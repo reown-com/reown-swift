@@ -42,14 +42,18 @@ let package = Package(
             targets: ["ReownAppKit"]),
         .library(
             name: "ReownAppKitUI",
-            targets: ["ReownAppKitUI"])
+            targets: ["ReownAppKitUI"]),
+        .library(
+            name: "YttriumWrapper",
+            targets: ["YttriumWrapper"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
         .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")
-        ),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
+        .package(path: "../yttrium")
+//        .package(url: "https://github.com/WalletConnect/yttrium", branch: "main")
     ],
     targets: [
         .target(
@@ -156,6 +160,13 @@ let package = Package(
         .target(
             name: "ReownAppKitBackport",
             path: "Sources/ReownAppKitBackport"
+        ),
+        .target(
+            name: "YttriumWrapper",
+            dependencies: [
+                .productItem(name: "Yttrium", package: "yttrium")
+            ],
+            path: "Sources/YttriumWrapper"
         ),
         .testTarget(
             name: "WalletConnectSignTests",

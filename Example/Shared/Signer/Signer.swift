@@ -1,7 +1,7 @@
 import Foundation
 import Commons
 import WalletConnectSign
-import WalletConnectAccount
+import YttriumWrapper
 
 struct SendCallsParams: Codable {
     let version: String
@@ -36,7 +36,7 @@ final class Signer {
         if let paramsArray = try? request.params.get([AnyCodable].self),
            let firstParam = paramsArray.first?.value as? [String: Any],
            let account = firstParam["from"] as? String {
-            let smartAccountAddress = try await SmartAccount.instance.getAddress()
+            let smartAccountAddress = try await SmartAccount.instance.getClient().getAddress()
             return account.lowercased() == smartAccountAddress.lowercased()
         }
 
@@ -46,7 +46,7 @@ final class Signer {
                 // Typically, the account address is the second parameter for personal_sign and eth_signTypedData
                 if paramsArray.count > 1,
                    let account = paramsArray[1].value as? String {
-                    let smartAccountAddress = try await SmartAccount.instance.getAddress()
+                    let smartAccountAddress = try await SmartAccount.instance.getClient().getAddress()
                     return account.lowercased() == smartAccountAddress.lowercased()
                 }
             }
@@ -54,7 +54,7 @@ final class Signer {
             if request.method == "wallet_sendCalls" {
                 if let sendCallsParams = paramsArray.first?.value as? [String: Any],
                    let account = sendCallsParams["from"] as? String {
-                    let smartAccountAddress = try await SmartAccount.instance.getAddress()
+                    let smartAccountAddress = try await SmartAccount.instance.getClient().getAddress()
                     return account.lowercased() == smartAccountAddress.lowercased()
                 }
             }
@@ -90,17 +90,21 @@ final class Signer {
         case "personal_sign":
             let params = try request.params.get([String].self)
             let message = params[0]
-            return AnyCodable(SmartAccount.instance.signMessage(message))
+            let client = await SmartAccount.instance.getClient()
+            let signedMessage = try client.signMessage(message)
+            return AnyCodable(signedMessage)
 
         case "eth_signTypedData":
             let params = try request.params.get([String].self)
             let message = params[0]
-            return AnyCodable(SmartAccount.instance.signMessage(message))
+            let client = await SmartAccount.instance.getClient()
+            let signedMessage = try client.signMessage(message)
+            return AnyCodable(signedMessage)
 
         case "eth_sendTransaction":
-            let params = try request.params.get([WalletConnectAccount.Transaction].self)
+            let params = try request.params.get([YttriumWrapper.Transaction].self)
             let transaction = params[0]
-            let result = try await SmartAccount.instance.sendTransaction(transaction)
+            let result = try await SmartAccount.instance.getClient().sendTransaction(transaction)
             return AnyCodable(result)
 
             // sendCalls should handle the whole batch
@@ -110,14 +114,13 @@ final class Signer {
                 fatalError()
             }
 
-            let transaction = WalletConnectAccount.Transaction(
-                to: firstCall.to,
-                value: firstCall.value,
-                data: firstCall.data,
-                chainId: firstCall.chainId
+            let transaction = YttriumWrapper.Transaction(
+                to: firstCall.to!,
+                value: firstCall.value!,
+                data: firstCall.data!
             )
 
-            let result = try await SmartAccount.instance.sendTransaction(transaction)
+            let result = try await SmartAccount.instance.getClient().sendTransaction(transaction)
             return AnyCodable(result)
 
         default:

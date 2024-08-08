@@ -29,6 +29,15 @@
         }
       },
       {
+        "package": "swift-dotenv",
+        "repositoryURL": "https://github.com/thebarndog/swift-dotenv.git",
+        "state": {
+          "branch": null,
+          "revision": "f6e7ca817d35eeccb20b62c87ee75963b01b29dc",
+          "version": "2.0.1"
+        }
+      },
+      {
         "package": "swift-qrcode-generator",
         "repositoryURL": "https://github.com/dagronf/swift-qrcode-generator",
         "state": {
@@ -38,12 +47,30 @@
         }
       },
       {
+        "package": "swift-snapshot-testing",
+        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing",
+        "state": {
+          "branch": null,
+          "revision": "f29e2014f6230cf7d5138fc899da51c7f513d467",
+          "version": "1.10.0"
+        }
+      },
+      {
         "package": "SwiftImageReadWrite",
         "repositoryURL": "https://github.com/dagronf/SwiftImageReadWrite",
         "state": {
           "branch": null,
           "revision": "5596407d1cf61b953b8e658fa8636a471df3c509",
           "version": "1.1.6"
+        }
+      },
+      {
+        "package": "CoinbaseWalletSDK",
+        "repositoryURL": "https://github.com/WalletConnect/wallet-mobile-sdk",
+        "state": {
+          "branch": null,
+          "revision": "b6dfb7d6b8447c7c5b238a10443a1ac28223f38f",
+          "version": "1.0.0"
         }
       }
     ]
