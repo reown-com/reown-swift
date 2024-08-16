@@ -43,10 +43,17 @@ let package = Package(
         .library(
             name: "WalletConnectIdentity",
             targets: ["WalletConnectIdentity"]),
+        .library(
+            name: "Web3Modal",
+            targets: ["Web3Modal"]),
+        .library(
+            name: "Web3ModalUI",
+            targets: ["Web3ModalUI"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
-        .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1")
+        .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
+        .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0")
     ],
     targets: [
         .target(
@@ -138,6 +145,32 @@ let package = Package(
                 .copy("Resources/Assets.xcassets"),
                 .process("Resources/PrivacyInfo.xcprivacy"),
             ]
+        ),
+        .target(
+            name: "Web3Modal",
+            dependencies: [
+                "QRCode",
+                "WalletConnectSign",
+                "Web3ModalUI",
+                "Web3ModalBackport",
+                "CoinbaseWalletSDK"
+            ],
+            resources: [
+                .process("Resources/Assets.xcassets"),
+                .copy("PackageConfig.json")
+            ]
+        ),
+        .target(
+            name: "Web3ModalUI",
+            dependencies: [
+                "Web3ModalBackport"
+            ],
+            resources: [
+                .process("Resources/Assets.xcassets")
+            ]
+        ),
+        .target(
+            name: "Web3ModalBackport"
         ),
         .testTarget(
             name: "WalletConnectSignTests",
