@@ -202,6 +202,20 @@ let package = Package(
         .testTarget(
             name: "EventsTests",
             dependencies: ["Events"]),
+        .testTarget(
+            name: "Web3ModalTests",
+            dependencies: [
+                "Web3Modal",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ]
+        ),
+        .testTarget(
+            name: "Web3ModalUITests",
+            dependencies: [
+                "Web3ModalUI",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ]
+        )
     ],
     swiftLanguageVersions: [.v5]
 )
