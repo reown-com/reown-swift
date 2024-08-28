@@ -20,6 +20,8 @@ class AuthResponseSubscriber {
     private let authResponseTopicRecordsStore: CodableStore<AuthResponseTopicRecord>
     private let linkModeLinksStore: CodableStore<Bool>
     private let supportLinkMode: Bool
+    private let pairingStore: WCPairingStorage
+    private let eventsClient: EventsClientProtocol
 
     init(networkingInteractor: NetworkInteracting,
          logger: ConsoleLogging,
@@ -33,7 +35,10 @@ class AuthResponseSubscriber {
          authResponseTopicRecordsStore: CodableStore<AuthResponseTopicRecord>,
          linkEnvelopesDispatcher: LinkEnvelopesDispatcher,
          linkModeLinksStore: CodableStore<Bool>,
-         supportLinkMode: Bool) {
+         pairingStore: WCPairingStorage,
+         supportLinkMode: Bool,
+         eventsClient: EventsClientProtocol
+    ) {
         self.networkingInteractor = networkingInteractor
         self.logger = logger
         self.rpcHistory = rpcHistory
@@ -47,6 +52,9 @@ class AuthResponseSubscriber {
         self.linkEnvelopesDispatcher = linkEnvelopesDispatcher
         self.linkModeLinksStore = linkModeLinksStore
         self.supportLinkMode = supportLinkMode
+        self.pairingStore = pairingStore
+        self.eventsClient = eventsClient
+
         subscribeForResponse()
         subscribeForLinkResponse()
     }
@@ -56,7 +64,8 @@ class AuthResponseSubscriber {
             .responseErrorSubscription(on: SessionAuthenticatedProtocolMethod.responseApprove())
             .sink { [unowned self] (payload: ResponseSubscriptionErrorPayload<SessionAuthenticateRequestParams>) in
                 guard let error = AuthError(code: payload.error.code) else { return }
-                authResponsePublisherSubject.send((payload.id, .failure(error)))                
+                Task { removePairing(pairingTopic: payload.topic) }
+                authResponsePublisherSubject.send((payload.id, .failure(error)))
             }.store(in: &publishers)
 
         networkingInteractor
@@ -67,6 +76,7 @@ class AuthResponseSubscriber {
 
                 let pairingTopic = payload.topic
                 removeResponseTopicRecord(responseTopic: payload.topic)
+                Task { removePairing(pairingTopic: pairingTopic) }
 
                 let requestId = payload.id
                 let cacaos = payload.response.cacaos
@@ -89,12 +99,15 @@ class AuthResponseSubscriber {
     private func subscribeForLinkResponse() {
         linkEnvelopesDispatcher.responseErrorSubscription(on: SessionAuthenticatedProtocolMethod.responseApprove())
             .sink { [unowned self] (payload: ResponseSubscriptionErrorPayload<SessionAuthenticateRequestParams>) in
+                Task { eventsClient.saveMessageEvent(.sessionAuthenticateLinkModeResponseRejectReceived(payload.id)) }
                 guard let error = AuthError(code: payload.error.code) else { return }
                 authResponsePublisherSubject.send((payload.id, .failure(error)))
             }.store(in: &publishers)
 
         linkEnvelopesDispatcher.responseSubscription(on: SessionAuthenticatedProtocolMethod.responseApprove())
             .sink { [unowned self] (payload: ResponseSubscriptionPayload<SessionAuthenticateRequestParams, SessionAuthenticateResponseParams>)  in
+
+                Task(priority: .low) { eventsClient.saveMessageEvent(.sessionAuthenticateLinkModeResponseApproveReceived(payload.id)) }
 
                 _ = getTransportTypeUpgradeIfPossible(peerMetadata: payload.response.responder.metadata, requestId: payload.id)
 
@@ -214,6 +227,11 @@ class AuthResponseSubscriber {
     func removeResponseTopicRecord(responseTopic: String) {
         authResponseTopicRecordsStore.delete(forKey: responseTopic)
         networkingInteractor.unsubscribe(topic: responseTopic)
+    }
+
+    private func removePairing(pairingTopic: String) {
+        pairingStore.delete(topic: pairingTopic)
+        kms.deleteSymmetricKey(for: pairingTopic)
     }
 }
 
