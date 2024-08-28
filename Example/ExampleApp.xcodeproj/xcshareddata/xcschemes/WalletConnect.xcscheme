@@ -272,9 +272,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Web3ModalTests"
-               BuildableName = "Web3ModalTests"
-               BlueprintName = "Web3ModalTests"
+               BlueprintIdentifier = "AppKitTests"
+               BuildableName = "AppKitTests"
+               BlueprintName = "AppKitTests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>
@@ -282,9 +282,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Web3ModalUITests"
-               BuildableName = "Web3ModalUITests"
-               BlueprintName = "Web3ModalUITests"
+               BlueprintIdentifier = "AppKitUITests"
+               BuildableName = "AppKitUITests"
+               BlueprintName = "AppKitUITests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>

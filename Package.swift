@@ -41,11 +41,11 @@ let package = Package(
             name: "WalletConnectIdentity",
             targets: ["WalletConnectIdentity"]),
         .library(
-            name: "Web3Modal",
-            targets: ["Web3Modal"]),
+            name: "ReownAppKit",
+            targets: ["ReownAppKit"]),
         .library(
-            name: "Web3ModalUI",
-            targets: ["Web3ModalUI"])
+            name: "ReownAppKitUI",
+            targets: ["ReownAppKitUI"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
@@ -142,30 +142,33 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Web3Modal",
+            name: "ReownAppKit",
             dependencies: [
                 "QRCode",
                 "WalletConnectSign",
-                "Web3ModalUI",
-                "Web3ModalBackport",
+                "ReownAppKitUI",
+                "ReownAppKitBackport",
                 "CoinbaseWalletSDK"
             ],
+            path: "Sources/ReownAppKit",
             resources: [
                 .process("Resources/Assets.xcassets"),
                 .copy("PackageConfig.json")
             ]
         ),
         .target(
-            name: "Web3ModalUI",
+            name: "ReownAppKitUI",
             dependencies: [
-                "Web3ModalBackport"
+                "ReownAppKitBackport"
             ],
+            path: "Sources/ReownAppKitUI",
             resources: [
                 .process("Resources/Assets.xcassets")
             ]
         ),
         .target(
-            name: "Web3ModalBackport"
+            name: "ReownAppKitBackport",
+            path: "Sources/ReownAppKitBackport"
         ),
         .testTarget(
             name: "WalletConnectSignTests",
@@ -205,19 +208,20 @@ let package = Package(
             name: "EventsTests",
             dependencies: ["Events"]),
         .testTarget(
-            name: "Web3ModalTests",
+            name: "ReownAppKitTests",
             dependencies: [
-                "Web3Modal",
+                "ReownAppKit",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ]
         ),
         .testTarget(
-            name: "Web3ModalUITests",
+            name: "ReownAppKitUITests",
             dependencies: [
-                "Web3ModalUI",
+                "ReownAppKitUI",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ]
         )
     ],
     swiftLanguageVersions: [.v5]
 )
+
