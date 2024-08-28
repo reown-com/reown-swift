@@ -108,7 +108,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             projectId: InputConfig.projectId,
             metadata: metadata,
             crypto: DefaultCryptoProvider(),
-            authRequestParams: .stub(), customWallets: [
+            authRequestParams: .stub(), // set to nil for non SIWE
+            customWallets: [
                 .init(
                     id: "swift-sample",
                     name: "Swift Sample Wallet",
