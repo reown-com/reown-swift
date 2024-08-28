@@ -1441,11 +1441,11 @@
 		A5E03DEE286464DB00888481 /* IntegrationTests */ = {
 			isa = PBXGroup;
 			children = (
+				84D2A66728A4F5260088AE09 /* Auth */,
 				847F07FE2A25DBC700B2A5A4 /* XPlatform */,
 				849D7A91292E2115006A2BD4 /* Push */,
 				A5E03E0A28646A8A00888481 /* Stubs */,
 				A5E03E0928646A8100888481 /* Sign */,
-				84D2A66728A4F5260088AE09 /* Auth */,
 			);
 			path = IntegrationTests;
 			sourceTree = "<group>";
