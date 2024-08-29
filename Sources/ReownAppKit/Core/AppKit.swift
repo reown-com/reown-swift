@@ -6,7 +6,7 @@ import SwiftUI
 import UIKit
 #endif
 
-/// Web3Modal instance wrapper
+/// AppKit instance wrapper
 ///
 /// ```Swift
 /// let metadata = AppMetadata(
@@ -15,16 +15,16 @@ import UIKit
 ///     url: "dapp.wallet.connect",
 ///     icons:  ["https://my_icon.com/1"]
 /// )
-/// Web3Modal.configure(projectId: PROJECT_ID, metadata: metadata)
-/// Web3Modal.instance.getSessions()
+/// AppKit.configure(projectId: PROJECT_ID, metadata: metadata)
+/// AppKit.instance.getSessions()
 /// ```
 public class AppKit {
-    /// Web3Modalt client instance
-    public static var instance: Web3ModalClient = {
+    /// AppKit client instance
+    public static var instance: AppKitClient = {
         guard let config = AppKit.config else {
-            fatalError("Error - you must call Web3Modal.configure(_:) before accessing the shared instance.")
+            fatalError("Error - you must call AppKit.configure(_:) before accessing the shared instance.")
         }
-        let client = Web3ModalClient(
+        let client = AppKitClient(
             logger: ConsoleLogger(prefix: "📜", loggingLevel: .off),
             signClient: Sign.instance,
             pairingClient: Pair.instance as! (PairingClientProtocol & PairingInteracting & PairingRegisterer),

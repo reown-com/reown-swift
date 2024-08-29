@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct Web3ModalButton: View {
+public struct AppKitButton: View {
     @ObservedObject var store: Store
     
     public init() {
@@ -24,7 +24,7 @@ public struct Web3ModalButton: View {
 
 #if DEBUG
 
-struct Web3Button_Preview: PreviewProvider {
+struct AppKitButton_Preview: PreviewProvider {
     static let store = { () -> Store in
         let store = Store()
         store.balance = 1.23
@@ -34,11 +34,11 @@ struct Web3Button_Preview: PreviewProvider {
     
     static var previews: some View {
         VStack {
-            Web3ModalButton(store: Store())
+            AppKitButton(store: Store())
             
-            Web3ModalButton(store: Web3Button_Preview.store)
+            AppKitButton(store: AppKitButton_Preview.store)
             
-            Web3ModalButton(store: Web3Button_Preview.store)
+            AppKitButton(store: AppKitButton_Preview.store)
                 .disabled(true)
         }
     }

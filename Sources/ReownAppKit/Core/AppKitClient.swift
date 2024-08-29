@@ -10,7 +10,7 @@ import UIKit
 /// Cannot be instantiated outside of the SDK
 ///
 /// Access via `Web3Modal.instance`
-public class Web3ModalClient {
+public class AppKitClient {
     // MARK: - Public Properties
     
     /// Publisher that sends sessions on every sessions update
