@@ -27,7 +27,7 @@ final class NetworkDetailViewModel: ObservableObject {
         self.router = router
         self.store = store
     
-        Web3Modal.instance.sessionEventPublisher
+        AppKit.instance.sessionEventPublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] event, _, _ in
                 switch event.name {
@@ -55,7 +55,7 @@ final class NetworkDetailViewModel: ObservableObject {
             }
             .store(in: &disposeBag)
         
-        Web3Modal.instance.sessionResponsePublisher
+        AppKit.instance.sessionResponsePublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] response in
                 
@@ -111,7 +111,7 @@ final class NetworkDetailViewModel: ObservableObject {
         do {
             try await switchEthChain(from: from, to: to)
         } catch {
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
         }
         
         guard let session = store.session else { return }
@@ -140,7 +140,7 @@ final class NetworkDetailViewModel: ObservableObject {
             
             guard let session = store.session else { return }
             
-            try await Web3Modal.instance.request(params:
+            try await AppKit.instance.request(params:
                     .init(
                         topic: session.topic,
                         method: EthUtils.walletSwitchEthChain,
@@ -149,7 +149,7 @@ final class NetworkDetailViewModel: ObservableObject {
                     )
             )
         case .cb:
-            try await Web3Modal.instance.request(.wallet_switchEthereumChain(chainId: to.chainReference))
+            try await AppKit.instance.request(.wallet_switchEthereumChain(chainId: to.chainReference))
         case .none:
             break
         }
@@ -170,7 +170,7 @@ final class NetworkDetailViewModel: ObservableObject {
             
             guard let session = store.session else { return }
             
-            try await Web3Modal.instance.request(params:
+            try await AppKit.instance.request(params:
                 .init(
                     topic: session.topic,
                     method: EthUtils.walletAddEthChain,
@@ -179,7 +179,7 @@ final class NetworkDetailViewModel: ObservableObject {
                 )
             )
         case .cb:
-            try await Web3Modal.instance.request(
+            try await AppKit.instance.request(
                 .wallet_addEthereumChain(
                     chainId: addChainParams.chainId,
                     blockExplorerUrls: addChainParams.blockExplorerUrls,

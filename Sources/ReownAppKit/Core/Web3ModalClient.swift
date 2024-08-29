@@ -117,7 +117,7 @@ public class Web3ModalClient {
         do {
             return try await pairingClient.create()
         } catch {
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
             throw error
         }
     }
@@ -130,18 +130,18 @@ public class Web3ModalClient {
     public func connect(walletUniversalLink: String?) async throws -> WalletConnectURI? {
         logger.debug("Connecting Application")
         do {
-            if let authParams = Web3Modal.config.authRequestParams {
+            if let authParams = AppKit.config.authRequestParams {
                 return try await signClient.authenticate(authParams, walletUniversalLink: walletUniversalLink)
             } else {
                 let pairingURI = try await signClient.connect(
-                    requiredNamespaces: Web3Modal.config.sessionParams.requiredNamespaces,
-                    optionalNamespaces: Web3Modal.config.sessionParams.optionalNamespaces,
-                    sessionProperties: Web3Modal.config.sessionParams.sessionProperties
+                    requiredNamespaces: AppKit.config.sessionParams.requiredNamespaces,
+                    optionalNamespaces: AppKit.config.sessionParams.optionalNamespaces,
+                    sessionProperties: AppKit.config.sessionParams.sessionProperties
                 )
                 return pairingURI
             }
         } catch {
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
             throw error
         }
     }
@@ -201,7 +201,7 @@ public class Web3ModalClient {
                             response = .init(result: .error(.init(code: -1, message: "Empty response")))
                         }
                     case let .failure(error):
-                        Web3Modal.config.onError(error)
+                        AppKit.config.onError(error)
                         
                         if let cbError = error as? ActionError {
                             response = .init(result: .error(.init(code: cbError.code, message: cbError.message)))
@@ -225,7 +225,7 @@ public class Web3ModalClient {
         do {
             try await signClient.request(params: params)
         } catch {
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
             throw error
         }
     }
@@ -243,7 +243,7 @@ public class Web3ModalClient {
                 try await signClient.disconnect(topic: topic)
                 analyticsService.track(.DISCONNECT_SUCCESS)
             } catch {
-                Web3Modal.config.onError(error)
+                AppKit.config.onError(error)
                 analyticsService.track(.DISCONNECT_ERROR)
                 throw error
             }
@@ -278,7 +278,7 @@ public class Web3ModalClient {
         do {
             try await signClient.cleanup()
         } catch {
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
             throw error
         }
     }

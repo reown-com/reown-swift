@@ -5,13 +5,13 @@ class SignInteractor: ObservableObject {
     
     private let store: Store
     
-    lazy var sessionsPublisher: AnyPublisher<[Session], Never> = Web3Modal.instance.sessionsPublisher
-    lazy var sessionSettlePublisher: AnyPublisher<Session, Never> = Web3Modal.instance.sessionSettlePublisher
-    lazy var sessionResponsePublisher: AnyPublisher<W3MResponse, Never> = Web3Modal.instance.sessionResponsePublisher
-    lazy var sessionRejectionPublisher: AnyPublisher<(Session.Proposal, Reason), Never> = Web3Modal.instance.sessionRejectionPublisher
-    lazy var sessionDeletePublisher: AnyPublisher<(String, Reason), Never> = Web3Modal.instance.sessionDeletePublisher
-    lazy var sessionEventPublisher: AnyPublisher<(event: Session.Event, sessionTopic: String, chainId: Blockchain?), Never> = Web3Modal.instance.sessionEventPublisher
-    lazy var authResponsePublisher: AnyPublisher<(id: RPCID, result: Result<(Session?, [Cacao]), AuthError>), Never> = Web3Modal.instance.authResponsePublisher
+    lazy var sessionsPublisher: AnyPublisher<[Session], Never> = AppKit.instance.sessionsPublisher
+    lazy var sessionSettlePublisher: AnyPublisher<Session, Never> = AppKit.instance.sessionSettlePublisher
+    lazy var sessionResponsePublisher: AnyPublisher<W3MResponse, Never> = AppKit.instance.sessionResponsePublisher
+    lazy var sessionRejectionPublisher: AnyPublisher<(Session.Proposal, Reason), Never> = AppKit.instance.sessionRejectionPublisher
+    lazy var sessionDeletePublisher: AnyPublisher<(String, Reason), Never> = AppKit.instance.sessionDeletePublisher
+    lazy var sessionEventPublisher: AnyPublisher<(event: Session.Event, sessionTopic: String, chainId: Blockchain?), Never> = AppKit.instance.sessionEventPublisher
+    lazy var authResponsePublisher: AnyPublisher<(id: RPCID, result: Result<(Session?, [Cacao]), AuthError>), Never> = AppKit.instance.authResponsePublisher
 
 
     init(store: Store = .shared) {
@@ -19,7 +19,7 @@ class SignInteractor: ObservableObject {
     }
     
     func connect(walletUniversalLink: String?) async throws  {
-        let uri = try await Web3Modal.instance.connect(walletUniversalLink: walletUniversalLink)
+        let uri = try await AppKit.instance.connect(walletUniversalLink: walletUniversalLink)
 
         DispatchQueue.main.async {
             self.store.uri = uri
@@ -36,13 +36,13 @@ class SignInteractor: ObservableObject {
         }
         
         do {
-            try await Web3Modal.instance.disconnect(topic: store.session?.topic ?? "")
+            try await AppKit.instance.disconnect(topic: store.session?.topic ?? "")
         } catch {
             DispatchQueue.main.async {
                 self.store.toast = .init(style: .error, message: "Failed to disconnect.")
             }
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
         }
-        try await Web3Modal.instance.cleanup()
+        try await AppKit.instance.cleanup()
     }
 }

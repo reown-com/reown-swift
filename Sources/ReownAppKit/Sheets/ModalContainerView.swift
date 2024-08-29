@@ -13,7 +13,7 @@ struct ModalContainerView: View {
         self.store = store
         _router = Backport.StateObject(wrappedValue: router)
         _web3modalViewModel = Backport.StateObject(
-            wrappedValue: Web3Modal.viewModel
+            wrappedValue: AppKit.viewModel
         )
     }
     

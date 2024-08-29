@@ -14,7 +14,7 @@ public struct ConnectButton: View {
     
     public var body: some View {
         Button {
-            Web3Modal.present()
+            AppKit.present()
         } label: {
             if store.connecting {
                 HStack {

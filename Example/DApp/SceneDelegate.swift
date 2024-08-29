@@ -1,6 +1,6 @@
 import UIKit
 
-import Web3Modal
+import ReownAppKit
 import WalletConnectModal
 import WalletConnectRelay
 import WalletConnectNetworking
@@ -104,7 +104,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             redirect: try! AppMetadata.Redirect(native: "wcdapp://", universal: "https://lab.web3modal.com/dapp", linkMode: true)
         )
 
-        Web3Modal.configure(
+        AppKit.configure(
             projectId: InputConfig.projectId,
             metadata: metadata,
             crypto: DefaultCryptoProvider(),
@@ -140,7 +140,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             ]
         )
 
-        Web3Modal.instance.authResponsePublisher.sink { (id, result) in
+        AppKit.instance.authResponsePublisher.sink { (id, result) in
             switch result {
             case .success((_, _)):
                 AlertPresenter.present(message: "User Authenticted with SIWE", type: .success)
@@ -174,6 +174,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
         }.store(in: &publishers)
 
-        Web3Modal.instance.disableAnalytics()
+        AppKit.instance.disableAnalytics()
     }
 }

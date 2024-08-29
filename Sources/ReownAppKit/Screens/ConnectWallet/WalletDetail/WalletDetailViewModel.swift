@@ -49,7 +49,7 @@ class WalletDetailViewModel: ObservableObject {
     }
     
     func startObserving() {
-        Web3Modal.instance.sessionRejectionPublisher
+        AppKit.instance.sessionRejectionPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _, _ in
                 self?.store.retryShown = true
@@ -60,7 +60,7 @@ class WalletDetailViewModel: ObservableObject {
     func cancel() async throws {
         store.SIWEFallbackState = false
         guard let topic = store.session?.topic else { return }
-        try await Web3Modal.instance.disconnect(topic: topic)
+        try await AppKit.instance.disconnect(topic: topic)
     }
 
     func signSIWE() async throws {
@@ -68,9 +68,9 @@ class WalletDetailViewModel: ObservableObject {
             self?.store.SIWEFallbackState = false
         }
         guard let account = store.account?.account(),
-              let authRequestParams = Web3Modal.config.authRequestParams,
-        let topic = Web3Modal.instance.getSessions().first?.topic,
-        let chain = Web3Modal.instance.getSelectedChain(),
+              let authRequestParams = AppKit.config.authRequestParams,
+        let topic = AppKit.instance.getSessions().first?.topic,
+        let chain = AppKit.instance.getSelectedChain(),
         let blockchain = Blockchain(namespace: chain.chainNamespace, reference: chain.chainReference)
         else { return }
 
@@ -152,7 +152,7 @@ class WalletDetailViewModel: ObservableObject {
             }
         } catch {
             store.toast = .init(style: .error, message: error.localizedDescription)
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
         }
     }
 
@@ -170,7 +170,7 @@ class WalletDetailViewModel: ObservableObject {
             }
         } catch {
             store.toast = .init(style: .error, message: error.localizedDescription)
-            Web3Modal.config.onError(error)
+            AppKit.config.onError(error)
         }
     }
 

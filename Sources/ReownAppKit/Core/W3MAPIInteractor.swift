@@ -35,10 +35,10 @@ final class W3MAPIInteractor: ObservableObject {
             page: search.isEmpty ? store.currentPage : 1,
             entries: search.isEmpty ? entriesPerPage : 100,
             search: search,
-            projectId: Web3Modal.config.projectId,
-            metadata: Web3Modal.config.metadata,
-            recommendedIds: Web3Modal.config.recommendedWalletIds,
-            excludedIds: Web3Modal.config.excludedWalletIds
+            projectId: AppKit.config.projectId,
+            metadata: AppKit.config.metadata,
+            recommendedIds: AppKit.config.recommendedWalletIds,
+            excludedIds: AppKit.config.excludedWalletIds
         )
         
         let httpClient = HTTPNetworkClient(host: "api.web3modal.com")
@@ -82,8 +82,8 @@ final class W3MAPIInteractor: ObservableObject {
             GetIosDataResponse.self,
             at: Web3ModalAPI.getIosData(
                 params: .init(
-                    projectId: Web3Modal.config.projectId,
-                    metadata: Web3Modal.config.metadata
+                    projectId: AppKit.config.projectId,
+                    metadata: AppKit.config.metadata
                 )
             )
         )
@@ -111,10 +111,10 @@ final class W3MAPIInteractor: ObservableObject {
                     page: 1,
                     entries: 4,
                     search: "",
-                    projectId: Web3Modal.config.projectId,
-                    metadata: Web3Modal.config.metadata,
-                    recommendedIds: Web3Modal.config.recommendedWalletIds,
-                    excludedIds: Web3Modal.config.excludedWalletIds
+                    projectId: AppKit.config.projectId,
+                    metadata: AppKit.config.metadata,
+                    recommendedIds: AppKit.config.recommendedWalletIds,
+                    excludedIds: AppKit.config.excludedWalletIds
                 )
             )
         )
@@ -239,9 +239,9 @@ final class W3MAPIInteractor: ObservableObject {
 
 extension URLRequest {
     mutating func setW3MHeaders() {
-        setValue(Web3Modal.config.projectId, forHTTPHeaderField: "x-project-id")
-        setValue(Web3Modal.Config.sdkType, forHTTPHeaderField: "x-sdk-type")
-        setValue(Web3Modal.Config.sdkVersion, forHTTPHeaderField: "x-sdk-version")
+        setValue(AppKit.config.projectId, forHTTPHeaderField: "x-project-id")
+        setValue(AppKit.Config.sdkType, forHTTPHeaderField: "x-sdk-type")
+        setValue(AppKit.Config.sdkVersion, forHTTPHeaderField: "x-sdk-version")
         setValue(EnvironmentInfo.sdkVersion, forHTTPHeaderField: "User-Agent")
     }
 }

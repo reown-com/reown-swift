@@ -1,3 +1,3 @@
 #if !CocoaPods
-@_exported import Web3ModalBackport
+@_exported import ReownAppKitBackport
 #endif

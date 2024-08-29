@@ -33,7 +33,7 @@ class Web3ModalViewModel: ObservableObject {
 
         setupSIWEFallback()
 
-        Web3Modal.instance.sessionEventPublisher
+        AppKit.instance.sessionEventPublisher
             .receive(on: DispatchQueue.main)
             .sink { event, _, _ in
                 switch event.name {
@@ -87,7 +87,7 @@ class Web3ModalViewModel: ObservableObject {
                         break
                     } else {
                         store.toast = .init(style: .error, message: "Authentication error: \(error.localizedDescription)")
-                        Web3Modal.config.onError(error)
+                        AppKit.config.onError(error)
                         self?.store.retryShown = true
                     }
                 }
@@ -133,7 +133,7 @@ class Web3ModalViewModel: ObservableObject {
                 try await blockchainApiInteractor.getIdentity()
             } catch {
                 store.toast = .init(style: .error, message: "Network error")
-                Web3Modal.config.onError(error)
+                AppKit.config.onError(error)
             }
         }
     }
@@ -144,7 +144,7 @@ class Web3ModalViewModel: ObservableObject {
                 try await blockchainApiInteractor.getBalance()
             } catch {
                 store.toast = .init(style: .error, message: "Network error")
-                Web3Modal.config.onError(error)
+                AppKit.config.onError(error)
             }
         }
     }
@@ -256,7 +256,7 @@ class Web3ModalViewModel: ObservableObject {
 
                             guard let self = self else { return }
 
-                            Web3Modal.instance.SIWEAuthenticationPublisherSubject.send(.success((siweMessage, signature)))
+                            AppKit.instance.SIWEAuthenticationPublisherSubject.send(.success((siweMessage, signature)))
 
                             DispatchQueue.main.async {
                                 self.router.setRoute(Router.AccountSubpage.profile)
@@ -265,24 +265,24 @@ class Web3ModalViewModel: ObservableObject {
                         } catch {
                             guard let self = self else { return }
 
-                            Web3Modal.instance.SIWEAuthenticationPublisherSubject.send(Result.failure(
+                            AppKit.instance.SIWEAuthenticationPublisherSubject.send(Result.failure(
                                 .messageVerificationFailed))
                             DispatchQueue.main.async {
                                 self.store.toast = .init(style: .error, message: error.localizedDescription)
                                 guard let topic = self.store.session?.topic else { return }
-                                Task {try await Web3Modal.instance.disconnect(topic: topic)}
+                                Task {try await AppKit.instance.disconnect(topic: topic)}
 
                             }
                         }
                     }
                 case .error(let error):
                     DispatchQueue.main.async {
-                        Web3Modal.instance.SIWEAuthenticationPublisherSubject.send(Result.failure(
+                        AppKit.instance.SIWEAuthenticationPublisherSubject.send(Result.failure(
                             .requestRejected))
                         guard let self = self else { return }
                         self.store.SIWEFallbackState = false
                         guard let topic = self.store.session?.topic else { return }
-                        Task {try await Web3Modal.instance.disconnect(topic: topic)}
+                        Task {try await AppKit.instance.disconnect(topic: topic)}
                     }
                 }
             }

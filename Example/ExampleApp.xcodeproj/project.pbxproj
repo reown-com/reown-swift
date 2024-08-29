@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
+		8421447B2C80A2B8004FF494 /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447A2C80A2B8004FF494 /* ReownAppKit */; };
 		84310D05298BC980000C15B6 /* MainInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84310D04298BC980000C15B6 /* MainInteractor.swift */; };
 		8439CB89293F658E00F2F2E2 /* PushMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8439CB88293F658E00F2F2E2 /* PushMessage.swift */; };
 		844749F629B9E5B9005F520B /* RelayClientEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844749F529B9E5B9005F520B /* RelayClientEndToEndTests.swift */; };
@@ -54,7 +55,6 @@
 		84B8154E2991099000FAD54E /* BuildConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8154D2991099000FAD54E /* BuildConfiguration.swift */; };
 		84B8155B2992A18D00FAD54E /* NotifyMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */; };
 		84C2E2B82C6F1F7000853BAA /* Web3ModalUI in Frameworks */ = {isa = PBXBuildFile; productRef = 84C2E2B72C6F1F7000853BAA /* Web3ModalUI */; };
-		84C2E2BA2C6F1F7800853BAA /* Web3Modal in Frameworks */ = {isa = PBXBuildFile; productRef = 84C2E2B92C6F1F7800853BAA /* Web3Modal */; };
 		84CE641F27981DED00142511 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CE641E27981DED00142511 /* AppDelegate.swift */; };
 		84CE642127981DED00142511 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CE642027981DED00142511 /* SceneDelegate.swift */; };
 		84CE642827981DF000142511 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84CE642727981DF000142511 /* Assets.xcassets */; };
@@ -552,8 +552,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8448F1D427E4726F0000B866 /* WalletConnect in Frameworks */,
-				84C2E2BA2C6F1F7800853BAA /* Web3Modal in Frameworks */,
 				C5BE01DF2AF692D80064FC88 /* WalletConnectRouter in Frameworks */,
+				8421447B2C80A2B8004FF494 /* ReownAppKit in Frameworks */,
 				A5B6C0F12A6EAB0800927332 /* WalletConnectNotify in Frameworks */,
 				A54195A52934E83F0035AD19 /* Web3 in Frameworks */,
 				8487A9442A836C2A0003D5AF /* Sentry in Frameworks */,
@@ -1476,7 +1476,7 @@
 				C5BE01DE2AF692D80064FC88 /* WalletConnectRouter */,
 				CFDB50712B2869AA00A0CBC2 /* WalletConnectModal */,
 				8486EDD22B4F2EA6008E53C3 /* SwiftMessages */,
-				84C2E2B92C6F1F7800853BAA /* Web3Modal */,
+				8421447A2C80A2B8004FF494 /* ReownAppKit */,
 			);
 			productName = DApp;
 			productReference = 84CE641C27981DED00142511 /* DApp.app */;
@@ -2770,6 +2770,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		8421447A2C80A2B8004FF494 /* ReownAppKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ReownAppKit;
+		};
 		844749FC29B9E6B2005F520B /* WalletConnectNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WalletConnectNetworking;
@@ -2820,10 +2824,6 @@
 		84C2E2B72C6F1F7000853BAA /* Web3ModalUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Web3ModalUI;
-		};
-		84C2E2B92C6F1F7800853BAA /* Web3Modal */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Web3Modal;
 		};
 		A54195A42934E83F0035AD19 /* Web3 */ = {
 			isa = XCSwiftPackageProductDependency;

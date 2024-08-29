@@ -18,10 +18,10 @@ import UIKit
 /// Web3Modal.configure(projectId: PROJECT_ID, metadata: metadata)
 /// Web3Modal.instance.getSessions()
 /// ```
-public class Web3Modal {
+public class AppKit {
     /// Web3Modalt client instance
     public static var instance: Web3ModalClient = {
-        guard let config = Web3Modal.config else {
+        guard let config = AppKit.config else {
             fatalError("Error - you must call Web3Modal.configure(_:) before accessing the shared instance.")
         }
         let client = Web3ModalClient(
@@ -106,7 +106,7 @@ public class Web3Modal {
     ) {
         Pair.configure(metadata: metadata)
         
-        Web3Modal.config = Web3Modal.Config(
+        AppKit.config = AppKit.Config(
             projectId: projectId,
             metadata: metadata,
             crypto: crypto,
@@ -136,7 +136,7 @@ public class Web3Modal {
             w3mApiInteractor: w3mApiInteractor
         )
         
-        Web3Modal.viewModel = Web3ModalViewModel(
+        AppKit.viewModel = Web3ModalViewModel(
             router: router,
             store: store,
             w3mApiInteractor: w3mApiInteractor,
@@ -154,7 +154,7 @@ public class Web3Modal {
     }
     
     public static func set(sessionParams: SessionParams) {
-        Web3Modal.config.sessionParams = sessionParams
+        AppKit.config.sessionParams = sessionParams
     }
     
     private static func configureCoinbaseIfNeeded(
@@ -162,7 +162,7 @@ public class Web3Modal {
         metadata: AppMetadata,
         w3mApiInteractor: W3MAPIInteractor
     ) {
-        guard Web3Modal.config.coinbaseEnabled else { return }
+        guard AppKit.config.coinbaseEnabled else { return }
         
         if let redirectLink = metadata.redirect?.universal ?? metadata.redirect?.native {
             CoinbaseWalletSDK.configure(callback: URL(string: redirectLink)!)
@@ -204,7 +204,7 @@ public class Web3Modal {
                             withAnimation {
                                 store.isModalShown = false
                             }
-                            Web3Modal.viewModel.router.setRoute(Router.AccountSubpage.profile)
+                            AppKit.viewModel.router.setRoute(Router.AccountSubpage.profile)
                             
                             let matchingChain = ChainPresets.ethChains.first(where: {
                                 $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference
@@ -231,20 +231,20 @@ public class Web3Modal {
 
 #if canImport(UIKit)
 
-public extension Web3Modal {
+public extension AppKit {
     static func selectChain(from presentingViewController: UIViewController? = nil) {
         guard let vc = presentingViewController ?? topViewController() else {
             assertionFailure("No controller found for presenting modal")
             return
         }
         
-        _ = Web3Modal.instance
+        _ = AppKit.instance
         
-        Web3Modal.viewModel.router.setRoute(Router.NetworkSwitchSubpage.selectChain)
+        AppKit.viewModel.router.setRoute(Router.NetworkSwitchSubpage.selectChain)
         
         Store.shared.connecting = true
         
-        let modal = Web3ModalSheetController(router: Web3Modal.viewModel.router)
+        let modal = Web3ModalSheetController(router: AppKit.viewModel.router)
         vc.present(modal, animated: true)
     }
     
@@ -254,13 +254,13 @@ public extension Web3Modal {
             return
         }
         
-        _ = Web3Modal.instance
+        _ = AppKit.instance
         
         Store.shared.connecting = true
         
-        Web3Modal.viewModel.router.setRoute(Store.shared.account != nil ? Router.AccountSubpage.profile : Router.ConnectingSubpage.connectWallet)
+        AppKit.viewModel.router.setRoute(Store.shared.account != nil ? Router.AccountSubpage.profile : Router.ConnectingSubpage.connectWallet)
         
-        let modal = Web3ModalSheetController(router: Web3Modal.viewModel.router)
+        let modal = Web3ModalSheetController(router: AppKit.viewModel.router)
         vc.present(modal, animated: true)
     }
     
@@ -294,7 +294,7 @@ public extension Web3Modal {
 
 import AppKit
 
-public extension Web3Modal {
+public extension AppKit {
     static func present(from presentingViewController: NSViewController? = nil) {
         let modal = Web3ModalSheetController()
         presentingViewController!.presentAsModalWindow(modal)

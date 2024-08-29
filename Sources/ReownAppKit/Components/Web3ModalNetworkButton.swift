@@ -17,7 +17,7 @@ public struct Web3ModalNetworkButton: View {
     public var body: some View {
         if let selectedChain = store.selectedChain {
             Button(selectedChain.chainName) {
-                Web3Modal.selectChain()
+                AppKit.selectChain()
             }
             .buttonStyle(
                 W3MChipButtonStyle(
@@ -42,7 +42,7 @@ public struct Web3ModalNetworkButton: View {
         } else {
             Button {
                 analyticsService.track(.CLICK_NETWORKS)
-                Web3Modal.selectChain()
+                AppKit.selectChain()
             } label: {
                 Text("Select network").foregroundColor(.Foreground100)
             }

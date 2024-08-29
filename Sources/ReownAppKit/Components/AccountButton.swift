@@ -162,7 +162,7 @@ public struct AccountButton: View {
     
     public var body: some View {
         Button(action: {
-            Web3Modal.present()
+            AppKit.present()
         }, label: {})
             .buttonStyle(AccountButtonStyle(store: store))
             .onAppear {
@@ -177,7 +177,7 @@ public struct AccountButton: View {
                 try await blockchainApiInteractor.getIdentity()
             } catch {
                 store.toast = .init(style: .error, message: "Network error")
-                Web3Modal.config.onError(error)
+                AppKit.config.onError(error)
             }
         }
     }
@@ -188,7 +188,7 @@ public struct AccountButton: View {
                 try await blockchainApiInteractor.getBalance()
             } catch {
                 store.toast = .init(style: .error, message: "Network error")
-                Web3Modal.config.onError(error)
+                AppKit.config.onError(error)
             }
         }
     }

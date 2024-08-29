@@ -1,5 +1,5 @@
 #if !CocoaPods
-@_exported import Web3ModalUI
-@_exported import Web3ModalBackport
+@_exported import ReownAppKitUI
+@_exported import ReownAppKitBackport
 @_exported import WalletConnectSign
 #endif

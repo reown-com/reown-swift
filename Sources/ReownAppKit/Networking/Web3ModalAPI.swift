@@ -68,15 +68,15 @@ enum Web3ModalAPI: HTTPService {
         case let .getWallets(params):
             return [
                 "x-project-id": params.projectId,
-                "x-sdk-version": Web3Modal.Config.sdkVersion,
-                "x-sdk-type": Web3Modal.Config.sdkType,
+                "x-sdk-version": AppKit.Config.sdkVersion,
+                "x-sdk-type": AppKit.Config.sdkType,
                 "Referer": params.metadata.name
             ]
         case let .getIosData(params):
             return [
                 "x-project-id": params.projectId,
-                "x-sdk-version": Web3Modal.Config.sdkVersion,
-                "x-sdk-type": Web3Modal.Config.sdkType,
+                "x-sdk-version": AppKit.Config.sdkVersion,
+                "x-sdk-type": AppKit.Config.sdkType,
                 "Referer": params.metadata.name
             ]
         }

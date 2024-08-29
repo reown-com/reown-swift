@@ -26,7 +26,7 @@ class BlockchainAPIInteractor: ObservableObject {
                 params: .init(
                     address: address,
                     chainId: chainId,
-                    projectId: Web3Modal.config.projectId,
+                    projectId: AppKit.config.projectId,
                     clientId: clientId
                 )
             )
