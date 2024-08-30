@@ -7,7 +7,7 @@ final class SessionRequestInteractor {
     func respondSessionRequest(sessionRequest: Request, importAccount: ImportAccount) async throws -> Bool {
         do {
             let result = try Signer.sign(request: sessionRequest, importAccount: importAccount)
-            try await Web3Wallet.instance.respond(
+            try await WalletKit.instance.respond(
                 topic: sessionRequest.topic,
                 requestId: sessionRequest.id,
                 response: .response(result)
@@ -26,7 +26,7 @@ final class SessionRequestInteractor {
     }
 
     func respondError(sessionRequest: Request) async throws {
-        try await Web3Wallet.instance.respond(
+        try await WalletKit.instance.respond(
             topic: sessionRequest.topic,
             requestId: sessionRequest.id,
             response: .error(.init(code: 0, message: ""))
@@ -40,6 +40,6 @@ final class SessionRequestInteractor {
     }
     
     func getSession(topic: String) -> Session? {
-        return Web3Wallet.instance.getSessions().first(where: { $0.topic == topic })
+        return WalletKit.instance.getSessions().first(where: { $0.topic == topic })
     }
 }

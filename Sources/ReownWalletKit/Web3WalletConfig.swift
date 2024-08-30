@@ -1,6 +1,6 @@
 import Foundation
 
-extension Web3Wallet {
+extension WalletKit {
     struct Config {
         let crypto: CryptoProvider
     }

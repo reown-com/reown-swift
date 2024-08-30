@@ -150,7 +150,7 @@ extension WalletPresenter {
     }
 
     private func setUpPairingIndicatorRemoval() {
-        Web3Wallet.instance.pairingStatePublisher
+        WalletKit.instance.pairingStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isPairing in
             self?.showPairingLoading = isPairing

@@ -1,12 +1,12 @@
 import Foundation
 
-public struct Web3WalletClientFactory {
+public struct WalletKitClientFactory {
     public static func create(
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol
-    ) -> Web3WalletClient {
-        return Web3WalletClient(
+    ) -> WalletKitClient {
+        return WalletKitClient(
             signClient: signClient,
             pairingClient: pairingClient,
             pushClient: pushClient

@@ -88,7 +88,7 @@ final class SessionRequestPresenter: ObservableObject {
 // MARK: - Private functions
 private extension SessionRequestPresenter {
     func setupInitialState() {
-        Web3Wallet.instance.requestExpirationPublisher
+        WalletKit.instance.requestExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] requestId in
                 guard let self = self else { return }

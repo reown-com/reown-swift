@@ -6,7 +6,7 @@ import Combine
 /// Cannot be instantiated outside of the SDK
 ///
 /// Access via `Web3Wallet.instance`
-public class Web3WalletClient {
+public class WalletKitClient {
     // MARK: - Public Properties
     
     /// Publisher that sends session proposal
@@ -264,7 +264,7 @@ public class Web3WalletClient {
 }
 
 #if DEBUG
-extension Web3WalletClient {
+extension WalletKitClient {
     public func register(deviceToken: String, enableEncrypted: Bool = false) async throws {
         try await pushClient.register(deviceToken: deviceToken)
     }

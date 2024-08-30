@@ -23,7 +23,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             return
         }
         do {
-            try Web3Wallet.instance.dispatchEnvelope(url.absoluteString)
+            try WalletKit.instance.dispatchEnvelope(url.absoluteString)
         } catch {
             print(error)
         }
@@ -59,7 +59,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             if let url = connectionOptions.userActivities.first?.webpageURL {
                 configurators.configure() // Ensure configurators are set up before dispatching
                 do {
-                    try Web3Wallet.instance.dispatchEnvelope(url.absoluteString)
+                    try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                 } catch {
                     print("Error dispatching envelope: \(error.localizedDescription)")
                 }
@@ -77,7 +77,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         do {
             let uri = try WalletConnectURI(urlContext: context)
             Task {
-                try await Web3Wallet.instance.pair(uri: uri)
+                try await WalletKit.instance.pair(uri: uri)
             }
         } catch {
             if case WalletConnectURI.Errors.expired = error {
@@ -90,7 +90,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                 }
 
                 do {
-                    try Web3Wallet.instance.dispatchEnvelope(url.absoluteString)
+                    try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                 } catch {
                     AlertPresenter.present(message: error.localizedDescription, type: .error)
                 }
@@ -138,7 +138,7 @@ private extension SceneDelegate {
             redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
         )
 
-        Web3Wallet.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment)
 
     }
 }

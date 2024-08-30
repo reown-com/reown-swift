@@ -22,7 +22,7 @@ final class ConnectionDetailsPresenter: ObservableObject {
         Task {
             do {
                 ActivityIndicatorManager.shared.start()
-                try await Web3Wallet.instance.disconnect(topic: session.topic)
+                try await WalletKit.instance.disconnect(topic: session.topic)
                 ActivityIndicatorManager.shared.stop()
                 DispatchQueue.main.async {
                     self.router.dismiss()
@@ -44,7 +44,7 @@ final class ConnectionDetailsPresenter: ObservableObject {
             do {
                 ActivityIndicatorManager.shared.start()
 
-                try await Web3Wallet.instance.emit(topic: session.topic, event: Session.Event(name: "chainChanged", data: AnyCodable("1")), chainId: Blockchain("eip155:1")!)
+                try await WalletKit.instance.emit(topic: session.topic, event: Session.Event(name: "chainChanged", data: AnyCodable("1")), chainId: Blockchain("eip155:1")!)
 
                 ActivityIndicatorManager.shared.stop()
             } catch {

@@ -5,22 +5,22 @@ import WalletConnectNotify
 
 final class WalletInteractor {
     var sessionsPublisher: AnyPublisher<[Session], Never> {
-        return Web3Wallet.instance.sessionsPublisher
+        return WalletKit.instance.sessionsPublisher
     }
 
     func getSessions() -> [Session] {
-        return Web3Wallet.instance.getSessions()
+        return WalletKit.instance.getSessions()
     }
     
     func pair(uri: WalletConnectURI) async throws {
-        try await Web3Wallet.instance.pair(uri: uri)
+        try await WalletKit.instance.pair(uri: uri)
     }
     
     func disconnectSession(session: Session) async throws {
-        try await Web3Wallet.instance.disconnect(topic: session.topic)
+        try await WalletKit.instance.disconnect(topic: session.topic)
     }
 
     func getPendingRequests() -> [(request: Request, context: VerifyContext?)] {
-        Web3Wallet.instance.getPendingRequests()
+        WalletKit.instance.getPendingRequests()
     }
 }

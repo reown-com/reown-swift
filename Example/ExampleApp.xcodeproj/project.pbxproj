@@ -12,6 +12,7 @@
 		8421447D2C80A544004FF494 /* ReownAppKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447C2C80A544004FF494 /* ReownAppKitUI */; };
 		8421447F2C81863A004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447E2C81863A004FF494 /* ReownWalletKit */; };
 		842144812C818684004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 842144802C818684004FF494 /* ReownWalletKit */; };
+		842144832C818928004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 842144822C818928004FF494 /* ReownWalletKit */; };
 		84310D05298BC980000C15B6 /* MainInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84310D04298BC980000C15B6 /* MainInteractor.swift */; };
 		8439CB89293F658E00F2F2E2 /* PushMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8439CB88293F658E00F2F2E2 /* PushMessage.swift */; };
 		844749F629B9E5B9005F520B /* RelayClientEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844749F529B9E5B9005F520B /* RelayClientEndToEndTests.swift */; };
@@ -241,7 +242,6 @@
 		C5BE021E2AF79B9A0064FC88 /* SessionAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE02192AF79B950064FC88 /* SessionAccountView.swift */; };
 		C5BE021F2AF79B9A0064FC88 /* SessionAccountModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE021A2AF79B960064FC88 /* SessionAccountModule.swift */; };
 		C5D4603A29687A5700302C7E /* DefaultSocketFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5629AEF2877F73000094373 /* DefaultSocketFactory.swift */; };
-		C5DD5BE1294E09E3008FD3A4 /* Web3Wallet in Frameworks */ = {isa = PBXBuildFile; productRef = C5DD5BE0294E09E3008FD3A4 /* Web3Wallet */; };
 		C5F32A2C2954814200A6476E /* ConnectionDetailsModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F32A2B2954814200A6476E /* ConnectionDetailsModule.swift */; };
 		C5F32A2E2954814A00A6476E /* ConnectionDetailsRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F32A2D2954814A00A6476E /* ConnectionDetailsRouter.swift */; };
 		C5F32A322954816C00A6476E /* ConnectionDetailsPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F32A312954816C00A6476E /* ConnectionDetailsPresenter.swift */; };
@@ -604,8 +604,8 @@
 				A5E03DFF2864662500888481 /* WalletConnect in Frameworks */,
 				A5E03DF52864651200888481 /* Starscream in Frameworks */,
 				A5C8BE85292FE20B006CC85C /* Web3 in Frameworks */,
-				C5DD5BE1294E09E3008FD3A4 /* Web3Wallet in Frameworks */,
 				A5B6C0F32A6EAB1700927332 /* WalletConnectNotify in Frameworks */,
+				842144832C818928004FF494 /* ReownWalletKit in Frameworks */,
 				A573C53B29EC365800E3CBFD /* HDWalletKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1566,9 +1566,9 @@
 				A5E03DF42864651200888481 /* Starscream */,
 				A5E03DFE2864662500888481 /* WalletConnect */,
 				A5C8BE84292FE20B006CC85C /* Web3 */,
-				C5DD5BE0294E09E3008FD3A4 /* Web3Wallet */,
 				A573C53A29EC365800E3CBFD /* HDWalletKit */,
 				A5B6C0F22A6EAB1700927332 /* WalletConnectNotify */,
+				842144822C818928004FF494 /* ReownWalletKit */,
 			);
 			productName = IntegrationTests;
 			productReference = A5E03DED286464DB00888481 /* IntegrationTests.xctest */;
@@ -2786,6 +2786,10 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ReownWalletKit;
 		};
+		842144822C818928004FF494 /* ReownWalletKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ReownWalletKit;
+		};
 		844749FC29B9E6B2005F520B /* WalletConnectNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WalletConnectNetworking;
@@ -2948,10 +2952,6 @@
 		C5BE01DE2AF692D80064FC88 /* WalletConnectRouter */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WalletConnectRouter;
-		};
-		C5DD5BE0294E09E3008FD3A4 /* Web3Wallet */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Web3Wallet;
 		};
 		CF25F2882A432476009C7E49 /* WalletConnectModal */ = {
 			isa = XCSwiftPackageProductDependency;

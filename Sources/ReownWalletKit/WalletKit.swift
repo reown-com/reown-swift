@@ -5,7 +5,7 @@ import Combine
 public typealias VerifyContext = WalletConnectVerify.VerifyContext
 #endif
 
-/// Web3Wallet instance wrapper
+/// WalletKit instance wrapper
 ///
 /// ```Swift
 /// let metadata = AppMetadata(
@@ -14,16 +14,16 @@ public typealias VerifyContext = WalletConnectVerify.VerifyContext
 ///     url: "wallet.connect",
 ///     icons:  ["https://my_icon.com/1"]
 /// )
-/// Web3Wallet.configure(metadata: metadata, account: account)
-/// Web3Wallet.instance.getSessions()
+/// WalletKit.configure(metadata: metadata, account: account)
+/// WalletKit.instance.getSessions()
 /// ```
-public class Web3Wallet {
+public class WalletKit {
     /// Web3Wallett client instance
-    public static var instance: Web3WalletClient = {
-        guard let config = Web3Wallet.config else {
+    public static var instance: WalletKitClient = {
+        guard let config = WalletKit.config else {
             fatalError("Error - you must call Web3Wallet.configure(_:) before accessing the shared instance.")
         }
-        return Web3WalletClientFactory.create(
+        return WalletKitClientFactory.create(
             signClient: Sign.instance,
             pairingClient: Pair.instance as! PairingClient,
             pushClient: Push.instance
@@ -47,6 +47,6 @@ public class Web3Wallet {
         Pair.configure(metadata: metadata)
         Push.configure(pushHost: pushHost, environment: environment)
         Sign.configure(crypto: crypto)
-        Web3Wallet.config = Web3Wallet.Config(crypto: crypto)
+        WalletKit.config = WalletKit.Config(crypto: crypto)
     }
 }
