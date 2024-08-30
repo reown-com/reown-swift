@@ -1,9 +1,9 @@
-# WalletConnect v.2 - Swift
+# Reown WalletKit & AppKit - Swift
 
 ![CI main](https://github.com/WalletConnect/WalletConnectSwiftV2/actions/workflows/ci.yml/badge.svg?branch=main)
 ![CI develop](https://github.com/WalletConnect/WalletConnectSwiftV2/actions/workflows/ci.yml/badge.svg?branch=develop)
 
-Swift implementation of WalletConnect v.2 protocol for native iOS applications.
+Swift implementation of WalletKit and AppKit for native iOS applications.
 ## Requirements
 - iOS 13
 - XCode 13
@@ -15,7 +15,8 @@ Swift implementation of WalletConnect v.2 protocol for native iOS applications.
 - [Beginner guide to WalletConnect v2.0 for iOS Developers](https://medium.com/walletconnect/beginner-guide-to-walletconnect-v2-0-for-swift-developers-4534b0975218)
 - [Protocol Documentation](https://github.com/WalletConnect/walletconnect-specs)
 - [Glossary](https://docs.walletconnect.com/2.0/introduction/glossary)
-- [Migration guide from Sign and Auth to Web3Wallet](https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/swift/guides/web3wallet-migration.md)
+- [Migration guide to AppKit](https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/swift/guides/web3wallet-migration.md)
+- [Migration guide to WalletKit](https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/swift/guides/web3wallet-migration.md)
 
 
 ## Installation
@@ -23,7 +24,7 @@ Swift implementation of WalletConnect v.2 protocol for native iOS applications.
 Add .package(url:_:) to your Package.swift:
 ```Swift
 dependencies: [
-    .package(url: "https://github.com/WalletConnect/WalletConnectSwiftV2", .branch("main")),
+    .package(url: "https://github.com/reown-com/reown-swift", .branch("main")),
 ],
 ```
 ### Cocoapods
@@ -45,12 +46,8 @@ Follow instructions from *Configuration.xcconfig* and configure PROJECT_ID with 
 // from Window->Devices and Simulators->Simulator you're using->Identifier
 SIMULATOR_IDENTIFIER = YOUR_SIMULATOR_IDENTIFIER
 ```
-## Example App
+## Example Apps
 open `Example/ExampleApp.xcodeproj`
-
-## Web3Wallet
-Web3Wallet SDK introduces a new interface for all wallets that wraps the Sign and Auth clients internally.
-- [Migration guide from Sign and Auth to Web3Wallet](https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/swift/web3wallet/upgrade-guide.md)
 
 ## License
 
