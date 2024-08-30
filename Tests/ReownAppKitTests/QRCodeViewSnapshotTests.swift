@@ -1,6 +1,6 @@
 import SnapshotTesting
 import SwiftUI
-@testable import Web3Modal
+@testable import ReownAppKit
 import XCTest
 
 final class QRCodeViewSnapshotTests: XCTestCase {
