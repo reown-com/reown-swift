@@ -1,6 +1,6 @@
 import Foundation
 
-import Web3Wallet
+import ReownWalletKit
 import WalletConnectRouter
 
 final class SessionProposalInteractor {

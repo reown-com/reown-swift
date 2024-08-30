@@ -1,7 +1,7 @@
 import UIKit
 import WalletConnectNetworking
 import WalletConnectNotify
-import Web3Wallet
+import ReownWalletKit
 import Combine
 
 final class ConfigurationService {

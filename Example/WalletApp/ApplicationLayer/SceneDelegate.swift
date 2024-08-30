@@ -1,6 +1,6 @@
 import SafariServices
 import UIKit
-import Web3Wallet
+import ReownWalletKit
 import WalletConnectSign
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {

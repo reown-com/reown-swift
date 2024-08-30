@@ -1,5 +1,5 @@
 import UserNotifications
-import Web3Wallet
+import ReownWalletKit
 import WalletConnectNotify
 import Intents
 import Mixpanel

@@ -1,6 +1,6 @@
 import Combine
 
-import Web3Wallet
+import ReownWalletKit
 import WalletConnectNotify
 
 final class WalletInteractor {

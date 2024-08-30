@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 
-import Web3Wallet
+import ReownWalletKit
 
 final class ConnectionDetailsPresenter: ObservableObject {
     private let router: ConnectionDetailsRouter

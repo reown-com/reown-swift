@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 import WalletConnectNetworking
-import Web3Wallet
+import ReownWalletKit
 
 final class SettingsPresenter: ObservableObject {
 

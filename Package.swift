@@ -14,8 +14,8 @@ let package = Package(
             name: "WalletConnect",
             targets: ["WalletConnectSign"]),
         .library(
-            name: "Web3Wallet",
-            targets: ["Web3Wallet"]),
+            name: "ReownWalletKit",
+            targets: ["ReownWalletKit"]),
         .library(
             name: "WalletConnectPairing",
             targets: ["WalletConnectPairing"]),
@@ -61,9 +61,9 @@ let package = Package(
             path: "Sources/WalletConnectSign",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
-            name: "Web3Wallet",
+            name: "ReownWalletKit",
             dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
-            path: "Sources/Web3Wallet",
+            path: "Sources/ReownWalletKit",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectNotify",

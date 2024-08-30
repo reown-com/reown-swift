@@ -1,5 +1,5 @@
 import SwiftUI
-import Web3Wallet
+import ReownWalletKit
 
 struct SessionProposalView: View {
     @EnvironmentObject var presenter: SessionProposalPresenter
