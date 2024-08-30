@@ -45,7 +45,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         // Notification center delegate setup
         UNUserNotificationCenter.current().delegate = self
 
-        configureWeb3WalletClientIfNeeded()
+        configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
 
         // Process connection options
@@ -123,7 +123,7 @@ private extension SceneDelegate {
         }
     }
 
-    func configureWeb3WalletClientIfNeeded() {
+    func configureWalletKitClientIfNeeded() {
         Networking.configure(
             groupIdentifier: "group.com.walletconnect.sdk",
             projectId: InputConfig.projectId,

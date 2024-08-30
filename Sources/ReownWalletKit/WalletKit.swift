@@ -18,10 +18,10 @@ public typealias VerifyContext = WalletConnectVerify.VerifyContext
 /// WalletKit.instance.getSessions()
 /// ```
 public class WalletKit {
-    /// Web3Wallett client instance
+    /// WalletKit client instance
     public static var instance: WalletKitClient = {
         guard let config = WalletKit.config else {
-            fatalError("Error - you must call Web3Wallet.configure(_:) before accessing the shared instance.")
+            fatalError("Error - you must call WalletKit.configure(_:) before accessing the shared instance.")
         }
         return WalletKitClientFactory.create(
             signClient: Sign.instance,

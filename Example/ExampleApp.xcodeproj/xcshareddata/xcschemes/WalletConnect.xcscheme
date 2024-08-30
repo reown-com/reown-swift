@@ -272,9 +272,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AppKitTests"
-               BuildableName = "AppKitTests"
-               BlueprintName = "AppKitTests"
+               BlueprintIdentifier = "ReownAppKitTests"
+               BuildableName = "ReownAppKitTests"
+               BlueprintName = "ReownAppKitTests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>
@@ -282,9 +282,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AppKitUITests"
-               BuildableName = "AppKitUITests"
-               BlueprintName = "AppKitUITests"
+               BlueprintIdentifier = "ReownAppKitUITests"
+               BuildableName = "ReownAppKitUITests"
+               BlueprintName = "ReownAppKitUITests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>

@@ -1,6 +1,6 @@
 import Foundation
 
-public final class Web3WalletDecryptionService {
+public final class WalletKitDecryptionService {
     enum Errors: Error {
         case unknownTag
     }
@@ -44,20 +44,20 @@ public final class Web3WalletDecryptionService {
 }
 
 public protocol DecryptedPayloadProtocol {
-    var requestMethod: Web3WalletDecryptionService.RequestMethod { get }
+    var requestMethod: WalletKitDecryptionService.RequestMethod { get }
 }
 
 public struct RequestPayload: DecryptedPayloadProtocol {
-    public var requestMethod: Web3WalletDecryptionService.RequestMethod { .sessionRequest }
+    public var requestMethod: WalletKitDecryptionService.RequestMethod { .sessionRequest }
     public var request: Request
 }
 
 public struct ProposalPayload: DecryptedPayloadProtocol {
-    public var requestMethod: Web3WalletDecryptionService.RequestMethod { .sessionProposal }
+    public var requestMethod: WalletKitDecryptionService.RequestMethod { .sessionProposal }
     public var proposal: Session.Proposal
 }
 
 public struct AuthRequestPayload: DecryptedPayloadProtocol {
-    public var requestMethod: Web3WalletDecryptionService.RequestMethod { .authRequest }
+    public var requestMethod: WalletKitDecryptionService.RequestMethod { .authRequest }
     public var authRequest: AuthenticationRequest
 }

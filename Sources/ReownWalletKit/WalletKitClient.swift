@@ -5,7 +5,7 @@ import Combine
 ///
 /// Cannot be instantiated outside of the SDK
 ///
-/// Access via `Web3Wallet.instance`
+/// Access via `WalletKit.instance`
 public class WalletKitClient {
     // MARK: - Public Properties
     
