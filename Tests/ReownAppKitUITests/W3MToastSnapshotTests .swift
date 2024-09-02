@@ -1,6 +1,6 @@
 import SnapshotTesting
 import SwiftUI
-@testable import ReownAppKit
+@testable import ReownAppKitUI
 import XCTest
 
 final class W3MToastSnapshotTests: XCTestCase {
