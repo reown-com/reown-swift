@@ -1,7 +1,7 @@
 # Reown WalletKit & AppKit - Swift
 
-![CI main](https://github.com/WalletConnect/WalletConnectSwiftV2/actions/workflows/ci.yml/badge.svg?branch=main)
-![CI develop](https://github.com/WalletConnect/WalletConnectSwiftV2/actions/workflows/ci.yml/badge.svg?branch=develop)
+![CI main](https://github.com/reown-com/reown-swift/actions/workflows/ci.yml/badge.svg?branch=main)
+![CI develop](https://github.com/reown-com/reown-swift/actions/workflows/ci.yml/badge.svg?branch=develop)
 
 Swift implementation of WalletKit and AppKit for native iOS applications.
 ## Requirements
@@ -16,7 +16,7 @@ Swift implementation of WalletKit and AppKit for native iOS applications.
 - [Protocol Documentation](https://github.com/WalletConnect/walletconnect-specs)
 - [Glossary](https://docs.walletconnect.com/2.0/introduction/glossary)
 - [Migration guide to AppKit](https://gist.github.com/llbartekll/a6fb18b48af837bcc46bb75b3eeaa781)
-- [Migration guide to WalletKit](https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/swift/guides/web3wallet-migration.md)
+- [Migration guide to WalletKit](https://gist.github.com/llbartekll/a6fb18b48af837bcc46bb75b3eeaa781)
 
 
 ## Installation
@@ -31,11 +31,11 @@ dependencies: [
 Add pod to your Podfile:
 
 ```Ruby
-pod 'WalletConnectSwiftV2'
+pod 'reown-swift'
 ```
 If you encounter any problems during package installation, you can specify the exact path to the repository
 ```Ruby
-pod 'WalletConnectSwiftV2', :git => 'https://github.com/WalletConnect/WalletConnectSwiftV2.git', :tag => '1.0.5'
+pod 'reown-swift', :git => 'https://github.com/reown-com/reown-swift.git', :tag => '1.0.0'
 ```
 ## Setting Project ID
 Follow instructions from *Configuration.xcconfig* and configure PROJECT_ID with your ID from WalletConnect Dashboard
