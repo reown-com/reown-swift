@@ -15,7 +15,7 @@ Swift implementation of WalletKit and AppKit for native iOS applications.
 - [Beginner guide to WalletConnect v2.0 for iOS Developers](https://medium.com/walletconnect/beginner-guide-to-walletconnect-v2-0-for-swift-developers-4534b0975218)
 - [Protocol Documentation](https://github.com/WalletConnect/walletconnect-specs)
 - [Glossary](https://docs.walletconnect.com/2.0/introduction/glossary)
-- [Migration guide to AppKit](https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/swift/guides/web3wallet-migration.md)
+- [Migration guide to AppKit](https://gist.github.com/llbartekll/a6fb18b48af837bcc46bb75b3eeaa781)
 - [Migration guide to WalletKit](https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/swift/guides/web3wallet-migration.md)
 
 

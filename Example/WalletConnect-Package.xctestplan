@@ -71,13 +71,6 @@
     {
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "WalletConnectModalTests",
-        "name" : "WalletConnectModalTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:",
         "identifier" : "NotifyTests",
         "name" : "NotifyTests"
       }

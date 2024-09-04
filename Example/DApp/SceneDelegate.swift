@@ -1,7 +1,6 @@
 import UIKit
 
 import ReownAppKit
-import WalletConnectModal
 import WalletConnectRelay
 import WalletConnectNetworking
 import Combine
@@ -148,11 +147,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 break
             }
         }.store(in: &publishers)
-
-        WalletConnectModal.configure(
-            projectId: InputConfig.projectId,
-            metadata: metadata
-        )
 
         Sign.instance.logger.setLogging(level: .debug)
         Networking.instance.setLogging(level: .debug)

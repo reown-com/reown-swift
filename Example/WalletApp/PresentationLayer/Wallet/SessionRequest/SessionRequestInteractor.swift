@@ -1,7 +1,7 @@
 import Foundation
 
 import ReownWalletKit
-import WalletConnectRouter
+import ReownRouter
 
 final class SessionRequestInteractor {
     func respondSessionRequest(sessionRequest: Request, importAccount: ImportAccount) async throws -> Bool {
@@ -15,7 +15,7 @@ final class SessionRequestInteractor {
             /* Redirect */
             let session = getSession(topic: sessionRequest.topic)
             if let uri = session?.peer.redirect?.native {
-                WalletConnectRouter.goBack(uri: uri)
+                ReownRouter.goBack(uri: uri)
                 return false
             } else {
                 return true
@@ -35,7 +35,7 @@ final class SessionRequestInteractor {
         /* Redirect */
         let session = getSession(topic: sessionRequest.topic)
         if let uri = session?.peer.redirect?.native {
-            WalletConnectRouter.goBack(uri: uri)
+            ReownRouter.goBack(uri: uri)
         }
     }
     

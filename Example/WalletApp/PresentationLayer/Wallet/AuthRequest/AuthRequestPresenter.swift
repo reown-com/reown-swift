@@ -2,7 +2,7 @@ import UIKit
 import Combine
 
 import ReownWalletKit
-import WalletConnectRouter
+import ReownRouter
 
 final class AuthRequestPresenter: ObservableObject {
     enum Errors: Error {
@@ -63,7 +63,7 @@ final class AuthRequestPresenter: ObservableObject {
             ActivityIndicatorManager.shared.stop()
             /* Redirect */
             if let uri = request.requester.redirect?.native {
-                WalletConnectRouter.goBack(uri: uri)
+                ReownRouter.goBack(uri: uri)
                 router.dismiss()
             } else {
                 showSignedSheet.toggle()
@@ -87,7 +87,7 @@ final class AuthRequestPresenter: ObservableObject {
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
-                WalletConnectRouter.goBack(uri: uri)
+                ReownRouter.goBack(uri: uri)
                 router.dismiss()
             } else {
                 showSignedSheet.toggle()
@@ -108,7 +108,7 @@ final class AuthRequestPresenter: ObservableObject {
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
-                WalletConnectRouter.goBack(uri: uri)
+                ReownRouter.goBack(uri: uri)
             }
             ActivityIndicatorManager.shared.stop()
 

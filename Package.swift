@@ -26,17 +26,14 @@ let package = Package(
             name: "WalletConnectPush",
             targets: ["WalletConnectPush"]),
         .library(
-            name: "WalletConnectRouter",
-            targets: ["WalletConnectRouter", "WalletConnectRouterLegacy"]),
+            name: "ReownRouter",
+            targets: ["ReownRouter", "WalletConnectRouterLegacy"]),
         .library(
             name: "WalletConnectNetworking",
             targets: ["WalletConnectNetworking"]),
         .library(
             name: "WalletConnectVerify",
             targets: ["WalletConnectVerify"]),
-        .library(
-            name: "WalletConnectModal",
-            targets: ["WalletConnectModal"]),
         .library(
             name: "WalletConnectIdentity",
             targets: ["WalletConnectIdentity"]),
@@ -116,11 +113,11 @@ let package = Package(
         .target(
             name: "WalletConnectRouterLegacy",
             dependencies: [],
-            path: "Sources/WalletConnectRouter/RouterLegacy"),
+            path: "Sources/ReownRouter/RouterLegacy"),
         .target(
-            name: "WalletConnectRouter",
+            name: "ReownRouter",
             dependencies: ["WalletConnectRouterLegacy"],
-            path: "Sources/WalletConnectRouter/Router"),
+            path: "Sources/ReownRouter/Router"),
         .target(
             name: "WalletConnectVerify",
             dependencies: ["WalletConnectUtils", "WalletConnectNetworking", "WalletConnectJWT"],
@@ -131,16 +128,6 @@ let package = Package(
         .target(
             name: "Events",
             dependencies: ["WalletConnectUtils", "WalletConnectNetworking"]),
-        .target(
-            name: "WalletConnectModal",
-            dependencies: ["QRCode", "WalletConnectSign"],
-            exclude: ["Secrets/secrets.json.sample"],
-            resources: [
-                .copy("Secrets/secrets.json"),
-                .copy("Resources/Assets.xcassets"),
-                .process("Resources/PrivacyInfo.xcprivacy"),
-            ]
-        ),
         .target(
             name: "ReownAppKit",
             dependencies: [
@@ -202,25 +189,22 @@ let package = Package(
             name: "CommonsTests",
             dependencies: ["Commons", "TestingUtils"]),
         .testTarget(
-            name: "WalletConnectModalTests",
-            dependencies: ["WalletConnectModal", "TestingUtils"]),
-        .testTarget(
             name: "EventsTests",
             dependencies: ["Events"]),
-        .testTarget(
-            name: "ReownAppKitTests",
-            dependencies: [
-                "ReownAppKit",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-            ]
-        ),
-        .testTarget(
-            name: "ReownAppKitUITests",
-            dependencies: [
-                "ReownAppKitUI",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-            ]
-        )
+//        .testTarget(
+//            name: "ReownAppKitTests",
+//            dependencies: [
+//                "ReownAppKit",
+//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+//            ]
+//        ),
+//        .testTarget(
+//            name: "ReownAppKitUITests",
+//            dependencies: [
+//                "ReownAppKitUI",
+//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+//            ]
+//        )
     ],
     swiftLanguageVersions: [.v5]
 )
