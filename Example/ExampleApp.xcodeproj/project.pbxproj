@@ -1667,7 +1667,6 @@
 				A561C7FE29DF32CE00DF540D /* XCRemoteSwiftPackageReference "HDWallet" */,
 				84943C792A9BA206007EBAC2 /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
 				84AEC2522B4D43CD00E27A5B /* XCRemoteSwiftPackageReference "SwiftMessages" */,
-				84CA52182C889A940069BB33 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			productRefGroup = 764E1D3D26F8D3FC00A1FB15 /* Products */;
 			projectDirPath = "";
@@ -2705,14 +2704,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 9.0.9;
-			};
-		};
-		84CA52182C889A940069BB33 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
-			requirement = {
-				kind = exactVersion;
-				version = 8.36.0;
 			};
 		};
 		A5434021291E6A270068F706 /* XCRemoteSwiftPackageReference "solana-swift" */ = {
