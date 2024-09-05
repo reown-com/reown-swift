@@ -1,7 +1,7 @@
 import Foundation
 
-import Web3Wallet
-import WalletConnectRouter
+import ReownWalletKit
+import ReownRouter
 
 final class SessionProposalInteractor {
     func approve(proposal: Session.Proposal, account: Account) async throws -> Bool {
@@ -40,9 +40,9 @@ final class SessionProposalInteractor {
             AlertPresenter.present(message: error.localizedDescription, type: .error)
             return false
         }
-        _ = try await Web3Wallet.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: proposal.sessionProperties)
+        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: proposal.sessionProperties)
         if let uri = proposal.proposer.redirect?.native {
-            WalletConnectRouter.goBack(uri: uri)
+            ReownRouter.goBack(uri: uri)
             return false
         } else {
             return true
@@ -50,10 +50,10 @@ final class SessionProposalInteractor {
     }
 
     func reject(proposal: Session.Proposal, reason: RejectionReason = .userRejected) async throws {
-        try await Web3Wallet.instance.rejectSession(proposalId: proposal.id, reason: .userRejected)
+        try await WalletKit.instance.rejectSession(proposalId: proposal.id, reason: .userRejected)
         /* Redirect */
         if let uri = proposal.proposer.redirect?.native {
-            WalletConnectRouter.goBack(uri: uri)
+            ReownRouter.goBack(uri: uri)
         }
     }
 }

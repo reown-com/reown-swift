@@ -1,5 +1,5 @@
 import SwiftUI
-import Web3ModalUI
+import ReownAppKitUI
 
 struct SubscriptionView: View {
 

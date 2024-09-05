@@ -15,20 +15,6 @@
     {
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "AuthTests",
-        "name" : "AuthTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "ChatTests",
-        "name" : "ChatTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:",
         "identifier" : "CommonsTests",
         "name" : "CommonsTests"
       }
@@ -80,20 +66,6 @@
         "containerPath" : "container:",
         "identifier" : "WalletConnectUtilsTests",
         "name" : "WalletConnectUtilsTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "Web3WalletTests",
-        "name" : "Web3WalletTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "WalletConnectModalTests",
-        "name" : "WalletConnectModalTests"
       }
     },
     {

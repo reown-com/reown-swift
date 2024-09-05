@@ -1,12 +1,12 @@
 import Foundation
 import XCTest
 import Combine
-@testable import Web3Wallet
+@testable import ReownWalletKit
 @testable import WalletConnectSign
 @testable import WalletConnectPush
 
 final class XPlatformW3WTests: XCTestCase {
-    var w3wClient: Web3WalletClient!
+    var walletKitClient: WalletKitClient!
     var javaScriptAutoTestsAPI: JavaScriptAutoTestsAPI!
     private var publishers = [AnyCancellable]()
 
@@ -62,7 +62,7 @@ final class XPlatformW3WTests: XCTestCase {
             eventsClient: MockEventsClient()
         )
 
-        w3wClient = Web3WalletClientFactory.create(
+        walletKitClient = WalletKitClientFactory.create(
             signClient: signClient,
             pairingClient: pairingClient,
             pushClient: PushClientMock())
@@ -72,16 +72,16 @@ final class XPlatformW3WTests: XCTestCase {
 
         let expectation = expectation(description: "session settled")
 
-        w3wClient.sessionProposalPublisher
+        walletKitClient.sessionProposalPublisher
             .sink { [unowned self] (proposal, _) in
                 Task(priority: .high) {
                     let sessionNamespaces = SessionNamespace.make(toRespond: proposal.requiredNamespaces)
-                    try await w3wClient.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
+                    try await walletKitClient.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
                 }
             }
             .store(in: &publishers)
 
-        w3wClient.sessionSettlePublisher.sink { [unowned self] session in
+        walletKitClient.sessionSettlePublisher.sink { [unowned self] session in
             Task {
                 var jsSession: JavaScriptAutoTestsAPI.Session?
 
@@ -105,7 +105,7 @@ final class XPlatformW3WTests: XCTestCase {
         .store(in: &publishers)
 
         let pairingUri = try await javaScriptAutoTestsAPI.quickConnect()
-        try await w3wClient.pair(uri: pairingUri)
+        try await walletKitClient.pair(uri: pairingUri)
 
         wait(for: [expectation], timeout: InputConfig.defaultTimeout)
     }

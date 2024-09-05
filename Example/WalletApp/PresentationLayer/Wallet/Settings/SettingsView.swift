@@ -1,6 +1,6 @@
 import SwiftUI
 import AsyncButton
-import Web3ModalUI
+import ReownAppKitUI
 
 struct SettingsView: View {
 

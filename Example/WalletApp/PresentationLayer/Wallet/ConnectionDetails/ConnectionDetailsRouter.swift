@@ -1,6 +1,6 @@
 import UIKit
 
-import Web3Wallet
+import ReownWalletKit
 
 final class ConnectionDetailsRouter {
     weak var viewController: UIViewController!
