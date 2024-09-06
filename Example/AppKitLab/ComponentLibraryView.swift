@@ -1,5 +1,5 @@
 import SwiftUI
-import Web3Modal
+import ReownAppKit
 
 
 struct ComponentLibraryView: View {

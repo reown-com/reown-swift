@@ -1,5 +1,5 @@
 import SwiftUI
-import Web3Modal
+import ReownAppKit
 
 struct ContentView: View {
     @State var showUIComponents: Bool = false
@@ -11,8 +11,8 @@ struct ContentView: View {
             VStack {
                 Spacer()
                 
-                Web3ModalButton()
-                
+                AppKitButton()
+
                 Web3ModalNetworkButton()
                 
                 Spacer()
@@ -21,7 +21,7 @@ struct ContentView: View {
                     Task {
                         do {
                             try await requestPersonalSign()
-                            Web3Modal.instance.launchCurrentWallet()
+                            AppKit.instance.launchCurrentWallet()
                         } catch {
                             print("Error occurred: \(error)")
                         }
@@ -53,8 +53,8 @@ struct ContentView: View {
     
     func requestPersonalSign() async throws {
 
-        guard let address = Web3Modal.instance.getAddress() else { return }
-        try await Web3Modal.instance.request(.personal_sign(address: address, message: "Hello there!"))
+        guard let address = AppKit.instance.getAddress() else { return }
+        try await AppKit.instance.request(.personal_sign(address: address, message: "Hello there!"))
 
     }
 }

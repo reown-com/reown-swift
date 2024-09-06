@@ -101,7 +101,7 @@ class AppKitLabApp: App {
             }
         }.store(in: &disposeBag)
 
-        Web3Modal.instance.SIWEAuthenticationPublisher.sink { result in
+        AppKit.instance.SIWEAuthenticationPublisher.sink { result in
             switch result {
             case .success((let message, let signature)):
                 AlertPresenter.present(message: "User authenticated", type: .success)
@@ -116,7 +116,7 @@ class AppKitLabApp: App {
             ContentView()
                 .environmentObject(socketConnectionManager)
                 .onOpenURL { url in
-                    Web3Modal.instance.handleDeeplink(url)
+                    AppKit.instance.handleDeeplink(url)
                 }
                 .alert(
                     "Response",
@@ -129,7 +129,7 @@ class AppKitLabApp: App {
                 } message: {
                     Text(alertMessage)
                 }
-                .onReceive(Web3Modal.instance.sessionResponsePublisher, perform: { response in
+                .onReceive(AppKit.instance.sessionResponsePublisher, perform: { response in
                     switch response.result {
                     case let .response(value):
                         self.alertMessage = "Session response: \(value.stringRepresentation)"
