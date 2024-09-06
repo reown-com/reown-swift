@@ -22,7 +22,6 @@
 		844511AF2C8B695500A6A86C /* WCSocketFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A42C8B695400A6A86C /* WCSocketFactory.swift */; };
 		844511B02C8B695500A6A86C /* DefaultCryptoProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A52C8B695400A6A86C /* DefaultCryptoProvider.swift */; };
 		844511B12C8B695500A6A86C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A62C8B695500A6A86C /* ContentView.swift */; };
-		844511B22C8B695500A6A86C /* Configuration.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 844511A72C8B695500A6A86C /* Configuration.xcconfig */; };
 		844511B32C8B695500A6A86C /* AlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A82C8B695500A6A86C /* AlertPresenter.swift */; };
 		844511B42C8B695500A6A86C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 844511A92C8B695500A6A86C /* Assets.xcassets */; };
 		844511B62C8B69F200A6A86C /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 844511B52C8B69F200A6A86C /* Starscream */; };
@@ -348,9 +347,9 @@
 		844511A42C8B695400A6A86C /* WCSocketFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WCSocketFactory.swift; sourceTree = "<group>"; };
 		844511A52C8B695400A6A86C /* DefaultCryptoProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DefaultCryptoProvider.swift; sourceTree = "<group>"; };
 		844511A62C8B695500A6A86C /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		844511A72C8B695500A6A86C /* Configuration.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		844511A82C8B695500A6A86C /* AlertPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertPresenter.swift; sourceTree = "<group>"; };
 		844511A92C8B695500A6A86C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		844511C82C8BA12200A6A86C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		844749F329B9E5B9005F520B /* RelayIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RelayIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		844749F529B9E5B9005F520B /* RelayClientEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayClientEndToEndTests.swift; sourceTree = "<group>"; };
 		845AA7D929BA1EBA00F33739 /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = IntegrationTests.xctestplan; path = ExampleApp.xcodeproj/IntegrationTests.xctestplan; sourceTree = "<group>"; };
@@ -736,10 +735,10 @@
 		844511902C8B689D00A6A86C /* AppKitLab */ = {
 			isa = PBXGroup;
 			children = (
+				844511C82C8BA12200A6A86C /* Info.plist */,
 				844511A82C8B695500A6A86C /* AlertPresenter.swift */,
 				844511A92C8B695500A6A86C /* Assets.xcassets */,
 				844511A12C8B695400A6A86C /* ComponentLibraryView.swift */,
-				844511A72C8B695500A6A86C /* Configuration.xcconfig */,
 				844511A62C8B695500A6A86C /* ContentView.swift */,
 				844511A52C8B695400A6A86C /* DefaultCryptoProvider.swift */,
 				844511A22C8B695400A6A86C /* Example.entitlements */,
@@ -1794,7 +1793,6 @@
 			files = (
 				844511AB2C8B695500A6A86C /* Preview Assets.xcassets in Resources */,
 				844511B42C8B695500A6A86C /* Assets.xcassets in Resources */,
-				844511B22C8B695500A6A86C /* Configuration.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2322,6 +2320,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AppKitLab/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -2358,6 +2357,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AppKitLab/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
