@@ -16,7 +16,6 @@
 		84310D05298BC980000C15B6 /* MainInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84310D04298BC980000C15B6 /* MainInteractor.swift */; };
 		8439CB89293F658E00F2F2E2 /* PushMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8439CB88293F658E00F2F2E2 /* PushMessage.swift */; };
 		844511922C8B689D00A6A86C /* AppKitLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511912C8B689D00A6A86C /* AppKitLabApp.swift */; };
-		844511AB2C8B695500A6A86C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8445119E2C8B695300A6A86C /* Preview Assets.xcassets */; };
 		844511AC2C8B695500A6A86C /* InputConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A02C8B695300A6A86C /* InputConfig.swift */; };
 		844511AD2C8B695500A6A86C /* ComponentLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A12C8B695400A6A86C /* ComponentLibraryView.swift */; };
 		844511AF2C8B695500A6A86C /* WCSocketFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A42C8B695400A6A86C /* WCSocketFactory.swift */; };
@@ -326,7 +325,6 @@
 		8439CB88293F658E00F2F2E2 /* PushMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushMessage.swift; sourceTree = "<group>"; };
 		8445118F2C8B689D00A6A86C /* AppKitLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppKitLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		844511912C8B689D00A6A86C /* AppKitLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKitLabApp.swift; sourceTree = "<group>"; };
-		8445119E2C8B695300A6A86C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		844511A02C8B695300A6A86C /* InputConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputConfig.swift; sourceTree = "<group>"; };
 		844511A12C8B695400A6A86C /* ComponentLibraryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComponentLibraryView.swift; sourceTree = "<group>"; };
 		844511A22C8B695400A6A86C /* Example.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Example.entitlements; sourceTree = "<group>"; };
@@ -714,20 +712,10 @@
 				844511A52C8B695400A6A86C /* DefaultCryptoProvider.swift */,
 				844511A22C8B695400A6A86C /* Example.entitlements */,
 				844511A02C8B695300A6A86C /* InputConfig.swift */,
-				8445119F2C8B695300A6A86C /* Preview Content */,
 				844511A42C8B695400A6A86C /* WCSocketFactory.swift */,
 				844511912C8B689D00A6A86C /* AppKitLabApp.swift */,
 			);
 			path = AppKitLab;
-			sourceTree = "<group>";
-		};
-		8445119F2C8B695300A6A86C /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				8445119E2C8B695300A6A86C /* Preview Assets.xcassets */,
-			);
-			name = "Preview Content";
-			path = "../../../../web3modal-swift/Sample/Example/Preview Content";
 			sourceTree = "<group>";
 		};
 		844749F429B9E5B9005F520B /* RelayIntegrationTests */ = {
@@ -1731,7 +1719,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				844511AB2C8B695500A6A86C /* Preview Assets.xcassets in Resources */,
 				844511B42C8B695500A6A86C /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
