@@ -15,6 +15,24 @@
 		842144832C818928004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 842144822C818928004FF494 /* ReownWalletKit */; };
 		84310D05298BC980000C15B6 /* MainInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84310D04298BC980000C15B6 /* MainInteractor.swift */; };
 		8439CB89293F658E00F2F2E2 /* PushMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8439CB88293F658E00F2F2E2 /* PushMessage.swift */; };
+		844511922C8B689D00A6A86C /* AppKitLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511912C8B689D00A6A86C /* AppKitLabApp.swift */; };
+		844511AA2C8B695500A6A86C /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8445119D2C8B695300A6A86C /* Info.plist */; };
+		844511AB2C8B695500A6A86C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8445119E2C8B695300A6A86C /* Preview Assets.xcassets */; };
+		844511AC2C8B695500A6A86C /* InputConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A02C8B695300A6A86C /* InputConfig.swift */; };
+		844511AD2C8B695500A6A86C /* ComponentLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A12C8B695400A6A86C /* ComponentLibraryView.swift */; };
+		844511AF2C8B695500A6A86C /* WCSocketFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A42C8B695400A6A86C /* WCSocketFactory.swift */; };
+		844511B02C8B695500A6A86C /* DefaultCryptoProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A52C8B695400A6A86C /* DefaultCryptoProvider.swift */; };
+		844511B12C8B695500A6A86C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A62C8B695500A6A86C /* ContentView.swift */; };
+		844511B22C8B695500A6A86C /* Configuration.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 844511A72C8B695500A6A86C /* Configuration.xcconfig */; };
+		844511B32C8B695500A6A86C /* AlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511A82C8B695500A6A86C /* AlertPresenter.swift */; };
+		844511B42C8B695500A6A86C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 844511A92C8B695500A6A86C /* Assets.xcassets */; };
+		844511B62C8B69F200A6A86C /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 844511B52C8B69F200A6A86C /* Starscream */; };
+		844511BA2C8B6BC800A6A86C /* Atlantis in Frameworks */ = {isa = PBXBuildFile; productRef = 844511B92C8B6BC800A6A86C /* Atlantis */; };
+		844511BC2C8B6BE600A6A86C /* Web3ContractABI in Frameworks */ = {isa = PBXBuildFile; productRef = 844511BB2C8B6BE600A6A86C /* Web3ContractABI */; };
+		844511BE2C8B6BF000A6A86C /* ReownAppKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 844511BD2C8B6BF000A6A86C /* ReownAppKitUI */; };
+		844511C02C8B6BF800A6A86C /* Web3 in Frameworks */ = {isa = PBXBuildFile; productRef = 844511BF2C8B6BF800A6A86C /* Web3 */; };
+		844511C22C8B6C0600A6A86C /* SwiftMessages in Frameworks */ = {isa = PBXBuildFile; productRef = 844511C12C8B6C0600A6A86C /* SwiftMessages */; };
+		844511C42C8B6C0D00A6A86C /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 844511C32C8B6C0D00A6A86C /* ReownAppKit */; };
 		844749F629B9E5B9005F520B /* RelayClientEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844749F529B9E5B9005F520B /* RelayClientEndToEndTests.swift */; };
 		844749FD29B9E6B2005F520B /* WalletConnectNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 844749FC29B9E6B2005F520B /* WalletConnectNetworking */; };
 		844749FE29B9EB1B005F520B /* InputConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A518B31328E33A6500A2CE93 /* InputConfig.swift */; };
@@ -322,6 +340,19 @@
 		767DC83428997F8E00080FA9 /* EthSendTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EthSendTransaction.swift; sourceTree = "<group>"; };
 		84310D04298BC980000C15B6 /* MainInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainInteractor.swift; sourceTree = "<group>"; };
 		8439CB88293F658E00F2F2E2 /* PushMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushMessage.swift; sourceTree = "<group>"; };
+		8445118F2C8B689D00A6A86C /* AppKitLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppKitLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		844511912C8B689D00A6A86C /* AppKitLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKitLabApp.swift; sourceTree = "<group>"; };
+		8445119D2C8B695300A6A86C /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8445119E2C8B695300A6A86C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		844511A02C8B695300A6A86C /* InputConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputConfig.swift; sourceTree = "<group>"; };
+		844511A12C8B695400A6A86C /* ComponentLibraryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComponentLibraryView.swift; sourceTree = "<group>"; };
+		844511A22C8B695400A6A86C /* Example.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Example.entitlements; sourceTree = "<group>"; };
+		844511A42C8B695400A6A86C /* WCSocketFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WCSocketFactory.swift; sourceTree = "<group>"; };
+		844511A52C8B695400A6A86C /* DefaultCryptoProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DefaultCryptoProvider.swift; sourceTree = "<group>"; };
+		844511A62C8B695500A6A86C /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		844511A72C8B695500A6A86C /* Configuration.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
+		844511A82C8B695500A6A86C /* AlertPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertPresenter.swift; sourceTree = "<group>"; };
+		844511A92C8B695500A6A86C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		844749F329B9E5B9005F520B /* RelayIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RelayIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		844749F529B9E5B9005F520B /* RelayClientEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayClientEndToEndTests.swift; sourceTree = "<group>"; };
 		845AA7D929BA1EBA00F33739 /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = IntegrationTests.xctestplan; path = ExampleApp.xcodeproj/IntegrationTests.xctestplan; sourceTree = "<group>"; };
@@ -534,6 +565,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		8445118C2C8B689D00A6A86C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				844511BC2C8B6BE600A6A86C /* Web3ContractABI in Frameworks */,
+				844511C42C8B6C0D00A6A86C /* ReownAppKit in Frameworks */,
+				844511BA2C8B6BC800A6A86C /* Atlantis in Frameworks */,
+				844511B62C8B69F200A6A86C /* Starscream in Frameworks */,
+				844511BE2C8B6BF000A6A86C /* ReownAppKitUI in Frameworks */,
+				844511C22C8B6C0600A6A86C /* SwiftMessages in Frameworks */,
+				844511C02C8B6BF800A6A86C /* Web3 in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		844749F029B9E5B9005F520B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -649,6 +694,7 @@
 				84E6B84829787A8000428BAF /* PNDecryptionService */,
 				844749F429B9E5B9005F520B /* RelayIntegrationTests */,
 				CF1A593129E5873D00AAC16B /* EchoUITests */,
+				844511902C8B689D00A6A86C /* AppKitLab */,
 				764E1D3D26F8D3FC00A1FB15 /* Products */,
 				764E1D5326F8DAC800A1FB15 /* Frameworks */,
 				764E1D5626F8DB6000A1FB15 /* WalletConnectSwiftV2 */,
@@ -666,6 +712,7 @@
 				84E6B84729787A8000428BAF /* PNDecryptionService.appex */,
 				844749F329B9E5B9005F520B /* RelayIntegrationTests.xctest */,
 				CF1A593029E5873D00AAC16B /* EchoUITests.xctest */,
+				8445118F2C8B689D00A6A86C /* AppKitLab.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -686,6 +733,34 @@
 				84AA01DA28CF0CD7005D48D8 /* XCTest.swift */,
 			);
 			path = Helpers;
+			sourceTree = "<group>";
+		};
+		844511902C8B689D00A6A86C /* AppKitLab */ = {
+			isa = PBXGroup;
+			children = (
+				844511A82C8B695500A6A86C /* AlertPresenter.swift */,
+				844511A92C8B695500A6A86C /* Assets.xcassets */,
+				844511A12C8B695400A6A86C /* ComponentLibraryView.swift */,
+				844511A72C8B695500A6A86C /* Configuration.xcconfig */,
+				844511A62C8B695500A6A86C /* ContentView.swift */,
+				844511A52C8B695400A6A86C /* DefaultCryptoProvider.swift */,
+				844511A22C8B695400A6A86C /* Example.entitlements */,
+				8445119D2C8B695300A6A86C /* Info.plist */,
+				844511A02C8B695300A6A86C /* InputConfig.swift */,
+				8445119F2C8B695300A6A86C /* Preview Content */,
+				844511A42C8B695400A6A86C /* WCSocketFactory.swift */,
+				844511912C8B689D00A6A86C /* AppKitLabApp.swift */,
+			);
+			path = AppKitLab;
+			sourceTree = "<group>";
+		};
+		8445119F2C8B695300A6A86C /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				8445119E2C8B695300A6A86C /* Preview Assets.xcassets */,
+			);
+			name = "Preview Content";
+			path = "../../../../web3modal-swift/Sample/Example/Preview Content";
 			sourceTree = "<group>";
 		};
 		844749F429B9E5B9005F520B /* RelayIntegrationTests */ = {
@@ -1423,6 +1498,32 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		8445118E2C8B689D00A6A86C /* AppKitLab */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8445119C2C8B689F00A6A86C /* Build configuration list for PBXNativeTarget "AppKitLab" */;
+			buildPhases = (
+				8445118B2C8B689D00A6A86C /* Sources */,
+				8445118C2C8B689D00A6A86C /* Frameworks */,
+				8445118D2C8B689D00A6A86C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AppKitLab;
+			packageProductDependencies = (
+				844511B52C8B69F200A6A86C /* Starscream */,
+				844511B92C8B6BC800A6A86C /* Atlantis */,
+				844511BB2C8B6BE600A6A86C /* Web3ContractABI */,
+				844511BD2C8B6BF000A6A86C /* ReownAppKitUI */,
+				844511BF2C8B6BF800A6A86C /* Web3 */,
+				844511C12C8B6C0600A6A86C /* SwiftMessages */,
+				844511C32C8B6C0D00A6A86C /* ReownAppKit */,
+			);
+			productName = AppKitLab;
+			productReference = 8445118F2C8B689D00A6A86C /* AppKitLab.app */;
+			productType = "com.apple.product-type.application";
+		};
 		844749F229B9E5B9005F520B /* RelayIntegrationTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 844749FB29B9E5B9005F520B /* Build configuration list for PBXNativeTarget "RelayIntegrationTests" */;
@@ -1621,9 +1722,12 @@
 		764E1D3426F8D3FC00A1FB15 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1430;
+				LastSwiftUpdateCheck = 1540;
 				LastUpgradeCheck = 1250;
 				TargetAttributes = {
+					8445118E2C8B689D00A6A86C = {
+						CreatedOnToolsVersion = 15.4;
+					};
 					844749F229B9E5B9005F520B = {
 						CreatedOnToolsVersion = 14.2;
 					};
@@ -1667,6 +1771,7 @@
 				A561C7FE29DF32CE00DF540D /* XCRemoteSwiftPackageReference "HDWallet" */,
 				84943C792A9BA206007EBAC2 /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
 				84AEC2522B4D43CD00E27A5B /* XCRemoteSwiftPackageReference "SwiftMessages" */,
+				844511B82C8B6BC800A6A86C /* XCRemoteSwiftPackageReference "atlantis" */,
 			);
 			productRefGroup = 764E1D3D26F8D3FC00A1FB15 /* Products */;
 			projectDirPath = "";
@@ -1680,11 +1785,23 @@
 				84E6B84629787A8000428BAF /* PNDecryptionService */,
 				844749F229B9E5B9005F520B /* RelayIntegrationTests */,
 				CF1A592F29E5873D00AAC16B /* EchoUITests */,
+				8445118E2C8B689D00A6A86C /* AppKitLab */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		8445118D2C8B689D00A6A86C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				844511AB2C8B695500A6A86C /* Preview Assets.xcassets in Resources */,
+				844511AA2C8B695500A6A86C /* Info.plist in Resources */,
+				844511B42C8B695500A6A86C /* Assets.xcassets in Resources */,
+				844511B22C8B695500A6A86C /* Configuration.xcconfig in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		844749F129B9E5B9005F520B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1749,6 +1866,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		8445118B2C8B689D00A6A86C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				844511AF2C8B695500A6A86C /* WCSocketFactory.swift in Sources */,
+				844511B12C8B695500A6A86C /* ContentView.swift in Sources */,
+				844511AD2C8B695500A6A86C /* ComponentLibraryView.swift in Sources */,
+				844511AC2C8B695500A6A86C /* InputConfig.swift in Sources */,
+				844511922C8B689D00A6A86C /* AppKitLabApp.swift in Sources */,
+				844511B02C8B695500A6A86C /* DefaultCryptoProvider.swift in Sources */,
+				844511B32C8B695500A6A86C /* AlertPresenter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		844749EF29B9E5B9005F520B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2177,6 +2308,77 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		8445119A2C8B689F00A6A86C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"AppKitLab/Preview Content\"";
+				DEVELOPMENT_TEAM = D64T69ZD22;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = walletconnect.AppKitLab;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8445119B2C8B689F00A6A86C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"AppKitLab/Preview Content\"";
+				DEVELOPMENT_TEAM = D64T69ZD22;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = walletconnect.AppKitLab;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -2615,6 +2817,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		8445119C2C8B689F00A6A86C /* Build configuration list for PBXNativeTarget "AppKitLab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8445119A2C8B689F00A6A86C /* Debug */,
+				8445119B2C8B689F00A6A86C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		844749FB29B9E5B9005F520B /* Build configuration list for PBXNativeTarget "RelayIntegrationTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2690,6 +2901,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		844511B82C8B6BC800A6A86C /* XCRemoteSwiftPackageReference "atlantis" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ProxymanApp/atlantis";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.24.0;
+			};
+		};
 		84943C792A9BA206007EBAC2 /* XCRemoteSwiftPackageReference "mixpanel-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mixpanel/mixpanel-swift";
@@ -2768,6 +2987,39 @@
 		842144822C818928004FF494 /* ReownWalletKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ReownWalletKit;
+		};
+		844511B52C8B69F200A6A86C /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A5D85224286333D500DAF5C3 /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+		844511B92C8B6BC800A6A86C /* Atlantis */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 844511B82C8B6BC800A6A86C /* XCRemoteSwiftPackageReference "atlantis" */;
+			productName = Atlantis;
+		};
+		844511BB2C8B6BE600A6A86C /* Web3ContractABI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A5AE354528A1A2AC0059AE8A /* XCRemoteSwiftPackageReference "Web3" */;
+			productName = Web3ContractABI;
+		};
+		844511BD2C8B6BF000A6A86C /* ReownAppKitUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ReownAppKitUI;
+		};
+		844511BF2C8B6BF800A6A86C /* Web3 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A5AE354528A1A2AC0059AE8A /* XCRemoteSwiftPackageReference "Web3" */;
+			productName = Web3;
+		};
+		844511C12C8B6C0600A6A86C /* SwiftMessages */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84AEC2522B4D43CD00E27A5B /* XCRemoteSwiftPackageReference "SwiftMessages" */;
+			productName = SwiftMessages;
+		};
+		844511C32C8B6C0D00A6A86C /* ReownAppKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ReownAppKit;
 		};
 		844749FC29B9E6B2005F520B /* WalletConnectNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
