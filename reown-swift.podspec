@@ -27,7 +27,6 @@ Pod::Spec.new do |spec|
   spec.subspec 'WalletKit' do |ss|
     ss.source_files = 'Sources/WalletKit/**/*.{h,m,swift}'
     ss.dependency 'WalletConnectSwiftV2/WalletConnectSign'
-    ss.dependency 'WalletConnectSwiftV2/WalletConnectAuth'
     ss.dependency 'WalletConnectSwiftV2/WalletConnectPush'
     ss.dependency 'WalletConnectSwiftV2/WalletConnectVerify'
   end
@@ -40,13 +39,6 @@ Pod::Spec.new do |spec|
     ss.dependency 'WalletConnectSwiftV2/Events'
   end
 
-  spec.subspec 'WalletConnectAuth' do |ss|
-    ss.source_files = 'Sources/Auth/**/*.{h,m,swift}'
-    ss.dependency 'WalletConnectSwiftV2/WalletConnectPairing'
-    ss.dependency 'WalletConnectSwiftV2/WalletConnectSigner'
-    ss.dependency 'WalletConnectSwiftV2/WalletConnectVerify'
-  end
-  
   spec.subspec 'WalletConnectVerify' do |ss|
     ss.source_files = 'Sources/WalletConnectVerify/**/*.{h,m,swift}'
     ss.dependency 'WalletConnectSwiftV2/WalletConnectUtils'
