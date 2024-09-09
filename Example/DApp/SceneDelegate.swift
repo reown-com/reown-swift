@@ -19,11 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
             return
         }
-        do {
-            try Sign.instance.dispatchEnvelope(url.absoluteString)
-        } catch {
-            print(error)
-        }
+        AppKit.instance.handleDeeplink(url)
     }
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
