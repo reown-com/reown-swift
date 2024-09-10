@@ -69,21 +69,26 @@ final class Dispatcher: NSObject, Dispatching {
     }
 
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
+        logger.debug("will try to send a socket frame")
         // Check if the socket is already connected and ready to send
         if socket.isConnected && networkMonitor.isConnected {
+            logger.debug("sending a socket frame")
             send(string, completion: completion)
             return
         }
 
+        logger.debug("Socket is not connected, will try to connect to send a frame")
         // Start the connection process if not already connected
         Task {
             do {
                 // Await the connection handler to establish the connection
                 try await socketConnectionHandler.handleInternalConnect()
 
+                logger.debug("internal connect successful, will try to send a socket frame")
                 // If successful, send the message
                 send(string, completion: completion)
             } catch {
+                logger.debug("failed to handle internal connect")
                 // If an error occurs during connection, complete with that error
                 completion(error)
             }
