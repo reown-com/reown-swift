@@ -20,7 +20,6 @@ final class SessionEngine {
     private let networkingInteractor: NetworkInteracting
     private let historyService: HistoryServiceProtocol
     private let verifyContextStore: CodableStore<VerifyContext>
-    private let verifyClient: VerifyClientProtocol
     private let kms: KeyManagementServiceProtocol
     private var publishers = [AnyCancellable]()
     private let logger: ConsoleLogging
@@ -31,7 +30,6 @@ final class SessionEngine {
         networkingInteractor: NetworkInteracting,
         historyService: HistoryServiceProtocol,
         verifyContextStore: CodableStore<VerifyContext>,
-        verifyClient: VerifyClientProtocol,
         kms: KeyManagementServiceProtocol,
         sessionStore: WCSessionStorage,
         logger: ConsoleLogging,
@@ -41,14 +39,13 @@ final class SessionEngine {
         self.networkingInteractor = networkingInteractor
         self.historyService = historyService
         self.verifyContextStore = verifyContextStore
-        self.verifyClient = verifyClient
         self.kms = kms
         self.sessionStore = sessionStore
         self.logger = logger
         self.sessionRequestsProvider = sessionRequestsProvider
         self.invalidRequestsSanitiser = invalidRequestsSanitiser
 
-        setupConnectionSubscriptions()
+        subscribeActiveSessions()
         setupRequestSubscriptions()
         setupResponseSubscriptions()
         setupUpdateSubscriptions()
@@ -90,17 +87,11 @@ final class SessionEngine {
 // MARK: - Privates
 
 private extension SessionEngine {
-
-    func setupConnectionSubscriptions() {
-        networkingInteractor.socketConnectionStatusPublisher
-            .sink { [unowned self] status in
-                guard status == .connected else { return }
-                let topics = sessionStore.getAll().map{$0.topic}
-                Task(priority: .high) {
-                    try await networkingInteractor.batchSubscribe(topics: topics)
-                }
-            }
-            .store(in: &publishers)
+    func subscribeActiveSessions() {
+        let topics = sessionStore.getAll().map{$0.topic}
+        Task(priority: .background) {
+            try await networkingInteractor.batchSubscribe(topics: topics)
+        }
     }
 
     func setupRequestSubscriptions() {
@@ -214,20 +205,9 @@ private extension SessionEngine {
         guard !request.isExpired() else {
             return respondError(payload: payload, reason: .sessionRequestExpired, protocolMethod: protocolMethod)
         }
-        Task(priority: .high) {
-            let assertionId = payload.decryptedPayload.sha256().toHexString()
-            do {
-                let response = try await verifyClient.verifyOrigin(assertionId: assertionId)
-                let verifyContext = verifyClient.createVerifyContext(origin: response.origin, domain: session.peerParticipant.metadata.url, isScam: response.isScam)
-                verifyContextStore.set(verifyContext, forKey: request.id.string)
-
-                sessionRequestsProvider.emitRequestIfPending()
-            } catch {
-                let verifyContext = verifyClient.createVerifyContext(origin: nil, domain: session.peerParticipant.metadata.url, isScam: nil)
-                verifyContextStore.set(verifyContext, forKey: request.id.string)
-                sessionRequestsProvider.emitRequestIfPending()
-            }
-        }
+        let verifyContext = session.verifyContext ?? VerifyContext(origin: nil, validation: .unknown)
+        verifyContextStore.set(verifyContext, forKey: request.id.string)
+        sessionRequestsProvider.emitRequestIfPending()
     }
 
     func onSessionPing(payload: SubscriptionPayload) {

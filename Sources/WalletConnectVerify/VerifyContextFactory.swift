@@ -1,15 +1,37 @@
-
 import Foundation
 
 class VerifyContextFactory {
-    public func createVerifyContext(origin: String?, domain: String, isScam: Bool?) -> VerifyContext {
+
+    private func ensureUrlHasScheme(_ urlString: String) -> String {
+        if urlString.hasPrefix("http://") || urlString.hasPrefix("https://") {
+            return urlString
+        } else {
+            return "https://" + urlString
+        }
+    }
+
+    public func createVerifyContext(origin: String?, domain: String, isScam: Bool?, isVerified: Bool?) -> VerifyContext {
+
         guard isScam != true else {
             return VerifyContext(
                 origin: origin,
                 validation: .scam
             )
         }
-        if let origin, let originUrl = URL(string: origin), let domainUrl = URL(string: domain) {
+
+        // If isVerified is provided and is false, return unknown
+        if let isVerified = isVerified, !isVerified {
+            return VerifyContext(
+                origin: origin,
+                validation: .unknown
+            )
+        }
+
+        // Ensure both origin and domain have a scheme
+        let originWithScheme = origin.map { ensureUrlHasScheme($0) }
+        let domainWithScheme = ensureUrlHasScheme(domain)
+
+        if let originWithScheme, let originUrl = URL(string: originWithScheme), let domainUrl = URL(string: domainWithScheme) {
             return VerifyContext(
                 origin: origin,
                 validation: (originUrl.host == domainUrl.host) ? .valid : .invalid

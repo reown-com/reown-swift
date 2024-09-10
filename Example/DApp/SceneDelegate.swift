@@ -1,7 +1,6 @@
 import UIKit
 
-import Web3Modal
-import WalletConnectModal
+import ReownAppKit
 import WalletConnectRelay
 import WalletConnectNetworking
 import Combine
@@ -20,11 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
             return
         }
-        do {
-            try Sign.instance.dispatchEnvelope(url.absoluteString)
-        } catch {
-            print(error)
-        }
+        AppKit.instance.handleDeeplink(url)
     }
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
@@ -104,11 +99,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             redirect: try! AppMetadata.Redirect(native: "wcdapp://", universal: "https://lab.web3modal.com/dapp", linkMode: true)
         )
 
-        Web3Modal.configure(
+        AppKit.configure(
             projectId: InputConfig.projectId,
             metadata: metadata,
             crypto: DefaultCryptoProvider(),
-            authRequestParams: .stub(), customWallets: [
+            authRequestParams: .stub(), // set to nil for non SIWE
+            customWallets: [
                 .init(
                     id: "swift-sample",
                     name: "Swift Sample Wallet",
@@ -117,11 +113,29 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     order: 1,
                     mobileLink: "walletapp://",
                     linkMode: "https://lab.web3modal.com/wallet"
-                )
+                ),
+                .init(
+                    id: "rn-sample",
+                    name: "RN Sample Wallet",
+                    homepage: "https://walletconnect.com/",
+                    imageUrl: "https://avatars.githubusercontent.com/u/37784886?s=200&v=4",
+                    order: 1,
+                    mobileLink: "rn-web3wallet://",
+                    linkMode: "https://lab.web3modal.com/rn_walletkit"
+                ),
+                .init(
+                    id: "flutter-sample-internal",
+                    name: "FL Sample Wallet (internal)",
+                    homepage: "https://walletconnect.com/",
+                    imageUrl: "https://avatars.githubusercontent.com/u/37784886?s=200&v=4",
+                    order: 1,
+                    mobileLink: "wcflutterwallet-internal://",
+                    linkMode: "https://dev.lab.web3modal.com/flutter_walletkit_internal"
+                ),
             ]
         )
 
-        Web3Modal.instance.authResponsePublisher.sink { (id, result) in
+        AppKit.instance.authResponsePublisher.sink { (id, result) in
             switch result {
             case .success((_, _)):
                 AlertPresenter.present(message: "User Authenticted with SIWE", type: .success)
@@ -129,11 +143,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 break
             }
         }.store(in: &publishers)
-
-        WalletConnectModal.configure(
-            projectId: InputConfig.projectId,
-            metadata: metadata
-        )
 
         Sign.instance.logger.setLogging(level: .debug)
         Networking.instance.setLogging(level: .debug)
@@ -155,6 +164,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
         }.store(in: &publishers)
 
-        Web3Modal.instance.disableAnalytics()
+        AppKit.instance.disableAnalytics()
     }
 }

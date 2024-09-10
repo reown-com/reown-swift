@@ -52,16 +52,16 @@ final class RelayClientEndToEndTests: XCTestCase {
             socketAuthenticator: socketAuthenticator
         )
 
-        let socketUrlFallbackHandler = SocketUrlFallbackHandler(relayUrlFactory: relayUrlFactory, logger: logger, socket: socket, networkMonitor: networkMonitor)
-
-        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, logger: logger, socketUrlFallbackHandler: socketUrlFallbackHandler)
+        let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
+        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(), logger: logger, socketStatusProvider: socketStatusProvider)
         let dispatcher = Dispatcher(
             socketFactory: webSocketFactory,
             relayUrlFactory: urlFactory,
             networkMonitor: networkMonitor,
             socket: socket,
             logger: logger,
-            socketConnectionHandler: socketConnectionHandler
+            socketConnectionHandler: socketConnectionHandler,
+            socketStatusProvider: socketStatusProvider
         )
         let keychain = KeychainStorageMock()
         let relayClient = RelayClientFactory.create(
@@ -117,12 +117,12 @@ final class RelayClientEndToEndTests: XCTestCase {
         expectationA.assertForOverFulfill = false
         expectationB.assertForOverFulfill = false
 
-        relayA.messagePublisher.sink { topic, payload, _ in
+        relayA.messagePublisher.sink { topic, payload, _, _ in
             (subscriptionATopic, subscriptionAPayload) = (topic, payload)
             expectationA.fulfill()
         }.store(in: &publishers)
 
-        relayB.messagePublisher.sink { topic, payload, _ in
+        relayB.messagePublisher.sink { topic, payload, _, _ in
             (subscriptionBTopic, subscriptionBPayload) = (topic, payload)
             Task(priority: .high) {
                 sleep(1)

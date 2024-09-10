@@ -1,5 +1,5 @@
 import UserNotifications
-import Web3Wallet
+import ReownWalletKit
 import WalletConnectNotify
 import Intents
 import Mixpanel
@@ -20,8 +20,8 @@ class NotificationService: UNNotificationServiceExtension {
            let ciphertext = content.userInfo["message"] as? String,
            let tag = content.userInfo["tag"] as? UInt {
 
-            if Web3WalletDecryptionService.canHandle(tag: tag) {
-                let mutableContent = handleWeb3WalletNotification(content: content, topic: topic, tag: tag, ciphertext: ciphertext)
+            if WalletKitDecryptionService.canHandle(tag: tag) {
+                let mutableContent = handleWalletKitNotification(content: content, topic: topic, tag: tag, ciphertext: ciphertext)
                 contentHandler(mutableContent)
             } else if NotifyDecryptionService.canHandle(tag: tag) {
                 let mutableContent = handleNotifyNotification(content: content, topic: topic, ciphertext: ciphertext)
@@ -33,16 +33,16 @@ class NotificationService: UNNotificationServiceExtension {
         }
     }
 
-    private func handleWeb3WalletNotification(content: UNNotificationContent, topic: String, tag: UInt, ciphertext: String) -> UNMutableNotificationContent {
+    private func handleWalletKitNotification(content: UNNotificationContent, topic: String, tag: UInt, ciphertext: String) -> UNMutableNotificationContent {
 
         do {
-            let web3WalletDecryptionService = try Web3WalletDecryptionService(groupIdentifier: "group.com.walletconnect.sdk")
+            let WalletKitDecryptionService = try WalletKitDecryptionService(groupIdentifier: "group.com.walletconnect.sdk")
 
-            let decryptedPayload = try web3WalletDecryptionService.decryptMessage(topic: topic, ciphertext: ciphertext, tag: tag)
+            let decryptedPayload = try WalletKitDecryptionService.decryptMessage(topic: topic, ciphertext: ciphertext, tag: tag)
 
             let mutableContent = content.mutableCopy() as! UNMutableNotificationContent
 
-            guard let metadata = web3WalletDecryptionService.getMetadata(topic: topic) else {
+            guard let metadata = WalletKitDecryptionService.getMetadata(topic: topic) else {
                 mutableContent.title = "Error: Cannot get peer's metadata"
                 return mutableContent
             }

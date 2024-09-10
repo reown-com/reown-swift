@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 
-import Web3Wallet
+import ReownWalletKit
 
 final class WalletPresenter: ObservableObject {
     enum Errors: Error {
@@ -150,7 +150,7 @@ extension WalletPresenter {
     }
 
     private func setUpPairingIndicatorRemoval() {
-        Web3Wallet.instance.pairingStatePublisher
+        WalletKit.instance.pairingStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isPairing in
             self?.showPairingLoading = isPairing

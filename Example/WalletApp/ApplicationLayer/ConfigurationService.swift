@@ -1,7 +1,7 @@
 import UIKit
 import WalletConnectNetworking
 import WalletConnectNotify
-import Web3Wallet
+import ReownWalletKit
 import Combine
 
 final class ConfigurationService {
@@ -24,7 +24,7 @@ final class ConfigurationService {
             redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
         )
 
-        Web3Wallet.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment)
 
         Notify.configure(
             environment: BuildConfiguration.shared.apnsEnvironment,
@@ -33,6 +33,7 @@ final class ConfigurationService {
 
         Notify.instance.setLogging(level: .debug)
         Sign.instance.setLogging(level: .debug)
+        Events.instance.setLogging(level: .debug)
 
         if let clientId = try? Networking.interactor.getClientId() {
             LoggingService.instance.setUpUser(account: importAccount.account.absoluteString, clientId: clientId)
@@ -42,7 +43,7 @@ final class ConfigurationService {
         }
         LoggingService.instance.startLogging()
 
-        Web3Wallet.instance.socketConnectionStatusPublisher
+        WalletKit.instance.socketConnectionStatusPublisher
             .receive(on: DispatchQueue.main)
             .sink { status in
             switch status {
@@ -53,7 +54,7 @@ final class ConfigurationService {
             }
         }.store(in: &publishers)
 
-        Web3Wallet.instance.logsPublisher
+        WalletKit.instance.logsPublisher
             .receive(on: DispatchQueue.main)
             .sink { log in
             switch log {
@@ -63,18 +64,17 @@ final class ConfigurationService {
             }
         }.store(in: &publishers)
 
-        Web3Wallet.instance.pairingExpirationPublisher
+        WalletKit.instance.pairingExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { pairing in
-            guard !pairing.active else { return }
             AlertPresenter.present(message: "Pairing has expired", type: .warning)
         }.store(in: &publishers)
 
-        Web3Wallet.instance.sessionProposalExpirationPublisher.sink { _ in
+        WalletKit.instance.sessionProposalExpirationPublisher.sink { _ in
             AlertPresenter.present(message: "Session Proposal has expired", type: .warning)
         }.store(in: &publishers)
 
-        Web3Wallet.instance.requestExpirationPublisher.sink { _ in
+        WalletKit.instance.requestExpirationPublisher.sink { _ in
             AlertPresenter.present(message: "Session Request has expired", type: .warning)
         }.store(in: &publishers)
 

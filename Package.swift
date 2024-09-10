@@ -14,11 +14,8 @@ let package = Package(
             name: "WalletConnect",
             targets: ["WalletConnectSign"]),
         .library(
-            name: "WalletConnectAuth",
-            targets: ["Auth"]),
-        .library(
-            name: "Web3Wallet",
-            targets: ["Web3Wallet"]),
+            name: "ReownWalletKit",
+            targets: ["ReownWalletKit"]),
         .library(
             name: "WalletConnectPairing",
             targets: ["WalletConnectPairing"]),
@@ -29,8 +26,8 @@ let package = Package(
             name: "WalletConnectPush",
             targets: ["WalletConnectPush"]),
         .library(
-            name: "WalletConnectRouter",
-            targets: ["WalletConnectRouter", "WalletConnectRouterLegacy"]),
+            name: "ReownRouter",
+            targets: ["ReownRouter", "WalletConnectRouterLegacy"]),
         .library(
             name: "WalletConnectNetworking",
             targets: ["WalletConnectNetworking"]),
@@ -38,30 +35,32 @@ let package = Package(
             name: "WalletConnectVerify",
             targets: ["WalletConnectVerify"]),
         .library(
-            name: "WalletConnectModal",
-            targets: ["WalletConnectModal"]),
-        .library(
             name: "WalletConnectIdentity",
             targets: ["WalletConnectIdentity"]),
+        .library(
+            name: "ReownAppKit",
+            targets: ["ReownAppKit"]),
+        .library(
+            name: "ReownAppKitUI",
+            targets: ["ReownAppKitUI"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
-        .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1")
+        .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
+        .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")
+        ),
     ],
     targets: [
         .target(
             name: "WalletConnectSign",
-            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner"],
+            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events"],
             path: "Sources/WalletConnectSign",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
-            name: "Auth",
-            dependencies: ["WalletConnectPairing", "WalletConnectSigner", "WalletConnectVerify"],
-            path: "Sources/Auth"),
-        .target(
-            name: "Web3Wallet",
+            name: "ReownWalletKit",
             dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
-            path: "Sources/Web3Wallet",
+            path: "Sources/ReownWalletKit",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectNotify",
@@ -84,7 +83,7 @@ let package = Package(
             path: "Sources/WalletConnectKMS"),
         .target(
             name: "WalletConnectPairing",
-            dependencies: ["WalletConnectNetworking"],
+            dependencies: ["WalletConnectNetworking", "Events"],
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectSigner",
@@ -114,27 +113,49 @@ let package = Package(
         .target(
             name: "WalletConnectRouterLegacy",
             dependencies: [],
-            path: "Sources/WalletConnectRouter/RouterLegacy"),
+            path: "Sources/ReownRouter/RouterLegacy"),
         .target(
-            name: "WalletConnectRouter",
+            name: "ReownRouter",
             dependencies: ["WalletConnectRouterLegacy"],
-            path: "Sources/WalletConnectRouter/Router"),
+            path: "Sources/ReownRouter/Router"),
         .target(
             name: "WalletConnectVerify",
-            dependencies: ["WalletConnectUtils", "WalletConnectNetworking"],
+            dependencies: ["WalletConnectUtils", "WalletConnectNetworking", "WalletConnectJWT"],
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "Database",
             dependencies: ["WalletConnectUtils"]),
         .target(
-            name: "WalletConnectModal",
-            dependencies: ["QRCode", "WalletConnectSign"],
-            exclude: ["Secrets/secrets.json.sample"],
+            name: "Events",
+            dependencies: ["WalletConnectUtils", "WalletConnectNetworking"]),
+        .target(
+            name: "ReownAppKit",
+            dependencies: [
+                "QRCode",
+                "WalletConnectSign",
+                "ReownAppKitUI",
+                "ReownAppKitBackport",
+                "CoinbaseWalletSDK"
+            ],
+            path: "Sources/ReownAppKit",
             resources: [
-                .copy("Secrets/secrets.json"),
-                .copy("Resources/Assets.xcassets"),
-                .process("Resources/PrivacyInfo.xcprivacy"),
+                .process("Resources/Assets.xcassets"),
+                .copy("PackageConfig.json")
             ]
+        ),
+        .target(
+            name: "ReownAppKitUI",
+            dependencies: [
+                "ReownAppKitBackport"
+            ],
+            path: "Sources/ReownAppKitUI",
+            resources: [
+                .process("Resources/Assets.xcassets")
+            ]
+        ),
+        .target(
+            name: "ReownAppKitBackport",
+            path: "Sources/ReownAppKitBackport"
         ),
         .testTarget(
             name: "WalletConnectSignTests",
@@ -168,8 +189,23 @@ let package = Package(
             name: "CommonsTests",
             dependencies: ["Commons", "TestingUtils"]),
         .testTarget(
-            name: "WalletConnectModalTests",
-            dependencies: ["WalletConnectModal", "TestingUtils"])
+            name: "EventsTests",
+            dependencies: ["Events"]),
+//        .testTarget(
+//            name: "ReownAppKitTests",
+//            dependencies: [
+//                "ReownAppKit",
+//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+//            ]
+//        ),
+//        .testTarget(
+//            name: "ReownAppKitUITests",
+//            dependencies: [
+//                "ReownAppKitUI",
+//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+//            ]
+//        )
     ],
     swiftLanguageVersions: [.v5]
 )
+

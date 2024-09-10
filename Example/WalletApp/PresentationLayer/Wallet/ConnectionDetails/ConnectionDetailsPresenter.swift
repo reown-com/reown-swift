@@ -1,10 +1,9 @@
 import UIKit
 import Combine
 
-import Web3Wallet
+import ReownWalletKit
 
 final class ConnectionDetailsPresenter: ObservableObject {
-    private let interactor: ConnectionDetailsInteractor
     private let router: ConnectionDetailsRouter
     
     let session: Session
@@ -12,11 +11,9 @@ final class ConnectionDetailsPresenter: ObservableObject {
     private var disposeBag = Set<AnyCancellable>()
 
     init(
-        interactor: ConnectionDetailsInteractor,
         router: ConnectionDetailsRouter,
         session: Session
     ) {
-        self.interactor = interactor
         self.router = router
         self.session = session
     }
@@ -25,7 +22,7 @@ final class ConnectionDetailsPresenter: ObservableObject {
         Task {
             do {
                 ActivityIndicatorManager.shared.start()
-                try await interactor.disconnectSession(session: session)
+                try await WalletKit.instance.disconnect(topic: session.topic)
                 ActivityIndicatorManager.shared.stop()
                 DispatchQueue.main.async {
                     self.router.dismiss()
@@ -36,9 +33,25 @@ final class ConnectionDetailsPresenter: ObservableObject {
             }
         }
     }
-    
+
+
     func accountReferences(namespace: String) -> [String] {
         session.namespaces[namespace]?.accounts.map { "\($0.namespace):\(($0.reference))" } ?? []
+    }
+
+    func changeForMainnet() {
+        Task {
+            do {
+                ActivityIndicatorManager.shared.start()
+
+                try await WalletKit.instance.emit(topic: session.topic, event: Session.Event(name: "chainChanged", data: AnyCodable("1")), chainId: Blockchain("eip155:1")!)
+
+                ActivityIndicatorManager.shared.stop()
+            } catch {
+                ActivityIndicatorManager.shared.stop()
+                print(error)
+            }
+        }
     }
 }
 

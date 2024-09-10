@@ -1,8 +1,8 @@
 import UIKit
 import Combine
 
-import Web3Wallet
-import WalletConnectRouter
+import ReownWalletKit
+import ReownRouter
 
 final class AuthRequestPresenter: ObservableObject {
     enum Errors: Error {
@@ -23,7 +23,7 @@ final class AuthRequestPresenter: ObservableObject {
             guard let chainAccount = Account(blockchain: chain, address: account.address) else {
                 return nil
             }
-            guard let formattedMessage = try? Web3Wallet.instance.formatAuthMessage(payload: request.payload, account: chainAccount) else {
+            guard let formattedMessage = try? WalletKit.instance.formatAuthMessage(payload: request.payload, account: chainAccount) else {
                 return nil
             }
             let messagePrefix = "Message \(index + 1):"
@@ -59,11 +59,11 @@ final class AuthRequestPresenter: ObservableObject {
 
             let auths = try buildAuthObjects()
 
-            _ = try await Web3Wallet.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
+            _ = try await WalletKit.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
             ActivityIndicatorManager.shared.stop()
             /* Redirect */
             if let uri = request.requester.redirect?.native {
-                WalletConnectRouter.goBack(uri: uri)
+                ReownRouter.goBack(uri: uri)
                 router.dismiss()
             } else {
                 showSignedSheet.toggle()
@@ -82,12 +82,12 @@ final class AuthRequestPresenter: ObservableObject {
 
             let auths = try buildOneAuthObject()
 
-            _ = try await Web3Wallet.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
+            _ = try await WalletKit.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
             ActivityIndicatorManager.shared.stop()
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
-//                WalletConnectRouter.goBack(uri: uri)
+                ReownRouter.goBack(uri: uri)
                 router.dismiss()
             } else {
                 showSignedSheet.toggle()
@@ -104,11 +104,11 @@ final class AuthRequestPresenter: ObservableObject {
         ActivityIndicatorManager.shared.start()
 
         do {
-            try await Web3Wallet.instance.rejectSession(requestId: request.id)
+            try await WalletKit.instance.rejectSession(requestId: request.id)
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
-                WalletConnectRouter.goBack(uri: uri)
+                ReownRouter.goBack(uri: uri)
             }
             ActivityIndicatorManager.shared.stop()
 
@@ -127,13 +127,13 @@ final class AuthRequestPresenter: ObservableObject {
     private func createAuthObjectForChain(chain: Blockchain) throws -> AuthObject {
         let account = Account(blockchain: chain, address: importAccount.account.address)!
 
-        let supportedAuthPayload = try Web3Wallet.instance.buildAuthPayload(payload: request.payload, supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!, Blockchain("eip155:69")!], supportedMethods: ["personal_sign", "eth_sendTransaction"])
+        let supportedAuthPayload = try WalletKit.instance.buildAuthPayload(payload: request.payload, supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!, Blockchain("eip155:69")!], supportedMethods: ["personal_sign", "eth_sendTransaction"])
 
-        let SIWEmessages = try Web3Wallet.instance.formatAuthMessage(payload: supportedAuthPayload, account: account)
+        let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: supportedAuthPayload, account: account)
 
         let signature = try messageSigner.sign(message: SIWEmessages, privateKey: Data(hex: importAccount.privateKey), type: .eip191)
 
-        let auth = try Web3Wallet.instance.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: account)
+        let auth = try WalletKit.instance.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: account)
 
         return auth
     }
@@ -172,7 +172,7 @@ final class AuthRequestPresenter: ObservableObject {
 // MARK: - Private functions
 private extension AuthRequestPresenter {
     func setupInitialState() {
-        Web3Wallet.instance.requestExpirationPublisher
+        WalletKit.instance.requestExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] requestId in
                 guard let self = self else { return }

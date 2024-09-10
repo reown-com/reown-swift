@@ -1,8 +1,7 @@
 import UIKit
 import Combine
 
-import Web3Modal
-import WalletConnectModal
+import ReownAppKit
 import WalletConnectSign
 
 final class SignPresenter: ObservableObject {
@@ -45,22 +44,14 @@ final class SignPresenter: ObservableObject {
     
     func connectWalletWithW3M() {
         Task {
-            Web3Modal.set(sessionParams: .init(
+            AppKit.set(sessionParams: .init(
                 requiredNamespaces: Proposal.requiredNamespaces,
                 optionalNamespaces: Proposal.optionalNamespaces
             ))
         }
-        Web3Modal.present(from: nil)
+        AppKit.present(from: nil)
     }
 
-    func connectWalletWithWCM() {
-        WalletConnectModal.set(sessionParams: .init(
-            requiredNamespaces: Proposal.requiredNamespaces,
-            optionalNamespaces: Proposal.optionalNamespaces
-        ))
-        WalletConnectModal.present(from: nil)
-    }
-    
     @MainActor
     func connectWalletWithSessionPropose() {
         Task {
@@ -210,7 +201,7 @@ extension SignPresenter {
             }
             .store(in: &subscriptions)
 
-        Web3Modal.instance.SIWEAuthenticationPublisher
+        AppKit.instance.SIWEAuthenticationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] result in
                 switch result {

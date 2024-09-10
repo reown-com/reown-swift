@@ -14,7 +14,7 @@ public enum EnvironmentInfo {
     }
 
     public static var sdkName: String {
-        "swift-v\(packageVersion)"
+        "reown-swift-v\(packageVersion)"
     }
 
     public static var packageVersion: String {

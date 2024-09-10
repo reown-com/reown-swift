@@ -1,26 +1,16 @@
 import Foundation
 
 class ManualSocketConnectionHandler: SocketConnectionHandler {
-
     private let socket: WebSocketConnecting
     private let logger: ConsoleLogging
-    private let defaultTimeout: Int = 5
-    private var socketUrlFallbackHandler: SocketUrlFallbackHandler
+    private let defaultTimeout: Int = 60
     private let concurrentQueue = DispatchQueue(label: "com.walletconnect.sdk.manual_socket_connection", attributes: .concurrent)
 
     init(
         socket: WebSocketConnecting,
-        logger: ConsoleLogging,
-        socketUrlFallbackHandler: SocketUrlFallbackHandler) {
+        logger: ConsoleLogging) {
             self.socket = socket
             self.logger = logger
-            self.socketUrlFallbackHandler = socketUrlFallbackHandler
-
-            socketUrlFallbackHandler.onTryReconnect = { [unowned self] in
-                Task(priority: .high) {
-                    await tryReconect()
-                }
-            }
         }
 
     func handleConnect() throws {
@@ -34,8 +24,8 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
                 return
             }
             if !self.socket.isConnected {
-                self.logger.debug("Connection timed out, initiating fallback...")
-                self.socketUrlFallbackHandler.handleFallbackIfNeeded(error: .connectionFailed)
+                self.logger.debug("Connection timed out, will rety to connect...")
+                retryToConnect()
             }
             timer.cancel()
         }
@@ -46,12 +36,17 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
         socket.disconnect()
     }
 
+    func handleInternalConnect() {
+        // No operation
+    }
+
+
     func handleDisconnection() async {
         // No operation
         // ManualSocketConnectionHandler does not support reconnection logic
     }
 
-    func tryReconect() async {
+    private func retryToConnect() {
         if !socket.isConnected {
             socket.connect()
         }

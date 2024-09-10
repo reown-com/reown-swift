@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 
-import Web3Wallet
+import ReownWalletKit
 
 final class SessionProposalPresenter: ObservableObject {
     private let interactor: SessionProposalInteractor
@@ -73,7 +73,7 @@ final class SessionProposalPresenter: ObservableObject {
 // MARK: - Private functions
 private extension SessionProposalPresenter {
     func setupInitialState() {
-        Web3Wallet.instance.sessionProposalExpirationPublisher
+        WalletKit.instance.sessionProposalExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] proposal in
             guard let self = self else { return }
@@ -82,7 +82,7 @@ private extension SessionProposalPresenter {
             }
         }.store(in: &disposeBag)
 
-        Web3Wallet.instance.pairingExpirationPublisher
+        WalletKit.instance.pairingExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink {[weak self]  pairing in
                 if self?.sessionProposal.pairingTopic == pairing.topic {

@@ -17,23 +17,46 @@ class VerifyContextFactoryTests: XCTestCase {
     }
 
     func testScamValidation() {
-        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://example.com", isScam: true)
+        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://example.com", isScam: true, isVerified: nil)
         XCTAssertEqual(context.validation, .scam)
     }
 
     func testValidOriginAndDomain() {
-        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://example.com", isScam: false)
+        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://example.com", isScam: false, isVerified: nil)
         XCTAssertEqual(context.validation, .valid)
     }
 
     func testInvalidOriginAndDomain() {
-        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://different.com", isScam: false)
+        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://different.com", isScam: false, isVerified: nil)
         XCTAssertEqual(context.validation, .invalid)
     }
 
     func testUnknownValidation() {
-        let context = factory.createVerifyContext(origin: nil, domain: "http://example.com", isScam: false)
+        let context = factory.createVerifyContext(origin: nil, domain: "http://example.com", isScam: false, isVerified: nil)
         XCTAssertEqual(context.validation, .unknown)
+    }
+
+    func testVerifyContextIsMarkedAsUnknownWhenIsVerifiedIsFalse() {
+        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://example.com", isScam: false, isVerified: false)
+        XCTAssertEqual(context.validation, .unknown)
+    }
+
+    func testVerifyContextIsMarkedAsScamWhenIsScamIsTrueRegardlessOfIsVerified() {
+        let context = factory.createVerifyContext(origin: "http://example.com", domain: "http://example.com", isScam: true, isVerified: true)
+        XCTAssertEqual(context.validation, .scam)
+
+        let contextWithFalseVerification = factory.createVerifyContext(origin: "http://example.com", domain: "http://example.com", isScam: true, isVerified: false)
+        XCTAssertEqual(contextWithFalseVerification.validation, .scam)
+    }
+
+    func testValidOriginAndDomainWithoutScheme() {
+        let context = factory.createVerifyContext(origin: "https://dev.lab.web3modal.com", domain: "dev.lab.web3modal.com", isScam: false, isVerified: nil)
+        XCTAssertEqual(context.validation, .valid)
+    }
+
+    func testInvalidOriginAndDomainWithoutScheme() {
+        let context = factory.createVerifyContext(origin: "https://dev.lab.web3modal.com", domain: "different.com", isScam: false, isVerified: nil)
+        XCTAssertEqual(context.validation, .invalid)
     }
 
     // tests for createVerifyContextForLinkMode
