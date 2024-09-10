@@ -3,6 +3,19 @@ import Commons
 import WalletConnectSign
 import WalletConnectAccount
 
+struct SendCallsParams: Codable {
+    let version: String
+    let from: String
+    let calls: [Call]
+
+    struct Call: Codable {
+        let to: String?
+        let value: String?
+        let data: String?
+        let chainId: String?
+    }
+}
+
 final class Signer {
     enum Errors: Error {
         case notImplemented
@@ -17,7 +30,6 @@ final class Signer {
             return try signWithEOA(request: request, importAccount: importAccount)
         }
     }
-
 
     private static func didRequestSmartAccount(_ request: Request) async throws -> Bool {
         // Attempt to decode params for transaction requests encapsulated in an array of dictionaries
@@ -38,10 +50,19 @@ final class Signer {
                     return account.lowercased() == smartAccountAddress.lowercased()
                 }
             }
+            // Handle the `wallet_sendCalls` method
+            if request.method == "wallet_sendCalls" {
+                if let sendCallsParams = paramsArray.first?.value as? [String: Any],
+                   let account = sendCallsParams["from"] as? String {
+                    let smartAccountAddress = try await SmartAccount.instance.getAddress()
+                    return account.lowercased() == smartAccountAddress.lowercased()
+                }
+            }
         }
 
         return false
     }
+
     private static func signWithEOA(request: Request, importAccount: ImportAccount) throws -> AnyCodable {
         let signer = ETHSigner(importAccount: importAccount)
 
@@ -65,31 +86,44 @@ final class Signer {
 
 
     private static func signWithSmartAccount(request: Request) async throws -> AnyCodable {
-            switch request.method {
-            case "personal_sign":
-                let params = try request.params.get([String].self)
-                let message = params[0]
-                return AnyCodable(SmartAccount.instance.signMessage(message))
+        switch request.method {
+        case "personal_sign":
+            let params = try request.params.get([String].self)
+            let message = params[0]
+            return AnyCodable(SmartAccount.instance.signMessage(message))
 
-            case "eth_signTypedData":
-                let params = try request.params.get([String].self)
-                let message = params[0]
-                return AnyCodable(SmartAccount.instance.signMessage(message))
+        case "eth_signTypedData":
+            let params = try request.params.get([String].self)
+            let message = params[0]
+            return AnyCodable(SmartAccount.instance.signMessage(message))
 
-            case "eth_sendTransaction":
-                let params = try request.params.get([WalletConnectAccount.Transaction].self)
-                let transaction = params[0]
-                let result = try await SmartAccount.instance.sendTransaction(transaction)
-                return AnyCodable(result)
+        case "eth_sendTransaction":
+            let params = try request.params.get([WalletConnectAccount.Transaction].self)
+            let transaction = params[0]
+            let result = try await SmartAccount.instance.sendTransaction(transaction)
+            return AnyCodable(result)
 
-                //        case "wallet_sendCalls":
-                //            let transactions =
-                //            return SmartAccount.instance.sendBatchTransaction(<#T##batch: [Transaction]##[Transaction]#>)
-
-            default:
-                throw Signer.Errors.notImplemented
+            // sendCalls should handle the whole batch
+        case "wallet_sendCalls":
+            let params = try request.params.get([SendCallsParams].self)
+            guard let firstCall = params.first?.calls.first else {
+                fatalError()
             }
+
+            let transaction = WalletConnectAccount.Transaction(
+                to: firstCall.to,
+                value: firstCall.value,
+                data: firstCall.data,
+                chainId: firstCall.chainId
+            )
+
+            let result = try await SmartAccount.instance.sendTransaction(transaction)
+            return AnyCodable(result)
+
+        default:
+            throw Signer.Errors.notImplemented
         }
+    }
 }
 
 extension Signer.Errors: LocalizedError {
