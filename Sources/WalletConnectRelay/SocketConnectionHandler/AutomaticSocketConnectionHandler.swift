@@ -163,6 +163,8 @@ class AutomaticSocketConnectionHandler {
         if !socket.isConnected && subscriptionsTracker.isSubscribed() {
             logger.debug("Socket is not connected, but there are active subscriptions. Reconnecting...")
             connect()
+        } else {
+            logger.debug("Will not attempt to reconnect")
         }
     }
 
@@ -252,10 +254,10 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
 
     func handleDisconnection() async {
         logger.debug("Handling disconnection.")
-        guard await appStateObserver.currentState == .foreground else {
-            logger.debug("App is not in foreground. No reconnection will be attempted.")
-            return
-        }
+//        guard await appStateObserver.currentState == .foreground else {
+//            logger.debug("App is not in foreground. No reconnection will be attempted.")
+//            return
+//        }
         reconnectIfNeeded()
     }
 }
