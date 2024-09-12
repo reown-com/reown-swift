@@ -16,7 +16,15 @@ struct InputConfig {
     static var mixpanelToken: String? {
         return config(for: "MIXPANEL_TOKEN")
     }
-    
+
+    static var pimlicoBundlerUrl: String? {
+        return config(for: "PIMLICO_BUNDLER_URL")
+    }
+
+    static var rpcUrl: String? {
+        return config(for: "RPC_URL")
+    }
+
     private static func config(for key: String) -> String? {
         return Bundle.main.object(forInfoDictionaryKey: key) as? String
     }

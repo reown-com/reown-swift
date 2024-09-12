@@ -173,7 +173,7 @@ final class ApproveEngine {
             sessionStore.setSession(session)
 
             Task {
-                removePairing(pairingTopic: pairingTopic)
+                networkingInteractor.unsubscribe(topic: pairingTopic)
             }
             onSessionSettle?(session.publicRepresentation())
             eventsClient.saveTraceEvent(SessionApproveExecutionTraceEvents.sessionSettleSuccess)
@@ -202,7 +202,7 @@ final class ApproveEngine {
 
         if let pairingTopic = rpcHistory.get(recordId: payload.id)?.topic {
             Task {
-                removePairing(pairingTopic: pairingTopic)
+                networkingInteractor.unsubscribe(topic: pairingTopic)
             }
         }
 

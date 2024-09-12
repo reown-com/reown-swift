@@ -30,8 +30,12 @@
 	<array>
 		<string>INSendMessageIntent</string>
 	</array>
+	<key>PIMLICO_BUNDLER_URL</key>
+	<string>$(PIMLICO_BUNDLER_URL)</string>
 	<key>PROJECT_ID</key>
 	<string>$(PROJECT_ID)</string>
+	<key>RPC_URL</key>
+	<string>$(RPC_URL)</string>
 	<key>SIMULATOR_IDENTIFIER</key>
 	<string>$(SIMULATOR_IDENTIFIER)</string>
 	<key>UIApplicationSceneManifest</key>

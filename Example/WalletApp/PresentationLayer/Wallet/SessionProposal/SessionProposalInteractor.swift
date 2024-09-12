@@ -11,9 +11,11 @@ final class SessionProposalInteractor {
         
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedChains = supportedRequiredChains + supportedOptionalChains 
+        var supportedChains = supportedRequiredChains + supportedOptionalChains
 
-        var supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: EOAAccount.address)! }
+        let smartAccountAddress = try await SmartAccount.instance.getClient().getAddress()
+
+        var supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: smartAccountAddress)! }
 
         supportedAccounts.append(smartAccount)
 
@@ -42,7 +44,10 @@ final class SessionProposalInteractor {
             AlertPresenter.present(message: error.localizedDescription, type: .error)
             return false
         }
-        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: proposal.sessionProperties)
+
+
+        let sessionProperties = getSessionProperties(address: smartAccountAddress)
+        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
             return false
@@ -58,4 +63,27 @@ final class SessionProposalInteractor {
             ReownRouter.goBack(uri: uri)
         }
     }
+
+    private func getSessionProperties(address: String) -> [String: String] {
+        let sepoliaAtomicBatchCapability = """
+        {
+            "\(address)":{
+                "0xaa36a7":{
+                    "atomicBatch":{
+                        "supported":true
+                    }
+                }
+            }
+        }
+        """
+
+        let sessionProperties: [String: String] = [
+            "bundler_name": "pimlico",
+            "capabilities": sepoliaAtomicBatchCapability
+        ]
+
+        print(sessionProperties)
+        return sessionProperties
+    }
 }
+
