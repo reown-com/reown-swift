@@ -27,7 +27,9 @@ class SmartAccount {
     
     private var config: Config?
 
-    private init() {}
+    private init() {
+        
+    }
     
     public func configure(entryPoint: String, chainId: Int) {
         self.config = Config(

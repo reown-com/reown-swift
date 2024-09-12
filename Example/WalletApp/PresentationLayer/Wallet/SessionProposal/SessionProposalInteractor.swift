@@ -11,7 +11,7 @@ final class SessionProposalInteractor {
         
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedChains = [Blockchain("eip155:11155111")!]
+        var supportedChains = supportedRequiredChains + supportedOptionalChains
 
         let smartAccountAddress = try await SmartAccount.instance.getClient().getAddress()
 
@@ -44,22 +44,9 @@ final class SessionProposalInteractor {
             AlertPresenter.present(message: error.localizedDescription, type: .error)
             return false
         }
-        let capabilities = """
-        {
-          "0x0B0D91cF5541673b69bA4a1f596E84146Ddd006C":{
-              "0xaa36a7":{ 
-                 "atomicBatch":{
-                    "supported":true
-                 }
-              }
-           }
-        }
-        """
 
-        let sessionProperties: [String: String] = [
-            "bundler_name": "pimlico",
-            "capabilities": capabilities
-        ]
+
+        let sessionProperties = getSessionProperties()
         _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
@@ -67,6 +54,34 @@ final class SessionProposalInteractor {
         } else {
             return true
         }
+    }
+
+    private func getSessionProperties() -> [String: String] {
+
+        let sepoliaAtomicBatchCapability = """
+        {
+            "0xaa36a7":{
+                "atomicBatch":{
+                "supported":true
+                }
+            }
+        }
+        """
+        let capabilities = ["capabilities": sepoliaAtomicBatchCapability]
+
+        if let capabilitiesData = try? JSONSerialization.data(withJSONObject: capabilities, options: []),
+           let capabilitiesJSONString = String(data: capabilitiesData, encoding: .utf8) {
+
+            // Create the sessionProperties dictionary with the stringified capabilities
+            let sessionProperties: [String: String] = [
+                "bundler_name": "pimlico",
+                "capabilities": capabilitiesJSONString
+            ]
+
+            print(sessionProperties)
+            return sessionProperties
+        }
+        return [:]
     }
 
     func reject(proposal: Session.Proposal, reason: RejectionReason = .userRejected) async throws {
