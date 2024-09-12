@@ -46,7 +46,7 @@ final class SessionProposalInteractor {
         }
 
 
-        let sessionProperties = getSessionProperties()
+        let sessionProperties = getSessionProperties(address: smartAccountAddress)
         _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
@@ -56,40 +56,34 @@ final class SessionProposalInteractor {
         }
     }
 
-    private func getSessionProperties() -> [String: String] {
-
-        let sepoliaAtomicBatchCapability = """
-        {
-            "0xaa36a7":{
-                "atomicBatch":{
-                "supported":true
-                }
-            }
-        }
-        """
-        let capabilities = ["capabilities": sepoliaAtomicBatchCapability]
-
-        if let capabilitiesData = try? JSONSerialization.data(withJSONObject: capabilities, options: []),
-           let capabilitiesJSONString = String(data: capabilitiesData, encoding: .utf8) {
-
-            // Create the sessionProperties dictionary with the stringified capabilities
-            let sessionProperties: [String: String] = [
-                "bundler_name": "pimlico",
-                "capabilities": capabilitiesJSONString
-            ]
-
-            print(sessionProperties)
-            return sessionProperties
-        }
-        return [:]
-    }
-
     func reject(proposal: Session.Proposal, reason: RejectionReason = .userRejected) async throws {
         try await WalletKit.instance.rejectSession(proposalId: proposal.id, reason: .userRejected)
         /* Redirect */
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
         }
+    }
+
+    private func getSessionProperties(address: String) -> [String: String] {
+        let sepoliaAtomicBatchCapability = """
+        {
+            "\(address)":{
+                "0xaa36a7":{
+                    "atomicBatch":{
+                        "supported":true
+                    }
+                }
+            }
+        }
+        """
+
+        let sessionProperties: [String: String] = [
+            "bundler_name": "pimlico",
+            "capabilities": sepoliaAtomicBatchCapability
+        ]
+
+        print(sessionProperties)
+        return sessionProperties
     }
 }
 
