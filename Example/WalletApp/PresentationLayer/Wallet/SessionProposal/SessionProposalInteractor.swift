@@ -11,9 +11,11 @@ final class SessionProposalInteractor {
         
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedChains = supportedRequiredChains + supportedOptionalChains 
+        var supportedChains = [Blockchain("eip155:11155111")!]
 
-        var supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: EOAAccount.address)! }
+        let smartAccountAddress = try await SmartAccount.instance.getClient().getAddress()
+
+        var supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: smartAccountAddress)! }
 
         supportedAccounts.append(smartAccount)
 
@@ -42,7 +44,23 @@ final class SessionProposalInteractor {
             AlertPresenter.present(message: error.localizedDescription, type: .error)
             return false
         }
-        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: proposal.sessionProperties)
+        let capabilities = """
+        {
+          "0x0B0D91cF5541673b69bA4a1f596E84146Ddd006C":{
+              "0xaa36a7":{ 
+                 "atomicBatch":{
+                    "supported":true
+                 }
+              }
+           }
+        }
+        """
+
+        let sessionProperties: [String: String] = [
+            "bundler_name": "pimlico",
+            "capabilities": capabilities
+        ]
+        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
             return false
@@ -59,3 +77,4 @@ final class SessionProposalInteractor {
         }
     }
 }
+

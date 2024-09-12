@@ -82,7 +82,7 @@ struct SettingsView: View {
     func sendTransaction() async throws -> String {
         let client = await SmartAccount.instance.getClient()
         return try await client.sendTransaction(.init(
-            to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            to: "0x5505d4019f3C15Eb7D3df767dC1724AD6AF906aF",
             value: "0",
             data: "0x68656c6c6f"
         ))
