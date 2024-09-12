@@ -25,6 +25,10 @@ final class MainModule {
             owner: ownerAddress,
             privateKey: privateKey
         )
+        SmartAccountSafe.instance.register(
+            owner: ownerAddress,
+            privateKey: privateKey
+        )
 //        SmartAccount.instance.register(onSign: { (messageToSign: String) in
 //            func dataToHash(_ data: Data) -> Bytes {
 //                let prefix = "\u{19}Ethereum Signed Message:\n"

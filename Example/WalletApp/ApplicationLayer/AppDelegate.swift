@@ -11,6 +11,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let entryPointAddress = "0x0000000071727De22E5E9d8BAf0edAc6f37da032" // v0.7 on Sepolia
         let chainId = 11155111 // Sepolia
         SmartAccount.instance.configure(entryPoint: entryPointAddress, chainId: chainId)
+        SmartAccountSafe.instance.configure(entryPoint: entryPointAddress, chainId: chainId)
         return true
     }
 
