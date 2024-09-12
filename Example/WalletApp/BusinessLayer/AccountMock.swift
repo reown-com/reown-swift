@@ -14,7 +14,7 @@ class AccountClientMock: YttriumWrapper.AccountClientProtocol {
     
     private var config: Yttrium.Config
     
-    required init(ownerAddress: String, entryPoint: String, chainId: Int, config: Yttrium.Config) {
+    required init(ownerAddress: String, entryPoint: String, chainId: Int, config: Yttrium.Config, safe: Bool) {
         self.ownerAddress = ownerAddress
         self.entryPoint = entryPoint
         self.chainId = chainId
@@ -113,7 +113,8 @@ class SmartAccount {
             entryPoint: config.entryPoint,
             chainId: config.chainId,
 //            config: pimlicoSepolia
-            config: localConfig
+            config: localConfig,
+            safe: false
         )
         client.register(privateKey: privateKey)
         
@@ -138,3 +139,79 @@ class SmartAccount {
         let chainId: Int
     }
 }
+
+class SmartAccountSafe {
+    
+    static var instance = SmartAccountSafe()
+    
+    private var client: AccountClient? {
+        didSet {
+            if let _ = client {
+                clientSetContinuation?.resume()
+            }
+        }
+    }
+    
+    private var clientSetContinuation: CheckedContinuation<Void, Never>?
+    
+    private var config: Config?
+
+    private init() {}
+    
+    public func configure(entryPoint: String, chainId: Int) {
+        self.config = Config(
+            entryPoint: entryPoint,
+            chainId: chainId
+        )
+    }
+    
+    public func register(owner: String, privateKey: String) {
+        guard let config = self.config else {
+            fatalError("Error - you must call SmartAccount.configure(entryPoint:chainId:onSign:) before accessing the shared instance.")
+        }
+        assert(owner.count == 40)
+        
+        let localConfig = YttriumWrapper.Config.local()
+        
+//        let PIMLICO_BUNDLER_URL = "https://api.pimlico.io/v2/11155111/rpc?apikey=<PIMLICO_API_KEY>"
+//        let PIMLICO_RPC_URL = "https://rpc.ankr.com/eth_sepolia"
+//        let pimlicoSepolia = YttriumWrapper.Config(
+//            endpoints: .init(
+//                rpc: .init(baseURL: PIMLICO_RPC_URL),
+//                bundler: .init(baseURL: PIMLICO_BUNDLER_URL),
+//                paymaster: .init(baseURL: PIMLICO_BUNDLER_URL)
+//            )
+//        )
+        
+        let client = AccountClient(
+            ownerAddress: owner,
+            entryPoint: config.entryPoint,
+            chainId: config.chainId,
+//            config: pimlicoSepolia
+            config: localConfig,
+            safe: true
+        )
+        client.register(privateKey: privateKey)
+        
+        self.client = client
+    }
+
+
+    public func getClient() async -> AccountClient {
+        if let client = client {
+            return client
+        }
+
+        await withCheckedContinuation { continuation in
+            self.clientSetContinuation = continuation
+        }
+        
+        return client!
+    }
+
+    struct Config {
+        let entryPoint: String
+        let chainId: Int
+    }
+}
+

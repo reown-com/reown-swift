@@ -10,6 +10,7 @@ final class SettingsPresenter: ObservableObject {
     private let accountStorage: AccountStorage
     private var disposeBag = Set<AnyCancellable>()
     @Published var smartAccount: String = "Loading..."
+    @Published var smartAccountSafe: String = "Loading..."
 
     init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage) {
         defer { setupInitialState() }
@@ -17,9 +18,9 @@ final class SettingsPresenter: ObservableObject {
         self.router = router
         self.accountStorage = accountStorage
         fetchSmartAccount()
-
+        fetchSmartAccountSafe()
     }
-
+    
     func fetchSmartAccount() {
         Task {
             do {
@@ -38,6 +39,26 @@ final class SettingsPresenter: ObservableObject {
 
     private func getSmartAccount() async throws -> String {
         try await SmartAccount.instance.getClient().getAccount().absoluteString
+    }
+    
+    func fetchSmartAccountSafe() {
+        Task {
+            do {
+                let smartAccount = try await getSmartAccountSafe()
+                DispatchQueue.main.async {
+                    self.smartAccountSafe = smartAccount
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.smartAccountSafe = "Failed to load"
+                }
+                print("Failed to get smart account safe: \(error)")
+            }
+        }
+    }
+
+    private func getSmartAccountSafe() async throws -> String {
+        try await SmartAccountSafe.instance.getClient().getAccount().absoluteString
     }
 
     var account: String {
