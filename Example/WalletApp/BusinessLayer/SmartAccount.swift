@@ -45,7 +45,7 @@ class SmartAccount {
         let localConfig = YttriumWrapper.Config.local()
         
         let PIMLICO_BUNDLER_URL = "https://api.pimlico.io/v2/11155111/rpc?apikey="
-        let PIMLICO_RPC_URL = "https://rpc.ankr.com/eth_sepolia"
+        let RPC_URL = "https://rpc.ankr.com/eth_sepolia"
         let pimlicoSepolia = YttriumWrapper.Config(
             endpoints: .init(
                 rpc: .init(baseURL: PIMLICO_RPC_URL),
