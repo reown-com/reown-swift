@@ -56,12 +56,17 @@ class SmartAccount {
             )
         )
         
+        let pickedConfig = if !(InputConfig.pimlicoBundlerUrl?.isEmpty ?? true) && !(InputConfig.rpcUrl?.isEmpty ?? true) {
+            pimlicoSepolia
+        } else {
+            localConfig
+        }
+        
         let client = AccountClient(
             ownerAddress: owner,
             entryPoint: config.entryPoint,
             chainId: config.chainId,
-            config: pimlicoSepolia,
-//            config: localConfig
+            config: pickedConfig,
             safe: false
         )
         client.register(privateKey: privateKey)
@@ -133,12 +138,17 @@ class SmartAccountSafe {
             )
         )
         
+        let pickedConfig = if !(InputConfig.pimlicoBundlerUrl?.isEmpty ?? true) && !(InputConfig.rpcUrl?.isEmpty ?? true) {
+            pimlicoSepolia
+        } else {
+            localConfig
+        }
+        
         let client = AccountClient(
             ownerAddress: owner,
             entryPoint: config.entryPoint,
             chainId: config.chainId,
-            config: pimlicoSepolia,
-//            config: localConfig
+            config: pickedConfig,
             safe: true
         )
         client.register(privateKey: privateKey)
