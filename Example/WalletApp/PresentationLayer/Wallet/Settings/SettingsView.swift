@@ -110,7 +110,7 @@ struct SettingsView: View {
         }
         .onAppear {
             viewModel.objectWillChange.send()
-            isSmartAccountEnabled = false
+            isSmartAccountEnabled = SmartAccountManager.shared.isSmartAccountEnabled
         }
     }
 
