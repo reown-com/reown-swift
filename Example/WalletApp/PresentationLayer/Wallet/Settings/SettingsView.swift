@@ -2,9 +2,11 @@ import SwiftUI
 import AsyncButton
 import ReownAppKitUI
 
+
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
     @State private var copyAlert: Bool = false
+    @State private var isSmartAccountEnabled: Bool = false // State for the toggle switch
 
     var body: some View {
         ScrollView {
@@ -17,6 +19,24 @@ struct SettingsView: View {
                     row(title: "Smart Account", subtitle: viewModel.smartAccount)
                     row(title: "Smart Account Safe", subtitle: viewModel.smartAccountSafe)
                     row(title: "Private key", subtitle: viewModel.privateKey)
+
+                    // New Smart Account Toggle Row
+                    HStack {
+                        Text("Smart Account")
+                            .foregroundColor(.Foreground100)
+                            .font(.paragraph700)
+
+                        Spacer()
+
+                        Toggle("", isOn: $isSmartAccountEnabled)
+                            .onChange(of: isSmartAccountEnabled) { newValue in
+                                viewModel.enableSmartAccount(newValue)
+                            }
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 16)
+                    .background(Color.Foreground100.opacity(0.05).cornerRadius(12))
                 }
                 .padding(.horizontal, 20)
 
@@ -39,7 +59,7 @@ struct SettingsView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .frame(height: 44.0)
-                    
+
                     AsyncButton {
                         try await sendTransaction()
                     } label: {
@@ -53,7 +73,7 @@ struct SettingsView: View {
                             .stroke(Color.green, lineWidth: 1)
                     )
                     .padding(.bottom, 24)
-                    
+
                     AsyncButton {
                         try await sendTransactionSafe()
                     } label: {
@@ -90,9 +110,10 @@ struct SettingsView: View {
         }
         .onAppear {
             viewModel.objectWillChange.send()
+            isSmartAccountEnabled = false
         }
     }
-    
+
     @discardableResult
     func sendTransaction() async throws -> String {
         let client = await SmartAccount.instance.getClient()
@@ -102,7 +123,7 @@ struct SettingsView: View {
             data: "0x68656c6c6f"
         ))
     }
-    
+
     @discardableResult
     func sendTransactionSafe() async throws -> String {
         let client = await SmartAccountSafe.instance.getClient()

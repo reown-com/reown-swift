@@ -39,6 +39,7 @@
 		84474A0129B9EB74005F520B /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 84474A0029B9EB74005F520B /* Starscream */; };
 		84474A0229B9ECA2005F520B /* DefaultSocketFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5629AEF2877F73000094373 /* DefaultSocketFactory.swift */; };
 		8448F1D427E4726F0000B866 /* WalletConnect in Frameworks */ = {isa = PBXBuildFile; productRef = 8448F1D327E4726F0000B866 /* WalletConnect */; };
+		8454EF0A2C9421B600B5529E /* SmartAccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8454EF092C9421B600B5529E /* SmartAccountManager.swift */; };
 		845B8D8C2934B36C0084A966 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845B8D8B2934B36C0084A966 /* Account.swift */; };
 		846E359F2C00654F00E63DF4 /* ConfigModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846E359E2C00654F00E63DF4 /* ConfigModule.swift */; };
 		846E35A22C0065AD00E63DF4 /* ConfigRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846E35A12C0065AD00E63DF4 /* ConfigRouter.swift */; };
@@ -341,6 +342,7 @@
 		844511C92C8BA69D00A6A86C /* AppKitLab.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AppKitLab.entitlements; sourceTree = "<group>"; };
 		844749F329B9E5B9005F520B /* RelayIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RelayIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		844749F529B9E5B9005F520B /* RelayClientEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayClientEndToEndTests.swift; sourceTree = "<group>"; };
+		8454EF092C9421B600B5529E /* SmartAccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartAccountManager.swift; sourceTree = "<group>"; };
 		845AA7D929BA1EBA00F33739 /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = IntegrationTests.xctestplan; path = ExampleApp.xcodeproj/IntegrationTests.xctestplan; sourceTree = "<group>"; };
 		845AA7DC29BB424800F33739 /* SmokeTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = SmokeTests.xctestplan; sourceTree = "<group>"; };
 		845B8D8B2934B36C0084A966 /* Account.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
@@ -1013,6 +1015,7 @@
 			children = (
 				A5D610CC2AB3592F00C20083 /* ListingsSertice */,
 				84733CD92C258BDB001B2850 /* SmartAccount.swift */,
+				8454EF092C9421B600B5529E /* SmartAccountManager.swift */,
 			);
 			path = BusinessLayer;
 			sourceTree = "<group>";
@@ -2027,6 +2030,7 @@
 				847BD1E5298A806800076C90 /* NotificationsPresenter.swift in Sources */,
 				A50D53C12ABA055700A4FD8B /* NotifyPreferencesModule.swift in Sources */,
 				A50B6A382B06697B00162B01 /* ProfilingService.swift in Sources */,
+				8454EF0A2C9421B600B5529E /* SmartAccountManager.swift in Sources */,
 				A5B4F7C52ABB20AE0099AF7C /* SubscriptionRouter.swift in Sources */,
 				C55D3496295DFA750004314A /* WelcomeInteractor.swift in Sources */,
 				C5B2F6FC297055B0000DBA0E /* SOLSigner.swift in Sources */,
