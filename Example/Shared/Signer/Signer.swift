@@ -145,8 +145,14 @@ final class Signer {
                 data: firstCall.data!
             )
 
-            let result = try await client.sendTransaction(transaction)
-            return AnyCodable(result)
+            let userOpHash = try await client.sendTransaction(transaction)
+
+            Task {
+                let userOpReceipt = try await SmartAccount.instance.getClient().waitForUserOperationReceipt(userOperationHash: userOpHash)
+                AlertPresenter.present(message: userOpReceipt, type: .info)
+            }
+
+            return AnyCodable(userOpHash)
 
         default:
             throw Errors.notImplemented
