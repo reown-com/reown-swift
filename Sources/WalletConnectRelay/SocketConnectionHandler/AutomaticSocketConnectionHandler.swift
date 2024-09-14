@@ -53,6 +53,7 @@ class AutomaticSocketConnectionHandler {
         // Start the connection process
         logger.debug("Starting connection process.")
         isConnecting = true
+        logger.debug("socket request: \(socket.request.debugDescription)")
         socket.connect()
     }
 
@@ -85,6 +86,7 @@ class AutomaticSocketConnectionHandler {
         if reconnectionAttempts < maxImmediateAttempts {
             reconnectionAttempts += 1
             logger.debug("Immediate reconnection attempt \(reconnectionAttempts) of \(maxImmediateAttempts)")
+            logger.debug("socket request: \(socket.request.debugDescription)")
             socket.connect()
         } else {
             logger.debug("Max immediate reconnection attempts reached. Switching to periodic reconnection every \(periodicReconnectionInterval) seconds.")
@@ -112,6 +114,7 @@ class AutomaticSocketConnectionHandler {
 
         reconnectionTimer?.setEventHandler { [unowned self] in
             logger.debug("Periodic reconnection attempt...")
+            logger.debug("socket request: \(socket.request.debugDescription)")
             socket.connect() // Attempt to reconnect
 
             // The socketConnectionStatusPublisher handler will stop the timer and reset states if connection is successful
