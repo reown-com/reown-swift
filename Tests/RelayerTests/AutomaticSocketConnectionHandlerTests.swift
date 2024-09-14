@@ -56,7 +56,17 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testReconnectsOnEnterForeground() {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
         webSocketSession.disconnect()
+
+        let expectation = XCTestExpectation(description: "WebSocket should connect on entering foreground")
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
+
         appStateObserver.onWillEnterForeground?()
+
+        wait(for: [expectation], timeout: 1.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -86,8 +96,18 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         webSocketSession.connect()
         appStateObserver.currentState = .foreground
         XCTAssertTrue(webSocketSession.isConnected)
+
+        let expectation = XCTestExpectation(description: "WebSocket should reconnect on disconnection in foreground")
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
+
         webSocketSession.disconnect()
         await sut.handleDisconnection()
+
+        wait(for: [expectation], timeout: 1.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -129,10 +149,17 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         webSocketSession.disconnect()
         XCTAssertFalse(webSocketSession.isConnected)
 
+        let expectation = XCTestExpectation(description: "WebSocket should connect when reconnectIfNeeded is called")
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
+
         // Trigger reconnect logic
         sut.reconnectIfNeeded()
 
-        // Expect the socket to be connected since there are subscriptions
+        wait(for: [expectation], timeout: 1.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -159,10 +186,17 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         webSocketSession.disconnect()
         XCTAssertFalse(webSocketSession.isConnected)
 
+        let expectation = XCTestExpectation(description: "WebSocket should connect when network becomes connected")
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
+
         // Simulate network connection becomes satisfied
         networkMonitor.networkConnectionStatusPublisherSubject.send(.connected)
 
-        // Expect the socket to reconnect since there are subscriptions
+        wait(for: [expectation], timeout: 1.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -217,7 +251,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testPeriodicReconnectionAttempts() {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
         webSocketSession.disconnect()
-        sut.periodicReconnectionInterval = 0.0001
+        sut.periodicReconnectionInterval = 0.1 // Set a shorter interval for the test
         sut.connect() // Start connection process
 
         // Simulate immediate reconnection attempts to switch to periodic
@@ -228,17 +262,18 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Ensure we have switched to periodic reconnection
         XCTAssertNotNil(sut.reconnectionTimer)
 
-        // Simulate the periodic timer firing without waiting for real time
         let expectation = XCTestExpectation(description: "Periodic reconnection attempt made")
-        sut.reconnectionTimer?.setEventHandler {
-            self.socketStatusProviderMock.simulateConnectionStatus(.connected)
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
             expectation.fulfill()
         }
 
-        wait(for: [expectation], timeout: 1)
+        // Wait for the periodic reconnection attempt
+        wait(for: [expectation], timeout: 1.0)
 
         // Check that the periodic reconnection attempt was made
-        XCTAssertTrue(webSocketSession.isConnected) // Assume that connection would have been attempted
+        XCTAssertTrue(webSocketSession.isConnected)
     }
 
     func testHandleInternalConnectThrowsAfterThreeDisconnections() async {
