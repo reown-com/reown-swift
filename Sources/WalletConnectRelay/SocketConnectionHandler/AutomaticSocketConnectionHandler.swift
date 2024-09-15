@@ -218,7 +218,7 @@ class AutomaticSocketConnectionHandler {
             syncQueue.async { [unowned self] in
                 logger.debug("Checking if reconnection is needed: connected: \(socket.isConnected), isSubscribed: \(subscriptionsTracker.isSubscribed())")
 
-                if !socket.isConnected {
+                if !socket.isConnected && subscriptionsTracker.isSubscribed() {
                     logger.debug("Socket is not connected, Reconnecting...")
                     connect()
                 } else {
