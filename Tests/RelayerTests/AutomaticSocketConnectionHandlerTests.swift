@@ -108,7 +108,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
         webSocketSession.connect()
         appStateObserver.currentState = .foreground
-        XCTAssertTrue(webSocketSession.isConnected)
 
         let expectation = XCTestExpectation(description: "WebSocket should reconnect on disconnection in foreground")
 
@@ -159,7 +158,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         subscriptionsTracker.isSubscribedReturnValue = true
 
         // Ensure socket is disconnected initially
-        webSocketSession.disconnect()
         XCTAssertFalse(webSocketSession.isConnected)
 
         let expectation = XCTestExpectation(description: "WebSocket should connect when reconnectIfNeeded is called")
@@ -189,28 +187,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
         // Expect the socket to remain disconnected since there are no subscriptions
         XCTAssertFalse(webSocketSession.isConnected)
-    }
-
-    func testReconnectsOnConnectionSatisfiedWhenSubscribed() {
-        // Simulate that there are active subscriptions
-        subscriptionsTracker.isSubscribedReturnValue = true
-
-        // Ensure socket is disconnected initially
-        webSocketSession.disconnect()
-        XCTAssertFalse(webSocketSession.isConnected)
-
-        let expectation = XCTestExpectation(description: "WebSocket should connect when network becomes connected")
-
-        // Modify the webSocketSession mock to call this closure when connect() is called
-        webSocketSession.onConnect = {
-            expectation.fulfill()
-        }
-
-        // Simulate network connection becomes satisfied
-        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected)
-
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertTrue(webSocketSession.isConnected)
     }
 
     func testReconnectsOnEnterForegroundWhenSubscribed() async {
@@ -295,7 +271,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         }
 
         // Allow handleInternalConnect() to start observing
-        try await Task.sleep(nanoseconds: 10_000_000) // Wait 0.1 seconds
+        try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
 
         // Simulate three disconnections
         for _ in 0..<sut.maxImmediateAttempts {

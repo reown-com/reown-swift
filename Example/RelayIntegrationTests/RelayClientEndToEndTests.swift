@@ -80,6 +80,11 @@ final class RelayClientEndToEndTests: XCTestCase {
         return relayClient
     }
 
+    override func tearDown() {
+        Thread.sleep(forTimeInterval: 0.3)
+        super.tearDown()
+    }
+
     func testSubscribe() {
         let relayClient = makeRelayClient(prefix: "")
 
