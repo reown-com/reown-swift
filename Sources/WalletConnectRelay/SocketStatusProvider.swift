@@ -33,11 +33,12 @@ class SocketStatusProvider: SocketStatusProviding {
                 let errorMirror = Mirror(reflecting: error)
                 logger.debug("Error type: \(type(of: error))")
 
-                for child in errorMirror.children {
-                    if let label = child.label {
-                        logger.debug("\(label): \(child.value)")
-                    }
-                }
+                let errorDetails = errorMirror.children.compactMap { child -> String? in
+                    guard let label = child.label else { return nil }
+                    return "\(label): \(child.value)"
+                }.joined(separator: ", ")
+
+                logger.debug("Error details: \(errorDetails)")
             } else {
                 logger.debug("Socket disconnected with unknown error.")
             }

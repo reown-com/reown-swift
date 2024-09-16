@@ -61,7 +61,7 @@ public struct RelayClientFactory {
         if let bundleId = Bundle.main.bundleIdentifier {
             socket.request.addValue(bundleId, forHTTPHeaderField: "Origin")
         }
-        let subscriptionsTracker = SubscriptionsTracker()
+        let subscriptionsTracker = SubscriptionsTracker(logger: logger)
 
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
         var socketConnectionHandler: SocketConnectionHandler!
