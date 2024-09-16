@@ -14,20 +14,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "WalletConnect"
-               BuildableName = "WalletConnect"
-               BlueprintName = "WalletConnect"
-               ReferencedContainer = "container:..">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "Web3Inbox"
                BuildableName = "Web3Inbox"
                BlueprintName = "Web3Inbox"
@@ -160,6 +146,20 @@
                ReferencedContainer = "container:..">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "NO"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "ChatTests"
+               BuildableName = "ChatTests"
+               BlueprintName = "ChatTests"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -178,26 +178,6 @@
          </BuildableReference>
       </CodeCoverageTargets>
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AuthTests"
-               BuildableName = "AuthTests"
-               BlueprintName = "AuthTests"
-               ReferencedContainer = "container:..">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "ChatTests"
-               BuildableName = "ChatTests"
-               BlueprintName = "ChatTests"
-               ReferencedContainer = "container:..">
-            </BuildableReference>
-         </TestableReference>
          <TestableReference
             skipped = "NO">
             <BuildableReference
@@ -282,9 +262,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Web3WalletTests"
-               BuildableName = "Web3WalletTests"
-               BlueprintName = "Web3WalletTests"
+               BlueprintIdentifier = "NotifyTests"
+               BuildableName = "NotifyTests"
+               BlueprintName = "NotifyTests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>
@@ -292,9 +272,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "NotifyTests"
-               BuildableName = "NotifyTests"
-               BlueprintName = "NotifyTests"
+               BlueprintIdentifier = "ReownAppKitTests"
+               BuildableName = "ReownAppKitTests"
+               BlueprintName = "ReownAppKitTests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>
@@ -320,9 +300,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "WalletConnect"
-            BuildableName = "WalletConnect"
-            BlueprintName = "WalletConnect"
+            BlueprintIdentifier = "Web3Inbox"
+            BuildableName = "Web3Inbox"
+            BlueprintName = "Web3Inbox"
             ReferencedContainer = "container:..">
          </BuildableReference>
       </MacroExpansion>

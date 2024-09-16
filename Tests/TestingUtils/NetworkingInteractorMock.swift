@@ -6,6 +6,8 @@ import WalletConnectKMS
 import WalletConnectNetworking
 
 public class NetworkingInteractorMock: NetworkInteracting {
+    public var isSocketConnected: Bool = true
+
 
     private var publishers = Set<AnyCancellable>()
 
@@ -38,10 +40,10 @@ public class NetworkingInteractorMock: NetworkInteracting {
         networkConnectionStatusPublisherSubject.eraseToAnyPublisher()
     }
 
-    public let requestPublisherSubject = PassthroughSubject<(topic: String, request: RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?), Never>()
+    public let requestPublisherSubject = PassthroughSubject<(topic: String, request: RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?, encryptedMessage: String, attestation: String?), Never>()
     public let responsePublisherSubject = PassthroughSubject<(topic: String, request: RPCRequest, response: RPCResponse, publishedAt: Date, derivedTopic: String?), Never>()
 
-    public var requestPublisher: AnyPublisher<(topic: String, request: JSONRPC.RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?), Never> {
+    public var requestPublisher: AnyPublisher<(topic: String, request: JSONRPC.RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?, encryptedMessage: String, attestation: String?), Never> {
         requestPublisherSubject.eraseToAnyPublisher()
     }
 
@@ -61,9 +63,9 @@ public class NetworkingInteractorMock: NetworkInteracting {
             .filter { rpcRequest in
                 return rpcRequest.request.method == request.method
             }
-            .compactMap { topic, rpcRequest, decryptedPayload, publishedAt, derivedTopic in
+            .compactMap { topic, rpcRequest, decryptedPayload, publishedAt, derivedTopic, encryptedMessage, attestation in
                 guard let id = rpcRequest.id, let request = try? rpcRequest.params?.get(Request.self) else { return nil }
-                return RequestSubscriptionPayload(id: id, topic: topic, request: request, decryptedPayload: decryptedPayload, publishedAt: publishedAt, derivedTopic: derivedTopic)
+                return RequestSubscriptionPayload(id: id, topic: topic, request: request, decryptedPayload: decryptedPayload, publishedAt: publishedAt, derivedTopic: derivedTopic, encryptedMessage: encryptedMessage, attestation: attestation)
             }
             .eraseToAnyPublisher()
     }
@@ -132,6 +134,36 @@ public class NetworkingInteractorMock: NetworkInteracting {
                     }
                 }
             }.store(in: &publishers)
+    }
+
+    public func awaitResponse<Request: Codable, Response: Codable>(
+        request: RPCRequest,
+        topic: String,
+        method: ProtocolMethod,
+        requestOfType: Request.Type,
+        responseOfType: Response.Type,
+        envelopeType: Envelope.EnvelopeType
+    ) async throws -> Response {
+
+        try await self.request(request, topic: topic, protocolMethod: method, envelopeType: envelopeType)
+
+        return try await withCheckedThrowingContinuation { [unowned self] continuation in
+            var response, error: AnyCancellable?
+
+            response = responseSubscription(on: method)
+                .sink { (payload: ResponseSubscriptionPayload<Request, Response>) in
+                    response?.cancel()
+                    error?.cancel()
+                    continuation.resume(with: .success(payload.response))
+                }
+
+            error = responseErrorSubscription(on: method)
+                .sink { (payload: ResponseSubscriptionErrorPayload<Request>) in
+                    response?.cancel()
+                    error?.cancel()
+                    continuation.resume(throwing: payload.error)
+                }
+        }
     }
 
     public func subscribe(topic: String) async throws {

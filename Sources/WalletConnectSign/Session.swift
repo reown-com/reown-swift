@@ -5,6 +5,7 @@ import Foundation
  */
 public struct Session: Codable {
     public let topic: String
+    @available(*, deprecated, message: "The pairingTopic property is deprecated.")
     public let pairingTopic: String
     public let peer: AppMetadata
     public let requiredNamespaces: [String: ProposalNamespace]
@@ -28,7 +29,11 @@ extension Session {
 
         // TODO: Refactor internal objects to manage only needed data
         internal let proposal: SessionProposal
-        
+
+        func isExpired() -> Bool {
+            return proposal.isExpired()
+        }
+
         init(
             id: String,
             pairingTopic: String,

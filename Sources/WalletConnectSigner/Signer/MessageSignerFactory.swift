@@ -9,13 +9,9 @@ public struct MessageSignerFactory {
     }
 
     public func create() -> MessageSigner {
-        return create(projectId: Networking.projectId)
-    }
-
-    public func create(projectId: String) -> MessageSigner {
         return MessageSigner(
             signer: signerFactory.createEthereumSigner(),
-            messageFormatter: SIWECacaoFormatter()
+            messageFormatter: SIWEFromCacaoPayloadFormatter()
         )
     }
 }

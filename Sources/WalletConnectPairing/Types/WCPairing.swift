@@ -8,10 +8,9 @@ public struct WCPairing: SequenceObject {
     public let topic: String
     public let relay: RelayProtocolOptions
 
-    public private (set) var peerMetadata: AppMetadata?
     public private (set) var expiryDate: Date
-    public private (set) var active: Bool
     public private (set) var requestReceived: Bool
+    public private (set) var methods: [String]?
 
     #if DEBUG
     public static var dateInitializer: () -> Date = Date.init
@@ -27,51 +26,42 @@ public struct WCPairing: SequenceObject {
         30 * .day
     }
 
-    public init(topic: String, relay: RelayProtocolOptions, peerMetadata: AppMetadata, isActive: Bool = false, requestReceived: Bool = false, expiryDate: Date) {
-        self.topic = topic
-        self.relay = relay
-        self.peerMetadata = peerMetadata
-        self.active = isActive
-        self.requestReceived = requestReceived
-        self.expiryDate = expiryDate
-    }
-
-    public init(topic: String) {
-        self.topic = topic
-        self.relay = RelayProtocolOptions(protocol: "irn", data: nil)
-        self.active = false
-        self.requestReceived = false
-        self.expiryDate = Self.dateInitializer().advanced(by: Self.timeToLiveInactive)
-    }
-
     public init(uri: WalletConnectURI) {
         self.topic = uri.topic
         self.relay = uri.relay
-        self.active = false
         self.requestReceived = false
-        self.expiryDate = Self.dateInitializer().advanced(by: Self.timeToLiveInactive)
-    }
-
-    public mutating func activate() {
-        active = true
-        try? updateExpiry()
+        self.methods = uri.methods
+        self.expiryDate = Date(timeIntervalSince1970: TimeInterval(uri.expiryTimestamp))
     }
     
     public mutating func receivedRequest() {
         requestReceived = true
     }
+}
 
-    public mutating func updatePeerMetadata(_ metadata: AppMetadata?) {
-        peerMetadata = metadata
+#if DEBUG
+extension WCPairing {
+    static func stub(expiryDate: Date = Date(timeIntervalSinceNow: 10000), topic: String = String.generateTopic()) -> WCPairing {
+        WCPairing(topic: topic, relay: RelayProtocolOptions.stub(), expiryDate: expiryDate)
     }
 
-    public mutating func updateExpiry(_ ttl: TimeInterval = WCPairing.timeToLiveActive) throws {
-        let now = Self.dateInitializer()
-        let newExpiryDate = now.advanced(by: ttl)
-        let maxExpiryDate = now.advanced(by: Self.timeToLiveActive)
-        guard newExpiryDate > expiryDate && newExpiryDate <= maxExpiryDate else {
-            throw Errors.invalidUpdateExpiryValue
-        }
-        expiryDate = newExpiryDate
+    init(topic: String, relay: RelayProtocolOptions, requestReceived: Bool = false, expiryDate: Date) {
+        self.topic = topic
+        self.relay = relay
+        self.requestReceived = requestReceived
+        self.expiryDate = expiryDate
     }
 }
+
+extension WalletConnectURI {
+    public static func stub() -> WalletConnectURI {
+        WalletConnectURI(
+            topic: String.generateTopic(),
+            symKey: SymmetricKey().hexRepresentation,
+            relay: RelayProtocolOptions(protocol: "", data: nil),
+            methods: ["wc_sessionPropose"]
+        )
+    }
+}
+
+#endif

@@ -1,17 +1,34 @@
-public enum AutoNamespacesError: Error {
+import Foundation
+
+public enum AutoNamespacesError: Error, LocalizedError {
     case requiredChainsNotSatisfied
     case requiredAccountsNotSatisfied
     case requiredMethodsNotSatisfied
     case requiredEventsNotSatisfied
+    case emptySessionNamespacesForbidden
+
+    public var errorDescription: String? {
+        switch self {
+        case .requiredChainsNotSatisfied:
+            return "The required chains are not satisfied."
+        case .requiredAccountsNotSatisfied:
+            return "The required accounts are not satisfied."
+        case .requiredMethodsNotSatisfied:
+            return "The required methods are not satisfied."
+        case .requiredEventsNotSatisfied:
+            return "The required events are not satisfied."
+        case .emptySessionNamespacesForbidden:
+            return "Empty session namespaces are not allowed."
+        }
+    }
 }
 
 public struct ProposalNamespace: Equatable, Codable {
-
-    public let chains: Set<Blockchain>?
+    public let chains: [Blockchain]?
     public let methods: Set<String>
     public let events: Set<String>
 
-    public init(chains: Set<Blockchain>? = nil, methods: Set<String>, events: Set<String>) {
+    public init(chains: [Blockchain]? = nil, methods: Set<String>, events: Set<String>) {
         self.chains = chains
         self.methods = methods
         self.events = events
@@ -19,19 +36,19 @@ public struct ProposalNamespace: Equatable, Codable {
 }
 
 public struct SessionNamespace: Equatable, Codable {
-    public var chains: Set<Blockchain>?
-    public var accounts: Set<Account>
+    public var chains: [Blockchain]?
+    public var accounts: [Account]
     public var methods: Set<String>
     public var events: Set<String>
 
-    public init(chains: Set<Blockchain>? = nil, accounts: Set<Account>, methods: Set<String>, events: Set<String>) {
+    public init(chains: [Blockchain]? = nil, accounts: [Account], methods: Set<String>, events: Set<String>) {
         self.chains = chains
         self.accounts = accounts
         self.methods = methods
         self.events = events
     }
 
-    static func accountsAreCompliant(_ accounts: Set<Account>, toChains chains: Set<Blockchain>) -> Bool {
+    static func accountsAreCompliant(_ accounts: [Account], toChains chains: [Blockchain]) -> Bool {
         for chain in chains {
             guard accounts.contains(where: { $0.blockchain == chain }) else {
                 return false
@@ -40,6 +57,7 @@ public struct SessionNamespace: Equatable, Codable {
         return true
     }
 }
+
 
 enum Namespace {
 
@@ -98,7 +116,7 @@ enum Namespace {
                     if requiredNamespaces[network] == nil {
                         requiredNamespaces[network] = proposalNamespace
                     } else {
-                        let unionChains = requiredNamespaces[network]?.chains!.union(proposalNamespace.chains ?? [])
+                        let unionChains = requiredNamespaces[network]?.chains!.orderedUnion(proposalNamespace.chains ?? [])
                         let unionMethods = requiredNamespaces[network]?.methods.union(proposalNamespace.methods)
                         let unionEvents = requiredNamespaces[network]?.events.union(proposalNamespace.events)
                         
@@ -148,9 +166,6 @@ enum SessionProperties {
 
 public enum AutoNamespaces {
     /// For a wallet to build session proposal structure by provided supported chains, methods, events & accounts.
-    /// - Parameters:
-    ///   - proposalId: Session Proposal id
-    ///   - namespaces: namespaces for given session, needs to contain at least required namespaces proposed by dApp.
     public static func build(
         sessionProposal: Session.Proposal,
         chains: [Blockchain],
@@ -160,13 +175,16 @@ public enum AutoNamespaces {
     ) throws -> [String: SessionNamespace] {
         var sessionNamespaces = [String: SessionNamespace]()
 
+        let chains = chains.removeDuplicates()
+        let accounts = accounts.removeDuplicates()
         try sessionProposal.requiredNamespaces.forEach {
             let caip2Namespace = $0.key
             let proposalNamespace = $0.value
 
             if let proposalChains = proposalNamespace.chains {
-                let sessionChains = Set(proposalChains).intersection(Set(chains))
-                guard !sessionChains.isEmpty else {
+                let sessionChains = proposalChains
+
+                guard !sessionChains.isEmpty && Set(proposalChains).isSubset(of: chains) else {
                     throw AutoNamespacesError.requiredChainsNotSatisfied
                 }
                 
@@ -181,13 +199,13 @@ public enum AutoNamespaces {
                 }
                 
                 let availableAccountsBlockchains = accounts.map { $0.blockchain }
-                guard !sessionChains.intersection(Set(availableAccountsBlockchains)).isEmpty else {
+                guard !sessionChains.intersection(availableAccountsBlockchains).isEmpty else {
                     throw AutoNamespacesError.requiredAccountsNotSatisfied
                 }
 
                 let sessionNamespace = SessionNamespace(
                     chains: sessionChains,
-                    accounts: Set(accounts).filter { sessionChains.contains($0.blockchain) },
+                    accounts: accounts.filter { sessionChains.contains($0.blockchain) },
                     methods: sessionMethods,
                     events: sessionEvents
                 )
@@ -195,9 +213,9 @@ public enum AutoNamespaces {
                 if sessionNamespaces[caip2Namespace] == nil {
                     sessionNamespaces[caip2Namespace] = sessionNamespace
                 } else {
-                    let unionChains = (sessionNamespaces[caip2Namespace]?.chains ?? []).union(sessionNamespace.chains ?? [])
+                    let unionChains = (sessionNamespaces[caip2Namespace]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
                     sessionNamespaces[caip2Namespace]?.chains = unionChains
-                    let unionAccounts = sessionNamespaces[caip2Namespace]?.accounts.union(sessionNamespace.accounts)
+                    let unionAccounts = sessionNamespaces[caip2Namespace]?.accounts.orderedUnion(sessionNamespace.accounts)
                     sessionNamespaces[caip2Namespace]?.accounts = unionAccounts ?? []
                     let unionMethods = sessionNamespaces[caip2Namespace]?.methods.union(sessionNamespace.methods)
                     sessionNamespaces[caip2Namespace]?.methods = unionMethods ?? []
@@ -208,7 +226,7 @@ public enum AutoNamespaces {
                 if let network = $0.key.components(separatedBy: ":").first,
                    let chain = $0.key.components(separatedBy: ":").last
                 {
-                    let sessionChains = Set([Blockchain(namespace: network, reference: chain)]).intersection(Set(chains))
+                    let sessionChains = [Blockchain(namespace: network, reference: chain)].intersection(chains)
                     guard !sessionChains.isEmpty else {
                         throw AutoNamespacesError.requiredChainsNotSatisfied
                     }
@@ -224,23 +242,22 @@ public enum AutoNamespaces {
                     }
                     
                     let availableAccountsBlockchains = accounts.map { $0.blockchain }
-                    guard !sessionChains.intersection(Set(availableAccountsBlockchains)).isEmpty else {
+                    guard !sessionChains.intersection(availableAccountsBlockchains).isEmpty else {
                         throw AutoNamespacesError.requiredAccountsNotSatisfied
                     }
 
                     let sessionNamespace = SessionNamespace(
-                        chains: Set([Blockchain(namespace: network, reference: chain)!]),
+                        chains: [Blockchain(namespace: network, reference: chain)!],
                         accounts: Set(accounts).filter { $0.blockchain == Blockchain(namespace: network, reference: chain)! },
                         methods: sessionMethods,
                         events: sessionEvents
                     )
-                    
                     if sessionNamespaces[network] == nil {
                         sessionNamespaces[network] = sessionNamespace
                     } else {
-                        let unionChains = (sessionNamespaces[network]?.chains ?? []).union(sessionNamespace.chains ?? [])
+                        let unionChains = (sessionNamespaces[network]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
                         sessionNamespaces[network]?.chains = unionChains
-                        let unionAccounts = sessionNamespaces[network]?.accounts.union(sessionNamespace.accounts)
+                        let unionAccounts = sessionNamespaces[network]?.accounts.orderedUnion(sessionNamespace.accounts)
                         sessionNamespaces[network]?.accounts = unionAccounts ?? []
                         let unionMethods = sessionNamespaces[network]?.methods.union(sessionNamespace.methods)
                         sessionNamespaces[network]?.methods = unionMethods ?? []
@@ -256,7 +273,7 @@ public enum AutoNamespaces {
             let proposalNamespace = $0.value
 
             if let proposalChains = proposalNamespace.chains {
-                let sessionChains = Set(proposalChains).intersection(Set(chains))
+                let sessionChains = proposalChains.intersection(chains)
                 guard !sessionChains.isEmpty else {
                     return
                 }
@@ -270,7 +287,7 @@ public enum AutoNamespaces {
 
                 let sessionNamespace = SessionNamespace(
                     chains: sessionChains,
-                    accounts: Set(accounts).filter { sessionChains.contains($0.blockchain) },
+                    accounts: accounts.filter { sessionChains.contains($0.blockchain) },
                     methods: sessionMethods,
                     events: sessionEvents
                 )
@@ -278,9 +295,9 @@ public enum AutoNamespaces {
                 if sessionNamespaces[caip2Namespace] == nil {
                     sessionNamespaces[caip2Namespace] = sessionNamespace
                 } else {
-                    let unionChains = (sessionNamespaces[caip2Namespace]?.chains ?? []).union(sessionNamespace.chains ?? [])
+                    let unionChains = (sessionNamespaces[caip2Namespace]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
                     sessionNamespaces[caip2Namespace]?.chains = unionChains
-                    let unionAccounts = sessionNamespaces[caip2Namespace]?.accounts.union(sessionNamespace.accounts)
+                    let unionAccounts = sessionNamespaces[caip2Namespace]?.accounts.orderedUnion(sessionNamespace.accounts)
                     sessionNamespaces[caip2Namespace]?.accounts = unionAccounts ?? []
                     let unionMethods = sessionNamespaces[caip2Namespace]?.methods.union(sessionNamespace.methods)
                     sessionNamespaces[caip2Namespace]?.methods = unionMethods ?? []
@@ -291,11 +308,11 @@ public enum AutoNamespaces {
                 if let network = $0.key.components(separatedBy: ":").first,
                    let chain = $0.key.components(separatedBy: ":").last
                 {
-                    let sessionChains = Set([Blockchain(namespace: network, reference: chain)]).intersection(Set(chains))
+                    let sessionChains = [Blockchain(namespace: network, reference: chain)].intersection(chains)
                     guard !sessionChains.isEmpty else {
                         return
                     }
-                    
+
                     let sessionMethods = Set(proposalNamespace.methods).intersection(Set(methods))
                     guard !sessionMethods.isEmpty else {
                         return
@@ -304,8 +321,8 @@ public enum AutoNamespaces {
                     let sessionEvents = Set(proposalNamespace.events).intersection(Set(events))
                     
                     let sessionNamespace = SessionNamespace(
-                        chains: Set([Blockchain(namespace: network, reference: chain)!]),
-                        accounts: Set(accounts).filter { $0.blockchain == Blockchain(namespace: network, reference: chain)! },
+                        chains: [Blockchain(namespace: network, reference: chain)!],
+                        accounts: accounts.filter { $0.blockchain == Blockchain(namespace: network, reference: chain)! },
                         methods: sessionMethods,
                         events: sessionEvents
                     )
@@ -313,9 +330,9 @@ public enum AutoNamespaces {
                     if sessionNamespaces[network] == nil {
                         sessionNamespaces[network] = sessionNamespace
                     } else {
-                        let unionChains = (sessionNamespaces[network]?.chains ?? []).union(sessionNamespace.chains ?? [])
+                        let unionChains = (sessionNamespaces[network]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
                         sessionNamespaces[network]?.chains = unionChains
-                        let unionAccounts = sessionNamespaces[network]?.accounts.union(sessionNamespace.accounts)
+                        let unionAccounts = sessionNamespaces[network]?.accounts.orderedUnion(sessionNamespace.accounts)
                         sessionNamespaces[network]?.accounts = unionAccounts ?? []
                         let unionMethods = sessionNamespaces[network]?.methods.union(sessionNamespace.methods)
                         sessionNamespaces[network]?.methods = unionMethods ?? []
@@ -325,7 +342,44 @@ public enum AutoNamespaces {
                 }
             }
         }
-        
+        guard !sessionNamespaces.isEmpty else { throw AutoNamespacesError.emptySessionNamespacesForbidden }
+
         return sessionNamespaces
     }
+}
+
+
+fileprivate extension Array where Element: Hashable {
+    // Returns the intersection of the current array and the provided array.
+    // Elements are returned in the order they appear in the current array.
+    func intersection(_ other: [Element]) -> [Element] {
+        let otherSet = Set(other)
+        return self.filter { otherSet.contains($0) }
+    }
+
+    // Returns the ordered union of the current array and the provided array.
+    // Elements from the current array are prioritized, and the order is preserved.
+    func orderedUnion(_ other: [Element]) -> [Element] {
+        var combined = self
+        let selfSet = Set(self)
+        for element in other where !selfSet.contains(element) {
+            combined.append(element)
+        }
+        return combined
+    }
+
+    func removeDuplicates() -> [Element] {
+        var uniqueElements = [Element]()
+        var seenElements = Set<Element>()
+
+        for element in self {
+            if !seenElements.contains(element) {
+                uniqueElements.append(element)
+                seenElements.insert(element)
+            }
+        }
+
+        return uniqueElements
+    }
+
 }

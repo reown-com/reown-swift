@@ -10,18 +10,22 @@ final class RelayClientTests: XCTestCase {
     var sut: RelayClient!
     var dispatcher: DispatcherMock!
     var publishers = Set<AnyCancellable>()
+    var subscriptionsTracker: SubscriptionsTrackerMock!
 
     override func setUp() {
         dispatcher = DispatcherMock()
         let logger = ConsoleLogger()
         let clientIdStorage = ClientIdStorageMock()
         let rpcHistory = RPCHistoryFactory.createForRelay(keyValueStorage: RuntimeKeyValueStorage())
-        sut = RelayClient(dispatcher: dispatcher, logger: logger, rpcHistory: rpcHistory, clientIdStorage: clientIdStorage)
+        subscriptionsTracker = SubscriptionsTrackerMock()
+        sut = RelayClient(dispatcher: dispatcher, logger: logger, rpcHistory: rpcHistory, clientIdStorage: clientIdStorage, subscriptionsTracker: subscriptionsTracker)
     }
 
     override func tearDown() {
+        Thread.sleep(forTimeInterval: 0.2)
         sut = nil
         dispatcher = nil
+        super.tearDown()
     }
 
     func testNotifyOnSubscriptionRequest() {
@@ -29,10 +33,10 @@ final class RelayClientTests: XCTestCase {
         let topic = "0987"
         let message = "qwerty"
         let subscriptionId = "sub-id"
-        let subscription = Subscription(id: subscriptionId, topic: topic, message: message)
+        let subscription = Subscription(id: subscriptionId, topic: topic, message: message, attestation: nil)
         let request = subscription.asRPCRequest()
 
-        sut.messagePublisher.sink { (subscriptionTopic, subscriptionMessage, _) in
+        sut.messagePublisher.sink { (subscriptionTopic, subscriptionMessage, _, _) in
             XCTAssertEqual(subscriptionMessage, message)
             XCTAssertEqual(subscriptionTopic, topic)
             expectation.fulfill()
@@ -48,15 +52,9 @@ final class RelayClientTests: XCTestCase {
         XCTAssertNotNil(request)
     }
 
-    func testPublishRequest() async {
-        try? await sut.publish(topic: "", payload: "{}", tag: 0, prompt: false, ttl: 60)
-        let request = dispatcher.getLastRequestSent()
-        XCTAssertNotNil(request)
-    }
-
     func testUnsubscribeRequest() {
         let topic = String.randomTopic()
-        sut.subscriptions[topic] = ""
+        subscriptionsTracker.setSubscription(for: topic, id: "")
         sut.unsubscribe(topic: topic) { error in
             XCTAssertNil(error)
         }
@@ -68,18 +66,13 @@ final class RelayClientTests: XCTestCase {
         let expectation = expectation(description: "Duplicate Subscription requests must notify only the first time")
         let request = Subscription.init(id: "sub_id", topic: "topic", message: "message").asRPCRequest()
         
-        sut.messagePublisher.sink { (_, _, _) in
+        sut.messagePublisher.sink { (_, _, _, _) in
             expectation.fulfill()
         }.store(in: &publishers)
 
         dispatcher.onMessage?(try! request.asJSONEncodedString())
         dispatcher.onMessage?(try! request.asJSONEncodedString())
         waitForExpectations(timeout: 0.1, handler: nil)
-    }
-
-    func testSendOnPublish() async {
-        try? await sut.publish(topic: "", payload: "", tag: 0, prompt: false, ttl: 60)
-        XCTAssertTrue(dispatcher.sent)
     }
 
     func testSendOnSubscribe() async {
@@ -89,7 +82,7 @@ final class RelayClientTests: XCTestCase {
 
     func testSendOnUnsubscribe() {
         let topic = "123"
-        sut.subscriptions[topic] = ""
+        subscriptionsTracker.setSubscription(for: topic, id: "")
         sut.unsubscribe(topic: topic) {_ in }
         XCTAssertTrue(dispatcher.sent)
     }

@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+
 public class NotifyClient {
 
     private var publishers = Set<AnyCancellable>()
@@ -17,36 +18,43 @@ public class NotifyClient {
         return logger.logsPublisher
     }
 
-    private let deleteNotifySubscriptionRequester: DeleteNotifySubscriptionRequester
+    private let notifyDeleteSubscriptionRequester: NotifyDeleteSubscriptionRequester
     private let notifySubscribeRequester: NotifySubscribeRequester
 
     public let logger: ConsoleLogging
 
+    private let keyserverURL: URL
     private let pushClient: PushClient
-    private let identityService: NotifyIdentityService
+    private let identityClient: IdentityClient
+    private let historyService: HistoryService
     private let notifyStorage: NotifyStorage
     private let notifyAccountProvider: NotifyAccountProvider
     private let notifyMessageSubscriber: NotifyMessageSubscriber
     private let resubscribeService: NotifyResubscribeService
     private let notifySubscribeResponseSubscriber: NotifySubscribeResponseSubscriber
+    private let notifyDeleteSubscriptionSubscriber: NotifyDeleteSubscriptionSubscriber
     private let notifyUpdateRequester: NotifyUpdateRequester
     private let notifyUpdateResponseSubscriber: NotifyUpdateResponseSubscriber
     private let subscriptionsAutoUpdater: SubscriptionsAutoUpdater
     private let notifyWatchSubscriptionsResponseSubscriber: NotifyWatchSubscriptionsResponseSubscriber
     private let notifyWatcherAgreementKeysProvider: NotifyWatcherAgreementKeysProvider
     private let notifySubscriptionsChangedRequestSubscriber: NotifySubscriptionsChangedRequestSubscriber
+    private let notifySubscriptionsUpdater: NotifySubsctiptionsUpdater
     private let subscriptionWatcher: SubscriptionWatcher
 
     init(logger: ConsoleLogging,
+         keyserverURL: URL,
          kms: KeyManagementServiceProtocol,
-         identityService: NotifyIdentityService,
+         identityClient: IdentityClient,
+         historyService: HistoryService,
          pushClient: PushClient,
          notifyMessageSubscriber: NotifyMessageSubscriber,
          notifyStorage: NotifyStorage,
-         deleteNotifySubscriptionRequester: DeleteNotifySubscriptionRequester,
+         notifyDeleteSubscriptionRequester: NotifyDeleteSubscriptionRequester,
          resubscribeService: NotifyResubscribeService,
          notifySubscribeRequester: NotifySubscribeRequester,
          notifySubscribeResponseSubscriber: NotifySubscribeResponseSubscriber,
+         notifyDeleteSubscriptionSubscriber: NotifyDeleteSubscriptionSubscriber,
          notifyUpdateRequester: NotifyUpdateRequester,
          notifyUpdateResponseSubscriber: NotifyUpdateResponseSubscriber,
          notifyAccountProvider: NotifyAccountProvider,
@@ -54,17 +62,21 @@ public class NotifyClient {
          notifyWatchSubscriptionsResponseSubscriber: NotifyWatchSubscriptionsResponseSubscriber,
          notifyWatcherAgreementKeysProvider: NotifyWatcherAgreementKeysProvider,
          notifySubscriptionsChangedRequestSubscriber: NotifySubscriptionsChangedRequestSubscriber,
+         notifySubscriptionsUpdater: NotifySubsctiptionsUpdater,
          subscriptionWatcher: SubscriptionWatcher
     ) {
         self.logger = logger
+        self.keyserverURL = keyserverURL
         self.pushClient = pushClient
-        self.identityService = identityService
+        self.identityClient = identityClient
+        self.historyService = historyService
         self.notifyMessageSubscriber = notifyMessageSubscriber
         self.notifyStorage = notifyStorage
-        self.deleteNotifySubscriptionRequester = deleteNotifySubscriptionRequester
+        self.notifyDeleteSubscriptionRequester = notifyDeleteSubscriptionRequester
         self.resubscribeService = resubscribeService
         self.notifySubscribeRequester = notifySubscribeRequester
         self.notifySubscribeResponseSubscriber = notifySubscribeResponseSubscriber
+        self.notifyDeleteSubscriptionSubscriber = notifyDeleteSubscriptionSubscriber
         self.notifyUpdateRequester = notifyUpdateRequester
         self.notifyUpdateResponseSubscriber = notifyUpdateResponseSubscriber
         self.notifyAccountProvider = notifyAccountProvider
@@ -72,19 +84,31 @@ public class NotifyClient {
         self.notifyWatchSubscriptionsResponseSubscriber = notifyWatchSubscriptionsResponseSubscriber
         self.notifyWatcherAgreementKeysProvider = notifyWatcherAgreementKeysProvider
         self.notifySubscriptionsChangedRequestSubscriber = notifySubscriptionsChangedRequestSubscriber
+        self.notifySubscriptionsUpdater = notifySubscriptionsUpdater
         self.subscriptionWatcher = subscriptionWatcher
     }
 
-    public func register(account: Account, domain: String, isLimited: Bool = false, onSign: @escaping SigningCallback) async throws {
-        try await identityService.register(account: account, domain: domain, isLimited: isLimited, onSign: onSign)
-        notifyAccountProvider.setAccount(account)
+    public func prepareRegistration(account: Account, domain: String) async throws -> IdentityRegistrationParams {
+        return try await identityClient.prepareRegistration(
+            account: account,
+            domain: domain,
+            resources: [keyserverURL.absoluteString, createAuthorizationRecap()]
+        )
+    }
+
+    public func register(params: IdentityRegistrationParams, signature: CacaoSignature) async throws {
+        try await identityClient.register(params: params, signature: signature)
+        notifyAccountProvider.setAccount(try params.account)
         try await subscriptionWatcher.start()
     }
 
     public func unregister(account: Account) async throws {
-        try await identityService.unregister(account: account)
+        if identityClient.isIdentityRegistered(account: account) {
+            try await identityClient.unregister(account: account)
+        }
         notifyWatcherAgreementKeysProvider.removeAgreement(account: account)
         try notifyStorage.clearDatabase(account: account)
+        try await pushClient.unregister()
         notifyAccountProvider.logout()
         subscriptionWatcher.stop()
     }
@@ -110,19 +134,19 @@ public class NotifyClient {
     }
 
     public func deleteSubscription(topic: String) async throws {
-        try await deleteNotifySubscriptionRequester.delete(topic: topic)
+        try await notifyDeleteSubscriptionRequester.delete(topic: topic)
     }
 
     public func deleteNotifyMessage(id: String) {
         try? notifyStorage.deleteMessage(id: id)
     }
 
-    public func register(deviceToken: Data) async throws {
-        try await pushClient.register(deviceToken: deviceToken)
+    public func register(deviceToken: Data, enableEncrypted: Bool = false) async throws {
+        try await pushClient.register(deviceToken: deviceToken, enableEncrypted: enableEncrypted)
     }
 
     public func isIdentityRegistered(account: Account) -> Bool {
-        return identityService.isIdentityRegistered(account: account)
+        return identityClient.isIdentityRegistered(account: account)
     }
 
     public func subscriptionsPublisher(account: Account) -> AnyPublisher<[NotifySubscription], Never> {
@@ -132,13 +156,39 @@ public class NotifyClient {
     public func messagesPublisher(topic: String) -> AnyPublisher<[NotifyMessageRecord], Never> {
         return notifyStorage.messagesPublisher(topic: topic)
     }
+
+    public func fetchHistory(subscription: NotifySubscription, after: String?, limit: Int) async throws -> Bool {
+        let messages = try await historyService.fetchHistory(
+            account: subscription.account,
+            topic: subscription.topic,
+            appAuthenticationKey: subscription.appAuthenticationKey,
+            host: subscription.metadata.url, 
+            after: after, 
+            limit: limit
+        )
+
+        let records = messages.map { message in
+            return NotifyMessageRecord(topic: subscription.topic, message: message, publishedAt: message.sentAt)
+        }
+
+        try notifyStorage.setMessages(records)
+
+        return messages.count == limit
+    }
+
+    /// returns notify recap for all apps
+    private func createAuthorizationRecap() -> String {
+        // {"att":{"https://notify.walletconnect.com":{"manage/all-apps-notifications":[{}]}}}
+        "urn:recap:eyJhdHQiOnsiaHR0cHM6Ly9ub3RpZnkud2FsbGV0Y29ubmVjdC5jb20iOnsibWFuYWdlL2FsbC1hcHBzLW5vdGlmaWNhdGlvbnMiOlt7fV19fX0"
+    }
 }
+
 
 #if targetEnvironment(simulator)
 extension NotifyClient {
 
     public var subscriptionChangedPublisher: AnyPublisher<[NotifySubscription], Never> {
-        return notifySubscriptionsChangedRequestSubscriber.subscriptionChangedPublisher
+        return notifySubscriptionsUpdater.subscriptionChangedPublisher
     }
 
     public func register(deviceToken: String) async throws {

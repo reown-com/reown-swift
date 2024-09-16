@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "WalletConnect",
+    name: "reown",
     platforms: [
         .iOS(.v13),
         .macOS(.v11),
@@ -14,14 +14,8 @@ let package = Package(
             name: "WalletConnect",
             targets: ["WalletConnectSign"]),
         .library(
-            name: "WalletConnectChat",
-            targets: ["WalletConnectChat"]),
-        .library(
-            name: "WalletConnectAuth",
-            targets: ["Auth"]),
-        .library(
-            name: "Web3Wallet",
-            targets: ["Web3Wallet"]),
+            name: "ReownWalletKit",
+            targets: ["ReownWalletKit"]),
         .library(
             name: "WalletConnectPairing",
             targets: ["WalletConnectPairing"]),
@@ -32,69 +26,65 @@ let package = Package(
             name: "WalletConnectPush",
             targets: ["WalletConnectPush"]),
         .library(
-            name: "WalletConnectRouter",
-            targets: ["WalletConnectRouter", "WalletConnectRouterLegacy"]),
+            name: "ReownRouter",
+            targets: ["ReownRouter", "WalletConnectRouterLegacy"]),
         .library(
             name: "WalletConnectNetworking",
             targets: ["WalletConnectNetworking"]),
         .library(
-            name: "WalletConnectSync",
-            targets: ["WalletConnectSync"]),
-        .library(
             name: "WalletConnectVerify",
             targets: ["WalletConnectVerify"]),
         .library(
-            name: "WalletConnectHistory",
-            targets: ["WalletConnectHistory"]),
+            name: "WalletConnectIdentity",
+            targets: ["WalletConnectIdentity"]),
         .library(
-            name: "WalletConnectModal",
-            targets: ["WalletConnectModal"]),
-
+            name: "ReownAppKit",
+            targets: ["ReownAppKit"]),
+        .library(
+            name: "ReownAppKitUI",
+            targets: ["ReownAppKitUI"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
-        .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1")
+        .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
+        .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")
+        ),
     ],
     targets: [
         .target(
             name: "WalletConnectSign",
-            dependencies: ["WalletConnectPairing", "WalletConnectVerify"],
-            path: "Sources/WalletConnectSign"),
+            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events"],
+            path: "Sources/WalletConnectSign",
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
-            name: "WalletConnectChat",
-            dependencies: ["WalletConnectIdentity", "WalletConnectSync", "WalletConnectHistory"],
-            path: "Sources/Chat"),
-        .target(
-            name: "Auth",
-            dependencies: ["WalletConnectPairing", "WalletConnectSigner", "WalletConnectVerify"],
-            path: "Sources/Auth"),
-        .target(
-            name: "Web3Wallet",
-            dependencies: ["Auth", "WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
-            path: "Sources/Web3Wallet"),
+            name: "ReownWalletKit",
+            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
+            path: "Sources/ReownWalletKit",
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectNotify",
-            dependencies: ["WalletConnectPairing", "WalletConnectPush", "WalletConnectIdentity", "WalletConnectSigner", "Database"],
-            path: "Sources/WalletConnectNotify"),
+            dependencies: ["WalletConnectPairing", "WalletConnectIdentity", "WalletConnectPush", "WalletConnectSigner", "Database"],
+            path: "Sources/WalletConnectNotify",
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectPush",
             dependencies: ["WalletConnectNetworking", "WalletConnectJWT"],
-            path: "Sources/WalletConnectPush"),
+            path: "Sources/WalletConnectPush",
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectRelay",
             dependencies: ["WalletConnectJWT"],
             path: "Sources/WalletConnectRelay",
-            resources: [.copy("PackageConfig.json")]),
+            resources: [.copy("PackageConfig.json"), .process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectKMS",
             dependencies: ["WalletConnectUtils"],
             path: "Sources/WalletConnectKMS"),
         .target(
             name: "WalletConnectPairing",
-            dependencies: ["WalletConnectNetworking"]),
-        .target(
-            name: "WalletConnectHistory",
-            dependencies: ["HTTPClient", "WalletConnectRelay"]),
+            dependencies: ["WalletConnectNetworking", "Events"],
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectSigner",
             dependencies: ["WalletConnectNetworking"]),
@@ -103,7 +93,8 @@ let package = Package(
             dependencies: ["WalletConnectKMS"]),
         .target(
             name: "WalletConnectIdentity",
-            dependencies: ["WalletConnectNetworking"]),
+            dependencies: ["WalletConnectNetworking"],
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectUtils",
             dependencies: ["JSONRPC"]),
@@ -122,47 +113,59 @@ let package = Package(
         .target(
             name: "WalletConnectRouterLegacy",
             dependencies: [],
-            path: "Sources/WalletConnectRouter/RouterLegacy"),
+            path: "Sources/ReownRouter/RouterLegacy"),
         .target(
-            name: "WalletConnectRouter",
+            name: "ReownRouter",
             dependencies: ["WalletConnectRouterLegacy"],
-            path: "Sources/WalletConnectRouter/Router"),
+            path: "Sources/ReownRouter/Router"),
         .target(
             name: "WalletConnectVerify",
-            dependencies: ["WalletConnectUtils", "WalletConnectNetworking"]),
+            dependencies: ["WalletConnectUtils", "WalletConnectNetworking", "WalletConnectJWT"],
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "Database",
             dependencies: ["WalletConnectUtils"]),
         .target(
-            name: "WalletConnectModal",
-            dependencies: ["QRCode", "WalletConnectSign"],
-            exclude: ["Secrets/secrets.json.sample"],
+            name: "Events",
+            dependencies: ["WalletConnectUtils", "WalletConnectNetworking"]),
+        .target(
+            name: "ReownAppKit",
+            dependencies: [
+                "QRCode",
+                "WalletConnectSign",
+                "ReownAppKitUI",
+                "ReownAppKitBackport",
+                "CoinbaseWalletSDK"
+            ],
+            path: "Sources/ReownAppKit",
             resources: [
-                .copy("Secrets/secrets.json"),
-                .copy("Resources/Assets.xcassets")
+                .process("Resources/Assets.xcassets"),
+                .copy("PackageConfig.json")
             ]
         ),
         .target(
-            name: "WalletConnectSync",
-            dependencies: ["WalletConnectSigner"]),
+            name: "ReownAppKitUI",
+            dependencies: [
+                "ReownAppKitBackport"
+            ],
+            path: "Sources/ReownAppKitUI",
+            resources: [
+                .process("Resources/Assets.xcassets")
+            ]
+        ),
+        .target(
+            name: "ReownAppKitBackport",
+            path: "Sources/ReownAppKitBackport"
+        ),
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
         .testTarget(
-            name: "Web3WalletTests",
-            dependencies: ["Web3Wallet", "TestingUtils"]),
-        .testTarget(
             name: "WalletConnectPairingTests",
             dependencies: ["WalletConnectPairing", "TestingUtils"]),
         .testTarget(
-            name: "ChatTests",
-            dependencies: ["WalletConnectChat", "WalletConnectUtils", "TestingUtils"]),
-        .testTarget(
             name: "NotifyTests",
             dependencies: ["WalletConnectNotify", "TestingUtils"]),
-        .testTarget(
-            name: "AuthTests",
-            dependencies: ["Auth", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
         .testTarget(
             name: "RelayerTests",
             dependencies: ["WalletConnectRelay", "WalletConnectUtils", "TestingUtils"]),
@@ -186,8 +189,23 @@ let package = Package(
             name: "CommonsTests",
             dependencies: ["Commons", "TestingUtils"]),
         .testTarget(
-            name: "WalletConnectModalTests",
-            dependencies: ["WalletConnectModal", "TestingUtils"])
+            name: "EventsTests",
+            dependencies: ["Events"]),
+//        .testTarget(
+//            name: "ReownAppKitTests",
+//            dependencies: [
+//                "ReownAppKit",
+//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+//            ]
+//        ),
+//        .testTarget(
+//            name: "ReownAppKitUITests",
+//            dependencies: [
+//                "ReownAppKitUI",
+//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+//            ]
+//        )
     ],
     swiftLanguageVersions: [.v5]
 )
+

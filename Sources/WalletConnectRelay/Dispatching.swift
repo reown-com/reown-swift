@@ -3,6 +3,8 @@ import Combine
 
 protocol Dispatching {
     var onMessage: ((String) -> Void)? { get set }
+    var isSocketConnected: Bool { get }
+    var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
     func send(_ string: String, completion: @escaping (Error?) -> Void)
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void)
@@ -15,52 +17,50 @@ final class Dispatcher: NSObject, Dispatching {
     var onMessage: ((String) -> Void)?
     var socket: WebSocketConnecting
     var socketConnectionHandler: SocketConnectionHandler
-    
+
+    private let defaultTimeout: Int = 15
     private let relayUrlFactory: RelayUrlFactory
+    private let networkMonitor: NetworkMonitoring
     private let logger: ConsoleLogging
-    
-    private let defaultTimeout: Int = 5
-    /// The property is used to determine whether relay.walletconnect.org will be used
-    /// in case relay.walletconnect.com doesn't respond for some reason (most likely due to being blocked in the user's location).
-    private var fallback = false
-    
-    private let socketConnectionStatusPublisherSubject = CurrentValueSubject<SocketConnectionStatus, Never>(.disconnected)
+    private let socketStatusProvider: SocketStatusProviding
 
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> {
-        socketConnectionStatusPublisherSubject.eraseToAnyPublisher()
+        socketStatusProvider.socketConnectionStatusPublisher
     }
 
-    private let concurrentQueue = DispatchQueue(label: "com.walletconnect.sdk.dispatcher", attributes: .concurrent)
+    var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> {
+        networkMonitor.networkConnectionStatusPublisher
+    }
+
+    var isSocketConnected: Bool {
+        return networkMonitor.isConnected
+    }
+
+    private let concurrentQueue = DispatchQueue(label: "com.walletconnect.sdk.dispatcher", qos: .utility, attributes: .concurrent)
 
     init(
         socketFactory: WebSocketFactory,
         relayUrlFactory: RelayUrlFactory,
-        socketConnectionType: SocketConnectionType,
-        logger: ConsoleLogging
+        networkMonitor: NetworkMonitoring,
+        socket: WebSocketConnecting,
+        logger: ConsoleLogging,
+        socketConnectionHandler: SocketConnectionHandler,
+        socketStatusProvider: SocketStatusProviding
     ) {
+        self.socketConnectionHandler = socketConnectionHandler
         self.relayUrlFactory = relayUrlFactory
+        self.networkMonitor = networkMonitor
         self.logger = logger
-        
-        let socket = socketFactory.create(with: relayUrlFactory.create(fallback: fallback))
-        socket.request.addValue(EnvironmentInfo.userAgent, forHTTPHeaderField: "User-Agent")
-        if let bundleId = Bundle.main.bundleIdentifier {
-            socket.request.addValue(bundleId, forHTTPHeaderField: "Origin")
-        }
         self.socket = socket
-        
-        switch socketConnectionType {
-        case .automatic:    socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket)
-        case .manual:       socketConnectionHandler = ManualSocketConnectionHandler(socket: socket)
-        }
-        
+        self.socketStatusProvider = socketStatusProvider
+
         super.init()
         setUpWebSocketSession()
-        setUpSocketConnectionObserving()
     }
 
     func send(_ string: String, completion: @escaping (Error?) -> Void) {
         guard socket.isConnected else {
-            completion(NetworkError.webSocketNotConnected)
+            completion(NetworkError.connectionFailed)
             return
         }
         socket.write(string: string) {
@@ -69,44 +69,54 @@ final class Dispatcher: NSObject, Dispatching {
     }
 
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
-        guard !socket.isConnected else {
-            return send(string, completion: completion)
+        logger.debug("will try to send a socket frame")
+        // Check if the socket is already connected and ready to send
+        if socket.isConnected && networkMonitor.isConnected {
+            logger.debug("sending a socket frame")
+            send(string, completion: completion)
+            return
         }
 
-        var cancellable: AnyCancellable?
-        cancellable = socketConnectionStatusPublisher
-            .filter { $0 == .connected }
-            .setFailureType(to: NetworkError.self)
-            .timeout(.seconds(defaultTimeout), scheduler: concurrentQueue, customError: { .webSocketNotConnected })
-            .sink(receiveCompletion: { [unowned self] result in
-                switch result {
-                case .failure(let error):
-                    cancellable?.cancel()
-                    self.handleFallbackIfNeeded(error: error)
-                    completion(error)
-                case .finished: break
-                }
-            }, receiveValue: { [unowned self] _ in
-                cancellable?.cancel()
+        logger.debug("Socket is not connected, will try to connect to send a frame")
+        // Start the connection process if not already connected
+        Task {
+            do {
+                // Await the connection handler to establish the connection
+                try await socketConnectionHandler.handleInternalConnect()
+
+                logger.debug("internal connect successful, will try to send a socket frame")
+                // If successful, send the message
                 send(string, completion: completion)
-            })
+            } catch {
+                logger.debug("failed to handle internal connect")
+                // If an error occurs during connection, complete with that error
+                completion(error)
+            }
+        }
     }
 
+
     func protectedSend(_ string: String) async throws {
+        var isResumed = false
         return try await withCheckedThrowingContinuation { continuation in
             protectedSend(string) { error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
+                if !isResumed {
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(returning: ())
+                    }
+                    isResumed = true
                 }
             }
         }
     }
 
     func connect() throws {
+        // Attempt to handle connection
         try socketConnectionHandler.handleConnect()
     }
+
 
     func disconnect(closeCode: URLSessionWebSocketTask.CloseCode) throws {
         try socketConnectionHandler.handleDisconnect(closeCode: closeCode)
@@ -121,29 +131,5 @@ extension Dispatcher {
         }
     }
 
-    private func setUpSocketConnectionObserving() {
-        socket.onConnect = { [unowned self] in
-            self.socketConnectionStatusPublisherSubject.send(.connected)
-        }
-        socket.onDisconnect = { [unowned self] error in
-            self.socketConnectionStatusPublisherSubject.send(.disconnected)
-            if error != nil {
-                self.socket.request.url = relayUrlFactory.create(fallback: fallback)
-            }
-            Task(priority: .high) {
-                await self.socketConnectionHandler.handleDisconnection()
-            }
-        }
-    }
-    
-    private func handleFallbackIfNeeded(error: NetworkError) {
-        if error == .webSocketNotConnected && socket.request.url?.host == NetworkConstants.defaultUrl {
-            logger.debug("[WebSocket] - Fallback to \(NetworkConstants.fallbackUrl)")
-            fallback = true
-            socket.request.url = relayUrlFactory.create(fallback: fallback)
-            Task(priority: .high) {
-                await self.socketConnectionHandler.handleDisconnection()
-            }
-        }
-    }
+
 }

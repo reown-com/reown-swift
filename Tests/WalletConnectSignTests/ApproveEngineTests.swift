@@ -1,12 +1,12 @@
 import XCTest
 import Combine
 import JSONRPC
-import WalletConnectUtils
-import WalletConnectPairing
 import WalletConnectNetworking
+@testable import WalletConnectPairing
 @testable import WalletConnectSign
 @testable import TestingUtils
 @testable import WalletConnectKMS
+@testable import WalletConnectUtils
 
 final class ApproveEngineTests: XCTestCase {
 
@@ -33,6 +33,12 @@ final class ApproveEngineTests: XCTestCase {
         proposalPayloadsStore = CodableStore<RequestSubscriptionPayload<SessionType.ProposeParams>>(defaults: RuntimeKeyValueStorage(), identifier: "")
         verifyContextStore = CodableStore<VerifyContext>(defaults: RuntimeKeyValueStorage(), identifier: "")
         sessionTopicToProposal = CodableStore<Session.Proposal>(defaults: RuntimeKeyValueStorage(), identifier: "")
+        let history = RPCHistory(
+            keyValueStore: .init(
+                defaults: RuntimeKeyValueStorage(),
+                identifier: ""
+            )
+        )
         engine = ApproveEngine(
             networkingInteractor: networkingInteractor,
             proposalPayloadsStore: proposalPayloadsStore,
@@ -44,7 +50,10 @@ final class ApproveEngineTests: XCTestCase {
             logger: ConsoleLoggerMock(),
             pairingStore: pairingStorageMock,
             sessionStore: sessionStorageMock,
-            verifyClient: VerifyClientMock()
+            verifyClient: VerifyClientMock(),
+            rpcHistory: history,
+            authRequestSubscribersTracking: AuthRequestSubscribersTracking(logger: ConsoleLoggerMock()),
+            eventsClient: MockEventsClient()
         )
     }
 
@@ -64,16 +73,16 @@ final class ApproveEngineTests: XCTestCase {
         pairingStorageMock.setPairing(pairing)
         let proposerPubKey = AgreementPrivateKey().publicKey.hexRepresentation
         let proposal = SessionProposal.stub(proposerPubKey: proposerPubKey)
-        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil))
-        
-        try await engine.approveProposal(proposerPubKey: proposal.proposer.publicKey, validating: SessionNamespace.stubDictionary())
+        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil, encryptedMessage: "", attestation: nil))
+
+        _ = try await engine.approveProposal(proposerPubKey: proposal.proposer.publicKey, validating: SessionNamespace.stubDictionary())
 
         let topicB = networkingInteractor.subscriptions.last!
 
         XCTAssertTrue(networkingInteractor.didCallSubscribe)
         XCTAssert(cryptoMock.hasAgreementSecret(for: topicB), "Responder must store agreement key for topic B")
         XCTAssertEqual(networkingInteractor.didRespondOnTopic!, topicA, "Responder must respond on topic A")
-        XCTAssertTrue(pairingRegisterer.isActivateCalled)
+        XCTAssertTrue(sessionStorageMock.hasSession(forTopic: topicB), "Responder must persist session on topic B")
     }
 
     func testReceiveProposal() {
@@ -88,7 +97,7 @@ final class ApproveEngineTests: XCTestCase {
             sessionProposed = true
         }
 
-        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil))
+        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil, encryptedMessage: "", attestation: nil))
         XCTAssertNotNil(try! proposalPayloadsStore.get(key: proposal.proposer.publicKey), "Proposer must store proposal payload")
         XCTAssertTrue(sessionProposed)
     }
@@ -98,8 +107,7 @@ final class ApproveEngineTests: XCTestCase {
         let topicB = String.generateTopic()
         cryptoMock.setAgreementSecret(agreementKeys, topic: topicB)
         let proposal = SessionProposal.stub(proposerPubKey: AgreementPrivateKey().publicKey.hexRepresentation)
-        try await engine.settle(topic: topicB, proposal: proposal, namespaces: SessionNamespace.stubDictionary(), pairingTopic: "")
-        XCTAssertTrue(sessionStorageMock.hasSession(forTopic: topicB), "Responder must persist session on topic B")
+        _ = try await engine.settle(topic: topicB, proposal: proposal, namespaces: SessionNamespace.stubDictionary(), pairingTopic: "")
         XCTAssert(networkingInteractor.didSubscribe(to: topicB), "Responder must subscribe for topic B")
         XCTAssertTrue(networkingInteractor.didCallRequest, "Responder must send session settle payload on topic B")
     }
@@ -112,7 +120,7 @@ final class ApproveEngineTests: XCTestCase {
             didCallBackOnSessionApproved = true
         }
         sessionTopicToProposal.set(SessionProposal.stub().publicRepresentation(pairingTopic: ""), forKey: sessionTopic)
-        networkingInteractor.requestPublisherSubject.send((sessionTopic, RPCRequest.stubSettle(), Data(), Date(), ""))
+        networkingInteractor.requestPublisherSubject.send((sessionTopic, RPCRequest.stubSettle(), Data(), Date(), "", "", nil))
 
         usleep(100)
 
@@ -163,7 +171,7 @@ final class ApproveEngineTests: XCTestCase {
         engine.onSessionProposal = { _, _ in
             proposalReceivedExpectation.fulfill()
         }
-        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil))
+        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil, encryptedMessage: "", attestation: nil))
 
         wait(for: [proposalReceivedExpectation], timeout: 0.1)
         
@@ -182,13 +190,13 @@ final class ApproveEngineTests: XCTestCase {
         engine.onSessionProposal = { _, _ in
             proposalReceivedExpectation.fulfill()
         }
-        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil))
-        
+        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil, encryptedMessage: "", attestation: nil))
+
         wait(for: [proposalReceivedExpectation], timeout: 0.1)
         
         XCTAssertTrue(verifyContextStore.getAll().count == 1)
         
-        try await engine.approveProposal(proposerPubKey: proposal.proposer.publicKey, validating: SessionNamespace.stubDictionary())
+        _ = try await engine.approveProposal(proposerPubKey: proposal.proposer.publicKey, validating: SessionNamespace.stubDictionary())
         
         XCTAssertTrue(verifyContextStore.getAll().isEmpty)
     }
@@ -205,7 +213,7 @@ final class ApproveEngineTests: XCTestCase {
         engine.onSessionProposal = { _, _ in
             proposalReceivedExpectation.fulfill()
         }
-        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil))
+        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil, encryptedMessage: "", attestation: nil))
         
         wait(for: [proposalReceivedExpectation], timeout: 0.1)
         

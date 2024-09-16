@@ -1,5 +1,5 @@
 import SwiftUI
-import Web3Wallet
+import ReownWalletKit
 
 struct WalletView: View {
     @EnvironmentObject var presenter: WalletPresenter
@@ -35,7 +35,7 @@ struct WalletView: View {
                                     }
                                     .onDelete { indexSet in
                                         Task(priority: .high) {
-                                            await presenter.removeSession(at: indexSet)
+                                            try await presenter.removeSession(at: indexSet)
                                         }
                                     }
                                 }

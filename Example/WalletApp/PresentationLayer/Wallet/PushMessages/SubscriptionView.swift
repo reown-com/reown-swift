@@ -1,5 +1,5 @@
 import SwiftUI
-import Web3ModalUI
+import ReownAppKitUI
 
 struct SubscriptionView: View {
 
@@ -34,6 +34,11 @@ struct SubscriptionView: View {
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
                 }
+
+                if presenter.isMoreDataAvailable {
+                    lastRowView()
+                        .listRowSeparator(.hidden)
+                }
             }
             .listStyle(PlainListStyle())
         }
@@ -44,15 +49,16 @@ struct SubscriptionView: View {
     private func notificationView(pushMessage: NotifyMessageViewModel) -> some View {
         VStack(alignment: .center) {
             HStack(spacing: 12) {
-                CacheAsyncImage(url: URL(string: pushMessage.imageUrl)) { phase in
+                CacheAsyncImage(url: presenter.messageIconUrl(message: pushMessage)) { phase in
                     if let image = phase.image {
                         image
                             .resizable()
                             .frame(width: 48, height: 48)
-                            .background(Color.black)
+                            .background(Color.black.opacity(0.05))
                             .cornerRadius(10, corners: .allCorners)
                     } else {
                         Color.black
+                            .opacity(0.05)
                             .frame(width: 48, height: 48)
                             .cornerRadius(10, corners: .allCorners)
                     }
@@ -72,7 +78,7 @@ struct SubscriptionView: View {
                             .font(.system(size: 11))
                     }
 
-                    Text(pushMessage.subtitle)
+                    Text(.init(pushMessage.subtitle))
                         .foregroundColor(.Foreground175)
                         .font(.system(size: 13))
 
@@ -98,20 +104,24 @@ struct SubscriptionView: View {
             .padding(.top, 56.0)
             .padding(.bottom, 8.0)
 
-            Text(presenter.subscriptionViewModel.name)
-                .font(.large700)
-                .foregroundColor(.Foreground100)
-                .padding(.bottom, 8.0)
+            Group {
+                Text(presenter.subscriptionViewModel.name)
+                    .font(.large700)
+                    .foregroundColor(.Foreground100)
+                    .padding(.bottom, 8.0)
 
-            Text(presenter.subscriptionViewModel.domain)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.Foreground200)
-                .padding(.bottom, 16.0)
+                Text(presenter.subscriptionViewModel.domain)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.Foreground200)
+                    .padding(.bottom, 16.0)
 
-            Text(presenter.subscriptionViewModel.description)
-                .font(.system(size: 14, weight: .regular))
-                .foregroundColor(.Foreground100)
-                .padding(.bottom, 16.0)
+                Text(presenter.subscriptionViewModel.description)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(.Foreground100)
+                    .padding(.bottom, 16.0)
+            }
+            .padding(.horizontal, 20)
+            .multilineTextAlignment(.center)
 
             Menu {
                 Button(role: .destructive, action: {
@@ -156,6 +166,26 @@ struct SubscriptionView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 410)
+    }
+
+    func lastRowView() -> some View {
+        VStack {
+            switch presenter.loadingState {
+            case .loading:
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+                .padding(.bottom, 24)
+            case .idle:
+                EmptyView()
+            }
+        }
+        .frame(height: 50)
+        .onAppear {
+            presenter.loadMoreMessages()
+        }
     }
 }
 

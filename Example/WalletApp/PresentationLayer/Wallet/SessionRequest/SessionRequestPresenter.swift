@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 
-import Web3Wallet
+import ReownWalletKit
 
 final class SessionRequestPresenter: ObservableObject {
     private let interactor: SessionRequestInteractor
@@ -13,10 +13,18 @@ final class SessionRequestPresenter: ObservableObject {
     let validationStatus: VerifyContext.ValidationStatus?
     
     var message: String {
-        let message = try? sessionRequest.params.get([String].self)
-        let decryptedMessage = message.map { String(data: Data(hex: $0.first ?? ""), encoding: .utf8) }
-        return (decryptedMessage ?? String(describing: sessionRequest.params.value)) ?? String(describing: sessionRequest.params.value)
+        guard let messages = try? sessionRequest.params.get([String].self),
+              let firstMessage = messages.first else {
+            return String(describing: sessionRequest.params.value)
+        }
+
+        // Attempt to decode the message if it's hex-encoded
+        let decodedMessage = String(data: Data(hex: firstMessage), encoding: .utf8)
+
+        // Return the decoded message if available, else return the original message
+        return decodedMessage?.isEmpty == false ? decodedMessage! : firstMessage
     }
+
     
     @Published var showError = false
     @Published var errorMessage = "Error"
@@ -43,9 +51,12 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
         do {
-            let showConnected = try await interactor.approve(sessionRequest: sessionRequest, importAccount: importAccount)
+            ActivityIndicatorManager.shared.start()
+            let showConnected = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
             showConnected ? showSignedSheet.toggle() : router.dismiss()
+            ActivityIndicatorManager.shared.stop()
         } catch {
+            ActivityIndicatorManager.shared.stop()
             errorMessage = error.localizedDescription
             showError.toggle()
         }
@@ -53,8 +64,16 @@ final class SessionRequestPresenter: ObservableObject {
 
     @MainActor
     func onReject() async throws {
-        try await interactor.reject(sessionRequest: sessionRequest)
-        router.dismiss()
+        do {
+            ActivityIndicatorManager.shared.start()
+            try await interactor.respondError(sessionRequest: sessionRequest)
+            ActivityIndicatorManager.shared.stop()
+            router.dismiss()
+        } catch {
+            ActivityIndicatorManager.shared.stop()
+            errorMessage = error.localizedDescription
+            showError.toggle()
+        }
     }
     
     func onSignedSheetDismiss() {
@@ -68,7 +87,16 @@ final class SessionRequestPresenter: ObservableObject {
 
 // MARK: - Private functions
 private extension SessionRequestPresenter {
-    func setupInitialState() {}
+    func setupInitialState() {
+        WalletKit.instance.requestExpirationPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] requestId in
+                guard let self = self else { return }
+                if requestId == sessionRequest.id {
+                    dismiss()
+                }
+            }.store(in: &disposeBag)
+    }
 }
 
 // MARK: - SceneViewModel

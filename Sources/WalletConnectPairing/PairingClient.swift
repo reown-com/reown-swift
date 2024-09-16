@@ -2,26 +2,36 @@ import Foundation
 import Combine
 
 public class PairingClient: PairingRegisterer, PairingInteracting, PairingClientProtocol {
-    public var pingResponsePublisher: AnyPublisher<(String), Never> {
-        pingResponsePublisherSubject.eraseToAnyPublisher()
+    public var pairingDeletePublisher: AnyPublisher<(code: Int, message: String), Never> {
+        pairingDeleteRequestSubscriber.deletePublisherSubject.eraseToAnyPublisher()
     }
+
+    public var pairingStatePublisher: AnyPublisher<Bool, Never> {
+        return pairingStateProvider.pairingStatePublisher
+    }
+
     public let socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never>
+    public var pairingExpirationPublisher: AnyPublisher<Pairing, Never> {
+        return expirationService.pairingExpirationPublisher
+    }
 
     private let pairingStorage: WCPairingStorage
     private let walletPairService: WalletPairService
     private let appPairService: AppPairService
-    private let appPairActivateService: AppPairActivationService
-    private var pingResponsePublisherSubject = PassthroughSubject<String, Never>()
     private let logger: ConsoleLogging
-    private let pingService: PairingPingService
     private let networkingInteractor: NetworkInteracting
     private let pairingRequestsSubscriber: PairingRequestsSubscriber
     private let pairingsProvider: PairingsProvider
-    private let deletePairingService: DeletePairingService
     private let resubscribeService: PairingResubscribeService
     private let expirationService: ExpirationService
+    private let pairingDeleteRequestSubscriber: PairingDeleteRequestSubscriber
+    private let pairingStateProvider: PairingStateProvider
 
     private let cleanupService: PairingCleanupService
+
+    public var logsPublisher: AnyPublisher<Log, Never> {
+        return logger.logsPublisher
+    }
 
     init(
         pairingStorage: WCPairingStorage,
@@ -29,15 +39,14 @@ public class PairingClient: PairingRegisterer, PairingInteracting, PairingClient
         networkingInteractor: NetworkInteracting,
         logger: ConsoleLogging,
         walletPairService: WalletPairService,
-        deletePairingService: DeletePairingService,
+        pairingDeleteRequestSubscriber: PairingDeleteRequestSubscriber,
         resubscribeService: PairingResubscribeService,
         expirationService: ExpirationService,
         pairingRequestsSubscriber: PairingRequestsSubscriber,
-        appPairActivateService: AppPairActivationService,
         cleanupService: PairingCleanupService,
-        pingService: PairingPingService,
         socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never>,
-        pairingsProvider: PairingsProvider
+        pairingsProvider: PairingsProvider,
+        pairingStateProvider: PairingStateProvider
     ) {
         self.pairingStorage = pairingStorage
         self.appPairService = appPairService
@@ -45,22 +54,14 @@ public class PairingClient: PairingRegisterer, PairingInteracting, PairingClient
         self.networkingInteractor = networkingInteractor
         self.socketConnectionStatusPublisher = socketConnectionStatusPublisher
         self.logger = logger
-        self.deletePairingService = deletePairingService
-        self.appPairActivateService = appPairActivateService
+        self.pairingDeleteRequestSubscriber = pairingDeleteRequestSubscriber
         self.resubscribeService = resubscribeService
         self.expirationService = expirationService
         self.cleanupService = cleanupService
-        self.pingService = pingService
         self.pairingRequestsSubscriber = pairingRequestsSubscriber
         self.pairingsProvider = pairingsProvider
-        setUpPublishers()
+        self.pairingStateProvider = pairingStateProvider
         setUpExpiration()
-    }
-
-    private func setUpPublishers() {
-        pingService.onResponse = { [unowned self] topic in
-            pingResponsePublisherSubject.send(topic)
-        }
     }
 
     private func setUpExpiration() {
@@ -78,14 +79,10 @@ public class PairingClient: PairingRegisterer, PairingInteracting, PairingClient
         try await walletPairService.pair(uri)
     }
 
-    public func create()  async throws -> WalletConnectURI {
-        return try await appPairService.create()
+    public func create(methods: [String]? = nil)  async throws -> WalletConnectURI {
+        return try await appPairService.create(supportedMethods: methods)
     }
 
-    public func activate(pairingTopic: String, peerMetadata: AppMetadata?) {
-        appPairActivateService.activate(for: pairingTopic, peerMetadata: peerMetadata)
-    }
-    
     public func setReceived(pairingTopic: String) {
         guard var pairing = pairingStorage.getPairing(forTopic: pairingTopic) else {
             return logger.error("Pairing not found for topic: \(pairingTopic)")
@@ -103,17 +100,8 @@ public class PairingClient: PairingRegisterer, PairingInteracting, PairingClient
         try pairingsProvider.getPairing(for: topic)
     }
 
-    public func ping(topic: String) async throws {
-        try await pingService.ping(topic: topic)
-    }
-
-    public func disconnect(topic: String) async throws {
-        try await deletePairingService.delete(topic: topic)
-    }
-
-    public func validatePairingExistance(_ topic: String) throws {
-        _ = try pairingsProvider.getPairing(for: topic)
-    }
+    @available(*, deprecated, message: "This method is deprecated. Pairing will disconnect automatically")
+    public func disconnect(topic: String) async {}
 
     public func register<RequestParams>(method: ProtocolMethod) -> AnyPublisher<RequestSubscriptionPayload<RequestParams>, Never> {
         logger.debug("Pairing Client - registering for \(method.method)")

@@ -1,13 +1,19 @@
 import Foundation
 
 public struct PushClientFactory {
-    public static func create(projectId: String,
-                              pushHost: String,
-                              environment: APNSEnvironment) -> PushClient {
+    public static func create(
+        projectId: String,
+        pushHost: String,
+        groupIdentifier: String,
+        environment: APNSEnvironment
+    ) -> PushClient {
 
-        let keychainStorage = KeychainStorage(serviceIdentifier: "com.walletconnect.sdk")
-        let keyValueStorage = UserDefaults.standard
 
+        guard let keyValueStorage = UserDefaults(suiteName: groupIdentifier) else {
+            fatalError("Could not instantiate UserDefaults for a group identifier \(groupIdentifier)")
+        }
+        let keychainStorage = KeychainStorage(serviceIdentifier: "com.walletconnect.sdk", accessGroup: groupIdentifier)
+        
         return PushClientFactory.create(
             projectId: projectId,
             pushHost: pushHost,
@@ -24,8 +30,8 @@ public struct PushClientFactory {
         environment: APNSEnvironment
     ) -> PushClient {
         let sessionConfiguration = URLSessionConfiguration.default
-        sessionConfiguration.timeoutIntervalForRequest = 5.0
-        sessionConfiguration.timeoutIntervalForResource = 5.0
+        sessionConfiguration.timeoutIntervalForRequest = 10.0
+        sessionConfiguration.timeoutIntervalForResource = 10.0
         let session = URLSession(configuration: sessionConfiguration)
 
         let logger = ConsoleLogger(prefix: "👂🏻", loggingLevel: .off)
@@ -36,7 +42,8 @@ public struct PushClientFactory {
         let pushAuthenticator = PushAuthenticator(clientIdStorage: clientIdStorage, pushHost: pushHost)
 
         let registerService = PushRegisterService(httpClient: httpClient, projectId: projectId, clientIdStorage: clientIdStorage, pushAuthenticator: pushAuthenticator, logger: logger, environment: environment)
+        let unregisterService = UnregisterService(httpClient: httpClient, projectId: projectId, clientIdStorage: clientIdStorage, pushAuthenticator: pushAuthenticator, logger: logger, pushHost: pushHost, environment: environment)
 
-        return PushClient(registerService: registerService, logger: logger)
+        return PushClient(registerService: registerService, logger: logger, unregisterService: unregisterService)
     }
 }

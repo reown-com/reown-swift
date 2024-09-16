@@ -2,12 +2,21 @@
   "object": {
     "pins": [
       {
+        "package": "Atlantis",
+        "repositoryURL": "https://github.com/ProxymanApp/atlantis",
+        "state": {
+          "branch": null,
+          "revision": "5145a7041ec71421d09653db87dcc80c81792004",
+          "version": "1.24.0"
+        }
+      },
+      {
         "package": "BigInt",
         "repositoryURL": "https://github.com/attaswift/BigInt.git",
         "state": {
           "branch": null,
-          "revision": "0ed110f7555c34ff468e72e1686e59721f2b0da6",
-          "version": "5.3.0"
+          "revision": "793a7fac0bfc318e85994bf6900652e827aef33e",
+          "version": "5.4.1"
         }
       },
       {
@@ -15,8 +24,8 @@
         "repositoryURL": "https://github.com/krzyzanowskim/CryptoSwift.git",
         "state": {
           "branch": null,
-          "revision": "db51c407d3be4a051484a141bf0bff36c43d3b1e",
-          "version": "1.8.0"
+          "revision": "678d442c6f7828def400a70ae15968aef67ef52d",
+          "version": "1.8.3"
         }
       },
       {
@@ -33,7 +42,7 @@
         "repositoryURL": "https://github.com/mixpanel/mixpanel-swift",
         "state": {
           "branch": "master",
-          "revision": "1ce27d937009d5ecce74dad97d69898ffea49c75",
+          "revision": "61ce9b40817466fb1334db1d7a582fbaf616ab4c",
           "version": null
         }
       },
@@ -65,15 +74,6 @@
         }
       },
       {
-        "package": "Sentry",
-        "repositoryURL": "https://github.com/getsentry/sentry-cocoa.git",
-        "state": {
-          "branch": null,
-          "revision": "14aa6e47b03b820fd2b338728637570b9e969994",
-          "version": "8.12.0"
-        }
-      },
-      {
         "package": "SolanaSwift",
         "repositoryURL": "https://github.com/flypaper0/solana-swift",
         "state": {
@@ -96,13 +96,13 @@
         "repositoryURL": "https://github.com/apple/swift-docc-plugin",
         "state": {
           "branch": null,
-          "revision": "26ac5758409154cc448d7ab82389c520fa8a8247",
-          "version": "1.3.0"
+          "revision": "2eb22993b3dfd0c0d32729b357c8dabb6cd44680",
+          "version": "1.4.2"
         }
       },
       {
         "package": "SymbolKit",
-        "repositoryURL": "https://github.com/apple/swift-docc-symbolkit",
+        "repositoryURL": "https://github.com/swiftlang/swift-docc-symbolkit",
         "state": {
           "branch": null,
           "revision": "b45d1f2ed151d057b54504d653e0da5552844e34",
@@ -119,12 +119,30 @@
         }
       },
       {
+        "package": "swift-snapshot-testing",
+        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing",
+        "state": {
+          "branch": null,
+          "revision": "f29e2014f6230cf7d5138fc899da51c7f513d467",
+          "version": "1.10.0"
+        }
+      },
+      {
         "package": "SwiftImageReadWrite",
         "repositoryURL": "https://github.com/dagronf/SwiftImageReadWrite",
         "state": {
           "branch": null,
           "revision": "5596407d1cf61b953b8e658fa8636a471df3c509",
           "version": "1.1.6"
+        }
+      },
+      {
+        "package": "SwiftMessages",
+        "repositoryURL": "https://github.com/SwiftKickMobile/SwiftMessages",
+        "state": {
+          "branch": null,
+          "revision": "62e12e138fc3eedf88c7553dd5d98712aa119f40",
+          "version": "9.0.9"
         }
       },
       {
@@ -155,21 +173,21 @@
         }
       },
       {
+        "package": "CoinbaseWalletSDK",
+        "repositoryURL": "https://github.com/WalletConnect/wallet-mobile-sdk",
+        "state": {
+          "branch": null,
+          "revision": "b6dfb7d6b8447c7c5b238a10443a1ac28223f38f",
+          "version": "1.0.0"
+        }
+      },
+      {
         "package": "Web3",
         "repositoryURL": "https://github.com/WalletConnect/Web3.swift",
         "state": {
           "branch": null,
           "revision": "569255adcfff0b37e4cb8004aea29d0e2d6266df",
           "version": "1.0.2"
-        }
-      },
-      {
-        "package": "swift-web3modal",
-        "repositoryURL": "https://github.com/WalletConnect/web3modal-swift",
-        "state": {
-          "branch": null,
-          "revision": "831410cfd6e68afa7212a5547483fb2d180f0fa7",
-          "version": "1.0.10"
         }
       }
     ]

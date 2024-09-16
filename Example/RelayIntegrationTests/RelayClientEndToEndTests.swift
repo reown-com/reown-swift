@@ -35,21 +35,33 @@ final class RelayClientEndToEndTests: XCTestCase {
         let logger = ConsoleLogger(prefix: prefix, loggingLevel: .debug)
         let clientIdStorage = ClientIdStorage(defaults: keyValueStorage, keychain: KeychainStorageMock(), logger: logger)
         let socketAuthenticator = ClientIdAuthenticator(
-            clientIdStorage: clientIdStorage,
-            url: InputConfig.relayUrl
+            clientIdStorage: clientIdStorage
         )
         let urlFactory = RelayUrlFactory(
             relayHost: InputConfig.relayHost,
             projectId: InputConfig.projectId,
             socketAuthenticator: socketAuthenticator
         )
-        let socket = WebSocket(url: urlFactory.create(fallback: false))
+        let socket = WebSocket(url: urlFactory.create())
         let webSocketFactory = WebSocketFactoryMock(webSocket: socket)
+        let networkMonitor = NetworkMonitor()
+
+        let relayUrlFactory = RelayUrlFactory(
+            relayHost: "relay.walletconnect.com",
+            projectId: "1012db890cf3cfb0c1cdc929add657ba",
+            socketAuthenticator: socketAuthenticator
+        )
+
+        let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
+        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(logger: logger), logger: logger, socketStatusProvider: socketStatusProvider)
         let dispatcher = Dispatcher(
             socketFactory: webSocketFactory,
             relayUrlFactory: urlFactory,
-            socketConnectionType: .manual,
-            logger: logger
+            networkMonitor: networkMonitor,
+            socket: socket,
+            logger: logger,
+            socketConnectionHandler: socketConnectionHandler,
+            socketStatusProvider: socketStatusProvider
         )
         let keychain = KeychainStorageMock()
         let relayClient = RelayClientFactory.create(
@@ -58,13 +70,19 @@ final class RelayClientEndToEndTests: XCTestCase {
             keyValueStorage: keyValueStorage,
             keychainStorage: keychain,
             socketFactory: DefaultSocketFactory(),
-            socketConnectionType: .manual,
+            socketConnectionType: .manual, 
+            networkMonitor: networkMonitor,
             logger: logger
         )
         let clientId = try! relayClient.getClientId()
         logger.debug("My client id is: \(clientId)")
 
         return relayClient
+    }
+
+    override func tearDown() {
+        Thread.sleep(forTimeInterval: 1.0)
+        super.tearDown()
     }
 
     func testSubscribe() {
@@ -104,12 +122,12 @@ final class RelayClientEndToEndTests: XCTestCase {
         expectationA.assertForOverFulfill = false
         expectationB.assertForOverFulfill = false
 
-        relayA.messagePublisher.sink { topic, payload, _ in
+        relayA.messagePublisher.sink { topic, payload, _, _ in
             (subscriptionATopic, subscriptionAPayload) = (topic, payload)
             expectationA.fulfill()
         }.store(in: &publishers)
 
-        relayB.messagePublisher.sink { topic, payload, _ in
+        relayB.messagePublisher.sink { topic, payload, _, _ in
             (subscriptionBTopic, subscriptionBPayload) = (topic, payload)
             Task(priority: .high) {
                 sleep(1)

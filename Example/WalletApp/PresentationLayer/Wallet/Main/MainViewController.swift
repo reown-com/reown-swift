@@ -1,5 +1,5 @@
 import UIKit
-import Sentry
+
 enum LoginError: Error {
     case wrongUser(id: String)
     case wrongPassword

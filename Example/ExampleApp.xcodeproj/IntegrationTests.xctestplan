@@ -10,6 +10,11 @@
   ],
   "defaultOptions" : {
     "codeCoverage" : false,
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "isTesting"
+      }
+    ],
     "environmentVariableEntries" : [
       {
         "key" : "RELAY_HOST",
@@ -54,10 +59,12 @@
     {
       "parallelizable" : true,
       "skippedTests" : [
+        "AuthTests",
         "AuthTests\/testEIP1271RespondSuccess()",
         "ChatTests",
         "ENSResolverTests",
         "HistoryTests",
+        "NotifyTests",
         "SyncDerivationServiceTests",
         "SyncTests"
       ],

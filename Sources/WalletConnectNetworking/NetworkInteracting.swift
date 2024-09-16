@@ -2,9 +2,10 @@ import Foundation
 import Combine
 
 public protocol NetworkInteracting {
+    var isSocketConnected: Bool { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
-    var requestPublisher: AnyPublisher<(topic: String, request: RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?), Never> { get }
+    var requestPublisher: AnyPublisher<(topic: String, request: RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?, encryptedMessage: String, attestation: String?), Never> { get }
     func subscribe(topic: String) async throws
     func unsubscribe(topic: String)
     func batchSubscribe(topics: [String]) async throws
@@ -41,6 +42,15 @@ public protocol NetworkInteracting {
         errorHandler: ErrorHandler?,
         subscription: @escaping (ResponseSubscriptionPayload<Request, Response>) async throws -> Void
     )
+
+    func awaitResponse<Request: Codable, Response: Codable>(
+        request: RPCRequest,
+        topic: String,
+        method: ProtocolMethod,
+        requestOfType: Request.Type,
+        responseOfType: Response.Type,
+        envelopeType: Envelope.EnvelopeType
+    ) async throws -> Response
 
     func getClientId() throws -> String
 }
