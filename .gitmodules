@@ -1,0 +1,3 @@
+[submodule "submodules/yttrium"]
+	path = submodules/yttrium
+	url = https://github.com/WalletConnect/yttrium.git

@@ -52,7 +52,8 @@ let package = Package(
         .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
         .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
-        .package(path: "../yttrium")
+        .package(path: "submodules/yttrium")
+//        .package(path: "../yttrium")
 //        .package(url: "https://github.com/WalletConnect/yttrium", branch: "main")
     ],
     targets: [
