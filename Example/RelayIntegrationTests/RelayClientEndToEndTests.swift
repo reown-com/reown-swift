@@ -81,7 +81,7 @@ final class RelayClientEndToEndTests: XCTestCase {
     }
 
     override func tearDown() {
-        Thread.sleep(forTimeInterval: 0.3)
+        Thread.sleep(forTimeInterval: 1.0)
         super.tearDown()
     }
 
