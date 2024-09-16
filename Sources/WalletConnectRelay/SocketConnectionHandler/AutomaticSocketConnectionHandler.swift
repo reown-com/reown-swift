@@ -81,22 +81,25 @@ class AutomaticSocketConnectionHandler {
     private func setUpSocketStatusObserving() {
         logger.debug("Setting up socket status observing.")
         socketStatusProvider.socketConnectionStatusPublisher
-            .sink { [unowned self] status in
-                syncQueue.async { [unowned self] in
+            .sink { [weak self] status in
+                // self needs to be weak to avoid crashes in tests
+                guard let self = self else {return}
+                self.syncQueue.async { [weak self] in
+                    guard let self = self else {return}
                     switch status {
                     case .connected:
-                        logger.debug("Socket connected.")
-                        isConnecting = false
-                        reconnectionAttempts = 0 // Reset reconnection attempts on successful connection
-                        stopPeriodicReconnectionTimer()
+                        self.logger.debug("Socket connected.")
+                        self.isConnecting = false
+                        self.reconnectionAttempts = 0 // Reset reconnection attempts on successful connection
+                        self.stopPeriodicReconnectionTimer()
                     case .disconnected:
-                        logger.debug("Socket disconnected.")
-                        if isConnecting {
-                            logger.debug("Was in connecting state when disconnected.")
-                            handleFailedConnectionAndReconnectIfNeeded()
+                        self.logger.debug("Socket disconnected.")
+                        if self.isConnecting {
+                            self.logger.debug("Was in connecting state when disconnected.")
+                            self.handleFailedConnectionAndReconnectIfNeeded()
                         } else {
                             Task(priority: .high) {
-                                await handleDisconnection()
+                                await self.handleDisconnection()
                             }
                         }
                         isConnecting = false // Ensure isConnecting is reset
@@ -215,7 +218,8 @@ class AutomaticSocketConnectionHandler {
                 logger.debug("Bypassing app state check due to willEnterForeground = true")
             }
 
-            syncQueue.async { [unowned self] in
+            syncQueue.async { [weak self] in
+                guard let self = self else {return}
                 logger.debug("Checking if reconnection is needed: connected: \(socket.isConnected), isSubscribed: \(subscriptionsTracker.isSubscribed())")
 
                 if !socket.isConnected && subscriptionsTracker.isSubscribed() {

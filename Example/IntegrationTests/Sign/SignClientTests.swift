@@ -84,8 +84,14 @@ final class SignClientTests: XCTestCase {
     }
 
     override func tearDown() {
+        // Synchronously wait for 0.1 seconds
+        Thread.sleep(forTimeInterval: 0.1)
+
+        // Now set properties to nil
         dapp = nil
         wallet = nil
+
+        super.tearDown() // Ensure superclass tearDown is called
     }
 
     func testSessionPropose() async throws {
