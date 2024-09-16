@@ -22,6 +22,7 @@ final class RelayClientTests: XCTestCase {
     }
 
     override func tearDown() {
+        Thread.sleep(forTimeInterval: 0.2)
         sut = nil
         dispatcher = nil
     }
