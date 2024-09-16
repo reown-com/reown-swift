@@ -27,7 +27,21 @@ class SocketStatusProvider: SocketStatusProviding {
             self.socketConnectionStatusPublisherSubject.send(.connected)
         }
         socket.onDisconnect = { [unowned self] error in
-            logger.debug("Socket disconnected with error: \(error?.localizedDescription ?? "Unknown error")")
+            if let error = error {
+                logger.debug("Socket disconnected with error: \(error.localizedDescription)")
+
+                let errorMirror = Mirror(reflecting: error)
+                logger.debug("Error type: \(type(of: error))")
+
+                let errorDetails = errorMirror.children.compactMap { child -> String? in
+                    guard let label = child.label else { return nil }
+                    return "\(label): \(child.value)"
+                }.joined(separator: ", ")
+
+                logger.debug("Error details: \(errorDetails)")
+            } else {
+                logger.debug("Socket disconnected with unknown error.")
+            }
             self.socketConnectionStatusPublisherSubject.send(.disconnected)
         }
     }

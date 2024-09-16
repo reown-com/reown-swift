@@ -53,7 +53,7 @@ final class RelayClientEndToEndTests: XCTestCase {
         )
 
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
-        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(), logger: logger, socketStatusProvider: socketStatusProvider)
+        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(logger: logger), logger: logger, socketStatusProvider: socketStatusProvider)
         let dispatcher = Dispatcher(
             socketFactory: webSocketFactory,
             relayUrlFactory: urlFactory,
@@ -78,6 +78,11 @@ final class RelayClientEndToEndTests: XCTestCase {
         logger.debug("My client id is: \(clientId)")
 
         return relayClient
+    }
+
+    override func tearDown() {
+        Thread.sleep(forTimeInterval: 0.3)
+        super.tearDown()
     }
 
     func testSubscribe() {

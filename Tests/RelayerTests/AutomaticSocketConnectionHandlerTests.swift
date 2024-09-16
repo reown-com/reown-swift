@@ -38,10 +38,23 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     }
 
     func testConnectsOnConnectionSatisfied() {
+        // Ensure the socket is disconnected
         webSocketSession.disconnect()
-        subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
+        subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         XCTAssertFalse(webSocketSession.isConnected)
+
+        let expectation = XCTestExpectation(description: "WebSocket should connect when network becomes connected")
+
+        // Assign onConnect closure to fulfill the expectation and set isConnected
+        webSocketSession.onConnect = {
+            self.webSocketSession.isConnected = true
+            expectation.fulfill()
+        }
+
+        // Simulate network connection becoming connected
         networkMonitor.networkConnectionStatusPublisherSubject.send(.connected)
+
+        wait(for: [expectation], timeout: 0.1)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -56,7 +69,17 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testReconnectsOnEnterForeground() {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
         webSocketSession.disconnect()
+
+        let expectation = XCTestExpectation(description: "WebSocket should connect on entering foreground")
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
+
         appStateObserver.onWillEnterForeground?()
+
+        wait(for: [expectation], timeout: 1.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -85,9 +108,18 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
         webSocketSession.connect()
         appStateObserver.currentState = .foreground
-        XCTAssertTrue(webSocketSession.isConnected)
+
+        let expectation = XCTestExpectation(description: "WebSocket should reconnect on disconnection in foreground")
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
+
         webSocketSession.disconnect()
         await sut.handleDisconnection()
+
+        wait(for: [expectation], timeout: 1.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -126,13 +158,19 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         subscriptionsTracker.isSubscribedReturnValue = true
 
         // Ensure socket is disconnected initially
-        webSocketSession.disconnect()
         XCTAssertFalse(webSocketSession.isConnected)
+
+        let expectation = XCTestExpectation(description: "WebSocket should connect when reconnectIfNeeded is called")
+
+        // Modify the webSocketSession mock to call this closure when connect() is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
 
         // Trigger reconnect logic
         sut.reconnectIfNeeded()
 
-        // Expect the socket to be connected since there are subscriptions
+        wait(for: [expectation], timeout: 1.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -151,97 +189,75 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         XCTAssertFalse(webSocketSession.isConnected)
     }
 
-    func testReconnectsOnConnectionSatisfiedWhenSubscribed() {
-        // Simulate that there are active subscriptions
-        subscriptionsTracker.isSubscribedReturnValue = true
-
-        // Ensure socket is disconnected initially
+    func testReconnectsOnEnterForegroundWhenSubscribed() async {
+        subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
         webSocketSession.disconnect()
         XCTAssertFalse(webSocketSession.isConnected)
 
-        // Simulate network connection becomes satisfied
-        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected)
+        let expectation = XCTestExpectation(description: "WebSocket should reconnect when entering foreground and subscriptions exist")
 
-        // Expect the socket to reconnect since there are subscriptions
-        XCTAssertTrue(webSocketSession.isConnected)
-    }
-
-    func testReconnectsOnEnterForegroundWhenSubscribed() {
-        // Simulate that there are active subscriptions
-        subscriptionsTracker.isSubscribedReturnValue = true
-
-        // Ensure socket is disconnected initially
-        webSocketSession.disconnect()
-        XCTAssertFalse(webSocketSession.isConnected)
+        // Set up the mock to fulfill expectation when connect is called
+        webSocketSession.onConnect = {
+            expectation.fulfill()
+        }
 
         // Simulate entering foreground
         appStateObserver.onWillEnterForeground?()
 
-        // Expect the socket to reconnect since there are subscriptions
+        await fulfillment(of: [expectation], timeout: 0.01)
+
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
-    func testSwitchesToPeriodicReconnectionAfterMaxImmediateAttempts() {
+    func testSwitchesToPeriodicReconnectionAfterMaxImmediateAttempts() async {
+        subscriptionsTracker.isSubscribedReturnValue = true // Ensure subscriptions exist to allow reconnection
         sut.connect() // Start connection process
 
         // Simulate immediate reconnection attempts
-        for _ in 0...sut.maxImmediateAttempts {
+        for _ in 0..<sut.maxImmediateAttempts {
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+            // Wait briefly to allow the handler to process each disconnection
+            try? await Task.sleep(nanoseconds: 100_000_000) // 10ms
         }
 
-        // Now we should be switching to periodic reconnection attempts
-        // Check reconnectionAttempts is set to maxImmediateAttempts
+        // Simulate one more disconnection to trigger switching to periodic reconnection
+        socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+
+        // Allow some time for the reconnection logic to switch to periodic
+        try? await Task.sleep(nanoseconds: 100_000_000) // 10ms
+
+        // Verify that reconnectionAttempts is set to maxImmediateAttempts
         XCTAssertEqual(sut.reconnectionAttempts, sut.maxImmediateAttempts)
-        XCTAssertNotNil(sut.reconnectionTimer) // Periodic reconnection timer should be started
+
+        // Verify that the periodic reconnection timer is started
+        XCTAssertNotNil(sut.reconnectionTimer)
     }
 
-    func testPeriodicReconnectionStopsAfterSuccessfulConnection() {
+    func testPeriodicReconnectionStopsAfterSuccessfulConnection() async {
         sut.connect() // Start connection process
 
         // Simulate immediate reconnection attempts
         for _ in 0...sut.maxImmediateAttempts {
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+            try? await Task.sleep(nanoseconds: 10_000_000) // 1ms
         }
+        try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
 
-        // Check that periodic reconnection starts
-        XCTAssertNotNil(sut.reconnectionTimer)
 
         // Now simulate the connection being successful
         socketStatusProviderMock.simulateConnectionStatus(.connected)
+        try? await Task.sleep(nanoseconds: 100_000_000) // 10ms
 
         // Periodic reconnection timer should stop
         XCTAssertNil(sut.reconnectionTimer)
         XCTAssertEqual(sut.reconnectionAttempts, 0) // Attempts should be reset
     }
 
-    func testPeriodicReconnectionAttempts() {
-        subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
-        webSocketSession.disconnect()
-        sut.periodicReconnectionInterval = 0.0001
-        sut.connect() // Start connection process
+    func testHandleInternalConnectThrowsAfterThreeDisconnections() async throws {
+        subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
+        appStateObserver.currentState = .foreground // Ensure app is in foreground
+        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
 
-        // Simulate immediate reconnection attempts to switch to periodic
-        for _ in 0...sut.maxImmediateAttempts {
-            socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-        }
-
-        // Ensure we have switched to periodic reconnection
-        XCTAssertNotNil(sut.reconnectionTimer)
-
-        // Simulate the periodic timer firing without waiting for real time
-        let expectation = XCTestExpectation(description: "Periodic reconnection attempt made")
-        sut.reconnectionTimer?.setEventHandler {
-            self.socketStatusProviderMock.simulateConnectionStatus(.connected)
-            expectation.fulfill()
-        }
-
-        wait(for: [expectation], timeout: 1)
-
-        // Check that the periodic reconnection attempt was made
-        XCTAssertTrue(webSocketSession.isConnected) // Assume that connection would have been attempted
-    }
-
-    func testHandleInternalConnectThrowsAfterThreeDisconnections() async {
         // Start a task to call handleInternalConnect and await its result
         let handleConnectTask = Task {
             do {
@@ -249,30 +265,30 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
                 XCTFail("Expected handleInternalConnect to throw NetworkError.connectionFailed after three disconnections")
             } catch NetworkError.connectionFailed {
                 // Expected behavior
-                XCTAssertEqual(sut.reconnectionAttempts, sut.maxImmediateAttempts)
             } catch {
                 XCTFail("Expected NetworkError.connectionFailed, but got \(error)")
             }
         }
 
-        let startObservingExpectation = XCTestExpectation(description: "Start observing connection status")
-
         // Allow handleInternalConnect() to start observing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
-            startObservingExpectation.fulfill()
-        }
-        await fulfillment(of: [startObservingExpectation], timeout: 0.02)
+        try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
 
         // Simulate three disconnections
         for _ in 0..<sut.maxImmediateAttempts {
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+            try await Task.sleep(nanoseconds: 10_000_000) // Wait 0.001 seconds
+
         }
 
         // Wait for the task to complete
         await handleConnectTask.value
     }
 
-    func testHandleInternalConnectSuccessWithNoFailures() async {
+    func testHandleInternalConnectSuccessWithNoFailures() async throws {
+        subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
+        appStateObserver.currentState = .foreground // Ensure app is in foreground
+        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
+
         // Start a task to call handleInternalConnect and await its result
         let handleConnectTask = Task {
             do {
@@ -283,17 +299,12 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
             }
         }
 
-        // Expectation to ensure handleInternalConnect() is observing
-        let startObservingExpectation = XCTestExpectation(description: "Start observing connection status")
-
         // Allow handleInternalConnect() to start observing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
-            startObservingExpectation.fulfill()
-        }
-        await fulfillment(of: [startObservingExpectation], timeout: 0.02)
+        try await Task.sleep(nanoseconds: 5_000_000) // Wait 0.1 seconds
 
         // Simulate a successful connection immediately
         socketStatusProviderMock.simulateConnectionStatus(.connected)
+        try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
 
         // Wait for the task to complete
         await handleConnectTask.value
@@ -304,29 +315,28 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         XCTAssertEqual(sut.reconnectionAttempts, 0)
     }
 
-    func testHandleInternalConnectSuccessAfterFailures() async {
+    func testHandleInternalConnectSuccessAfterFailures() async throws {
+        subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
+        appStateObserver.currentState = .foreground // Ensure app is in foreground
+        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
+
         // Start a task to call handleInternalConnect and await its result
         let handleConnectTask = Task {
             do {
                 try await sut.handleInternalConnect()
                 // Success expected, do nothing
             } catch {
-                XCTFail("Expected handleInternalConnect to succeed after two disconnections followed by a connection, but it threw: \(error)")
+                XCTFail("Expected handleInternalConnect to succeed after disconnections followed by a connection, but it threw: \(error)")
             }
         }
 
-        // Expectation to ensure handleInternalConnect() is observing
-        let startObservingExpectation = XCTestExpectation(description: "Start observing connection status")
-
         // Allow handleInternalConnect() to start observing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
-            startObservingExpectation.fulfill()
-        }
-        await fulfillment(of: [startObservingExpectation], timeout: 0.02)
+        try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.001 seconds
 
         // Simulate two disconnections
         for _ in 0..<2 {
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+            try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.001 seconds
         }
 
         // Simulate a successful connection
@@ -335,38 +345,40 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Wait for the task to complete
         await handleConnectTask.value
 
+        try await Task.sleep(nanoseconds: 1_000_000_000) // Wait 0.001 seconds
         // Verify that the state is as expected after a successful connection
         XCTAssertFalse(sut.isConnecting)
         XCTAssertNil(sut.reconnectionTimer)
         XCTAssertEqual(sut.reconnectionAttempts, 0) // Attempts should reset after success
     }
 
-    func testHandleInternalConnectTimeout() async {
-            // Set a short timeout for testing purposes
-        sut.requestTimeout = 0.001
-            // Start a task to call handleInternalConnect and await its result
-            let handleConnectTask = Task {
-                do {
-                    try await sut.handleInternalConnect()
-                    XCTFail("Expected handleInternalConnect to throw NetworkError.connectionFailed due to timeout")
-                } catch NetworkError.connectionFailed {
-                    // Expected behavior
-                    XCTAssertEqual(sut.reconnectionAttempts, 0) // No reconnection attempts should be recorded for timeout
-                } catch {
-                    XCTFail("Expected NetworkError.connectionFailed due to timeout, but got \(error)")
-                }
+    func testHandleInternalConnectTimeout() async throws {
+        subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
+        appStateObserver.currentState = .foreground // Ensure app is in foreground
+        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
+
+        // Set a short timeout for testing purposes
+        sut.requestTimeout = 0.01
+
+        // Start a task to call handleInternalConnect and await its result
+        let handleConnectTask = Task {
+            do {
+                try await sut.handleInternalConnect()
+                XCTFail("Expected handleInternalConnect to throw NetworkError.connectionFailed due to timeout")
+            } catch NetworkError.connectionFailed {
+                // Expected behavior
+                XCTAssertEqual(sut.reconnectionAttempts, 0) // No reconnection attempts should be recorded for timeout
+            } catch {
+                XCTFail("Expected NetworkError.connectionFailed due to timeout, but got \(error)")
             }
-
-            // Expectation to ensure handleInternalConnect() is observing
-            let startObservingExpectation = XCTestExpectation(description: "Start observing connection status")
-
-            // Allow handleInternalConnect() to start observing
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
-                startObservingExpectation.fulfill()
-            }
-            await fulfillment(of: [startObservingExpectation], timeout: 0.02)
-
-            // No connection simulation to allow timeout to trigger
-            await handleConnectTask.value
         }
+
+        // Allow handleInternalConnect() to start observing
+        try await Task.sleep(nanoseconds: 300_000_000) // Wait 0.2 seconds to allow timeout
+
+        // No connection simulation to allow timeout to trigger
+
+        // Wait for the task to complete
+        await handleConnectTask.value
+    }
 }

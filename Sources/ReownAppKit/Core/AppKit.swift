@@ -64,7 +64,7 @@ public class AppKit {
             return "swift-\(version)"
         }()
 
-        static let sdkType = "w3m"
+        static let sdkType = "appkit"
         
         let projectId: String
         var metadata: AppMetadata
