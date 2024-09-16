@@ -240,21 +240,29 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
         var isResumed = false // Track if continuation has been resumed
         let requestTimeout = self.requestTimeout // Timeout set at the class level
 
+        var shouldStartConnect = false
+
         // Start the connection process immediately if not already connecting
-        syncQueue.async { [unowned self] in
+        syncQueue.sync { [unowned self] in
             if !isConnecting {
                 logger.debug("Not already connecting. Will start connection.")
                 isConnecting = true
-
-                logger.debug("Starting connection process.")
-                logger.debug("Socket request: \(socket.request.debugDescription)")
-
-                // Start the connection
-                socket.connect()
+                shouldStartConnect = true
             } else {
                 logger.debug("Already connecting. Will not start new connection.")
             }
         }
+
+        if !shouldStartConnect {
+            // Exit the function early since a connection is already in progress
+            return
+        }
+
+        // Proceed to start the connection
+        logger.debug("Starting connection process.")
+        logger.debug("Socket request: \(socket.request.debugDescription)")
+        socket.connect()
+
         // Use Combine publisher to monitor connection status
         let connectionStatusPublisher = socketStatusProvider.socketConnectionStatusPublisher
             .share()
@@ -273,7 +281,7 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
             var cancellable: AnyCancellable?
 
             cancellable = connectionStatusPublisher
-                .setFailureType(to: NetworkError.self) // Set failure type to NetworkError
+                .setFailureType(to: NetworkError.self)
                 .timeout(.seconds(requestTimeout), scheduler: DispatchQueue.global(), customError: { NetworkError.connectionFailed })
                 .sink(receiveCompletion: { [unowned self] completion in
                     guard !isResumed else { return } // Ensure continuation is only resumed once
@@ -282,10 +290,6 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
 
                     if case .failure(let error) = completion {
                         logger.debug("Connection failed with error: \(error).")
-                        syncQueue.async { [unowned self] in
-                            isConnecting = false
-                            handleFailedConnectionAndReconnectIfNeeded() // Trigger reconnection
-                        }
                         continuation.resume(throwing: error) // Timeout or connection failure
                     }
                 }, receiveValue: { [unowned self] status in
