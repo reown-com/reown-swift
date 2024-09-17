@@ -25,7 +25,7 @@ Pod::Spec.new do |spec|
   spec.default_subspecs = 'WalletKit'
 
   spec.subspec 'WalletKit' do |ss|
-    ss.source_files = 'Sources/WalletKit/**/*.{h,m,swift}'
+    ss.source_files = 'Sources/ReownWalletKit/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/WalletConnectPush'
     ss.dependency 'reown-swift/WalletConnectVerify'
