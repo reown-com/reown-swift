@@ -57,6 +57,10 @@ final class SettingsPresenter: ObservableObject {
         }
     }
 
+    func enableSmartAccount(_ enable: Bool) {
+        SmartAccountManager.shared.isSmartAccountEnabled = enable
+    }
+
     private func getSmartAccountSafe() async throws -> String {
         try await SmartAccountSafe.instance.getClient().getAccount().absoluteString
     }
