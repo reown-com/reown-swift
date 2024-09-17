@@ -318,6 +318,7 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
                                 isConnecting = false
                                 handleFailedConnectionAndReconnectIfNeeded() // Trigger reconnection
                             }
+                            logger.debug("Will throw an error \(NetworkError.connectionFailed)")
                             continuation.resume(throwing: NetworkError.connectionFailed)
                         }
                     }

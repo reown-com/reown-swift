@@ -6,7 +6,7 @@ protocol Dispatching {
     var isSocketConnected: Bool { get }
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
-    func send(_ string: String, completion: @escaping (Error?) -> Void)
+//    func send(_ string: String, completion: @escaping (Error?) -> Void)
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void)
     func protectedSend(_ string: String) async throws
     func connect() throws
@@ -58,11 +58,7 @@ final class Dispatcher: NSObject, Dispatching {
         setUpWebSocketSession()
     }
 
-    func send(_ string: String, completion: @escaping (Error?) -> Void) {
-        guard socket.isConnected else {
-            completion(NetworkError.connectionFailed)
-            return
-        }
+    private func send(_ string: String, completion: @escaping (Error?) -> Void) {
         socket.write(string: string) {
             completion(nil)
         }
