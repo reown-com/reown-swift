@@ -51,7 +51,7 @@ final class DispatcherTests: XCTestCase {
 
     func testSendWhileConnected() {
         try! sut.connect()
-        sut.send("1") {_ in}
+        sut.protectedSend("1") {_ in}
         XCTAssertEqual(webSocket.sendCallCount, 1)
     }
 
