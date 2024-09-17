@@ -149,7 +149,8 @@ final class Signer {
 
             Task {
                 let userOpReceipt = try await SmartAccount.instance.getClient().waitForUserOperationReceipt(userOperationHash: userOpHash)
-                AlertPresenter.present(message: userOpReceipt, type: .info)
+                guard let userOpReceiptSting = userOpReceipt.jsonString else { return }
+                AlertPresenter.present(message: userOpReceiptSting, type: .info)
             }
 
             return AnyCodable(userOpHash)
