@@ -64,15 +64,16 @@ class AutomaticSocketConnectionHandler {
     // MARK: - Connection Handling
 
     func connect() {
-        syncQueue.async { [unowned self] in
-            if isConnecting {
-                logger.debug("Already connecting. Ignoring connect request.")
+        syncQueue.async { [weak self] in
+            guard let self = self else { return }
+            if self.isConnecting {
+                self.logger.debug("Already connecting. Ignoring connect request.")
                 return
             }
-            logger.debug("Starting connection process.")
-            isConnecting = true
-            logger.debug("Socket request: \(socket.request.debugDescription)")
-            socket.connect()
+            self.logger.debug("Starting connection process.")
+            self.isConnecting = true
+            self.logger.debug("Socket request: \(self.socket.request.debugDescription)")
+            self.socket.connect()
         }
     }
 
@@ -82,10 +83,9 @@ class AutomaticSocketConnectionHandler {
         logger.debug("Setting up socket status observing.")
         socketStatusProvider.socketConnectionStatusPublisher
             .sink { [weak self] status in
-                // self needs to be weak to avoid crashes in tests
-                guard let self = self else {return}
+                guard let self = self else { return }
                 self.syncQueue.async { [weak self] in
-                    guard let self = self else {return}
+                    guard let self = self else { return }
                     switch status {
                     case .connected:
                         self.logger.debug("Socket connected.")
@@ -98,11 +98,11 @@ class AutomaticSocketConnectionHandler {
                             self.logger.debug("Was in connecting state when disconnected.")
                             self.handleFailedConnectionAndReconnectIfNeeded()
                         } else {
-                            Task(priority: .high) {
-                                await self.handleDisconnection()
+                            Task(priority: .high) { [weak self] in
+                                await self?.handleDisconnection()
                             }
                         }
-                        isConnecting = false // Ensure isConnecting is reset
+                        self.isConnecting = false // Ensure isConnecting is reset
                     }
                 }
             }
@@ -137,15 +137,16 @@ class AutomaticSocketConnectionHandler {
 
         reconnectionTimer?.schedule(deadline: initialDelay, repeating: periodicReconnectionInterval)
 
-        reconnectionTimer?.setEventHandler { [unowned self] in
-            logger.debug("Periodic reconnection attempt...")
-            logger.debug("Socket request: \(socket.request.debugDescription)")
-            if isConnecting {
-                logger.debug("Already connecting. Skipping periodic reconnection attempt.")
+        reconnectionTimer?.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            self.logger.debug("Periodic reconnection attempt...")
+            self.logger.debug("Socket request: \(self.socket.request.debugDescription)")
+            if self.isConnecting {
+                self.logger.debug("Already connecting. Skipping periodic reconnection attempt.")
                 return
             }
-            isConnecting = true
-            socket.connect() // Attempt to reconnect
+            self.isConnecting = true
+            self.socket.connect() // Attempt to reconnect
             // The socketConnectionStatusPublisher handler will stop the timer and reset states if connection is successful
         }
 
@@ -163,14 +164,16 @@ class AutomaticSocketConnectionHandler {
 
     private func setUpStateObserving() {
         logger.debug("Setting up app state observing.")
-        appStateObserver.onWillEnterBackground = { [unowned self] in
-            logger.debug("App will enter background. Registering background task.")
-            registerBackgroundTask()
+        appStateObserver.onWillEnterBackground = { [weak self] in
+            guard let self = self else { return }
+            self.logger.debug("App will enter background. Registering background task.")
+            self.registerBackgroundTask()
         }
 
-        appStateObserver.onWillEnterForeground = { [unowned self] in
-            logger.debug("App will enter foreground. Reconnecting if needed.")
-            reconnectIfNeeded(willEnterForeground: true)
+        appStateObserver.onWillEnterForeground = { [weak self] in
+            guard let self = self else { return }
+            self.logger.debug("App will enter foreground. Reconnecting if needed.")
+            self.reconnectIfNeeded(willEnterForeground: true)
         }
     }
 
@@ -179,10 +182,11 @@ class AutomaticSocketConnectionHandler {
     private func setUpNetworkMonitoring() {
         logger.debug("Setting up network monitoring.")
         networkMonitor.networkConnectionStatusPublisher
-            .sink { [unowned self] networkConnectionStatus in
+            .sink { [weak self] networkConnectionStatus in
+                guard let self = self else { return }
                 if networkConnectionStatus == .connected {
-                    logger.debug("Network connected. Reconnecting if needed.")
-                    reconnectIfNeeded()
+                    self.logger.debug("Network connected. Reconnecting if needed.")
+                    self.reconnectIfNeeded()
                 }
             }
             .store(in: &publishers)
@@ -192,8 +196,8 @@ class AutomaticSocketConnectionHandler {
 
     private func registerBackgroundTask() {
         logger.debug("Registering background task.")
-        backgroundTaskRegistrar.register(name: "Finish Network Tasks") { [unowned self] in
-            endBackgroundTask()
+        backgroundTaskRegistrar.register(name: "Finish Network Tasks") { [weak self] in
+            self?.endBackgroundTask()
         }
     }
 
@@ -205,33 +209,33 @@ class AutomaticSocketConnectionHandler {
     // MARK: - Reconnection Logic
 
     func reconnectIfNeeded(willEnterForeground: Bool = false) {
-        Task { [unowned self] in
-            let appState = await appStateObserver.currentState
-            logger.debug("App state: \(appState)")
+        Task { [weak self] in
+            guard let self = self else { return }
+            let appState = await self.appStateObserver.currentState
+            self.logger.debug("App state: \(appState)")
 
             if !willEnterForeground {
                 guard appState == .foreground else {
-                    logger.debug("App is not in the foreground. Reconnection will not be attempted.")
+                    self.logger.debug("App is not in the foreground. Reconnection will not be attempted.")
                     return
                 }
             } else {
-                logger.debug("Bypassing app state check due to willEnterForeground = true")
+                self.logger.debug("Bypassing app state check due to willEnterForeground = true")
             }
 
-            syncQueue.async { [weak self] in
-                guard let self = self else {return}
-                logger.debug("Checking if reconnection is needed: connected: \(socket.isConnected), isSubscribed: \(subscriptionsTracker.isSubscribed())")
+            self.syncQueue.async { [weak self] in
+                guard let self = self else { return }
+                self.logger.debug("Checking if reconnection is needed: connected: \(self.socket.isConnected), isSubscribed: \(self.subscriptionsTracker.isSubscribed())")
 
-                if !socket.isConnected && subscriptionsTracker.isSubscribed() {
-                    logger.debug("Socket is not connected, Reconnecting...")
-                    connect()
+                if !self.socket.isConnected && self.subscriptionsTracker.isSubscribed() {
+                    self.logger.debug("Socket is not connected, Reconnecting...")
+                    self.connect()
                 } else {
-                    logger.debug("Will not attempt to reconnect")
+                    self.logger.debug("Will not attempt to reconnect")
                 }
             }
         }
     }
-
 }
 
 // MARK: - SocketConnectionHandler
@@ -247,13 +251,14 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
         var shouldStartConnect = false
 
         // Start the connection process immediately if not already connecting
-        syncQueue.sync { [unowned self] in
-            if !isConnecting {
-                logger.debug("Not already connecting. Will start connection.")
-                isConnecting = true
+        syncQueue.sync { [weak self] in
+            guard let self = self else { return }
+            if !self.isConnecting {
+                self.logger.debug("Not already connecting. Will start connection.")
+                self.isConnecting = true
                 shouldStartConnect = true
             } else {
-                logger.debug("Already connecting. Will not start new connection.")
+                self.logger.debug("Already connecting. Will not start new connection.")
             }
         }
 
@@ -287,38 +292,42 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
             cancellable = connectionStatusPublisher
                 .setFailureType(to: NetworkError.self)
                 .timeout(.seconds(requestTimeout), scheduler: DispatchQueue.global(), customError: { NetworkError.connectionFailed })
-                .sink(receiveCompletion: { [unowned self] completion in
+                .sink(receiveCompletion: { [weak self] completion in
+                    guard let self = self else { return }
                     guard !isResumed else { return } // Ensure continuation is only resumed once
                     isResumed = true
                     cancellable?.cancel() // Cancel the subscription to prevent further events
 
                     if case .failure(let error) = completion {
-                        logger.debug("Connection failed with error: \(error).")
+                        self.logger.debug("Connection failed with error: \(error).")
                         continuation.resume(throwing: error) // Timeout or connection failure
                     }
-                }, receiveValue: { [unowned self] status in
+                }, receiveValue: { [weak self] status in
+                    guard let self = self else { return }
                     guard !isResumed else { return } // Ensure continuation is only resumed once
                     if status == .connected {
-                        logger.debug("Connection succeeded.")
+                        self.logger.debug("Connection succeeded.")
                         isResumed = true
                         cancellable?.cancel() // Cancel the subscription to prevent further events
-                        syncQueue.async { [unowned self] in
-                            isConnecting = false
+                        self.syncQueue.async { [weak self] in
+                            guard let self = self else { return }
+                            self.isConnecting = false
                         }
                         continuation.resume() // Successfully connected
                     } else if status == .disconnected {
                         attempts += 1
-                        logger.debug("Disconnection observed, incrementing attempts to \(attempts)")
+                        self.logger.debug("Disconnection observed, incrementing attempts to \(attempts)")
 
                         if attempts >= maxAttempts {
-                            logger.debug("Max attempts reached. Failing with connection error.")
+                            self.logger.debug("Max attempts reached. Failing with connection error.")
                             isResumed = true
                             cancellable?.cancel() // Cancel the subscription to prevent further events
-                            syncQueue.async { [unowned self] in
-                                isConnecting = false
-                                handleFailedConnectionAndReconnectIfNeeded() // Trigger reconnection
+                            self.syncQueue.async { [weak self] in
+                                guard let self = self else { return }
+                                self.isConnecting = false
+                                self.handleFailedConnectionAndReconnectIfNeeded() // Trigger reconnection
                             }
-                            logger.debug("Will throw an error \(NetworkError.connectionFailed)")
+                            self.logger.debug("Will throw an error \(NetworkError.connectionFailed)")
                             continuation.resume(throwing: NetworkError.connectionFailed)
                         }
                     }

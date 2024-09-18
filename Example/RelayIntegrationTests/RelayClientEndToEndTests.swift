@@ -29,6 +29,8 @@ class WebSocketFactoryMock: WebSocketFactory {
 final class RelayClientEndToEndTests: XCTestCase {
 
     private var publishers = Set<AnyCancellable>()
+    private var relayA: RelayClient!
+    private var relayB: RelayClient!
 
     func makeRelayClient(prefix: String) -> RelayClient {
         let keyValueStorage = RuntimeKeyValueStorage()
@@ -81,7 +83,8 @@ final class RelayClientEndToEndTests: XCTestCase {
     }
 
     override func tearDown() {
-        Thread.sleep(forTimeInterval: 1.0)
+        relayA = nil
+        relayB = nil
         super.tearDown()
     }
 
@@ -102,8 +105,8 @@ final class RelayClientEndToEndTests: XCTestCase {
     }
 
     func testEndToEndPayload() {
-        let relayA = makeRelayClient(prefix: "⚽️ A ")
-        let relayB = makeRelayClient(prefix: "🏀 B ")
+        relayA = makeRelayClient(prefix: "⚽️ A ")
+        relayB = makeRelayClient(prefix: "🏀 B ")
 
         try! relayA.connect()
         try! relayB.connect()
@@ -122,31 +125,36 @@ final class RelayClientEndToEndTests: XCTestCase {
         expectationA.assertForOverFulfill = false
         expectationB.assertForOverFulfill = false
 
-        relayA.messagePublisher.sink { topic, payload, _, _ in
+        relayA.messagePublisher.sink { [weak self] topic, payload, _, _ in
+            guard let self = self else { return }
             (subscriptionATopic, subscriptionAPayload) = (topic, payload)
             expectationA.fulfill()
         }.store(in: &publishers)
 
-        relayB.messagePublisher.sink { topic, payload, _, _ in
+        relayB.messagePublisher.sink { [weak self] topic, payload, _, _ in
+            guard let self = self else { return }
             (subscriptionBTopic, subscriptionBPayload) = (topic, payload)
             Task(priority: .high) {
                 sleep(1)
-                try await relayB.publish(topic: randomTopic, payload: payloadB, tag: 0, prompt: false, ttl: 60)
+                try await self.relayB.publish(topic: randomTopic, payload: payloadB, tag: 0, prompt: false, ttl: 60)
             }
             expectationB.fulfill()
         }.store(in: &publishers)
 
-        relayA.socketConnectionStatusPublisher.sink {  status in
-            guard status == .connected else {return}
+        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
+            guard let self = self else { return }
+            guard status == .connected else { return }
             Task(priority: .high) {
-                try await relayA.subscribe(topic: randomTopic)
-                try await relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60)
+                try await self.relayA.subscribe(topic: randomTopic)
+                try await self.relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60)
             }
         }.store(in: &publishers)
-        relayB.socketConnectionStatusPublisher.sink {  status in
-            guard status == .connected else {return}
+
+        relayB.socketConnectionStatusPublisher.sink { [weak self] status in
+            guard let self = self else { return }
+            guard status == .connected else { return }
             Task(priority: .high) {
-                try await relayB.subscribe(topic: randomTopic)
+                try await self.relayB.subscribe(topic: randomTopic)
             }
         }.store(in: &publishers)
 
