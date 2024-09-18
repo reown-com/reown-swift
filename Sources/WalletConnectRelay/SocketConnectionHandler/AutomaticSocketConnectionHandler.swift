@@ -34,7 +34,7 @@ class AutomaticSocketConnectionHandler {
 
     // MARK: - Queues
 
-    private let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.automatic_socket_connection.sync", qos: .utility)
+    let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.automatic_socket_connection.sync", qos: .utility)
     private var publishers = Set<AnyCancellable>()
 
     // MARK: - Initialization

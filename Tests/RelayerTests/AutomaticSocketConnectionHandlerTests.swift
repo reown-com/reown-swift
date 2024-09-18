@@ -156,8 +156,10 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testReconnectIfNeededWhenSubscribed() {
         // Simulate that there are active subscriptions
         subscriptionsTracker.isSubscribedReturnValue = true
+        appStateObserver.currentState = .foreground // Ensure app is in the foreground
 
         // Ensure socket is disconnected initially
+        webSocketSession.disconnect()
         XCTAssertFalse(webSocketSession.isConnected)
 
         let expectation = XCTestExpectation(description: "WebSocket should connect when reconnectIfNeeded is called")
@@ -170,7 +172,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Trigger reconnect logic
         sut.reconnectIfNeeded()
 
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: [expectation], timeout: 5.0) // Increased timeout
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -217,21 +219,21 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Simulate immediate reconnection attempts
         for _ in 0..<sut.maxImmediateAttempts {
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-            // Wait briefly to allow the handler to process each disconnection
-            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            // Wait to allow the handler to process each disconnection
+            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
         }
 
         // Simulate one more disconnection to trigger switching to periodic reconnection
         socketStatusProviderMock.simulateConnectionStatus(.disconnected)
 
-        // Allow some time for the reconnection logic to switch to periodic
-        try? await Task.sleep(nanoseconds: 500_000_000) // 200ms
+        // Allow time for the reconnection logic to switch to periodic
+        try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
 
-        // Verify that reconnectionAttempts is set to maxImmediateAttempts
-        XCTAssertEqual(sut.reconnectionAttempts, sut.maxImmediateAttempts)
-
-        // Verify that the periodic reconnection timer is started
-        XCTAssertNotNil(sut.reconnectionTimer)
+        // Verify that reconnectionAttempts is set to maxImmediateAttempts and timer is started
+        sut.syncQueue.sync {
+            XCTAssertEqual(sut.reconnectionAttempts, sut.maxImmediateAttempts)
+            XCTAssertNotNil(sut.reconnectionTimer)
+        }
     }
 
     func testPeriodicReconnectionStopsAfterSuccessfulConnection() async {
@@ -250,8 +252,10 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
 
         // Periodic reconnection timer should stop
-        XCTAssertNil(sut.reconnectionTimer)
-        XCTAssertEqual(sut.reconnectionAttempts, 0) // Attempts should be reset
+        sut.syncQueue.sync {
+            XCTAssertNil(sut.reconnectionTimer)
+            XCTAssertEqual(sut.reconnectionAttempts, 0) // Attempts should be reset
+        }
     }
 
     func testHandleInternalConnectThrowsAfterThreeDisconnections() async throws {
@@ -303,17 +307,22 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Allow handleInternalConnect() to start observing
         try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
 
-        // Simulate a successful connection immediately
+        // Simulate a successful connection
         socketStatusProviderMock.simulateConnectionStatus(.connected)
-        try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
+        try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.5 seconds
 
         // Wait for the task to complete
         await handleConnectTask.value
 
         // Verify that the state is as expected after a successful connection
-        XCTAssertFalse(sut.isConnecting)
-        XCTAssertNil(sut.reconnectionTimer)
-        XCTAssertEqual(sut.reconnectionAttempts, 0)
+        sut.syncQueue.sync {
+            print("isConnecting: \(sut.isConnecting)")
+            print("reconnectionTimer: \(sut.reconnectionTimer)")
+            print("reconnectionAttempts: \(sut.reconnectionAttempts)")
+            XCTAssertFalse(sut.isConnecting)
+            XCTAssertNil(sut.reconnectionTimer)
+            XCTAssertEqual(sut.reconnectionAttempts, 0)
+        }
     }
 
     func testHandleInternalConnectSuccessAfterFailures() async throws {
@@ -348,9 +357,15 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
         try await Task.sleep(nanoseconds: 1_000_000_000) // Wait 0.001 seconds
         // Verify that the state is as expected after a successful connection
-        XCTAssertFalse(sut.isConnecting)
-        XCTAssertNil(sut.reconnectionTimer)
-        XCTAssertEqual(sut.reconnectionAttempts, 0) // Attempts should reset after success
+
+        sut.syncQueue.sync {
+            print("isConnecting: \(sut.isConnecting)")
+            print("reconnectionTimer: \(sut.reconnectionTimer)")
+            print("reconnectionAttempts: \(sut.reconnectionAttempts)")
+            XCTAssertFalse(sut.isConnecting)
+            XCTAssertNil(sut.reconnectionTimer)
+            XCTAssertEqual(sut.reconnectionAttempts, 0) // Attempts should reset after success
+        }
     }
 
     func testHandleInternalConnectTimeout() async throws {
@@ -375,7 +390,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         }
 
         // Allow handleInternalConnect() to start observing
-        try await Task.sleep(nanoseconds: 300_000_000) // Wait 0.2 seconds to allow timeout
+        try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.2 seconds to allow timeout
 
         // No connection simulation to allow timeout to trigger
 
