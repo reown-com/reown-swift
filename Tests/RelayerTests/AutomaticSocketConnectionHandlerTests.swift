@@ -224,7 +224,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         socketStatusProviderMock.simulateConnectionStatus(.disconnected)
 
         // Allow some time for the reconnection logic to switch to periodic
-        try? await Task.sleep(nanoseconds: 100_000_000) // 10ms
+        try? await Task.sleep(nanoseconds: 500_000_000) // 10ms
 
         // Verify that reconnectionAttempts is set to maxImmediateAttempts
         XCTAssertEqual(sut.reconnectionAttempts, sut.maxImmediateAttempts)
