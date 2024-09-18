@@ -19,7 +19,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         let defaults = RuntimeKeyValueStorage()
         let logger = ConsoleLoggerMock()
         let keychainStorageMock = DispatcherKeychainStorageMock()
-        let clientIdStorage = ClientIdStorage(defaults: defaults, keychain: keychainStorageMock, logger: logger)
 
         backgroundTaskRegistrar = BackgroundTaskRegistrarMock()
         subscriptionsTracker = SubscriptionsTrackerMock()
@@ -120,7 +119,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         webSocketSession.disconnect()
         await sut.handleDisconnection()
 
-        wait(for: [expectation], timeout: 5.0)
+        await fulfillment(of: [expectation], timeout: 5.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
