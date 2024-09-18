@@ -89,14 +89,15 @@ final class RelayClientEndToEndTests: XCTestCase {
     }
 
     func testSubscribe() {
-        let relayClient = makeRelayClient(prefix: "")
+        relayA = makeRelayClient(prefix: "")
 
-        try! relayClient.connect()
+        try! relayA.connect()
         let subscribeExpectation = expectation(description: "subscribe call succeeds")
         subscribeExpectation.assertForOverFulfill = true
-        relayClient.socketConnectionStatusPublisher.sink { status in
+        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
+            guard let self = self else {return}
             if status == .connected {
-                Task(priority: .high) {  try await relayClient.subscribe(topic: "ecb78f2df880c43d3418ddbf871092b847801932e21765b250cc50b9e96a9131") }
+                Task(priority: .high) {  try await self.relayA.subscribe(topic: "ecb78f2df880c43d3418ddbf871092b847801932e21765b250cc50b9e96a9131") }
                 subscribeExpectation.fulfill()
             }
         }.store(in: &publishers)
