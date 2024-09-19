@@ -288,7 +288,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testHandleInternalConnectSuccessWithNoFailures() async throws {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         appStateObserver.currentState = .foreground // Ensure app is in foreground
-        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
 
         // Start a task to call handleInternalConnect and await its result
         let handleConnectTask = Task {
@@ -301,12 +300,11 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         }
 
         // Allow handleInternalConnect() to start observing
-        try await Task.sleep(nanoseconds: 300_000_000) // Wait 0.1 seconds
 
-        // Simulate a successful connection
-        socketStatusProviderMock.simulateConnectionStatus(.connected)
-        try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.5 seconds
-
+        Task {
+            try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.1 seconds
+            socketStatusProviderMock.simulateConnectionStatus(.connected)
+        }
         // Wait for the task to complete
         await handleConnectTask.value
 
@@ -324,7 +322,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testHandleInternalConnectSuccessAfterFailures() async throws {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         appStateObserver.currentState = .foreground // Ensure app is in foreground
-        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
 
         // Start a task to call handleInternalConnect and await its result
         let handleConnectTask = Task {
@@ -367,7 +364,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testHandleInternalConnectTimeout() async throws {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         appStateObserver.currentState = .foreground // Ensure app is in foreground
-        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
 
         // Set a short timeout for testing purposes
         sut.requestTimeout = 0.01
