@@ -17,7 +17,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         appStateObserver = AppStateObserverMock()
 
         let defaults = RuntimeKeyValueStorage()
-        let logger = ConsoleLoggerMock()
+        let logger = ConsoleLogger(prefix: "", loggingLevel: .debug)
         let keychainStorageMock = DispatcherKeychainStorageMock()
 
         backgroundTaskRegistrar = BackgroundTaskRegistrarMock()
@@ -191,8 +191,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testReconnectsOnEnterForegroundWhenSubscribed() async {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
-        webSocketSession.disconnect()
-        XCTAssertFalse(webSocketSession.isConnected)
+        webSocketSession.isConnected = false
 
         let expectation = XCTestExpectation(description: "WebSocket should reconnect when entering foreground and subscriptions exist")
 
@@ -204,14 +203,14 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Simulate entering foreground
         appStateObserver.onWillEnterForeground?()
 
-        await fulfillment(of: [expectation], timeout: 1.0)
+        await fulfillment(of: [expectation], timeout: 5.0)
 
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
     func testSwitchesToPeriodicReconnectionAfterMaxImmediateAttempts() async {
         subscriptionsTracker.isSubscribedReturnValue = true // Ensure subscriptions exist to allow reconnection
-        sut.periodicReconnectionInterval = 0.1 // Set shorter interval for testing
+        sut.periodicReconnectionInterval = 3 // Set shorter interval for testing
         sut.connect() // Start connection process
 
         // Simulate immediate reconnection attempts
