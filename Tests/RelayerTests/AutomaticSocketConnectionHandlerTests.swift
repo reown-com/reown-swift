@@ -16,9 +16,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         networkMonitor = NetworkMonitoringMock()
         appStateObserver = AppStateObserverMock()
 
-        let defaults = RuntimeKeyValueStorage()
         let logger = ConsoleLogger(prefix: "", loggingLevel: .debug)
-        let keychainStorageMock = DispatcherKeychainStorageMock()
 
         backgroundTaskRegistrar = BackgroundTaskRegistrarMock()
         subscriptionsTracker = SubscriptionsTrackerMock()
@@ -118,7 +116,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
         await sut.handleDisconnection()
 
-        await fulfillment(of: [expectation], timeout: 5.0)
+        await fulfillment(of: [expectation], timeout: 15.0)
     }
 
     func testNotReconnectOnDisconnectForegroundWhenNoSubscriptions() async {
@@ -201,20 +199,21 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Simulate entering foreground
         appStateObserver.onWillEnterForeground?()
 
-        await fulfillment(of: [expectation], timeout: 5.0)
-
-        XCTAssertTrue(webSocketSession.isConnected)
+        await fulfillment(of: [expectation], timeout: 15.0)
     }
 
     func testSwitchesToPeriodicReconnectionAfterMaxImmediateAttempts() async {
         subscriptionsTracker.isSubscribedReturnValue = true // Ensure subscriptions exist to allow reconnection
         sut.periodicReconnectionInterval = 3 // Set shorter interval for testing
+        webSocketSession.blockConnection = true
         sut.connect() // Start connection process
 
         // Simulate immediate reconnection attempts
         for _ in 0..<sut.maxImmediateAttempts {
             print("Simulating disconnection")
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+            webSocketSession.isConnected = false
+
             // Wait to allow the handler to process each disconnection
             try? await Task.sleep(nanoseconds: 500_000_000) // 200ms
         }

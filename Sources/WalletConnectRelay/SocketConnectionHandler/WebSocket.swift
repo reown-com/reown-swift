@@ -24,8 +24,12 @@ class WebSocketMock: WebSocketConnecting {
     var onDisconnect: ((Error?) -> Void)?
     var sendCallCount: Int = 0
     var isConnected: Bool = false
+    var blockConnection = false
 
     func connect() {
+        guard !blockConnection else {
+            return
+        }
         isConnected = true
         onConnect?()
     }
