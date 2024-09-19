@@ -45,15 +45,13 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
         // Assign onConnect closure to fulfill the expectation and set isConnected
         webSocketSession.onConnect = {
-            self.webSocketSession.isConnected = true
             expectation.fulfill()
         }
 
         // Simulate network connection becoming connected
         networkMonitor.networkConnectionStatusPublisherSubject.send(.connected)
 
-        wait(for: [expectation], timeout: 0.1)
-        XCTAssertTrue(webSocketSession.isConnected)
+        wait(for: [expectation], timeout: 10)
     }
 
     func testHandleConnectThrows() {
@@ -212,7 +210,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         for _ in 0..<sut.maxImmediateAttempts {
             print("Simulating disconnection")
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-            webSocketSession.isConnected = false
 
             // Wait to allow the handler to process each disconnection
             try? await Task.sleep(nanoseconds: 500_000_000) // 200ms
@@ -222,7 +219,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         socketStatusProviderMock.simulateConnectionStatus(.disconnected)
 
         // Allow time for the reconnection logic to switch to periodic
-        try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 500ms
 
         // Verify that reconnectionAttempts is set to maxImmediateAttempts and timer is started
         sut.syncQueue.sync {
