@@ -207,19 +207,22 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         sut.connect() // Start connection process
 
         // Simulate immediate reconnection attempts
-        for _ in 0..<sut.maxImmediateAttempts {
-            print("Simulating disconnection")
-            socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+        Task {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 200ms
+            for _ in 0..<sut.maxImmediateAttempts {
+                print("Simulating disconnection")
+                socketStatusProviderMock.simulateConnectionStatus(.disconnected)
 
-            // Wait to allow the handler to process each disconnection
-            try? await Task.sleep(nanoseconds: 500_000_000) // 200ms
+                // Wait to allow the handler to process each disconnection
+                try? await Task.sleep(nanoseconds: 100_000_000) // 200ms
+            }
+            socketStatusProviderMock.simulateConnectionStatus(.disconnected)
         }
 
         // Simulate one more disconnection to trigger switching to periodic reconnection
-        socketStatusProviderMock.simulateConnectionStatus(.disconnected)
 
         // Allow time for the reconnection logic to switch to periodic
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 500ms
+        try? await Task.sleep(nanoseconds: 1_200_000_000) // 500ms
 
         // Verify that reconnectionAttempts is set to maxImmediateAttempts and timer is started
         sut.syncQueue.sync {
@@ -268,15 +271,17 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
             }
         }
 
-        // Allow handleInternalConnect() to start observing
-        try await Task.sleep(nanoseconds: 300_000_000) // Wait 0.1 seconds
+        Task {
+            try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
+            // Simulate three disconnections
+            for _ in 0..<sut.maxImmediateAttempts {
+                socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+                try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.001 seconds
 
-        // Simulate three disconnections
-        for _ in 0..<sut.maxImmediateAttempts {
-            socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-            try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.001 seconds
+            }
 
         }
+        // Allow handleInternalConnect() to start observing
 
         // Wait for the task to complete
         await handleConnectTask.value
@@ -330,17 +335,17 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
             }
         }
 
-        // Allow handleInternalConnect() to start observing
-        try await Task.sleep(nanoseconds: 300_000_000) // Wait 0.001 seconds
+        Task {
+            try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
+            // Simulate two disconnections
+            for _ in 0..<2 {
+                socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+                try await Task.sleep(nanoseconds: 100_000_000) // Wait 0.001 seconds
+            }
 
-        // Simulate two disconnections
-        for _ in 0..<2 {
-            socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-            try await Task.sleep(nanoseconds: 300_000_000) // Wait 0.001 seconds
+            // Simulate a successful connection
+            socketStatusProviderMock.simulateConnectionStatus(.connected)
         }
-
-        // Simulate a successful connection
-        socketStatusProviderMock.simulateConnectionStatus(.connected)
 
         // Wait for the task to complete
         await handleConnectTask.value
@@ -361,6 +366,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testHandleInternalConnectTimeout() async throws {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         appStateObserver.currentState = .foreground // Ensure app is in foreground
+        webSocketSession.blockConnection = true
 
         // Set a short timeout for testing purposes
         sut.requestTimeout = 0.01
@@ -378,8 +384,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
             }
         }
 
-        // Allow handleInternalConnect() to start observing
-        try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.2 seconds to allow timeout
 
         // No connection simulation to allow timeout to trigger
 
