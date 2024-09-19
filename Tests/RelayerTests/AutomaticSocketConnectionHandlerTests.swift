@@ -37,7 +37,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testConnectsOnConnectionSatisfied() {
         // Ensure the socket is disconnected
-        webSocketSession.disconnect()
+        webSocketSession.isConnected = false
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         XCTAssertFalse(webSocketSession.isConnected)
 
@@ -64,7 +64,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testReconnectsOnEnterForeground() {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
-        webSocketSession.disconnect()
+        webSocketSession.isConnected = false
 
         let expectation = XCTestExpectation(description: "WebSocket should connect on entering foreground")
 
@@ -81,7 +81,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testReconnectsOnEnterForegroundWhenNoSubscriptions() {
         subscriptionsTracker.isSubscribedReturnValue = false // Simulate no active subscriptions
-        webSocketSession.disconnect()
+        webSocketSession.isConnected = false
         appStateObserver.onWillEnterForeground?()
         XCTAssertFalse(webSocketSession.isConnected) // The connection should not be re-established
     }
@@ -119,7 +119,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testNotReconnectOnDisconnectForegroundWhenNoSubscriptions() async {
         subscriptionsTracker.isSubscribedReturnValue = false // Simulate no active subscriptions
-        webSocketSession.connect()
+        webSocketSession.isConnected = true
         appStateObserver.currentState = .foreground
         XCTAssertTrue(webSocketSession.isConnected)
         webSocketSession.disconnect()
@@ -129,7 +129,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testReconnectOnDisconnectBackground() async {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
-        webSocketSession.connect()
+        webSocketSession.isConnected = true
         appStateObserver.currentState = .background
         XCTAssertTrue(webSocketSession.isConnected)
         webSocketSession.disconnect()
@@ -139,7 +139,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testNotReconnectOnDisconnectBackgroundWhenNoSubscriptions() async {
         subscriptionsTracker.isSubscribedReturnValue = false // Simulate no active subscriptions
-        webSocketSession.connect()
+        webSocketSession.isConnected = true
         appStateObserver.currentState = .background
         XCTAssertTrue(webSocketSession.isConnected)
         webSocketSession.disconnect()
@@ -173,7 +173,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         subscriptionsTracker.isSubscribedReturnValue = false
 
         // Ensure socket is disconnected initially
-        webSocketSession.disconnect()
+        webSocketSession.isConnected = false
         XCTAssertFalse(webSocketSession.isConnected)
 
         // Trigger reconnect logic
