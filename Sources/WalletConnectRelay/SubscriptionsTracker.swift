@@ -85,11 +85,6 @@ final class SubscriptionsTrackerMock: SubscriptionsTracking {
         return isSubscribedReturnValue
     }
 
-    func reset() {
-        subscriptions.removeAll()
-        isSubscribedReturnValue = false
-    }
-
     func getTopics() -> [String] {
         return Array(subscriptions.keys)
     }
