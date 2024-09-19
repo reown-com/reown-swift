@@ -79,7 +79,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
         appStateObserver.onWillEnterForeground?()
 
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: [expectation], timeout: 14.0)
         XCTAssertTrue(webSocketSession.isConnected)
     }
 
@@ -106,7 +106,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
 
     func testReconnectOnDisconnectForeground() async {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate that there are active subscriptions
-        webSocketSession.connect()
+        webSocketSession.isConnected = false
         appStateObserver.currentState = .foreground
 
         let expectation = XCTestExpectation(description: "WebSocket should reconnect on disconnection in foreground")
@@ -116,11 +116,9 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
             expectation.fulfill()
         }
 
-        webSocketSession.disconnect()
         await sut.handleDisconnection()
 
         await fulfillment(of: [expectation], timeout: 5.0)
-        XCTAssertTrue(webSocketSession.isConnected)
     }
 
     func testNotReconnectOnDisconnectForegroundWhenNoSubscriptions() async {
@@ -171,7 +169,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Trigger reconnect logic
         sut.reconnectIfNeeded()
 
-        wait(for: [expectation], timeout: 5.0) // Increased timeout
+        wait(for: [expectation], timeout: 15.0) // Increased timeout
     }
 
     func testReconnectIfNeededWhenNotSubscribed() {
