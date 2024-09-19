@@ -89,11 +89,12 @@ public final class RelayClient {
 
     private func setupConnectionSubscriptions() {
         socketConnectionStatusPublisher
-            .sink { [unowned self] status in
+            .sink { [weak self] status in
+                guard let self = self else { return }
                 guard status == .connected else { return }
-                let topics = subscriptionsTracker.getTopics()
+                let topics = self.subscriptionsTracker.getTopics()
                 Task(priority: .high) {
-                    try await batchSubscribe(topics: topics)
+                    try await self.batchSubscribe(topics: topics)
                 }
             }
             .store(in: &publishers)

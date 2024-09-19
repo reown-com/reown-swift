@@ -91,7 +91,12 @@ final class RelayClientEndToEndTests: XCTestCase {
     func testSubscribe() {
         relayA = makeRelayClient(prefix: "")
 
-        try! relayA.connect()
+        do {
+            try relayA.connect()
+        } catch {
+            XCTFail("Failed to connect: \(error)")
+        }
+
         let subscribeExpectation = expectation(description: "subscribe call succeeds")
         subscribeExpectation.assertForOverFulfill = true
         relayA.socketConnectionStatusPublisher.sink { [weak self] status in
@@ -109,9 +114,12 @@ final class RelayClientEndToEndTests: XCTestCase {
         relayA = makeRelayClient(prefix: "⚽️ A ")
         relayB = makeRelayClient(prefix: "🏀 B ")
 
-        try! relayA.connect()
-        try! relayB.connect()
-
+        do {
+            try relayA.connect()
+            try relayB.connect()
+        } catch {
+            XCTFail("Failed to connect: \(error)")
+        }
         let randomTopic = String.randomTopic()
         let payloadA = "A"
         let payloadB = "B"
