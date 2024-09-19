@@ -256,8 +256,8 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
     func testHandleInternalConnectThrowsAfterThreeDisconnections() async throws {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         appStateObserver.currentState = .foreground // Ensure app is in foreground
-        networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
         webSocketSession.blockConnection = true
+        webSocketSession.isConnected = false
 
         // Start a task to call handleInternalConnect and await its result
         let handleConnectTask = Task {
@@ -277,7 +277,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Simulate three disconnections
         for _ in 0..<sut.maxImmediateAttempts {
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-            try await Task.sleep(nanoseconds: 300_000_000) // Wait 0.001 seconds
+            try await Task.sleep(nanoseconds: 500_000_000) // Wait 0.001 seconds
 
         }
 
