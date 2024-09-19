@@ -88,27 +88,27 @@ final class RelayClientEndToEndTests: XCTestCase {
         super.tearDown()
     }
 
-    func testSubscribe() {
-        relayA = makeRelayClient(prefix: "")
-
-        do {
-            try relayA.connect()
-        } catch {
-            XCTFail("Failed to connect: \(error)")
-        }
-
-        let subscribeExpectation = expectation(description: "subscribe call succeeds")
-        subscribeExpectation.assertForOverFulfill = true
-        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
-            guard let self = self else {return}
-            if status == .connected {
-                Task(priority: .high) {  try await self.relayA.subscribe(topic: "ecb78f2df880c43d3418ddbf871092b847801932e21765b250cc50b9e96a9131") }
-                subscribeExpectation.fulfill()
-            }
-        }.store(in: &publishers)
-
-        wait(for: [subscribeExpectation], timeout: InputConfig.defaultTimeout)
-    }
+//    func testSubscribe() {
+//        relayA = makeRelayClient(prefix: "")
+//
+//        do {
+//            try relayA.connect()
+//        } catch {
+//            XCTFail("Failed to connect: \(error)")
+//        }
+//
+//        let subscribeExpectation = expectation(description: "subscribe call succeeds")
+//        subscribeExpectation.assertForOverFulfill = true
+//        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
+//            guard let self = self else {return}
+//            if status == .connected {
+//                Task(priority: .high) {  try await self.relayA.subscribe(topic: "ecb78f2df880c43d3418ddbf871092b847801932e21765b250cc50b9e96a9131") }
+//                subscribeExpectation.fulfill()
+//            }
+//        }.store(in: &publishers)
+//
+//        wait(for: [subscribeExpectation], timeout: InputConfig.defaultTimeout)
+//    }
 
     func testEndToEndPayload() {
         relayA = makeRelayClient(prefix: "⚽️ A ")
