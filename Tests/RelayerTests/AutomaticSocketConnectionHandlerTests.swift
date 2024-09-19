@@ -257,6 +257,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         subscriptionsTracker.isSubscribedReturnValue = true // Simulate active subscriptions
         appStateObserver.currentState = .foreground // Ensure app is in foreground
         networkMonitor.networkConnectionStatusPublisherSubject.send(.connected) // Simulate network is connected
+        webSocketSession.blockConnection = true
 
         // Start a task to call handleInternalConnect and await its result
         let handleConnectTask = Task {
