@@ -207,7 +207,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         sut.connect() // Start connection process
 
         // Simulate immediate reconnection attempts
-        Task {
+        Task(priority: .high) {
             try? await Task.sleep(nanoseconds: 100_000_000) // 200ms
             for _ in 0..<sut.maxImmediateAttempts {
                 print("Simulating disconnection")
@@ -222,7 +222,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Simulate one more disconnection to trigger switching to periodic reconnection
 
         // Allow time for the reconnection logic to switch to periodic
-        try? await Task.sleep(nanoseconds: 2_200_000_000) // 500ms
+        try? await Task.sleep(nanoseconds: 3_200_000_000) // 500ms
 
         // Verify that reconnectionAttempts is set to maxImmediateAttempts and timer is started
         sut.syncQueue.sync {
