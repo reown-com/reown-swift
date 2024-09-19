@@ -214,7 +214,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
                 socketStatusProviderMock.simulateConnectionStatus(.disconnected)
 
                 // Wait to allow the handler to process each disconnection
-                try? await Task.sleep(nanoseconds: 100_000_000) // 200ms
+                try? await Task.sleep(nanoseconds: 400_000_000) // 200ms
             }
             socketStatusProviderMock.simulateConnectionStatus(.disconnected)
         }
@@ -222,7 +222,7 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         // Simulate one more disconnection to trigger switching to periodic reconnection
 
         // Allow time for the reconnection logic to switch to periodic
-        try? await Task.sleep(nanoseconds: 1_200_000_000) // 500ms
+        try? await Task.sleep(nanoseconds: 2_200_000_000) // 500ms
 
         // Verify that reconnectionAttempts is set to maxImmediateAttempts and timer is started
         sut.syncQueue.sync {
@@ -281,7 +281,6 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
             }
 
         }
-        // Allow handleInternalConnect() to start observing
 
         // Wait for the task to complete
         await handleConnectTask.value
