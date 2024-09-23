@@ -2,6 +2,34 @@
 
 import PackageDescription
 
+// Determine if Yttrium should be used in debug (local) mode
+let yttriumDebug = false
+
+// Define dependencies array
+var dependencies: [Package.Dependency] = [
+    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
+    .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
+    .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0"),
+//    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
+]
+var yttriumTarget: Target!
+
+if yttriumDebug {
+    dependencies.append(.package(path: "../yttrium/crates/ffi/YttriumCore"))
+    yttriumTarget = .target(
+        name: "YttriumWrapper",
+        dependencies: ["YttriumCore"],  // Corrected dependency
+        path: "Sources/YttriumWrapper"
+    )
+} else {
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.0.8")))
+    yttriumTarget = .target(
+        name: "YttriumWrapper",
+        dependencies: [.product(name: "Yttrium", package: "yttrium")],
+        path: "Sources/YttriumWrapper"
+    )
+}
+
 let package = Package(
     name: "WalletConnect",
     platforms: [
@@ -47,14 +75,7 @@ let package = Package(
             name: "YttriumWrapper",
             targets: ["YttriumWrapper"])
     ],
-    dependencies: [
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
-        .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
-        .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
-        .package(path: "../yttrium")
-//        .package(url: "https://github.com/WalletConnect/yttrium", branch: "main")
-    ],
+    dependencies: dependencies,
     targets: [
         .target(
             name: "WalletConnectSign",
@@ -161,13 +182,7 @@ let package = Package(
             name: "ReownAppKitBackport",
             path: "Sources/ReownAppKitBackport"
         ),
-        .target(
-            name: "YttriumWrapper",
-            dependencies: [
-                .productItem(name: "Yttrium", package: "yttrium")
-            ],
-            path: "Sources/YttriumWrapper"
-        ),
+        yttriumTarget,
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
