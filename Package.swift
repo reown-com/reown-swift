@@ -3,7 +3,8 @@
 import PackageDescription
 
 // Determine if Yttrium should be used in debug (local) mode
-let yttriumDebug = false
+let yttriumDebug = true
+
 
 // Define dependencies array
 var dependencies: [Package.Dependency] = [
@@ -13,16 +14,19 @@ var dependencies: [Package.Dependency] = [
 //    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
 ]
 var yttriumTarget: Target!
-
+// Conditionally add Yttrium dependency
 if yttriumDebug {
+    var yttriumSwiftSettings: [SwiftSetting] = []
     dependencies.append(.package(path: "../yttrium/crates/ffi/YttriumCore"))
+    yttriumSwiftSettings.append(.define("YTTRIUM_DEBUG"))
     yttriumTarget = .target(
         name: "YttriumWrapper",
-        dependencies: ["YttriumCore"],  // Corrected dependency
-        path: "Sources/YttriumWrapper"
+        dependencies: [.product(name: "YttriumCore", package: "YttriumCore")],
+        path: "Sources/YttriumWrapper",
+        swiftSettings: yttriumSwiftSettings
     )
 } else {
-    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.0.8")))
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.0.11")))
     yttriumTarget = .target(
         name: "YttriumWrapper",
         dependencies: [.product(name: "Yttrium", package: "yttrium")],
