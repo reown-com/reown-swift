@@ -147,11 +147,11 @@ final class Signer {
 
             let userOpHash = try await client.sendTransaction(transaction)
 
-//            Task {
-//                let userOpReceipt = try await SmartAccount.instance.getClient().waitForUserOperationReceipt(userOperationHash: userOpHash)
-//                guard let userOpReceiptSting = userOpReceipt.jsonString else { return }
-//                AlertPresenter.present(message: userOpReceiptSting, type: .info)
-//            }
+            Task {
+                let userOpReceipt = try await SmartAccount.instance.getClient().waitForUserOperationReceipt(userOperationHash: userOpHash)
+                guard let userOpReceiptSting = userOpReceipt.jsonString else { return }
+                AlertPresenter.present(message: userOpReceiptSting, type: .info)
+            }
 
             return AnyCodable(userOpHash)
 
