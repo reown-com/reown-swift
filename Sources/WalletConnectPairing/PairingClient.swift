@@ -62,10 +62,21 @@ public class PairingClient: PairingRegisterer, PairingInteracting, PairingClient
         self.pairingsProvider = pairingsProvider
         self.pairingStateProvider = pairingStateProvider
         setUpExpiration()
+        subscribePairingTopics()
     }
 
     private func setUpExpiration() {
         expirationService.setupExpirationHandling()
+    }
+
+    private func subscribePairingTopics() {
+        let topics = pairingStorage
+            .getAll()
+            .filter{!$0.requestReceived}
+            .map{$0.topic}
+        Task(priority: .background) {
+            try await networkingInteractor.batchSubscribe(topics: topics)
+        }
     }
 
     /// For wallet to establish a pairing
