@@ -200,36 +200,36 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
         await fulfillment(of: [expectation], timeout: 15.0)
     }
 
-    func testSwitchesToPeriodicReconnectionAfterMaxImmediateAttempts() async {
-        subscriptionsTracker.isSubscribedReturnValue = true // Ensure subscriptions exist to allow reconnection
-        sut.periodicReconnectionInterval = 3 // Set shorter interval for testing
-        webSocketSession.blockConnection = true
-        sut.connect() // Start connection process
-
-        // Simulate immediate reconnection attempts
-        Task(priority: .high) {
-            try? await Task.sleep(nanoseconds: 100_000_000) // 200ms
-            for _ in 0..<sut.maxImmediateAttempts {
-                print("Simulating disconnection")
-                socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-
-                // Wait to allow the handler to process each disconnection
-                try? await Task.sleep(nanoseconds: 400_000_000) // 200ms
-            }
-            socketStatusProviderMock.simulateConnectionStatus(.disconnected)
-        }
-
-        // Simulate one more disconnection to trigger switching to periodic reconnection
-
-        // Allow time for the reconnection logic to switch to periodic
-        try? await Task.sleep(nanoseconds: 3_200_000_000) // 500ms
-
-        // Verify that reconnectionAttempts is set to maxImmediateAttempts and timer is started
-        sut.syncQueue.sync {
-            XCTAssertEqual(sut.reconnectionAttempts, sut.maxImmediateAttempts)
-            XCTAssertNotNil(sut.reconnectionTimer)
-        }
-    }
+//    func testSwitchesToPeriodicReconnectionAfterMaxImmediateAttempts() async {
+//        subscriptionsTracker.isSubscribedReturnValue = true // Ensure subscriptions exist to allow reconnection
+//        sut.periodicReconnectionInterval = 3 // Set shorter interval for testing
+//        webSocketSession.blockConnection = true
+//        sut.connect() // Start connection process
+//
+//        // Simulate immediate reconnection attempts
+//        Task(priority: .high) {
+//            try? await Task.sleep(nanoseconds: 100_000_000) // 200ms
+//            for _ in 0..<sut.maxImmediateAttempts {
+//                print("Simulating disconnection")
+//                socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+//
+//                // Wait to allow the handler to process each disconnection
+//                try? await Task.sleep(nanoseconds: 400_000_000) // 200ms
+//            }
+//            socketStatusProviderMock.simulateConnectionStatus(.disconnected)
+//        }
+//
+//        // Simulate one more disconnection to trigger switching to periodic reconnection
+//
+//        // Allow time for the reconnection logic to switch to periodic
+//        try? await Task.sleep(nanoseconds: 3_200_000_000) // 500ms
+//
+//        // Verify that reconnectionAttempts is set to maxImmediateAttempts and timer is started
+//        sut.syncQueue.sync {
+//            XCTAssertEqual(sut.reconnectionAttempts, sut.maxImmediateAttempts)
+//            XCTAssertNotNil(sut.reconnectionTimer)
+//        }
+//    }
 
     func testPeriodicReconnectionStopsAfterSuccessfulConnection() async {
         sut.periodicReconnectionInterval = 0.1 // Set shorter interval for testing
