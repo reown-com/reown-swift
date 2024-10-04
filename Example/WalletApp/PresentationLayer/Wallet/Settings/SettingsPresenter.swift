@@ -17,28 +17,7 @@ final class SettingsPresenter: ObservableObject {
         self.interactor = interactor
         self.router = router
         self.accountStorage = accountStorage
-        fetchSmartAccount()
         fetchSmartAccountSafe()
-    }
-    
-    func fetchSmartAccount() {
-        Task {
-            do {
-                let smartAccount = try await getSmartAccount()
-                DispatchQueue.main.async {
-                    self.smartAccount = smartAccount
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.smartAccount = "Failed to load"
-                }
-                print("Failed to get smart account: \(error)")
-            }
-        }
-    }
-
-    private func getSmartAccount() async throws -> String {
-        try await SmartAccount.instance.getClient().getAccount().absoluteString
     }
     
     func fetchSmartAccountSafe() {

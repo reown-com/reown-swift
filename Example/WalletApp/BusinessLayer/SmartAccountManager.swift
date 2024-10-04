@@ -36,8 +36,7 @@ class SmartAccountManager {
         guard isSmartAccountEnabled else {
             throw Errors.smartAccountNotEnabled
         }
-        let simpleAccountAddress = try await SmartAccount.instance.getClient().getAddress()
         let safeAccountAddress = try await SmartAccountSafe.instance.getClient().getAddress()
-        return [simpleAccountAddress, safeAccountAddress]
+        return [safeAccountAddress]
     }
 }

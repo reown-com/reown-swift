@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/ProxymanApp/atlantis",
         "state": {
           "branch": null,
-          "revision": "5145a7041ec71421d09653db87dcc80c81792004",
-          "version": "1.24.0"
+          "revision": "523dd773538e1e20036cb2d28f8b9947448c2d20",
+          "version": "1.25.1"
         }
       },
       {
@@ -195,8 +195,8 @@
         "repositoryURL": "https://github.com/reown-com/yttrium",
         "state": {
           "branch": null,
-          "revision": "6c6524d2651b6dd8270350bdd804b53307f92fa6",
-          "version": "0.0.21"
+          "revision": "f090637fc2b68417b20a9f8249d2a531f9d405a5",
+          "version": "0.0.24"
         }
       }
     ]

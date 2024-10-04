@@ -4,7 +4,7 @@ import ReownWalletKit
 import ReownRouter
 
 final class SessionProposalInteractor {
-    func approve(proposal: Session.Proposal, EOAAccount: Account, smartAccount: Account) async throws -> Bool {
+    func approve(proposal: Session.Proposal, EOAAccount: Account) async throws -> Bool {
         // Following properties are used to support all the required and optional namespaces for the testing purposes
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
         let supportedEvents = Set(proposal.requiredNamespaces.flatMap { $0.value.events } + (proposal.optionalNamespaces?.flatMap { $0.value.events } ?? []))

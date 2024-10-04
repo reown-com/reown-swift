@@ -21,10 +21,6 @@ final class MainModule {
     static func configureSmartAccountOnSign(importAccount: ImportAccount) {
         let privateKey = importAccount.privateKey
         let ownerAddress = String(importAccount.account.address.dropFirst(2))
-        SmartAccount.instance.register(
-            owner: ownerAddress,
-            privateKey: privateKey
-        )
         SmartAccountSafe.instance.register(
             owner: ownerAddress,
             privateKey: privateKey
