@@ -43,12 +43,9 @@ final class Signer {
             return nil
         }
 
-        let simpleSmartAccountAddress = try await SmartAccount.instance.getClient().getAddress()
         let safeSmartAccountAddress = try await SmartAccountSafe.instance.getClient().getAddress()
 
-        if account?.lowercased() == simpleSmartAccountAddress.lowercased() {
-            return .simple
-        } else if account?.lowercased() == safeSmartAccountAddress.lowercased() {
+        if account?.lowercased() == safeSmartAccountAddress.lowercased() {
             return .safe
         }
 
@@ -108,10 +105,10 @@ final class Signer {
     private static func signWithSmartAccount(request: Request, accountType: SmartAccountType) async throws -> AnyCodable {
         let client: AccountClientProtocol
         switch accountType {
-        case .simple:
-            client = await SmartAccount.instance.getClient()
         case .safe:
             client = await SmartAccountSafe.instance.getClient()
+        default:
+            fatalError("Only safe is currently supported")
         }
 
         switch request.method {
@@ -129,26 +126,27 @@ final class Signer {
 
         case "eth_sendTransaction":
             let params = try request.params.get([YttriumWrapper.Transaction].self)
-            let transaction = params[0]
-            let result = try await client.sendTransaction(transaction)
+            let result = try await client.sendTransactions(params)
             return AnyCodable(result)
 
         case "wallet_sendCalls":
             let params = try request.params.get([SendCallsParams].self)
-            guard let firstCall = params.first?.calls.first else {
+            guard let calls = params.first?.calls else {
                 fatalError()
             }
 
-            let transaction = YttriumWrapper.Transaction(
-                to: firstCall.to!,
-                value: firstCall.value!,
-                data: firstCall.data!
-            )
+            let transactions = calls.map {
+                YttriumWrapper.Transaction(
+                    to: $0.to!,
+                    value: $0.value!,
+                    data: $0.data!
+                )
+            }
 
-            let userOpHash = try await client.sendTransaction(transaction)
+            let userOpHash = try await client.sendTransactions(transactions)
 
             Task {
-                let userOpReceipt = try await SmartAccount.instance.getClient().waitForUserOperationReceipt(userOperationHash: userOpHash)
+                let userOpReceipt = try await SmartAccountSafe.instance.getClient().waitForUserOperationReceipt(userOperationHash: userOpHash)
                 guard let userOpReceiptSting = userOpReceipt.jsonString else { return }
                 AlertPresenter.present(message: userOpReceiptSting, type: .info)
             }
