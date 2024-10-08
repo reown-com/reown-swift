@@ -39,6 +39,23 @@ struct ETHSigner {
         return AnyCodable(result)
     }
 
+    func sign(_ messageToSign: String) throws -> String {
+        let dataToSign: Bytes
+        if messageToSign.hasPrefix("0x") {
+            // Hex-encoded message, remove "0x" and convert
+            let messageData = Data(hex: String(messageToSign.dropFirst(2)))
+            dataToSign = dataToHash(messageData)
+        } else {
+            // Plain text message, convert directly to data
+            let messageData = Data(messageToSign.utf8)
+            dataToSign = dataToHash(messageData)
+        }
+
+        let (v, r, s) = try! privateKey.sign(message: .init(Data(dataToSign)))
+        let result = "0x" + r.toHexString() + s.toHexString() + String(v + 27, radix: 16)
+        return result
+    }
+
     func signTypedData(_ params: AnyCodable) -> AnyCodable {
         let result = "0x4355c47d63924e8a72e509b65029052eb6c299d53a04e167c5775fd466751c9d07299936d304c153f6443dfa05f40ff007d72911b6f72307f996231605b915621c"
         return AnyCodable(result)

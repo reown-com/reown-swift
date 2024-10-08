@@ -101,12 +101,7 @@ struct SettingsView: View {
 
     @discardableResult
     func sendTransactionSafe() async throws -> String {
-        let client = await SmartAccountSafe.instance.getClient()
-        return try await client.sendTransactions([.init(
-            to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-            value: "0",
-            data: "0x68656c6c6f"
-        )])
+        try await viewModel.sendTransaction()
     }
 
     func header(title: String) -> some View {
