@@ -22,8 +22,8 @@ final class MainRouter {
             .wrapToNavigationController()
     }
 
-    func settingsViewController() -> UIViewController {
-        return SettingsModule.create(app: app)
+    func settingsViewController(importAccount: ImportAccount) -> UIViewController {
+        return SettingsModule.create(app: app, importAccount: importAccount)
             .wrapToNavigationController()
     }
     

@@ -26,7 +26,7 @@ if yttriumDebug {
         swiftSettings: yttriumSwiftSettings
     )
 } else {
-    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.0.24")))
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.1.0")))
     yttriumTarget = .target(
         name: "YttriumWrapper",
         dependencies: [.product(name: "Yttrium", package: "yttrium")],

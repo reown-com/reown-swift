@@ -2,21 +2,24 @@ import UIKit
 import Combine
 import WalletConnectNetworking
 import ReownWalletKit
+import YttriumWrapper
 
 final class SettingsPresenter: ObservableObject {
 
     private let interactor: SettingsInteractor
+    private let importAccount: ImportAccount
     private let router: SettingsRouter
     private let accountStorage: AccountStorage
     private var disposeBag = Set<AnyCancellable>()
     @Published var smartAccount: String = "Loading..."
     @Published var smartAccountSafe: String = "Loading..."
 
-    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage) {
+    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount) {
         defer { setupInitialState() }
         self.interactor = interactor
         self.router = router
         self.accountStorage = accountStorage
+        self.importAccount = importAccount
         fetchSmartAccountSafe()
     }
     
@@ -66,6 +69,26 @@ final class SettingsPresenter: ObservableObject {
 
     func browserPressed() {
         router.presentBrowser()
+    }
+
+    func sendTransaction() async throws -> String {
+        let client = await SmartAccountSafe.instance.getClient()
+
+        let prepareSendTransactions = try await client.prepareSendTransactions([.init(
+            to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            value: "0",
+            data: "0x68656c6c6f"
+        )])
+
+        let owner = client.ownerAddress
+
+        let signer = ETHSigner(importAccount: importAccount)
+
+        let signature = try signer.signHash(prepareSendTransactions.hash)
+
+        let ownerSignature = OwnerSignature(owner: owner, signature: signature)
+
+        return try await client.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams)
     }
 
     func logoutPressed() async throws {
