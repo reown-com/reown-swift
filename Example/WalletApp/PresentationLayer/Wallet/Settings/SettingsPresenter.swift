@@ -84,7 +84,7 @@ final class SettingsPresenter: ObservableObject {
 
         let signer = ETHSigner(importAccount: importAccount)
 
-        let signature = try signer.sign(prepareSendTransactions.hash)
+        let signature = try signer.signHash(prepareSendTransactions.hash)
 
         let ownerSignature = OwnerSignature(owner: owner, signature: signature)
 
