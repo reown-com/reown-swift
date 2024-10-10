@@ -6,8 +6,8 @@ Pod::Spec.new do |spec|
 
   spec.name        = "reown-swift"
   spec.version     = package["version"]
-  spec.summary     = "Reown WalletKit"
-  spec.description = "Implementation of WalletKit"
+  spec.summary     = "Reown Swift WalletKit & AppKit"
+  spec.description = "Implementation of WalletKit and AppKit"
   spec.homepage    = "https://reown.com"
   spec.license     = { :type => 'Apache-2.0', :file => 'LICENSE' }
   spec.authors          = "Reown, Inc."
@@ -29,6 +29,35 @@ Pod::Spec.new do |spec|
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/WalletConnectPush'
     ss.dependency 'reown-swift/WalletConnectVerify'
+  end
+
+  spec.subspec 'ReownAppKitBackport' do |ss|
+    ss.source_files = 'Sources/ReownAppKitBackport/**/*.{h,m,swift}'
+  end
+
+  spec.subspec 'ReownAppKitUI' do |ss|
+    ss.source_files = 'Sources/ReownAppKitUI/**/*.{h,m,swift}'
+    ss.dependency 'reown-swift/ReownAppKitBackport'
+    ss.resource_bundles = {
+      'ReownAppKitUI' => [
+        'Sources/ReownAppKitUI/Resources/*'
+      ]
+    }
+  end
+
+  spec.subspec 'ReownAppKit' do |ss|
+    ss.source_files = 'Sources/ReownAppKit/**/*.{h,m,swift}'
+    ss.dependency 'reown-swift/WalletConnectSign'
+    ss.dependency 'reown-swift/ReownAppKitUI'
+    ss.dependency 'reown-swift/ReownAppKitBackport'
+    ss.dependency 'DSF_QRCode', '~> 16.1.1'
+    ss.dependency 'CoinbaseWalletSDK', '~> 1.0.4'
+    ss.resource_bundles = {
+      'ReownAppKit' => [
+        'Sources/ReownAppKit/Resources/*',
+        'Sources/ReownAppKit/PackageConfig.json'
+      ]
+    }
   end
 
   spec.subspec 'WalletConnectSign' do |ss|
