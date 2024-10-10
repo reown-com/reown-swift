@@ -242,6 +242,6 @@ extension URLRequest {
         setValue(AppKit.config.projectId, forHTTPHeaderField: "x-project-id")
         setValue(AppKit.Config.sdkType, forHTTPHeaderField: "x-sdk-type")
         setValue(AppKit.Config.sdkVersion, forHTTPHeaderField: "x-sdk-version")
-        setValue(EnvironmentInfo.sdkVersion, forHTTPHeaderField: "User-Agent")
+        setValue(EnvironmentInfo.sdkName, forHTTPHeaderField: "User-Agent")
     }
 }

@@ -1,6 +1,5 @@
 import Combine
 import SwiftUI
-import WalletConnectUtils
 
 enum ConnectionProviderType {
     case wc

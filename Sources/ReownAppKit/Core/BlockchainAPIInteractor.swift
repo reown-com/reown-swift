@@ -1,5 +1,4 @@
 import Foundation
-import WalletConnectNetworking
 
 class BlockchainAPIInteractor: ObservableObject {
     let store: Store
