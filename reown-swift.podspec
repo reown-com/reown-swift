@@ -17,7 +17,7 @@ Pod::Spec.new do |spec|
   }
 
   spec.platform     = :ios, '13.0'
-  spec.swift_versions = '5.3'
+  spec.swift_versions = '5.9'
   spec.pod_target_xcconfig = {
     'OTHER_SWIFT_FLAGS' => '-DCocoaPods'
   }
@@ -51,11 +51,10 @@ Pod::Spec.new do |spec|
     ss.dependency 'reown-swift/ReownAppKitUI'
     ss.dependency 'reown-swift/ReownAppKitBackport'
     ss.dependency 'DSF_QRCode', '~> 16.1.1'
-    ss.dependency 'CoinbaseWalletSDK', '~> 1.0.4'
+    ss.dependency 'CoinbaseWalletSDK', '~> 1.0.0'
     ss.resource_bundles = {
       'ReownAppKit' => [
-        'Sources/ReownAppKit/Resources/*',
-        'Sources/ReownAppKit/PackageConfig.json'
+        'Sources/ReownAppKit/Resources/*'
       ]
     }
   end
