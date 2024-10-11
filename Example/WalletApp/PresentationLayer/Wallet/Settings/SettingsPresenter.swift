@@ -2,7 +2,7 @@ import UIKit
 import Combine
 import WalletConnectNetworking
 import ReownWalletKit
-import YttriumWrapper
+import Yttrium
 
 final class SettingsPresenter: ObservableObject {
 

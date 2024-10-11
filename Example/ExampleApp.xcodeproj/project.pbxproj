@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		61DAC4AB2C65897800BAF3F8 /* YttriumWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 61DAC4AA2C65897800BAF3F8 /* YttriumWrapper */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
 		8421447B2C80A2B8004FF494 /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447A2C80A2B8004FF494 /* ReownAppKit */; };
@@ -41,6 +40,7 @@
 		8448F1D427E4726F0000B866 /* WalletConnect in Frameworks */ = {isa = PBXBuildFile; productRef = 8448F1D327E4726F0000B866 /* WalletConnect */; };
 		8454EF0A2C9421B600B5529E /* SmartAccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8454EF092C9421B600B5529E /* SmartAccountManager.swift */; };
 		845B8D8C2934B36C0084A966 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845B8D8B2934B36C0084A966 /* Account.swift */; };
+		846CA5C82CB901F8005E8C15 /* Yttrium in Frameworks */ = {isa = PBXBuildFile; productRef = 846CA5C72CB901F8005E8C15 /* Yttrium */; };
 		846E359F2C00654F00E63DF4 /* ConfigModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846E359E2C00654F00E63DF4 /* ConfigModule.swift */; };
 		846E35A22C0065AD00E63DF4 /* ConfigRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846E35A12C0065AD00E63DF4 /* ConfigRouter.swift */; };
 		846E35A42C0065B600E63DF4 /* ConfigPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846E35A32C0065B600E63DF4 /* ConfigPresenter.swift */; };
@@ -629,12 +629,12 @@
 				A59D25EE2AB3672700D7EA3A /* AsyncButton in Frameworks */,
 				C5133A78294125CC00A8314C /* Web3 in Frameworks */,
 				C5B2F7052970573D000DBA0E /* SolanaSwift in Frameworks */,
-				61DAC4AB2C65897800BAF3F8 /* YttriumWrapper in Frameworks */,
 				C56EE255293F569A004840D1 /* Starscream in Frameworks */,
 				84AEC2542B4D43CD00E27A5B /* SwiftMessages in Frameworks */,
 				A5B6C0F52A6EAB2800927332 /* WalletConnectNotify in Frameworks */,
 				84943C7D2A9BA328007EBAC2 /* Mixpanel in Frameworks */,
 				8421447F2C81863A004FF494 /* ReownWalletKit in Frameworks */,
+				846CA5C82CB901F8005E8C15 /* Yttrium in Frameworks */,
 				8421447D2C80A544004FF494 /* ReownAppKitUI in Frameworks */,
 				84CA52172C88965C0069BB33 /* ReownRouter in Frameworks */,
 			);
@@ -1638,7 +1638,7 @@
 				8421447C2C80A544004FF494 /* ReownAppKitUI */,
 				8421447E2C81863A004FF494 /* ReownWalletKit */,
 				84CA52162C88965C0069BB33 /* ReownRouter */,
-				61DAC4AA2C65897800BAF3F8 /* YttriumWrapper */,
+				846CA5C72CB901F8005E8C15 /* Yttrium */,
 			);
 			productName = ChatWallet;
 			productReference = C56EE21B293F55ED004840D1 /* WalletApp.app */;
@@ -1717,6 +1717,7 @@
 				84943C792A9BA206007EBAC2 /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
 				84AEC2522B4D43CD00E27A5B /* XCRemoteSwiftPackageReference "SwiftMessages" */,
 				844511B82C8B6BC800A6A86C /* XCRemoteSwiftPackageReference "atlantis" */,
+				846CA5C62CB901BC005E8C15 /* XCRemoteSwiftPackageReference "yttrium" */,
 			);
 			productRefGroup = 764E1D3D26F8D3FC00A1FB15 /* Products */;
 			projectDirPath = "";
@@ -2768,6 +2769,14 @@
 				minimumVersion = 1.24.0;
 			};
 		};
+		846CA5C62CB901BC005E8C15 /* XCRemoteSwiftPackageReference "yttrium" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WalletConnect/yttrium";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
 		84943C792A9BA206007EBAC2 /* XCRemoteSwiftPackageReference "mixpanel-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mixpanel/mixpanel-swift";
@@ -2827,10 +2836,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		61DAC4AA2C65897800BAF3F8 /* YttriumWrapper */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = YttriumWrapper;
-		};
 		8421447A2C80A2B8004FF494 /* ReownAppKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ReownAppKit;
@@ -2896,6 +2901,11 @@
 		8448F1D327E4726F0000B866 /* WalletConnect */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WalletConnect;
+		};
+		846CA5C72CB901F8005E8C15 /* Yttrium */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 846CA5C62CB901BC005E8C15 /* XCRemoteSwiftPackageReference "yttrium" */;
+			productName = Yttrium;
 		};
 		8486EDD22B4F2EA6008E53C3 /* SwiftMessages */ = {
 			isa = XCSwiftPackageProductDependency;

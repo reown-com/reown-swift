@@ -1,9 +1,9 @@
 import Foundation
-import YttriumWrapper
+import Yttrium
 import WalletConnectUtils
 
-extension YttriumWrapper.AccountClient {
-    
+extension Yttrium.AccountClient {
+
     func getAccount() async throws -> Account {
         let chain = try Blockchain(namespace: "eip155", reference: chainId)
         let address = try await getAddress()
@@ -44,11 +44,11 @@ class SmartAccountSafe {
         }
         assert(owner.count == 40)
         
-        let localConfig = YttriumWrapper.Config.local()
-        
+        let localConfig = Yttrium.Config.local()
+
         let pimlicoBundlerUrl = "https://\(InputConfig.pimlicoBundlerUrl!)"
         let rpcUrl = "https://\(InputConfig.rpcUrl!)"
-        let pimlicoSepolia = YttriumWrapper.Config(
+        let pimlicoSepolia = Yttrium.Config(
             endpoints: .init(
                 rpc: .init(baseURL: rpcUrl),
                 bundler: .init(baseURL: pimlicoBundlerUrl),
