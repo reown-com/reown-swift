@@ -1,7 +1,7 @@
 import Foundation
 import Commons
 import WalletConnectSign
-import YttriumWrapper
+import Yttrium
 
 struct SendCallsParams: Codable {
     let version: String
@@ -125,7 +125,7 @@ final class Signer {
             return AnyCodable(signedMessage)
 
         case "eth_sendTransaction":
-            let params = try request.params.get([YttriumWrapper.Transaction].self)
+            let params = try request.params.get([Yttrium.Transaction].self)
             let result = try await client.sendTransactions(params)
             return AnyCodable(result)
 
@@ -136,7 +136,7 @@ final class Signer {
             }
 
             let transactions = calls.map {
-                YttriumWrapper.Transaction(
+                Yttrium.Transaction(
                     to: $0.to!,
                     value: $0.value!,
                     data: $0.data!
