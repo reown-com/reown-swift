@@ -34,7 +34,7 @@ struct SignView: View {
                                 Button {
                                     presenter.connectWalletWithW3M()
                                 } label: {
-                                    Text("Connect with Web3Modal")
+                                    Text("Connect with AppKit")
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 16)

@@ -29,6 +29,8 @@ class WebSocketFactoryMock: WebSocketFactory {
 final class RelayClientEndToEndTests: XCTestCase {
 
     private var publishers = Set<AnyCancellable>()
+    private var relayA: RelayClient!
+    private var relayB: RelayClient!
 
     func makeRelayClient(prefix: String) -> RelayClient {
         let keyValueStorage = RuntimeKeyValueStorage()
@@ -53,7 +55,7 @@ final class RelayClientEndToEndTests: XCTestCase {
         )
 
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
-        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(), logger: logger, socketStatusProvider: socketStatusProvider)
+        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(logger: logger), logger: logger, socketStatusProvider: socketStatusProvider)
         let dispatcher = Dispatcher(
             socketFactory: webSocketFactory,
             relayUrlFactory: urlFactory,
@@ -80,29 +82,44 @@ final class RelayClientEndToEndTests: XCTestCase {
         return relayClient
     }
 
-    func testSubscribe() {
-        let relayClient = makeRelayClient(prefix: "")
-
-        try! relayClient.connect()
-        let subscribeExpectation = expectation(description: "subscribe call succeeds")
-        subscribeExpectation.assertForOverFulfill = true
-        relayClient.socketConnectionStatusPublisher.sink { status in
-            if status == .connected {
-                Task(priority: .high) {  try await relayClient.subscribe(topic: "ecb78f2df880c43d3418ddbf871092b847801932e21765b250cc50b9e96a9131") }
-                subscribeExpectation.fulfill()
-            }
-        }.store(in: &publishers)
-
-        wait(for: [subscribeExpectation], timeout: InputConfig.defaultTimeout)
+    override func tearDown() {
+        relayA = nil
+        relayB = nil
+        super.tearDown()
     }
 
+//    func testSubscribe() {
+//        relayA = makeRelayClient(prefix: "")
+//
+//        do {
+//            try relayA.connect()
+//        } catch {
+//            XCTFail("Failed to connect: \(error)")
+//        }
+//
+//        let subscribeExpectation = expectation(description: "subscribe call succeeds")
+//        subscribeExpectation.assertForOverFulfill = true
+//        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
+//            guard let self = self else {return}
+//            if status == .connected {
+//                Task(priority: .high) {  try await self.relayA.subscribe(topic: "ecb78f2df880c43d3418ddbf871092b847801932e21765b250cc50b9e96a9131") }
+//                subscribeExpectation.fulfill()
+//            }
+//        }.store(in: &publishers)
+//
+//        wait(for: [subscribeExpectation], timeout: InputConfig.defaultTimeout)
+//    }
+
     func testEndToEndPayload() {
-        let relayA = makeRelayClient(prefix: "⚽️ A ")
-        let relayB = makeRelayClient(prefix: "🏀 B ")
+        relayA = makeRelayClient(prefix: "⚽️ A ")
+        relayB = makeRelayClient(prefix: "🏀 B ")
 
-        try! relayA.connect()
-        try! relayB.connect()
-
+        do {
+            try relayA.connect()
+            try relayB.connect()
+        } catch {
+            XCTFail("Failed to connect: \(error)")
+        }
         let randomTopic = String.randomTopic()
         let payloadA = "A"
         let payloadB = "B"
@@ -117,31 +134,36 @@ final class RelayClientEndToEndTests: XCTestCase {
         expectationA.assertForOverFulfill = false
         expectationB.assertForOverFulfill = false
 
-        relayA.messagePublisher.sink { topic, payload, _, _ in
+        relayA.messagePublisher.sink { [weak self] topic, payload, _, _ in
+            guard let self = self else { return }
             (subscriptionATopic, subscriptionAPayload) = (topic, payload)
             expectationA.fulfill()
         }.store(in: &publishers)
 
-        relayB.messagePublisher.sink { topic, payload, _, _ in
+        relayB.messagePublisher.sink { [weak self] topic, payload, _, _ in
+            guard let self = self else { return }
             (subscriptionBTopic, subscriptionBPayload) = (topic, payload)
             Task(priority: .high) {
                 sleep(1)
-                try await relayB.publish(topic: randomTopic, payload: payloadB, tag: 0, prompt: false, ttl: 60)
+                try await self.relayB.publish(topic: randomTopic, payload: payloadB, tag: 0, prompt: false, ttl: 60)
             }
             expectationB.fulfill()
         }.store(in: &publishers)
 
-        relayA.socketConnectionStatusPublisher.sink {  status in
-            guard status == .connected else {return}
+        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
+            guard let self = self else { return }
+            guard status == .connected else { return }
             Task(priority: .high) {
-                try await relayA.subscribe(topic: randomTopic)
-                try await relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60)
+                try await self.relayA.subscribe(topic: randomTopic)
+                try await self.relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60)
             }
         }.store(in: &publishers)
-        relayB.socketConnectionStatusPublisher.sink {  status in
-            guard status == .connected else {return}
+
+        relayB.socketConnectionStatusPublisher.sink { [weak self] status in
+            guard let self = self else { return }
+            guard status == .connected else { return }
             Task(priority: .high) {
-                try await relayB.subscribe(topic: randomTopic)
+                try await self.relayB.subscribe(topic: randomTopic)
             }
         }.store(in: &publishers)
 

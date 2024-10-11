@@ -174,11 +174,11 @@
       },
       {
         "package": "CoinbaseWalletSDK",
-        "repositoryURL": "https://github.com/WalletConnect/wallet-mobile-sdk",
+        "repositoryURL": "https://github.com/MobileWalletProtocol/wallet-mobile-sdk",
         "state": {
           "branch": null,
-          "revision": "b6dfb7d6b8447c7c5b238a10443a1ac28223f38f",
-          "version": "1.0.0"
+          "revision": "4aa89e682f8d7ab1515d85d0797f0d25306bb56a",
+          "version": "1.0.5"
         }
       },
       {

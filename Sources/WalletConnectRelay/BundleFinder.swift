@@ -1,30 +1,27 @@
-import class Foundation.Bundle
+import Foundation
 
 private class BundleFinder {}
 
 extension Foundation.Bundle {
     /// Returns the resource bundle associated with the current Swift module.
     static var resourceBundle: Bundle = {
-        let bundleName = "WalletConnect_WalletConnectRelay"
-
+        let bundleName = "reown_WalletConnectRelay"
         let candidates = [
             // Bundle should be present here when the package is linked into an App.
             Bundle.main.resourceURL,
-
             // Bundle should be present here when the package is linked into a framework.
             Bundle(for: BundleFinder.self).resourceURL,
-
             // For command-line tools.
             Bundle.main.bundleURL,
-            
-            // One of these should be used when building SwiftUI Previews
+            // Bundle should be present here when running tests.
             Bundle(for: BundleFinder.self).resourceURL?
                 .deletingLastPathComponent()
                 .deletingLastPathComponent()
                 .deletingLastPathComponent(),
+            // Other possibilities
             Bundle(for: BundleFinder.self).resourceURL?
                 .deletingLastPathComponent()
-                .deletingLastPathComponent()
+                .deletingLastPathComponent(),
         ]
 
         for candidate in candidates {
@@ -33,6 +30,12 @@ extension Foundation.Bundle {
                 return bundle
             }
         }
-        fatalError("unable to find bundle named WalletConnect_WalletConnectRelay")
+
+        // If we can't find the bundle, fall back to the module bundle if available
+        #if SWIFT_PACKAGE
+        return Bundle.module
+        #else
+        return Bundle(for: BundleFinder.self)
+        #endif
     }()
 }

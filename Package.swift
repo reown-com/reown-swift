@@ -10,7 +10,7 @@ let yttriumDebug = false
 var dependencies: [Package.Dependency] = [
     .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
     .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
-    .package(name: "CoinbaseWalletSDK", url: "https://github.com/WalletConnect/wallet-mobile-sdk", from: "1.0.0"),
+    .package(name: "CoinbaseWalletSDK", url: "https://github.com/MobileWalletProtocol/wallet-mobile-sdk", .upToNextMinor(from: "1.0.0")),
 //    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
 ]
 var yttriumTarget: Target!
@@ -35,7 +35,7 @@ if yttriumDebug {
 }
 
 let package = Package(
-    name: "WalletConnect",
+    name: "reown",
     platforms: [
         .iOS(.v13),
         .macOS(.v11),

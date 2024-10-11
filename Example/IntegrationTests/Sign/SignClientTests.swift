@@ -84,8 +84,12 @@ final class SignClientTests: XCTestCase {
     }
 
     override func tearDown() {
+
+        // Now set properties to nil
         dapp = nil
         wallet = nil
+
+        super.tearDown() // Ensure superclass tearDown is called
     }
 
     func testSessionPropose() async throws {
