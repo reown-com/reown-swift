@@ -22,3 +22,9 @@ EXPLORER_HOST = explorer-api.walletconnect.com
 // WALLETAPP_SENTRY_DSN = WALLETAPP_SENTRY_DSN
 
 // MIXPANEL_TOKEN = MIXPANEL_TOKEN
+
+// pimloco bundler url including api key
+// PIMLICO_BUNDLER_URL = PIMLICO_BUNDLER_URL
+
+// rpc url
+// RPC_URL = RPC_URL

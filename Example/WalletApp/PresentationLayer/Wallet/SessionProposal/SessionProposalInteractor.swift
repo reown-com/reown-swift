@@ -4,16 +4,26 @@ import ReownWalletKit
 import ReownRouter
 
 final class SessionProposalInteractor {
-    func approve(proposal: Session.Proposal, account: Account) async throws -> Bool {
+    func approve(proposal: Session.Proposal, EOAAccount: Account) async throws -> Bool {
         // Following properties are used to support all the required and optional namespaces for the testing purposes
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
         let supportedEvents = Set(proposal.requiredNamespaces.flatMap { $0.value.events } + (proposal.optionalNamespaces?.flatMap { $0.value.events } ?? []))
         
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedChains = supportedRequiredChains + supportedOptionalChains 
+        var supportedChains = supportedRequiredChains + supportedOptionalChains
 
-        let supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: account.address)! }
+        var supportedAccounts: [Account]
+        var sessionProperties = [String: String]()
+
+        if SmartAccountManager.shared.isSmartAccountEnabled {
+            let sepolia = Blockchain("eip155:11155111")!
+            let smartAccountAddresses = try await SmartAccountManager.shared.getSmartAccountsAddresses()
+            supportedAccounts = smartAccountAddresses.map { Account(blockchain: sepolia, address: $0)! }
+            sessionProperties = getSessionProperties(addresses: smartAccountAddresses)
+        } else {
+            supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: EOAAccount.address)! }
+        }
 
         /* Use only supported values for production. I.e:
         let supportedMethods = ["eth_signTransaction", "personal_sign", "eth_signTypedData", "eth_sendTransaction", "eth_sign"]
@@ -40,7 +50,8 @@ final class SessionProposalInteractor {
             AlertPresenter.present(message: error.localizedDescription, type: .error)
             return false
         }
-        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: proposal.sessionProperties)
+
+        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
             return false
@@ -56,4 +67,34 @@ final class SessionProposalInteractor {
             ReownRouter.goBack(uri: uri)
         }
     }
+
+    private func getSessionProperties(addresses: [String]) -> [String: String] {
+        var addressCapabilities: [String] = []
+
+        // Iterate over the addresses and construct JSON strings for each address
+        for address in addresses {
+            let capability = """
+            "\(address)":{
+                "0xaa36a7":{
+                    "atomicBatch":{
+                        "supported":true
+                    }
+                }
+            }
+            """
+            addressCapabilities.append(capability)
+        }
+
+        // Join all the address capabilities into one JSON-like structure
+        let sepoliaAtomicBatchCapabilities = "{\(addressCapabilities.joined(separator: ","))}"
+
+        let sessionProperties: [String: String] = [
+            "bundler_name": "pimlico",
+            "capabilities": sepoliaAtomicBatchCapabilities
+        ]
+
+        print(sessionProperties)
+        return sessionProperties
+    }
 }
+

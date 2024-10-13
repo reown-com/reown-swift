@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/ProxymanApp/atlantis",
         "state": {
           "branch": null,
-          "revision": "5145a7041ec71421d09653db87dcc80c81792004",
-          "version": "1.24.0"
+          "revision": "523dd773538e1e20036cb2d28f8b9947448c2d20",
+          "version": "1.25.1"
         }
       },
       {
@@ -96,8 +96,8 @@
         "repositoryURL": "https://github.com/apple/swift-docc-plugin",
         "state": {
           "branch": null,
-          "revision": "2eb22993b3dfd0c0d32729b357c8dabb6cd44680",
-          "version": "1.4.2"
+          "revision": "85e4bb4e1cd62cec64a4b8e769dcefdf0c5b9d64",
+          "version": "1.4.3"
         }
       },
       {
@@ -110,21 +110,21 @@
         }
       },
       {
+        "package": "swift-dotenv",
+        "repositoryURL": "https://github.com/thebarndog/swift-dotenv.git",
+        "state": {
+          "branch": null,
+          "revision": "f6e7ca817d35eeccb20b62c87ee75963b01b29dc",
+          "version": "2.0.1"
+        }
+      },
+      {
         "package": "swift-qrcode-generator",
         "repositoryURL": "https://github.com/dagronf/swift-qrcode-generator",
         "state": {
           "branch": null,
           "revision": "5ca09b6a2ad190f94aa3d6ddef45b187f8c0343b",
           "version": "1.0.3"
-        }
-      },
-      {
-        "package": "swift-snapshot-testing",
-        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing",
-        "state": {
-          "branch": null,
-          "revision": "f29e2014f6230cf7d5138fc899da51c7f513d467",
-          "version": "1.10.0"
         }
       },
       {
@@ -188,6 +188,15 @@
           "branch": null,
           "revision": "569255adcfff0b37e4cb8004aea29d0e2d6266df",
           "version": "1.0.2"
+        }
+      },
+      {
+        "package": "yttrium",
+        "repositoryURL": "https://github.com/WalletConnect/yttrium",
+        "state": {
+          "branch": null,
+          "revision": "04d1589c42c510d0f2487e58b0af9619a6f070b4",
+          "version": "0.1.0"
         }
       }
     ]
