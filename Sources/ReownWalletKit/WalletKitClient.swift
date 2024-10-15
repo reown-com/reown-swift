@@ -98,17 +98,20 @@ public class WalletKitClient {
     private let signClient: SignClientProtocol
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
-    
+    private let smartAccountsManager: SafesManager?
+
     private var account: Account?
 
     init(
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
-        pushClient: PushClientProtocol
+        pushClient: PushClientProtocol,
+        smartAccountsManager: SafesManager?
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
+        self.smartAccountsManager = smartAccountsManager
     }
     
     /// For a wallet to approve a session proposal.
@@ -261,7 +264,14 @@ public class WalletKitClient {
     public func getPairings() -> [Pairing] {
         return pairingClient.getPairings()
     }
+
+
+    // MARK: Yttrium
+//    public func prepareSendTransactions(_ transactions: [Transaction]) async throws -> PreparedSendTransaction {
+//
+//    }
 }
+
 
 #if DEBUG
 extension WalletKitClient {

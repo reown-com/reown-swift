@@ -26,7 +26,8 @@ public class WalletKit {
         return WalletKitClientFactory.create(
             signClient: Sign.instance,
             pairingClient: Pair.instance as! PairingClient,
-            pushClient: Push.instance
+            pushClient: Push.instance,
+            config: config
         )
     }()
     
@@ -42,11 +43,13 @@ public class WalletKit {
         metadata: AppMetadata,
         crypto: CryptoProvider,
         pushHost: String = "echo.walletconnect.com",
-        environment: APNSEnvironment = .production
+        environment: APNSEnvironment = .production,
+        bundlerUrl: String? = nil,
+        rpcUrl: String? = nil
     ) {
         Pair.configure(metadata: metadata)
         Push.configure(pushHost: pushHost, environment: environment)
         Sign.configure(crypto: crypto)
-        WalletKit.config = WalletKit.Config(crypto: crypto)
+        WalletKit.config = WalletKit.Config(crypto: crypto, bundlerUrl: bundlerUrl, rpcUrl: rpcUrl)
     }
 }
