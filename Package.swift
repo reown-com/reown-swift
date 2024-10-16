@@ -93,7 +93,7 @@ let package = Package(
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "ReownWalletKit",
-            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
+            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify", "YttriumWrapper"],
             path: "Sources/ReownWalletKit",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(

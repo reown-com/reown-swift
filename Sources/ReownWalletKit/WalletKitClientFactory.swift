@@ -8,9 +8,9 @@ struct WalletKitClientFactory {
         config: WalletKit.Config
     ) -> WalletKitClient {
         var safesManager: SafesManager? = nil
-        if let bundlerUrl = config.bundlerUrl,
+        if let pimlicoApiKey = config.pimlicoApiKey,
            let rpcUrl = config.rpcUrl {
-            safesManager = SafesManager(bundlerUrl: bundlerUrl, rpcUrl: rpcUrl)
+            safesManager = SafesManager(pimlicoApiKey: pimlicoApiKey, rpcUrl: rpcUrl)
         }
         return WalletKitClient(
             signClient: signClient,

@@ -39,7 +39,6 @@
 		84474A0129B9EB74005F520B /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 84474A0029B9EB74005F520B /* Starscream */; };
 		84474A0229B9ECA2005F520B /* DefaultSocketFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5629AEF2877F73000094373 /* DefaultSocketFactory.swift */; };
 		8448F1D427E4726F0000B866 /* WalletConnect in Frameworks */ = {isa = PBXBuildFile; productRef = 8448F1D327E4726F0000B866 /* WalletConnect */; };
-		8454EF0A2C9421B600B5529E /* SmartAccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8454EF092C9421B600B5529E /* SmartAccountManager.swift */; };
 		845B8D8C2934B36C0084A966 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845B8D8B2934B36C0084A966 /* Account.swift */; };
 		846E359F2C00654F00E63DF4 /* ConfigModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846E359E2C00654F00E63DF4 /* ConfigModule.swift */; };
 		846E35A22C0065AD00E63DF4 /* ConfigRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846E35A12C0065AD00E63DF4 /* ConfigRouter.swift */; };
@@ -65,6 +64,7 @@
 		8487A9482A83AD680003D5AF /* LoggingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8487A9472A83AD680003D5AF /* LoggingService.swift */; };
 		84943C7B2A9BA206007EBAC2 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 84943C7A2A9BA206007EBAC2 /* Mixpanel */; };
 		84943C7D2A9BA328007EBAC2 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 84943C7C2A9BA328007EBAC2 /* Mixpanel */; };
+		849BA7532CBFCB5100B953F4 /* SmartAccountEnabler copy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849BA7522CBFCB5100B953F4 /* SmartAccountEnabler copy.swift */; };
 		849D7A93292E2169006A2BD4 /* NotifyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849D7A92292E2169006A2BD4 /* NotifyTests.swift */; };
 		84A6E3C32A386BBC008A0571 /* Publisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A6E3C22A386BBC008A0571 /* Publisher.swift */; };
 		84AA01DB28CF0CD7005D48D8 /* XCTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA01DA28CF0CD7005D48D8 /* XCTest.swift */; };
@@ -341,7 +341,6 @@
 		844511C92C8BA69D00A6A86C /* AppKitLab.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AppKitLab.entitlements; sourceTree = "<group>"; };
 		844749F329B9E5B9005F520B /* RelayIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RelayIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		844749F529B9E5B9005F520B /* RelayClientEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayClientEndToEndTests.swift; sourceTree = "<group>"; };
-		8454EF092C9421B600B5529E /* SmartAccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartAccountManager.swift; sourceTree = "<group>"; };
 		845AA7D929BA1EBA00F33739 /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = IntegrationTests.xctestplan; path = ExampleApp.xcodeproj/IntegrationTests.xctestplan; sourceTree = "<group>"; };
 		845AA7DC29BB424800F33739 /* SmokeTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = SmokeTests.xctestplan; sourceTree = "<group>"; };
 		845B8D8B2934B36C0084A966 /* Account.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
@@ -366,6 +365,7 @@
 		8487A9472A83AD680003D5AF /* LoggingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggingService.swift; sourceTree = "<group>"; };
 		849A4F18298281E300E61ACE /* WalletAppRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WalletAppRelease.entitlements; sourceTree = "<group>"; };
 		849A4F19298281F100E61ACE /* PNDecryptionServiceRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PNDecryptionServiceRelease.entitlements; sourceTree = "<group>"; };
+		849BA7522CBFCB5100B953F4 /* SmartAccountEnabler copy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SmartAccountEnabler copy.swift"; sourceTree = "<group>"; };
 		849D7A92292E2169006A2BD4 /* NotifyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifyTests.swift; sourceTree = "<group>"; };
 		84A6E3C22A386BBC008A0571 /* Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Publisher.swift; sourceTree = "<group>"; };
 		84AA01DA28CF0CD7005D48D8 /* XCTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTest.swift; sourceTree = "<group>"; };
@@ -1011,8 +1011,8 @@
 		A5D610CB2AB358ED00C20083 /* BusinessLayer */ = {
 			isa = PBXGroup;
 			children = (
+				849BA7522CBFCB5100B953F4 /* SmartAccountEnabler copy.swift */,
 				A5D610CC2AB3592F00C20083 /* ListingsSertice */,
-				8454EF092C9421B600B5529E /* SmartAccountManager.swift */,
 			);
 			path = BusinessLayer;
 			sourceTree = "<group>";
@@ -2017,6 +2017,7 @@
 				C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */,
 				A57879712A4EDC8100F8D10B /* TextFieldView.swift in Sources */,
 				A5D610CA2AB3249100C20083 /* ListingViewModel.swift in Sources */,
+				849BA7532CBFCB5100B953F4 /* SmartAccountEnabler copy.swift in Sources */,
 				84DB38F32983CDAE00BFEE37 /* PushRegisterer.swift in Sources */,
 				A5D610CE2AB3594100C20083 /* ListingsAPI.swift in Sources */,
 				C5B2F6FB297055B0000DBA0E /* ETHSigner.swift in Sources */,
@@ -2026,7 +2027,6 @@
 				847BD1E5298A806800076C90 /* NotificationsPresenter.swift in Sources */,
 				A50D53C12ABA055700A4FD8B /* NotifyPreferencesModule.swift in Sources */,
 				A50B6A382B06697B00162B01 /* ProfilingService.swift in Sources */,
-				8454EF0A2C9421B600B5529E /* SmartAccountManager.swift in Sources */,
 				A5B4F7C52ABB20AE0099AF7C /* SubscriptionRouter.swift in Sources */,
 				C55D3496295DFA750004314A /* WelcomeInteractor.swift in Sources */,
 				C5B2F6FC297055B0000DBA0E /* SOLSigner.swift in Sources */,

@@ -17,8 +17,8 @@ struct InputConfig {
         return config(for: "MIXPANEL_TOKEN")
     }
 
-    static var pimlicoBundlerUrl: String? {
-        return config(for: "PIMLICO_BUNDLER_URL")
+    static var pimlicoApiKey: String? {
+        return config(for: "PIMLICO_API_KEY")
     }
 
     static var rpcUrl: String? {

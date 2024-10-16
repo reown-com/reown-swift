@@ -1,12 +1,13 @@
 import Foundation
+import ReownWalletKit
 
-class SmartAccountManager {
+class SmartAccountEnabler {
     enum Errors: Error {
         case smartAccountNotEnabled
     }
 
     // Singleton instance
-    static let shared = SmartAccountManager()
+    static let shared = SmartAccountEnabler()
 
     // Use a private queue for thread-safe access to the isSmartAccountEnabled property
     private let queue = DispatchQueue(label: "com.smartaccount.manager", attributes: .concurrent)
@@ -32,11 +33,11 @@ class SmartAccountManager {
     private init() {}
 
     // Function to get smart account addresses
-    func getSmartAccountsAddresses() async throws -> [String] {
+    func getSmartAccountsAddresses(ownerAccount: Account) async throws -> [String] {
         guard isSmartAccountEnabled else {
             throw Errors.smartAccountNotEnabled
         }
-        let safeAccountAddress = try await SmartAccountSafe.instance.getClient().getAddress()
-        return [safeAccountAddress]
+        let safeAccount = try await WalletKit.instance.getSmartAccount(ownerAccount: ownerAccount)
+        return [safeAccount.address]
     }
 }

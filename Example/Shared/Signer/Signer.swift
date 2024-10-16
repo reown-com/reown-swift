@@ -1,7 +1,7 @@
 import Foundation
 import Commons
 import WalletConnectSign
-import YttriumWrapper
+import ReownWalletKit
 
 struct SendCallsParams: Codable {
     let version: String
@@ -16,43 +16,28 @@ struct SendCallsParams: Codable {
     }
 }
 
-enum SmartAccountType {
-    case simple
-    case safe
-}
 
 final class Signer {
     enum Errors: Error {
         case notImplemented
-        case unknownSmartAccountType
+        case accountForRequestNotFound
     }
 
     private init() {}
 
     static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
-        if let accountType = try await getRequestedSmartAccountType(request) {
-            return try await signWithSmartAccount(request: request, accountType: accountType)
-        } else {
+        let requestedAddress = try await getRequestedAddress(request)
+        if requestedAddress == importAccount.account.address {
             return try signWithEOA(request: request, importAccount: importAccount)
         }
+        let smartAccount = try await WalletKit.instance.getSmartAccount(ownerAccount: importAccount.account)
+        if smartAccount.address == requestedAddress {
+            return try await signWithSmartAccount(request: request, importAccount: importAccount)
+        }
+        throw Errors.accountForRequestNotFound
     }
 
-    private static func getRequestedSmartAccountType(_ request: Request) async throws -> SmartAccountType? {
-        let account = try await getRequestedAccount(request)
-        if account == nil {
-            return nil
-        }
-
-        let safeSmartAccountAddress = try await SmartAccountSafe.instance.getClient().getAddress()
-
-        if account?.lowercased() == safeSmartAccountAddress.lowercased() {
-            return .safe
-        }
-
-        return nil
-    }
-
-    private static func getRequestedAccount(_ request: Request) async throws -> String? {
+    private static func getRequestedAddress(_ request: Request) async throws -> String {
         // Attempt to decode params for transaction requests encapsulated in an array of dictionaries
         if let paramsArray = try? request.params.get([AnyCodable].self),
            let firstParam = paramsArray.first?.value as? [String: Any],
@@ -78,7 +63,7 @@ final class Signer {
             }
         }
 
-        return nil
+        throw cantGetRequestedAddress
     }
 
     private static func signWithEOA(request: Request, importAccount: ImportAccount) throws -> AnyCodable {
@@ -102,32 +87,35 @@ final class Signer {
         }
     }
 
-    private static func signWithSmartAccount(request: Request, accountType: SmartAccountType) async throws -> AnyCodable {
-        let client: AccountClientProtocol
-        switch accountType {
-        case .safe:
-            client = await SmartAccountSafe.instance.getClient()
-        default:
-            fatalError("Only safe is currently supported")
-        }
+    private static func signWithSmartAccount(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
+
+        let ownerAccount = Account(blockchain: request.chainId, address: importAccount.account.address)!
 
         switch request.method {
         case "personal_sign":
             let params = try request.params.get([String].self)
             let message = params[0]
-            let signedMessage = try client.signMessage(message)
+            let signedMessage = try WalletKit.instance.signMessage(message)
             return AnyCodable(signedMessage)
 
         case "eth_signTypedData":
             let params = try request.params.get([String].self)
             let message = params[0]
-            let signedMessage = try client.signMessage(message)
+            let signedMessage = try WalletKit.instance.signMessage(message)
             return AnyCodable(signedMessage)
 
         case "eth_sendTransaction":
             let params = try request.params.get([YttriumWrapper.Transaction].self)
-            let result = try await client.sendTransactions(params)
-            return AnyCodable(result)
+            let prepareSendTransactions = try await WalletKit.instance.prepareSendTransactions(params, ownerAccount: ownerAccount)
+
+            let signer = ETHSigner(importAccount: importAccount)
+
+            let signature = try signer.signHash(prepareSendTransactions.hash)
+
+            let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
+
+            let userOpHash = try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
+            return AnyCodable(userOpHash)
 
         case "wallet_sendCalls":
             let params = try request.params.get([SendCallsParams].self)
@@ -143,13 +131,15 @@ final class Signer {
                 )
             }
 
-            let userOpHash = try await client.sendTransactions(transactions)
+            let prepareSendTransactions = try await accountClient.prepareSendTransactions(transactions)
 
-            Task {
-                let userOpReceipt = try await SmartAccountSafe.instance.getClient().waitForUserOperationReceipt(userOperationHash: userOpHash)
-                guard let userOpReceiptSting = userOpReceipt.jsonString else { return }
-                AlertPresenter.present(message: userOpReceiptSting, type: .info)
-            }
+            let signer = ETHSigner(importAccount: importAccount)
+
+            let signature = try signer.signHash(prepareSendTransactions.hash)
+
+            let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
+
+            let userOpHash = try await accountClient.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams)
 
             return AnyCodable(userOpHash)
 
@@ -163,7 +153,7 @@ extension Signer.Errors: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notImplemented:   return "Requested method is not implemented"
-        case .unknownSmartAccountType: return "Unknown smart account type"
+        case .accountForRequestNotFound: return "Account for request not found"
         }
     }
 }

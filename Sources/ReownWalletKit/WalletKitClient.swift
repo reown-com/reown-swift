@@ -7,6 +7,9 @@ import Combine
 ///
 /// Access via `WalletKit.instance`
 public class WalletKitClient {
+    enum Errors: Error {
+        case smartAccountNotEnabled
+    }
     // MARK: - Public Properties
     
     /// Publisher that sends session proposal
@@ -267,9 +270,39 @@ public class WalletKitClient {
 
 
     // MARK: Yttrium
-//    public func prepareSendTransactions(_ transactions: [Transaction]) async throws -> PreparedSendTransaction {
-//
-//    }
+    public func prepareSendTransactions(_ transactions: [Transaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.prepareSendTransactions(transactions)
+    }
+
+    public func doSendTransaction(signatures: [OwnerSignature], params: String, ownerAccount: Account) async throws -> String {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.doSendTransaction(signatures: signatures, params: params)
+    }
+
+    public func getSmartAccount(ownerAccount: Account) async throws -> Account {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let address = try await client.getAddress()
+        // it's safe to force unwrap here because we know that the address and the chain are valid
+        return Account(blockchain: ownerAccount.blockchain, address: address)!
+    }
+
+    public func waitForUserOperationReceipt(userOperationHash: String, ownerAccount: Account) async throws -> UserOperationReceipt {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.waitForUserOperationReceipt(userOperationHash: userOperationHash)
+    }
 }
 
 

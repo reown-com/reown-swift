@@ -44,12 +44,12 @@ public class WalletKit {
         crypto: CryptoProvider,
         pushHost: String = "echo.walletconnect.com",
         environment: APNSEnvironment = .production,
-        bundlerUrl: String? = nil,
+        pimlicoApiKey: String? = nil,
         rpcUrl: String? = nil
     ) {
         Pair.configure(metadata: metadata)
         Push.configure(pushHost: pushHost, environment: environment)
         Sign.configure(crypto: crypto)
-        WalletKit.config = WalletKit.Config(crypto: crypto, bundlerUrl: bundlerUrl, rpcUrl: rpcUrl)
+        WalletKit.config = WalletKit.Config(crypto: crypto, pimlicoApiKey: pimlicoApiKey, rpcUrl: rpcUrl)
     }
 }

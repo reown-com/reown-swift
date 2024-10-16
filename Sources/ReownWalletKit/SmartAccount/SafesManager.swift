@@ -3,12 +3,11 @@ import Foundation
 
 class SafesManager {
     var ownerToClient: [Account: AccountClient] = [:]
-    let entryPoint = "0x0000000071727De22E5E9d8BAf0edAc6f37da032" // v0.7 on Sepolia
     let rpcUrl: String
-    let bundlerUrl: String
+    let apiKey: String
 
-    init(bundlerUrl: String, rpcUrl: String) {
-        self.bundlerUrl = bundlerUrl
+    init(pimlicoApiKey: String, rpcUrl: String) {
+        self.apiKey = pimlicoApiKey
         self.rpcUrl = rpcUrl
     }
 
@@ -24,8 +23,8 @@ class SafesManager {
     }
 
     private func createSafe(ownerAccount: Account) -> AccountClient {
-
-        let pimlicoBundlerUrl = "https://\(bundlerUrl)"
+        let chainId = ownerAccount.reference
+        let pimlicoBundlerUrl = "https://api.pimlico.io/v2/\(chainId)/rpc?apikey=\(apiKey)"
         let rpcUrl = "https://\(rpcUrl)"
         let pimlicoSepolia = YttriumWrapper.Config(
             endpoints: .init(
@@ -37,7 +36,7 @@ class SafesManager {
         // use YttriumWrapper.Config.local() for local foundry node
         return AccountClient(
             ownerAddress: ownerAccount.address,
-            entryPoint: entryPoint,
+            entryPoint: "", // remove the entrypoint
             chainId: Int(ownerAccount.blockchain.reference)!,
             config: pimlicoSepolia,
             safe: true
