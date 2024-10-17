@@ -21,6 +21,7 @@ final class Signer {
     enum Errors: Error {
         case notImplemented
         case accountForRequestNotFound
+        case cantFindRequestedAddress
     }
 
     private init() {}
@@ -63,7 +64,7 @@ final class Signer {
             }
         }
 
-        throw cantGetRequestedAddress
+        throw Errors.cantFindRequestedAddress
     }
 
     private static func signWithEOA(request: Request, importAccount: ImportAccount) throws -> AnyCodable {
@@ -95,14 +96,16 @@ final class Signer {
         case "personal_sign":
             let params = try request.params.get([String].self)
             let message = params[0]
-            let signedMessage = try WalletKit.instance.signMessage(message)
-            return AnyCodable(signedMessage)
+            fatalError("not implemented")
+//            let signedMessage = try WalletKit.instance.signMessage(message)
+//            return AnyCodable(signedMessage)
 
         case "eth_signTypedData":
             let params = try request.params.get([String].self)
             let message = params[0]
-            let signedMessage = try WalletKit.instance.signMessage(message)
-            return AnyCodable(signedMessage)
+            fatalError("not implemented")
+//            let signedMessage = try WalletKit.instance.signMessage(message)
+//            return AnyCodable(signedMessage)
 
         case "eth_sendTransaction":
             let params = try request.params.get([YttriumWrapper.Transaction].self)
@@ -131,7 +134,7 @@ final class Signer {
                 )
             }
 
-            let prepareSendTransactions = try await accountClient.prepareSendTransactions(transactions)
+            let prepareSendTransactions = try await WalletKit.instance.prepareSendTransactions(transactions, ownerAccount: ownerAccount)
 
             let signer = ETHSigner(importAccount: importAccount)
 
@@ -139,7 +142,7 @@ final class Signer {
 
             let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
 
-            let userOpHash = try await accountClient.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams)
+            let userOpHash = try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
 
             return AnyCodable(userOpHash)
 
@@ -154,6 +157,7 @@ extension Signer.Errors: LocalizedError {
         switch self {
         case .notImplemented:   return "Requested method is not implemented"
         case .accountForRequestNotFound: return "Account for request not found"
+        case .cantFindRequestedAddress: return "Can't find requested address"
         }
     }
 }
