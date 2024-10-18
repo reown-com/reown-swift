@@ -278,12 +278,12 @@ public class WalletKitClient {
         return try await client.prepareSendTransactions(transactions)
     }
 
-    public func doSendTransaction(signatures: [OwnerSignature], params: String, ownerAccount: Account) async throws -> String {
+    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: String, ownerAccount: Account) async throws -> String {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.doSendTransaction(signatures: signatures, params: params)
+        return try await client.doSendTransaction(signatures: signatures, params: doSendTransactionParams)
     }
 
     public func getSmartAccount(ownerAccount: Account) async throws -> Account {

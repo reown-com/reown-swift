@@ -34,12 +34,15 @@ class SafesManager {
             )
         )
         // use YttriumWrapper.Config.local() for local foundry node
-        return AccountClient(
+        let x =  AccountClient(
             ownerAddress: ownerAccount.address,
             entryPoint: "", // remove the entrypoint
             chainId: Int(ownerAccount.blockchain.reference)!,
             config: pimlicoSepolia,
             safe: true
         )
+        // TODO remove registration
+        x.register(privateKey: "ff89825a799afce0d5deaa079cdde227072ec3f62973951683ac8cc033092156")
+        return x
     }
 }

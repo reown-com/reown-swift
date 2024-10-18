@@ -117,7 +117,7 @@ final class Signer {
 
             let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
 
-            let userOpHash = try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
+            let userOpHash = try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], doSendTransactionParams: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
             return AnyCodable(userOpHash)
 
         case "wallet_sendCalls":
@@ -142,7 +142,7 @@ final class Signer {
 
             let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
 
-            let userOpHash = try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
+            let userOpHash = try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], doSendTransactionParams: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
 
             return AnyCodable(userOpHash)
 

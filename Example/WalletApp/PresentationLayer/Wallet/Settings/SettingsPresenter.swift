@@ -11,7 +11,6 @@ final class SettingsPresenter: ObservableObject {
     private let router: SettingsRouter
     private let accountStorage: AccountStorage
     private var disposeBag = Set<AnyCancellable>()
-    @Published var smartAccount: String = "Loading..."
     @Published var smartAccountSafe: String = "Loading..."
 
     init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount) {
@@ -73,7 +72,8 @@ final class SettingsPresenter: ObservableObject {
 
     func sendTransaction() async throws -> String {
 
-        let ownerAccount = importAccount.account
+        // hardcoded sepolia
+        let ownerAccount = try! Account(blockchain: Blockchain("eip155:11155111")!, accountAddress: importAccount.account.address)
 
         let prepareSendTransactions = try await WalletKit.instance.prepareSendTransactions(
             [.init(
@@ -89,7 +89,7 @@ final class SettingsPresenter: ObservableObject {
 
         let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
 
-        return try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
+        return try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], doSendTransactionParams: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
     }
 
     func logoutPressed() async throws {
