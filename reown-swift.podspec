@@ -116,7 +116,7 @@ Pod::Spec.new do |spec|
     ss.source_files = 'Sources/WalletConnectRelay/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectJWT'
     ss.resource_bundles = {
-      'WalletConnect_WalletConnectRelay' => [
+      'reown_WalletConnectRelay' => [
          'Sources/WalletConnectRelay/PackageConfig.json'
       ]
     }
