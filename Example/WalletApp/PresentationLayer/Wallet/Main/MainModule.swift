@@ -1,6 +1,5 @@
 import SwiftUI
 import Web3
-import YttriumWrapper
 
 let mnemonic = "test test test test test test test test test test test junk"
 

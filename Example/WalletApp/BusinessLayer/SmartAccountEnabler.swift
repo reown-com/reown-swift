@@ -37,7 +37,7 @@ class SmartAccountEnabler {
         guard isSmartAccountEnabled else {
             throw Errors.smartAccountNotEnabled
         }
-        let safeAccount = try await WalletKit.instance.getSmartAccount(ownerAccount: )
+        let safeAccount = try await WalletKit.instance.getSmartAccount(ownerAccount: ownerAccount)
         return [safeAccount.address]
     }
 }
