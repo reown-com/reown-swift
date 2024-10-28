@@ -4,12 +4,10 @@ import YttriumWrapper
 
 class SafesManager {
     var ownerToClient: [Account: AccountClient] = [:]
-    let rpcUrl: String
     let apiKey: String
 
-    init(pimlicoApiKey: String, rpcUrl: String) {
+    init(pimlicoApiKey: String) {
         self.apiKey = pimlicoApiKey
-        self.rpcUrl = rpcUrl
     }
 
     func getOrCreateSafe(for owner: Account) -> AccountClient {
@@ -25,8 +23,9 @@ class SafesManager {
 
     private func createSafe(ownerAccount: Account) -> AccountClient {
         let chainId = ownerAccount.reference
+        let projectId = Networking.projectId
         let pimlicoBundlerUrl = "https://api.pimlico.io/v2/\(chainId)/rpc?apikey=\(apiKey)"
-        let rpcUrl = "https://\(rpcUrl)"
+        let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(ownerAccount.blockchainIdentifier)&projectId=\(projectId)"
         let pimlicoSepolia = YttriumWrapper.Config(
             endpoints: .init(
                 rpc: .init(baseURL: rpcUrl),

@@ -21,10 +21,6 @@ struct InputConfig {
         return config(for: "PIMLICO_API_KEY")
     }
 
-    static var rpcUrl: String? {
-        return config(for: "RPC_URL")
-    }
-
     private static func config(for key: String) -> String? {
         return Bundle.main.object(forInfoDictionaryKey: key) as? String
     }
