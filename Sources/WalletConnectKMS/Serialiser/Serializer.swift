@@ -3,13 +3,13 @@ import Combine
 
 public class Serializer: Serializing {
 
-    enum Errors: Error, CustomStringConvertible {
+    public enum Errors: Error, CustomStringConvertible {
         case symmetricKeyForTopicNotFound(String)
         case publicKeyForTopicNotFound
         case invalidType2Envelope
         case topicNotFound
 
-        var description: String {
+        public var description: String {
             switch self {
             case .symmetricKeyForTopicNotFound(let topic):
                 return "Error: Symmetric key for topic '\(topic)' was not found."
