@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import YttriumWrapper
 
 /// Web3 Wallet Client
 ///

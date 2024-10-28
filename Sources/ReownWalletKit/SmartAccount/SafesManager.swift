@@ -1,5 +1,6 @@
 
 import Foundation
+import YttriumWrapper
 
 class SafesManager {
     var ownerToClient: [Account: AccountClient] = [:]
