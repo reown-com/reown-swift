@@ -30,7 +30,7 @@ func buildYttriumWrapperTarget() -> Target {
             swiftSettings: yttriumSwiftSettings
         )
     } else {
-        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.1.0")))
+        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.2.0")))
         return .target(
             name: "YttriumWrapper",
             dependencies: [.product(name: "Yttrium", package: "yttrium")],
