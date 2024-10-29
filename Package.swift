@@ -3,7 +3,7 @@
 import PackageDescription
 
 // Determine if Yttrium should be used in debug (local) mode
-let yttriumDebug = true
+let yttriumDebug = false
 
 
 // Define dependencies array
