@@ -129,8 +129,8 @@ final class Signer {
             let transactions = calls.map {
                 YttriumWrapper.Transaction(
                     to: $0.to!,
-                    value: $0.value!,
-                    data: $0.data!
+                    value: $0.value ?? "0",
+                    data: $0.data ?? ""
                 )
             }
 
