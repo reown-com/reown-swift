@@ -144,6 +144,16 @@ final class Signer {
 
             let userOpHash = try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], doSendTransactionParams: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
 
+            Task {
+                do {
+                    let receipt = try await WalletKit.instance.waitForUserOperationReceipt(userOperationHash: userOpHash, ownerAccount: ownerAccount)
+                    let message = "User Op receipt received, transaction hash: \(receipt.receipt.transactionHash)"
+                    AlertPresenter.present(message: message, type: .success)
+                } catch {
+                    AlertPresenter.present(message: error.localizedDescription, type: .error)
+                }
+            }
+
             return AnyCodable(userOpHash)
 
         default:
