@@ -22,10 +22,20 @@ class DeleteSessionService {
         let reason = SessionType.Reason(code: reasonCode.code, message: reasonCode.message)
         logger.debug("Will delete session for reason: message: \(reason.message) code: \(reason.code)")
         let request = RPCRequest(method: protocolMethod.method, params: reason)
-        try await networkingInteractor.request(request, topic: topic, protocolMethod: protocolMethod)
+
+        do {
+            try await networkingInteractor.request(request, topic: topic, protocolMethod: protocolMethod)
+        } catch let error as Serializer.Errors {
+            switch error {
+            case .symmetricKeyForTopicNotFound, .publicKeyForTopicNotFound:
+                logger.debug("Encountered Serializer error during session deletion: \(error)")
+            default:
+                throw error
+            }
+        }
+
         sessionStore.delete(topic: topic)
         logger.debug("Session disconnected")
         kms.deleteSymmetricKey(for: topic)
         networkingInteractor.unsubscribe(topic: topic)
-    }
-}
+    }}
