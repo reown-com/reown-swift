@@ -29,9 +29,32 @@ class SocketStatusProvider: SocketStatusProviding {
         socket.onDisconnect = { [unowned self] error in
             if let error = error {
                 logger.debug("Socket disconnected with error: \(error.localizedDescription)")
+                logger.debug("Error type: \(type(of: error))")
 
                 let errorMirror = Mirror(reflecting: error)
-                logger.debug("Error type: \(type(of: error))")
+
+                var errorType = "Unknown"
+                var errorMessage = error.localizedDescription
+                var errorCode = "N/A"
+
+                for child in errorMirror.children {
+                    if let label = child.label {
+                        switch label {
+                        case "type":
+                            errorType = "\(child.value)"
+                        case "message":
+                            errorMessage = "\(child.value)"
+                        case "code":
+                            errorCode = "\(child.value)"
+                        default:
+                            break
+                        }
+                    }
+                }
+
+                logger.debug("WSError type: \(errorType)")
+                logger.debug("WSError message: \(errorMessage)")
+                logger.debug("WSError code: \(errorCode)")
 
                 let errorDetails = errorMirror.children.compactMap { child -> String? in
                     guard let label = child.label else { return nil }
