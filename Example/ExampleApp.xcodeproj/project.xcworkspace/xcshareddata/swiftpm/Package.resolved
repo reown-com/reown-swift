@@ -195,8 +195,8 @@
         "repositoryURL": "https://github.com/WalletConnect/yttrium",
         "state": {
           "branch": null,
-          "revision": "04d1589c42c510d0f2487e58b0af9619a6f070b4",
-          "version": "0.1.0"
+          "revision": "25902d941b10495d50c17491863747bb3ae6500e",
+          "version": "0.1.1"
         }
       }
     ]

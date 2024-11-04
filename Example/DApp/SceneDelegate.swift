@@ -132,7 +132,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     mobileLink: "wcflutterwallet-internal://",
                     linkMode: "https://dev.lab.web3modal.com/flutter_walletkit_internal"
                 ),
-            ]
+            ],
+            coinbaseEnabled: false
         )
 
         AppKit.instance.authResponsePublisher.sink { (id, result) in
