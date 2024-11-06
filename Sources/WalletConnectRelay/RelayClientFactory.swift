@@ -53,14 +53,22 @@ public struct RelayClientFactory {
         )
         let relayUrlFactory = RelayUrlFactory(
             relayHost: relayHost,
-            projectId: projectId,
-            socketAuthenticator: socketAuthenticator
+            projectId: projectId
         )
         let socket = socketFactory.create(with: relayUrlFactory.create())
         socket.request.addValue(EnvironmentInfo.userAgent, forHTTPHeaderField: "User-Agent")
         if let bundleId = Bundle.main.bundleIdentifier {
             socket.request.addValue(bundleId, forHTTPHeaderField: "Origin")
         }
+
+        do {
+            let authToken = try socketAuthenticator.createAuthToken(url: "wss://" + relayHost)
+            socket.request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        } catch {
+            // TODO: Handle token creation errors
+            print("Auth token creation error: \(error.localizedDescription)")
+        }
+
         let subscriptionsTracker = SubscriptionsTracker(logger: logger)
 
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
