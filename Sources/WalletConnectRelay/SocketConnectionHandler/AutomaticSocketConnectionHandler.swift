@@ -95,7 +95,13 @@ class AutomaticSocketConnectionHandler {
         }
 
         do {
-            let refreshedToken = try clientIdAuthenticator.refreshTokenIfNeeded(token: token, url: socket.request.url!.absoluteString)
+            // Parse the URL and extract only the base URL (without query parameters)
+            var urlComponents = URLComponents(url: socket.request.url!, resolvingAgainstBaseURL: false)
+            urlComponents?.query = nil
+            let baseUrlString = urlComponents?.url?.absoluteString ?? socket.request.url!.absoluteString
+
+            // Refresh the token with just the base URL
+            let refreshedToken = try clientIdAuthenticator.refreshTokenIfNeeded(token: token, url: baseUrlString)
             let newAuthorizationHeader = "Bearer \(refreshedToken)"
             socket.request.allHTTPHeaderFields?["Authorization"] = newAuthorizationHeader
         } catch {
