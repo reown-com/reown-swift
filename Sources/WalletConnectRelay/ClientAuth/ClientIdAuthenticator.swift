@@ -36,7 +36,9 @@ public final class ClientIdAuthenticator: ClientIdAuthenticating {
         let expiryTime = TimeInterval(claims.exp)
         let currentTime = Date().timeIntervalSince1970
 
-        return currentTime >= expiryTime
+        // Check if the token will be valid for at least the next 50 seconds
+        // If the token expires within the next 60 seconds, consider it expired
+        return (expiryTime - currentTime) <= 60
     }
 
     private func getSubject() -> String {
