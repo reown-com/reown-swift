@@ -19,6 +19,7 @@ class AutomaticSocketConnectionHandler {
     private let logger: ConsoleLogging
     private let subscriptionsTracker: SubscriptionsTracking
     private let socketStatusProvider: SocketStatusProviding
+    private let clientIdAuthenticator: ClientIdAuthenticating
 
     // MARK: - Configuration
 
@@ -46,7 +47,8 @@ class AutomaticSocketConnectionHandler {
         backgroundTaskRegistrar: BackgroundTaskRegistering = BackgroundTaskRegistrar(),
         subscriptionsTracker: SubscriptionsTracking,
         logger: ConsoleLogging,
-        socketStatusProvider: SocketStatusProviding
+        socketStatusProvider: SocketStatusProviding,
+        clientIdAuthenticator: ClientIdAuthenticating
     ) {
         self.appStateObserver = appStateObserver
         self.socket = socket
@@ -55,6 +57,7 @@ class AutomaticSocketConnectionHandler {
         self.logger = logger
         self.subscriptionsTracker = subscriptionsTracker
         self.socketStatusProvider = socketStatusProvider
+        self.clientIdAuthenticator = clientIdAuthenticator
 
         setUpStateObserving()
         setUpNetworkMonitoring()
@@ -73,7 +76,31 @@ class AutomaticSocketConnectionHandler {
             self.logger.debug("Starting connection process.")
             self.isConnecting = true
             self.logger.debug("Socket request: \(self.socket.request.debugDescription)")
-            self.socket.connect()
+            self.connectSocketWithFreshToken()
+        }
+    }
+
+    private func connectSocketWithFreshToken() {
+        refreshTokenIfNeeded()
+        socket.connect()
+    }
+
+    private func refreshTokenIfNeeded() {
+        guard let authorizationHeader = socket.request.allHTTPHeaderFields?["Authorization"] else { return }
+
+        // Remove "Bearer " prefix if it exists
+        var token = authorizationHeader
+        if token.hasPrefix("Bearer ") {
+            token = String(token.dropFirst("Bearer ".count))
+        }
+
+        do {
+            let refreshedToken = try clientIdAuthenticator.refreshTokenIfNeeded(token: token, url: socket.request.url!.absoluteString)
+            let newAuthorizationHeader = "Bearer \(refreshedToken)"
+            socket.request.allHTTPHeaderFields?["Authorization"] = newAuthorizationHeader
+        } catch {
+            // Handle error appropriately
+            logger.error("Error refreshing token: \(error)")
         }
     }
 
@@ -146,7 +173,7 @@ class AutomaticSocketConnectionHandler {
                 return
             }
             self.isConnecting = true
-            self.socket.connect() // Attempt to reconnect
+            self.connectSocketWithFreshToken() // Attempt to reconnect
             // The socketConnectionStatusPublisher handler will stop the timer and reset states if connection is successful
         }
 
@@ -270,7 +297,7 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
         // Proceed to start the connection
         logger.debug("Starting connection process.")
         logger.debug("Socket request: \(socket.request.debugDescription)")
-        socket.connect()
+        connectSocketWithFreshToken()
 
         // Use Combine publisher to monitor connection status
         let connectionStatusPublisher = socketStatusProvider.socketConnectionStatusPublisher

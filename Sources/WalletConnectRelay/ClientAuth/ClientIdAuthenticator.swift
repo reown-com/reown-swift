@@ -2,6 +2,7 @@ import Foundation
 
 public protocol ClientIdAuthenticating {
     func createAuthToken(url: String) throws -> String
+    func refreshTokenIfNeeded(token: String, url: String) throws -> String 
 }
 
 public final class ClientIdAuthenticator: ClientIdAuthenticating {
@@ -15,6 +16,27 @@ public final class ClientIdAuthenticator: ClientIdAuthenticating {
         let keyPair = try clientIdStorage.getOrCreateKeyPair()
         let payload = RelayAuthPayload(subject: getSubject(), audience: url)
         return try payload.signAndCreateWrapper(keyPair: keyPair).jwtString
+    }
+
+    public func refreshTokenIfNeeded(token: String, url: String) throws -> String {
+        if try isTokenExpired(token: token) {
+            // Token has expired, generate a new one
+            return try createAuthToken(url: url)
+        } else {
+            // Token is still valid, return existing token
+            return token
+        }
+    }
+
+    private func isTokenExpired(token: String) throws -> Bool {
+        // Use the JWT classes to decode and verify the token
+        let wrapper = RelayAuthPayload.Wrapper(jwtString: token)
+        let (_, claims) = try RelayAuthPayload.decodeAndVerify(from: wrapper)
+
+        let expiryTime = TimeInterval(claims.exp)
+        let currentTime = Date().timeIntervalSince1970
+
+        return currentTime >= expiryTime
     }
 
     private func getSubject() -> String {
