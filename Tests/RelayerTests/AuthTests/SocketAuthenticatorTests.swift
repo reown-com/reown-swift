@@ -10,7 +10,7 @@ final class SocketAuthenticatorTests: XCTestCase {
 
     override func setUp() {
         clientIdStorage = ClientIdStorageMock()
-        sut = ClientIdAuthenticator(clientIdStorage: clientIdStorage)
+        sut = ClientIdAuthenticator(clientIdStorage: clientIdStorage, logger: ConsoleLoggerMock())
     }
 
     func test() async throws {

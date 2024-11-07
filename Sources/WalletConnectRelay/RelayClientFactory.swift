@@ -66,7 +66,6 @@ public struct RelayClientFactory {
             let authToken = try socketAuthenticator.createAuthToken(url: "wss://" + relayHost)
             socket.request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         } catch {
-            // TODO: Handle token creation errors
             print("Auth token creation error: \(error.localizedDescription)")
         }
 
