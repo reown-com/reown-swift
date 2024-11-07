@@ -16,11 +16,10 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         let clientIdStorage = ClientIdStorage(defaults: defaults, keychain: keychainStorageMock, logger: logger)
 
 
-        let socketAuthenticator = ClientIdAuthenticator(clientIdStorage: clientIdStorage)
+        let socketAuthenticator = ClientIdAuthenticator(clientIdStorage: clientIdStorage, logger: ConsoleLoggerMock())
         let relayUrlFactory = RelayUrlFactory(
             relayHost: "relay.walletconnect.com",
-            projectId: "1012db890cf3cfb0c1cdc929add657ba",
-            socketAuthenticator: socketAuthenticator
+            projectId: "1012db890cf3cfb0c1cdc929add657ba"
         )
 
         sut = ManualSocketConnectionHandler(socket: socket, logger: ConsoleLoggerMock())
