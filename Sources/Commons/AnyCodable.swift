@@ -53,7 +53,7 @@ public struct AnyCodable {
     }
 
     /**
-     Returns the underlying value, provided it matches the type spcified.
+     Returns the underlying value, provided it matches the type specified.
      
      Use this method to retrieve a strong-typed value, as long as it can be decoded from its underlying representation.
      

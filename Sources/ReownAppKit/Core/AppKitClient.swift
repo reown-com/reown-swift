@@ -15,28 +15,28 @@ public class AppKitClient {
     
     /// Publisher that sends sessions on every sessions update
     ///
-    /// Event will be emited on controller and non-controller clients.
+    /// Event will be emitted on controller and non-controller clients.
     public var sessionsPublisher: AnyPublisher<[Session], Never> {
         signClient.sessionsPublisher.eraseToAnyPublisher()
     }
     
     /// Publisher that sends session when one is settled
     ///
-    /// Event is emited on proposer and responder client when both communicating peers have successfully established a session.
+    /// Event is emitted on proposer and responder client when both communicating peers have successfully established a session.
     public var sessionSettlePublisher: AnyPublisher<Session, Never> {
         signClient.sessionSettlePublisher.eraseToAnyPublisher()
     }
     
     /// Publisher that sends session proposal that has been rejected
     ///
-    /// Event will be emited on dApp client only.
+    /// Event will be emitted on dApp client only.
     public var sessionRejectionPublisher: AnyPublisher<(Session.Proposal, Reason), Never> {
         signClient.sessionRejectionPublisher.eraseToAnyPublisher()
     }
     
     /// Publisher that sends deleted session topic
     ///
-    /// Event can be emited on any type of the client.
+    /// Event can be emitted on any type of the client.
     public var sessionDeletePublisher: AnyPublisher<(String, Reason), Never> {
         signClient.sessionDeletePublisher.eraseToAnyPublisher()
     }
@@ -67,7 +67,7 @@ public class AppKitClient {
     
     /// Publisher that sends session event
     ///
-    /// Event will be emited on dApp client only
+    /// Event will be emitted on dApp client only
     public var sessionEventPublisher: AnyPublisher<(event: Session.Event, sessionTopic: String, chainId: Blockchain?), Never> {
         signClient.sessionEventPublisher.eraseToAnyPublisher()
     }
