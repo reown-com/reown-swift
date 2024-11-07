@@ -49,24 +49,32 @@ public struct RelayClientFactory {
         let clientIdStorage = ClientIdStorage(defaults: keyValueStorage, keychain: keychainStorage, logger: logger)
 
         let socketAuthenticator = ClientIdAuthenticator(
-            clientIdStorage: clientIdStorage
+            clientIdStorage: clientIdStorage,
+            logger: logger
         )
         let relayUrlFactory = RelayUrlFactory(
             relayHost: relayHost,
-            projectId: projectId,
-            socketAuthenticator: socketAuthenticator
+            projectId: projectId
         )
         let socket = socketFactory.create(with: relayUrlFactory.create())
         socket.request.addValue(EnvironmentInfo.userAgent, forHTTPHeaderField: "User-Agent")
         if let bundleId = Bundle.main.bundleIdentifier {
             socket.request.addValue(bundleId, forHTTPHeaderField: "Origin")
         }
+
+        do {
+            let authToken = try socketAuthenticator.createAuthToken(url: "wss://" + relayHost)
+            socket.request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        } catch {
+            print("Auth token creation error: \(error.localizedDescription)")
+        }
+
         let subscriptionsTracker = SubscriptionsTracker(logger: logger)
 
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
         var socketConnectionHandler: SocketConnectionHandler!
         switch socketConnectionType {
-        case .automatic:    socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: subscriptionsTracker, logger: logger, socketStatusProvider: socketStatusProvider)
+        case .automatic:    socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: subscriptionsTracker, logger: logger, socketStatusProvider: socketStatusProvider, clientIdAuthenticator: socketAuthenticator)
         case .manual:       socketConnectionHandler = ManualSocketConnectionHandler(socket: socket, logger: logger)
         }
 
