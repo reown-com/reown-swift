@@ -1,4 +1,5 @@
 import Foundation
+import YttriumWrapper
 
 public struct MessageVerifier {
 
@@ -9,9 +10,16 @@ public struct MessageVerifier {
     private let eip191Verifier: EIP191Verifier
     private let eip1271Verifier: EIP1271Verifier
 
-    init(eip191Verifier: EIP191Verifier, eip1271Verifier: EIP1271Verifier) {
+    private let crypto: CryptoProvider
+
+    init(
+        eip191Verifier: EIP191Verifier,
+        eip1271Verifier: EIP1271Verifier,
+        crypto: CryptoProvider
+    ) {
         self.eip191Verifier = eip191Verifier
         self.eip1271Verifier = eip1271Verifier
+        self.crypto = crypto
     }
 
     public func verify(signature: CacaoSignature,
@@ -38,21 +46,28 @@ public struct MessageVerifier {
 
         let signatureData = Data(hex: signature.s)
 
-        switch signature.t {
-        case .eip191:
-            return try await eip191Verifier.verify(
-                signature: signatureData,
-                message: messageData.prefixed,
-                address: address
-            )
-        case .eip1271:
-            return try await eip1271Verifier.verify(
-                signature: signatureData,
-                message: messageData.prefixed,
-                address: address,
-                chainId: chainId
-            )
-        }
+        let erc6492Client = Erc6492Client("".intoRustString())
+
+        let messageHash = crypto.keccak256(messageData)
+
+        returns false if sig is not valid
+        _ = try await erc6492Client.verify_signature(signature.s.intoRustString(), address.intoRustString(), messageHash.toHexString().intoRustString())
+
+//        switch signature.t {
+//        case .eip191:
+//            return try await eip191Verifier.verify(
+//                signature: signatureData,
+//                message: messageData.prefixed,
+//                address: address
+//            )
+//        case .eip1271:
+//            return try await eip1271Verifier.verify(
+//                signature: signatureData,
+//                message: messageData.prefixed,
+//                address: address,
+//                chainId: chainId
+//            )
+//        }
     }
 
     public func verify(signature: String,

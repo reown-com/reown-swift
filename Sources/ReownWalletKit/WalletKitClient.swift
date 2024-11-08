@@ -293,6 +293,7 @@ public class WalletKitClient {
         }
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
         let address = try await client.getAddress()
+        
         // it's safe to force unwrap here because we know that the address and the chain are valid
         return Account(blockchain: ownerAccount.blockchain, address: address)!
     }

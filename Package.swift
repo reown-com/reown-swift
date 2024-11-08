@@ -3,7 +3,7 @@
 import PackageDescription
 
 // Determine if Yttrium should be used in debug (local) mode
-let yttriumDebug = false
+let yttriumDebug = true
 
 
 // Define dependencies array
@@ -88,7 +88,7 @@ let package = Package(
     targets: [
         .target(
             name: "WalletConnectSign",
-            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events"],
+            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events", "YttriumWrapper"],
             path: "Sources/WalletConnectSign",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
