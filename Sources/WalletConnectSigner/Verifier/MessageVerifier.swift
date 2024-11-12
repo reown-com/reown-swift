@@ -85,13 +85,23 @@ public struct MessageVerifier {
         }
 
         let signatureData = Data(hex: signatureString)
-
-        let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
-
-        let erc6492Client = Erc6492Client(rpcUrl.intoRustString())
-
         let prefixedMessage = messageData.prefixed
 
+        // Try eip191 verification first for better performance
+        do {
+            try await eip191Verifier.verify(
+                signature: signatureData,
+                message: prefixedMessage,
+                address: address
+            )
+            return  // If 6492 verification succeeds, we’re done
+        } catch {
+            // If eip191 verification fails, we’ll attempt 6492 verification
+        }
+
+        // Fallback to 6492 verification
+        let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
+        let erc6492Client = Erc6492Client(rpcUrl.intoRustString())
         let messageHash = crypto.keccak256(prefixedMessage)
 
         do {
