@@ -32,15 +32,18 @@ public struct MessageVerifier {
     private let eip191Verifier: EIP191Verifier
     private let eip1271Verifier: EIP1271Verifier
     private let crypto: CryptoProvider
+    private let projectId: String
 
     init(
         eip191Verifier: EIP191Verifier,
         eip1271Verifier: EIP1271Verifier,
-        crypto: CryptoProvider
+        crypto: CryptoProvider,
+        projectId: String
     ) {
         self.eip191Verifier = eip191Verifier
         self.eip1271Verifier = eip1271Verifier
         self.crypto = crypto
+        self.projectId = projectId
     }
 
     public func verify(signature: CacaoSignature,
@@ -82,8 +85,6 @@ public struct MessageVerifier {
         }
 
         let signatureData = Data(hex: signatureString)
-
-        let projectId = Networking.projectId
 
         let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
 
