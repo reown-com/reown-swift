@@ -100,6 +100,7 @@ public struct MessageVerifier {
         }
 
         // Fallback to 6492 verification
+        print("i was called only once")
         let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
         let erc6492Client = Erc6492Client(rpcUrl.intoRustString())
         let messageHash = crypto.keccak256(prefixedMessage)
