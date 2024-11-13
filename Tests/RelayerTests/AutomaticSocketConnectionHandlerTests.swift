@@ -30,7 +30,8 @@ final class AutomaticSocketConnectionHandlerTests: XCTestCase {
             backgroundTaskRegistrar: backgroundTaskRegistrar,
             subscriptionsTracker: subscriptionsTracker,
             logger: logger,
-            socketStatusProvider: socketStatusProviderMock
+            socketStatusProvider: socketStatusProviderMock,
+            clientIdAuthenticator: ClientIdAuthenticator(clientIdStorage: ClientIdStorageMock(), logger: ConsoleLoggerMock())
         )
         sut.periodicReconnectionInterval = 0.1 // 100 milliseconds
     }

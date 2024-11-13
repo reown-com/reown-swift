@@ -37,34 +37,20 @@ final class RelayClientEndToEndTests: XCTestCase {
         let logger = ConsoleLogger(prefix: prefix, loggingLevel: .debug)
         let clientIdStorage = ClientIdStorage(defaults: keyValueStorage, keychain: KeychainStorageMock(), logger: logger)
         let socketAuthenticator = ClientIdAuthenticator(
-            clientIdStorage: clientIdStorage
+            clientIdStorage: clientIdStorage,
+            logger: ConsoleLoggerMock()
         )
         let urlFactory = RelayUrlFactory(
             relayHost: InputConfig.relayHost,
-            projectId: InputConfig.projectId,
-            socketAuthenticator: socketAuthenticator
+            projectId: InputConfig.projectId
         )
         let socket = WebSocket(url: urlFactory.create())
         let webSocketFactory = WebSocketFactoryMock(webSocket: socket)
         let networkMonitor = NetworkMonitor()
 
-        let relayUrlFactory = RelayUrlFactory(
-            relayHost: "relay.walletconnect.com",
-            projectId: "1012db890cf3cfb0c1cdc929add657ba",
-            socketAuthenticator: socketAuthenticator
-        )
-
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
-        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(logger: logger), logger: logger, socketStatusProvider: socketStatusProvider)
-        let dispatcher = Dispatcher(
-            socketFactory: webSocketFactory,
-            relayUrlFactory: urlFactory,
-            networkMonitor: networkMonitor,
-            socket: socket,
-            logger: logger,
-            socketConnectionHandler: socketConnectionHandler,
-            socketStatusProvider: socketStatusProvider
-        )
+        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(logger: logger), logger: logger, socketStatusProvider: socketStatusProvider, clientIdAuthenticator: socketAuthenticator)
+        
         let keychain = KeychainStorageMock()
         let relayClient = RelayClientFactory.create(
             relayHost: InputConfig.relayHost,

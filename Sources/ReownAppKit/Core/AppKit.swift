@@ -38,8 +38,9 @@ public class AppKit {
             store.session = session
             store.connectedWith = .wc
             store.account = .init(from: session)
-        } else if CoinbaseWalletSDK.shared.isConnected() {
-            
+        } else if config.coinbaseEnabled,
+                  CoinbaseWalletSDK.shared.isConnected() {
+
             let storedAccount = AccountStorage.read()
             store.connectedWith = .cb
             store.account = storedAccount
