@@ -305,6 +305,32 @@ public class WalletKitClient {
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
         return try await client.waitForUserOperationReceipt(userOperationHash: userOperationHash)
     }
+
+    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) async throws -> PreparedSignMessage {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.prepareSignMessage(messageHash)
+    }
+
+    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> String {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let signature = try await client.doSignMessage(signatures)
+        return signature
+    }
+
+    public func finalizeSignMessage(_ signatures: [String], signStep3Params: String, ownerAccount: Account) async throws -> String {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let signature = try await client.finalizeSignMessage(signatures, signStep3Params: signStep3Params)
+        return signature
+    }
 }
 
 
