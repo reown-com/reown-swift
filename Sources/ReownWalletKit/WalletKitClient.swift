@@ -314,7 +314,7 @@ public class WalletKitClient {
         return try await client.prepareSignMessage(messageHash)
     }
 
-    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> String {
+    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> PreparedSign {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }

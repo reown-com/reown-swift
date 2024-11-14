@@ -2,6 +2,7 @@ import Foundation
 import Commons
 import WalletConnectSign
 import ReownWalletKit
+import Web3
 
 struct SendCallsParams: Codable {
     let version: String
@@ -32,7 +33,7 @@ final class Signer {
             return try signWithEOA(request: request, importAccount: importAccount)
         }
         let smartAccount = try await WalletKit.instance.getSmartAccount(ownerAccount: importAccount.account)
-        if smartAccount.address == requestedAddress {
+        if smartAccount.address.lowercased() == requestedAddress.lowercased() {
             return try await signWithSmartAccount(request: request, importAccount: importAccount)
         }
         throw Errors.accountForRequestNotFound
@@ -95,10 +96,40 @@ final class Signer {
         switch request.method {
         case "personal_sign":
             let params = try request.params.get([String].self)
-            let message = params[0]
-            fatalError("not implemented")
-//            let signedMessage = try WalletKit.instance.signMessage(message)
-//            return AnyCodable(signedMessage)
+            let requestedMessage = params[0]
+
+            let messageToSign = Self.prepareMessageToSign(requestedMessage)
+
+            let messageHash = messageToSign.sha3(.keccak256).toHexString()
+
+            // Step 1
+            let prepareSignMessage = try await WalletKit.instance.prepareSignMessage(messageHash, ownerAccount: ownerAccount)
+
+            // Sign prepared message
+            let dataToSign = prepareSignMessage.hash.data(using: .utf8)!
+            let privateKey = try! EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
+            let (v, r, s) = try! privateKey.sign(message: .init(Data(dataToSign)))
+            let result: String = "0x" + r.toHexString() + s.toHexString() + String(v + 27, radix: 16)
+
+            // Step 2
+            let prepareSign = try await WalletKit.instance.doSignMessage([result], ownerAccount: ownerAccount)
+
+            switch prepareSign {
+            case .signature(let signature):
+                return AnyCodable(signature)
+            case .signStep3(let preparedSignStep3):
+                // Step 3
+
+                let dataToSign = preparedSignStep3.hash.data(using: .utf8)!
+                let privateKey = try! EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
+                let (v, r, s) = try! privateKey.sign(message: .init(Data(dataToSign)))
+                let result: String = "0x" + r.toHexString() + s.toHexString() + String(v + 27, radix: 16)
+
+                let signature = try await WalletKit.instance.finalizeSignMessage([result], signStep3Params: preparedSignStep3.signStep3Params, ownerAccount: ownerAccount)
+
+                return AnyCodable(signature)
+            }
+
 
         case "eth_signTypedData":
             let params = try request.params.get([String].self)
@@ -160,6 +191,30 @@ final class Signer {
             throw Errors.notImplemented
         }
     }
+
+    private static func prepareMessageToSign(_ messageToSign: String) -> Bytes {
+        let dataToSign: Bytes
+        if messageToSign.hasPrefix("0x") {
+            // Remove "0x" prefix and create hex data
+            let hexString = String(messageToSign.dropFirst(2))
+            let messageData = Data(hex: hexString)
+            dataToSign = dataToHash(messageData)
+        } else {
+            // Plain text message, convert directly to data
+            let messageData = Data(messageToSign.utf8)
+            dataToSign = dataToHash(messageData)
+        }
+
+        return dataToSign
+    }
+
+    private static func dataToHash(_ data: Data) -> Bytes {
+        let prefix = "\u{19}Ethereum Signed Message:\n"
+        let prefixData = (prefix + String(data.count)).data(using: .utf8)!
+        let prefixedMessageData = prefixData + data
+        return .init(hex: prefixedMessageData.toHexString())
+    }
+
 }
 
 extension Signer.Errors: LocalizedError {
