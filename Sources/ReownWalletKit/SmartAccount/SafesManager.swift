@@ -42,6 +42,7 @@ class SafesManager {
             safe: true
         )
         // TODO remove registration
+        
         x.register(privateKey: "ff89825a799afce0d5deaa079cdde227072ec3f62973951683ac8cc033092156")
         return x
     }

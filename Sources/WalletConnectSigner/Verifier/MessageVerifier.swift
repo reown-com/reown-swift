@@ -94,7 +94,7 @@ public struct MessageVerifier {
                 message: prefixedMessage,
                 address: address
             )
-            return  // If 6492 verification succeeds, we’re done
+            return  // If 191 verification succeeds, we’re done
         } catch {
             // If eip191 verification fails, we’ll attempt 6492 verification
         }
