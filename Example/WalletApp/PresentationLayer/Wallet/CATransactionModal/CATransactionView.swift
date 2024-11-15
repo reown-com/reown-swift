@@ -2,7 +2,6 @@ import SwiftUI
 
 struct CATransactionView: View {
     @EnvironmentObject var presenter: CATransactionPresenter
-
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -17,7 +16,7 @@ struct CATransactionView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Paying")
                         .foregroundColor(.gray)
-                    Text("10.00 USDC")
+                    Text("\(presenter.payingAmount, specifier: "%.2f") USDC")
                         .font(.system(.body, design: .monospaced))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -33,7 +32,7 @@ struct CATransactionView: View {
                             .foregroundColor(.blue)
                         Text("Balance")
                         Spacer()
-                        Text("5.00 USDC")
+                        Text("\(presenter.balanceAmount, specifier: "%.2f") USDC")
                             .font(.system(.body, design: .monospaced))
                     }
 
@@ -44,9 +43,9 @@ struct CATransactionView: View {
                         Text("Bridging")
                         Spacer()
                         VStack(alignment: .trailing) {
-                            Text("5.00 USDC")
+                            Text("\(presenter.bridgingAmount, specifier: "%.2f") USDC")
                                 .font(.system(.body, design: .monospaced))
-                            Text("from Optimism")
+                            Text("from \(presenter.bridgingSource)")
                                 .font(.footnote)
                                 .foregroundColor(.gray)
                         }
@@ -59,7 +58,7 @@ struct CATransactionView: View {
                         Text("App")
                             .foregroundColor(.gray)
                         Spacer()
-                        Text("https://sampleapp.com")
+                        Text(presenter.appURL)
                             .foregroundColor(.blue)
                     }
 
@@ -70,7 +69,7 @@ struct CATransactionView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "network")
                                 .foregroundColor(.blue)
-                            Text("Arbitrum")
+                            Text(presenter.networkName)
                         }
                     }
                 }
@@ -81,7 +80,7 @@ struct CATransactionView: View {
                         Text("Estimated Fees")
                             .foregroundColor(.gray)
                         Spacer()
-                        Text("$4.34")
+                        Text("$\(presenter.estimatedFees, specifier: "%.2f")")
                             .font(.system(.body, design: .monospaced))
                     }
 
@@ -90,7 +89,7 @@ struct CATransactionView: View {
                             Text("Bridge")
                                 .foregroundColor(.gray)
                             Spacer()
-                            Text("$3.00")
+                            Text("$\(presenter.bridgeFee, specifier: "%.2f")")
                                 .font(.system(.body, design: .monospaced))
                         }
 
@@ -98,7 +97,7 @@ struct CATransactionView: View {
                             Text("Purchase")
                                 .foregroundColor(.gray)
                             Spacer()
-                            Text("$1.34")
+                            Text("$\(presenter.purchaseFee, specifier: "%.2f")")
                                 .font(.system(.body, design: .monospaced))
                         }
 
@@ -106,7 +105,7 @@ struct CATransactionView: View {
                             Text("Execution")
                                 .foregroundColor(.gray)
                             Spacer()
-                            Text("Fast (~20 sec)")
+                            Text(presenter.executionSpeed)
                                 .font(.system(.body, design: .monospaced))
                         }
                     }
@@ -125,19 +124,25 @@ struct CATransactionView: View {
                 Button(action: {
                     // Buy action
                 }) {
-                    Text("Buy")
+                    Text("Confirm")
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue, Color.purple]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .cornerRadius(12)
                 }
 
                 Button(action: {
                     dismiss()
                 }) {
-                    Text("Cancel")
+                    Text("Reject")
                         .foregroundColor(.blue)
                 }
             }
@@ -145,4 +150,3 @@ struct CATransactionView: View {
         }
     }
 }
-
