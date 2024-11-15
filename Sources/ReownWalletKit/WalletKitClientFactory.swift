@@ -1,15 +1,21 @@
 import Foundation
 
-public struct WalletKitClientFactory {
-    public static func create(
+struct WalletKitClientFactory {
+    static func create(
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
-        pushClient: PushClientProtocol
+        pushClient: PushClientProtocol,
+        config: WalletKit.Config
     ) -> WalletKitClient {
+        var safesManager: SafesManager? = nil
+        if let pimlicoApiKey = config.pimlicoApiKey {
+            safesManager = SafesManager(pimlicoApiKey: pimlicoApiKey)
+        }
         return WalletKitClient(
             signClient: signClient,
             pairingClient: pairingClient,
-            pushClient: pushClient
+            pushClient: pushClient,
+            smartAccountsManager: safesManager
         )
     }
 }

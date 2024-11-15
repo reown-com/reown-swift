@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import YttriumWrapper
 
 /// Web3 Wallet Client
 ///
@@ -7,6 +8,9 @@ import Combine
 ///
 /// Access via `WalletKit.instance`
 public class WalletKitClient {
+    enum Errors: Error {
+        case smartAccountNotEnabled
+    }
     // MARK: - Public Properties
     
     /// Publisher that sends session proposal
@@ -98,17 +102,20 @@ public class WalletKitClient {
     private let signClient: SignClientProtocol
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
-    
+    private let smartAccountsManager: SafesManager?
+
     private var account: Account?
 
     init(
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
-        pushClient: PushClientProtocol
+        pushClient: PushClientProtocol,
+        smartAccountsManager: SafesManager?
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
+        self.smartAccountsManager = smartAccountsManager
     }
     
     /// For a wallet to approve a session proposal.
@@ -261,7 +268,71 @@ public class WalletKitClient {
     public func getPairings() -> [Pairing] {
         return pairingClient.getPairings()
     }
+
+
+    // MARK: Yttrium
+    public func prepareSendTransactions(_ transactions: [Transaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.prepareSendTransactions(transactions)
+    }
+
+    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: String, ownerAccount: Account) async throws -> String {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.doSendTransaction(signatures: signatures, params: doSendTransactionParams)
+    }
+
+    public func getSmartAccount(ownerAccount: Account) async throws -> Account {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let address = try await client.getAddress()
+        
+        // it's safe to force unwrap here because we know that the address and the chain are valid
+        return Account(blockchain: ownerAccount.blockchain, address: address)!
+    }
+
+    public func waitForUserOperationReceipt(userOperationHash: String, ownerAccount: Account) async throws -> UserOperationReceipt {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.waitForUserOperationReceipt(userOperationHash: userOperationHash)
+    }
+
+    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) async throws -> PreparedSignMessage {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return try await client.prepareSignMessage(messageHash)
+    }
+
+    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> PreparedSign {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let signature = try await client.doSignMessage(signatures)
+        return signature
+    }
+
+    public func finalizeSignMessage(_ signatures: [String], signStep3Params: String, ownerAccount: Account) async throws -> String {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let signature = try await client.finalizeSignMessage(signatures, signStep3Params: signStep3Params)
+        return signature
+    }
 }
+
 
 #if DEBUG
 extension WalletKitClient {
