@@ -72,7 +72,17 @@ struct WalletView: View {
                         
                         HStack(spacing: 20) {
                             Spacer()
-                            
+
+                            Button {
+                                presenter.onTest()
+                            } label: {
+                                Label("Test Transaction", systemImage: "creditcard")
+                                    .labelStyle(.iconOnly) // Only show the icon
+                                    .frame(width: 56, height: 56)
+                                    .background(Circle().fill(Color(.systemBlue)))
+                            }
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+
                             Button {
                                 presenter.onPasteUri()
                             } label: {

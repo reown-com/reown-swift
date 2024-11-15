@@ -90,6 +90,10 @@ final class WalletPresenter: ObservableObject {
         }
     }
 
+    func onTest() {
+        router.presentTest()
+    }
+
     
     func removeSession(at indexSet: IndexSet) async {
         if let index = indexSet.first {
