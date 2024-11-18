@@ -10,6 +10,7 @@ import YttriumWrapper
 public class WalletKitClient {
     enum Errors: Error {
         case smartAccountNotEnabled
+        case chainAbstractionNotEnabled
     }
     // MARK: - Public Properties
     
@@ -103,6 +104,7 @@ public class WalletKitClient {
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
     private let smartAccountsManager: SafesManager?
+    private let chainAbstractionClient: ChainAbstractionClient?
 
     private var account: Account?
 
@@ -110,12 +112,14 @@ public class WalletKitClient {
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
-        smartAccountsManager: SafesManager?
+        smartAccountsManager: SafesManager?,
+        chainAbstractionClient: ChainAbstractionClient?
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
         self.smartAccountsManager = smartAccountsManager
+        self.chainAbstractionClient = chainAbstractionClient
     }
     
     /// For a wallet to approve a session proposal.
@@ -330,6 +334,22 @@ public class WalletKitClient {
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
         let signature = try await client.finalizeSignMessage(signatures, signStep3Params: signStep3Params)
         return signature
+    }
+
+    public func status(orchestrationId: String) async throws -> StatusResponseSuccess {
+        guard let chainAbstractionClient = chainAbstractionClient else {
+            throw Errors.chainAbstractionNotEnabled
+        }
+
+        return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
+    }
+
+    public func route(transaction: EthTransaction) async throws -> RouteResponseSuccess {
+        guard let chainAbstractionClient = chainAbstractionClient else {
+            throw Errors.chainAbstractionNotEnabled
+        }
+
+        return try await chainAbstractionClient.route(transaction: transaction)
     }
 }
 

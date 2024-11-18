@@ -1,4 +1,5 @@
 import Foundation
+import YttriumWrapper
 
 struct WalletKitClientFactory {
     static func create(
@@ -11,11 +12,13 @@ struct WalletKitClientFactory {
         if let pimlicoApiKey = config.pimlicoApiKey {
             safesManager = SafesManager(pimlicoApiKey: pimlicoApiKey)
         }
+        let chainAbstractionClient = ChainAbstractionClient(projectId: Networking.projectId)
         return WalletKitClient(
             signClient: signClient,
             pairingClient: pairingClient,
             pushClient: pushClient,
-            smartAccountsManager: safesManager
+            smartAccountsManager: safesManager,
+            chainAbstractionClient: chainAbstractionClient
         )
     }
 }
