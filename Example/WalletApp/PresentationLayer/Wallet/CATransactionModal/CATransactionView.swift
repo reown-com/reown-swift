@@ -122,9 +122,9 @@ struct CATransactionView: View {
             // Action Buttons
             VStack(spacing: 12) {
                 Button(action: {
-                    // Buy action
+                    presenter.approveTransactions()
                 }) {
-                    Text("Confirm")
+                    Text("Approve")
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -140,7 +140,7 @@ struct CATransactionView: View {
                 }
 
                 Button(action: {
-                    dismiss()
+                    presenter.rejectTransactions()
                 }) {
                     Text("Reject")
                         .foregroundColor(.blue)
