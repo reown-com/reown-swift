@@ -11,7 +11,8 @@ final class SessionRequestPresenter: ObservableObject {
     let sessionRequest: Request
     let session: Session?
     let validationStatus: VerifyContext.ValidationStatus?
-    
+    let chainAbstractionService = ChainAbstractionService()
+
     var message: String {
         guard let messages = try? sessionRequest.params.get([String].self),
               let firstMessage = messages.first else {
@@ -51,25 +52,9 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
 
-        struct Tx: Codable {
-            let data: String
-            let from: String
-            let to: String
-        }
-
         //test CA
 
-        if sessionRequest.method == "eth_sendTransaction" {
-            do {
-                let tx = try sessionRequest.params.get([Tx].self)[0]
-                let transaction = EthTransaction(from: tx.from, to: tx.to, value: "0", gas: "0", gasPrice: "0", data: tx.data, nonce: "0", maxFeePerGas: "0", maxPriorityFeePerGas: "0", chainId: sessionRequest.chainId.absoluteString)
-                let x = try await WalletKit.instance.route(transaction: transaction)
-                print(tx)
-            } catch {
-                print(error)
-            }
-        }
-        print(sessionRequest.params)
+        chainAbstractionService.handle(request: sessionRequest)
 
 
 

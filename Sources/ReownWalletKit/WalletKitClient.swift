@@ -351,6 +351,14 @@ public class WalletKitClient {
 
         return try await chainAbstractionClient.route(transaction: transaction)
     }
+
+    public func estimateFees(chainId: String) async throws -> Eip1559Estimation {
+        guard let chainAbstractionClient = chainAbstractionClient else {
+            throw Errors.chainAbstractionNotEnabled
+        }
+
+        return try await chainAbstractionClient.estimateFees(chainId: chainId)
+    }
 }
 
 
