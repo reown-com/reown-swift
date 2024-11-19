@@ -50,16 +50,39 @@ final class SessionRequestPresenter: ObservableObject {
 
     @MainActor
     func onApprove() async throws {
-        do {
-            ActivityIndicatorManager.shared.start()
-            let showConnected = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
-            showConnected ? showSignedSheet.toggle() : router.dismiss()
-            ActivityIndicatorManager.shared.stop()
-        } catch {
-            ActivityIndicatorManager.shared.stop()
-            errorMessage = error.localizedDescription
-            showError.toggle()
+
+        struct Tx: Codable {
+            let data: String
+            let from: String
+            let to: String
         }
+
+        //test CA
+
+        if sessionRequest.method == "eth_sendTransaction" {
+            do {
+                let tx = try sessionRequest.params.get([Tx].self)[0]
+                let transaction = EthTransaction(from: tx.from, to: tx.to, value: "0", gas: "1000", gasPrice: "31000000000", data: tx.data, nonce: "0", maxFeePerGas: "", maxPriorityFeePerGas: "", chainId: sessionRequest.chainId.absoluteString)
+                let x = try await WalletKit.instance.route(transaction: transaction)
+                print(tx)
+            } catch {
+                print(error)
+            }
+        }
+        print(sessionRequest.params)
+
+
+
+//        do {
+//            ActivityIndicatorManager.shared.start()
+//            let showConnected = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
+//            showConnected ? showSignedSheet.toggle() : router.dismiss()
+//            ActivityIndicatorManager.shared.stop()
+//        } catch {
+//            ActivityIndicatorManager.shared.stop()
+//            errorMessage = error.localizedDescription
+//            showError.toggle()
+//        }
     }
 
     @MainActor
