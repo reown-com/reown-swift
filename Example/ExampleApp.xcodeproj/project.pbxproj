@@ -2827,10 +2827,10 @@
 		};
 		A5AE354528A1A2AC0059AE8A /* XCRemoteSwiftPackageReference "Web3" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/WalletConnect/Web3.swift";
+			repositoryURL = "https://github.com/Boilertalk/Web3.swift";
 			requirement = {
-				kind = exactVersion;
-				version = 1.0.2;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.8.0;
 			};
 		};
 		A5D85224286333D500DAF5C3 /* XCRemoteSwiftPackageReference "Starscream" */ = {
