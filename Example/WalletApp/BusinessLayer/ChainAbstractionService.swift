@@ -53,9 +53,11 @@ class ChainAbstractionService {
                 for tx in routeResponseAvailable.transactions {
                     do {
                         let estimates = try await WalletKit.instance.estimateFees(chainId: tx.chainId)
-                        let maxPriorityFeePerGas = EthereumQuantity(quantity: try BigUInt(estimates.maxPriorityFeePerGas))
-                        let maxFeePerGas = EthereumQuantity(quantity: try BigUInt(estimates.maxFeePerGas))
+                        let maxPriorityFeePerGas = EthereumQuantity(quantity: try BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
+                        let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
 
+                        print(maxFeePerGas)
+                        print(maxPriorityFeePerGas)
                         let transaction = try EthereumTransaction(
                             routingTransaction: tx,
                             maxPriorityFeePerGas: maxPriorityFeePerGas,
