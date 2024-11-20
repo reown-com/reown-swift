@@ -8,7 +8,12 @@ class ChainAbstractionService {
         case invalidResponse
         case invalidData
     }
-    let privateKey: EthereumPrivateKey!
+
+    let privateKey: EthereumPrivateKey
+
+    init(privateKey: EthereumPrivateKey) {
+        self.privateKey = privateKey
+    }
 
     func handle(request: Request) async throws {
         struct Tx: Codable {
@@ -58,10 +63,12 @@ class ChainAbstractionService {
                         )
 
                         let chain = Blockchain(tx.chainId)!
-                        let chainId = EthereumQuantity(quantity: try BigUInt(chain.reference))
+                        let chainId = EthereumQuantity(quantity: BigUInt(chain.reference, radix: 10)!)
 
+                        print(chainId.quantity)
                         let signedTransaction = try transaction.sign(with: privateKey, chainId: chainId)
 
+                        print(signedTransaction.value)
                         transactions.append((transaction: signedTransaction, chainId: chain.absoluteString))
                     } catch {
                         print("Error processing transaction: \(error)")
@@ -129,14 +136,14 @@ extension EthereumTransaction {
     init(routingTransaction: RoutingTransaction, maxPriorityFeePerGas: EthereumQuantity, maxFeePerGas: EthereumQuantity) throws {
 
         self.init(
-            nonce: try EthereumQuantity(routingTransaction.nonce),
+            nonce: EthereumQuantity(quantity: BigUInt(routingTransaction.nonce.stripHexPrefix(), radix: 16)!),
             gasPrice: nil, // Not needed for EIP1559
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: try EthereumQuantity(routingTransaction.gas),
+            gasLimit: EthereumQuantity(quantity: BigUInt(routingTransaction.gas.stripHexPrefix(), radix: 16)!),
             from: try EthereumAddress(hex: routingTransaction.from, eip55: false),
             to: try EthereumAddress(hex: routingTransaction.to, eip55: false),
-            value: try EthereumQuantity(routingTransaction.value),
+            value: EthereumQuantity(quantity: 0.gwei),
             data: EthereumData(Array(hex: routingTransaction.data)),
             accessList: [:], // Empty access list for basic transactions
             transactionType: .eip1559 // Specify EIP1559 transaction type
@@ -146,5 +153,11 @@ extension EthereumTransaction {
     enum InitializationError: Error {
         case invalidAddress(String)
         case invalidValue(String)
+    }
+}
+
+fileprivate extension String {
+    func stripHexPrefix() -> String {
+        return hasPrefix("0x") ? String(dropFirst(2)) : self
     }
 }

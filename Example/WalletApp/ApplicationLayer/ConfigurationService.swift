@@ -14,7 +14,7 @@ final class ConfigurationService {
             projectId: InputConfig.projectId,
             socketFactory: DefaultSocketFactory()
         )
-        Networking.instance.setLogging(level: .debug)
+        Networking.instance.setLogging(level: .off)
 
         let metadata = AppMetadata(
             name: "Example Wallet",
@@ -31,9 +31,9 @@ final class ConfigurationService {
             crypto: DefaultCryptoProvider()
         )
 
-        Notify.instance.setLogging(level: .debug)
-        Sign.instance.setLogging(level: .debug)
-        Events.instance.setLogging(level: .debug)
+        Notify.instance.setLogging(level: .off)
+        Sign.instance.setLogging(level: .off)
+        Events.instance.setLogging(level: .off)
 
         if let clientId = try? Networking.interactor.getClientId() {
             LoggingService.instance.setUpUser(account: importAccount.account.absoluteString, clientId: clientId)
