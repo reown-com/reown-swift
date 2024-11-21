@@ -12,7 +12,6 @@ final class SessionRequestPresenter: ObservableObject {
     let sessionRequest: Request
     let session: Session?
     let validationStatus: VerifyContext.ValidationStatus?
-    let chainAbstractionService: ChainAbstractionService!
 
     var message: String {
         guard let messages = try? sessionRequest.params.get([String].self),
@@ -48,29 +47,20 @@ final class SessionRequestPresenter: ObservableObject {
         self.session = interactor.getSession(topic: sessionRequest.topic)
         self.importAccount = importAccount
         self.validationStatus = context?.validation
-        let prvKey = try! EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
-        self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey)
     }
 
     @MainActor
     func onApprove() async throws {
-
-        //test CA
-
-        try await chainAbstractionService.handle(request: sessionRequest)
-
-
-
-//        do {
-//            ActivityIndicatorManager.shared.start()
-//            let showConnected = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
-//            showConnected ? showSignedSheet.toggle() : router.dismiss()
-//            ActivityIndicatorManager.shared.stop()
-//        } catch {
-//            ActivityIndicatorManager.shared.stop()
-//            errorMessage = error.localizedDescription
-//            showError.toggle()
-//        }
+        do {
+            ActivityIndicatorManager.shared.start()
+            let showConnected = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
+            showConnected ? showSignedSheet.toggle() : router.dismiss()
+            ActivityIndicatorManager.shared.stop()
+        } catch {
+            ActivityIndicatorManager.shared.stop()
+            errorMessage = error.localizedDescription
+            showError.toggle()
+        }
     }
 
     @MainActor

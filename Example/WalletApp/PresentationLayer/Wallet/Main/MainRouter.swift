@@ -42,8 +42,8 @@ final class MainRouter {
             .presentFullScreen(from: viewController, transparentBackground: true)
     }
 
-    func presentCATransaction(request: AuthenticationRequest, importAccount: ImportAccount, context: VerifyContext?) {
-        CATransactionModule.create(app: app)
+    func presentCATransaction(sessionRequest: Request, importAccount: ImportAccount, routeResponseAvailable: RouteResponseAvailable, context: VerifyContext?) {
+        CATransactionModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable)
             .wrapToNavigationController()
             .present(from: viewController)
     }

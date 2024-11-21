@@ -10,86 +10,122 @@ class ChainAbstractionService {
     }
 
     let privateKey: EthereumPrivateKey
+    private let routeResponseAvailable: RouteResponseAvailable
 
-    init(privateKey: EthereumPrivateKey) {
+    init(privateKey: EthereumPrivateKey, routeResponseAvailable: RouteResponseAvailable) {
         self.privateKey = privateKey
+        self.routeResponseAvailable = routeResponseAvailable
     }
 
-    func handle(request: Request) async throws {
-        struct Tx: Codable {
-            let data: String
-            let from: String
-            let to: String
-        }
+//    func handle(request: Request) async throws {
+//        struct Tx: Codable {
+//            let data: String
+//            let from: String
+//            let to: String
+//        }
+//
+//
+//        guard request.method == "eth_sendTransaction" else {
+//            return
+//        }
+//        do {
+//            let tx = try request.params.get([Tx].self)[0]
+//
+//            let transaction = EthTransaction(
+//                from: tx.from,
+//                to: tx.to,
+//                value: "0",
+//                gas: "0",
+//                gasPrice: "0",
+//                data: tx.data,
+//                nonce: "0",
+//                maxFeePerGas: "0",
+//                maxPriorityFeePerGas: "0",
+//                chainId: request.chainId.absoluteString
+//            )
+//
+//            let routeResponseSuccess = try await WalletKit.instance.route(transaction: transaction)
+//
+//            switch routeResponseSuccess {
+//
+//            case .available(let routeResponseAvailable):
+//
+//                var transactions: [(transaction: EthereumSignedTransaction, chainId: String)] = []
+//
+//                for tx in routeResponseAvailable.transactions {
+//                    do {
+//                        let estimates = try await WalletKit.instance.estimateFees(chainId: tx.chainId)
+//                        let maxPriorityFeePerGas = EthereumQuantity(quantity: try BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
+//                        let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
+//
+//                        print(maxFeePerGas)
+//                        print(maxPriorityFeePerGas)
+//                        let transaction = try EthereumTransaction(
+//                            routingTransaction: tx,
+//                            maxPriorityFeePerGas: maxPriorityFeePerGas,
+//                            maxFeePerGas: maxFeePerGas
+//                        )
+//
+//                        let chain = Blockchain(tx.chainId)!
+//                        let chainId = EthereumQuantity(quantity: BigUInt(chain.reference, radix: 10)!)
+//
+//                        print(chainId.quantity)
+//                        let signedTransaction = try transaction.sign(with: privateKey, chainId: chainId)
+//
+//                        print(signedTransaction.value)
+//                        transactions.append((transaction: signedTransaction, chainId: chain.absoluteString))
+//                    } catch {
+//                        print("Error processing transaction: \(error)")
+//                    }
+//                }
+//
+//                try await broadcastTransactions(transactions: transactions)
+//
+//
+//            case .notRequired(let routeResponseNotRequired):
+//                print(("routing not required"))
+//            }
+//            print(tx)
+//        } catch {
+//            print(error)
+//        }
+//    }
 
 
-        guard request.method == "eth_sendTransaction" else {
-            return
-        }
-        do {
-            let tx = try request.params.get([Tx].self)[0]
 
-            let transaction = EthTransaction(
-                from: tx.from,
-                to: tx.to,
-                value: "0",
-                gas: "0",
-                gasPrice: "0",
-                data: tx.data,
-                nonce: "0",
-                maxFeePerGas: "0",
-                maxPriorityFeePerGas: "0",
-                chainId: request.chainId.absoluteString
-            )
+    func signTransactions() async throws -> [(transaction: EthereumSignedTransaction, chainId: String)] {
+        var signedTransactions: [(transaction: EthereumSignedTransaction, chainId: String)] = []
 
-            let routeResponseSuccess = try await WalletKit.instance.route(transaction: transaction)
+        for tx in routeResponseAvailable.transactions {
+            do {
+                let estimates = try await WalletKit.instance.estimateFees(chainId: tx.chainId)
+                let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
+                let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
 
-            switch routeResponseSuccess {
+                print(maxFeePerGas)
+                print(maxPriorityFeePerGas)
+                let transaction = try EthereumTransaction(
+                    routingTransaction: tx,
+                    maxPriorityFeePerGas: maxPriorityFeePerGas,
+                    maxFeePerGas: maxFeePerGas
+                )
 
-            case .available(let routeResponseAvailable):
+                let chain = Blockchain(tx.chainId)!
+                let chainId = EthereumQuantity(quantity: BigUInt(chain.reference, radix: 10)!)
 
-                var transactions: [(transaction: EthereumSignedTransaction, chainId: String)] = []
+                print(chainId.quantity)
+                let signedTransaction = try transaction.sign(with: privateKey, chainId: chainId)
 
-                for tx in routeResponseAvailable.transactions {
-                    do {
-                        let estimates = try await WalletKit.instance.estimateFees(chainId: tx.chainId)
-                        let maxPriorityFeePerGas = EthereumQuantity(quantity: try BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
-                        let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
-
-                        print(maxFeePerGas)
-                        print(maxPriorityFeePerGas)
-                        let transaction = try EthereumTransaction(
-                            routingTransaction: tx,
-                            maxPriorityFeePerGas: maxPriorityFeePerGas,
-                            maxFeePerGas: maxFeePerGas
-                        )
-
-                        let chain = Blockchain(tx.chainId)!
-                        let chainId = EthereumQuantity(quantity: BigUInt(chain.reference, radix: 10)!)
-
-                        print(chainId.quantity)
-                        let signedTransaction = try transaction.sign(with: privateKey, chainId: chainId)
-
-                        print(signedTransaction.value)
-                        transactions.append((transaction: signedTransaction, chainId: chain.absoluteString))
-                    } catch {
-                        print("Error processing transaction: \(error)")
-                    }
-                }
-
-                try await broadcastTransactions(transactions: transactions)
-
-
-            case .notRequired(let routeResponseNotRequired):
-                print(("routing not required"))
+                print(signedTransaction.value)
+                signedTransactions.append((transaction: signedTransaction, chainId: chain.absoluteString))
+            } catch {
+                print("Error processing transaction: \(error)")
             }
-            print(tx)
-        } catch {
-            print(error)
         }
+        return signedTransactions
     }
 
-    private func broadcastTransactions(transactions: [(transaction: EthereumSignedTransaction, chainId: String)]) async throws {
+    func broadcastTransactions(transactions: [(transaction: EthereumSignedTransaction, chainId: String)]) async throws {
         for transaction in transactions {
             let chainId = transaction.chainId
             let projectId = Networking.projectId
@@ -130,6 +166,8 @@ class ChainAbstractionService {
             }
         }
     }
+
+
 }
 
 

@@ -37,12 +37,6 @@ final class WalletRouter {
             .present(from: viewController)
     }
 
-    func presentTest() {
-        CATransactionModule.create(app: app)
-            .wrapToNavigationController()
-            .present(from: viewController)
-    }
-
     func dismiss() {
         viewController.navigationController?.dismiss()
     }
