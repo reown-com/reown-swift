@@ -41,6 +41,10 @@ final class SettingsPresenter: ObservableObject {
         SmartAccountEnabler.shared.isSmartAccountEnabled = enable
     }
 
+    func enableChainAbstraction(_ enable: Bool) {
+
+    }
+
     private func getSmartAccountSafe() async throws -> String {
         try await WalletKit.instance.getSmartAccount(ownerAccount: importAccount.account).absoluteString
     }
