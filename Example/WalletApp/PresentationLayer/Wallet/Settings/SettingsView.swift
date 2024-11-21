@@ -113,7 +113,7 @@ struct SettingsView: View {
         }
         .onAppear {
             viewModel.objectWillChange.send()
-            isSmartAccountEnabled = SmartAccountEnabler.shared.isSmartAccountEnabled
+            isSmartAccountEnabled = WalletKitEnabler.shared.isSmartAccountEnabled
         }
     }
 

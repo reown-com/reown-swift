@@ -16,10 +16,10 @@ final class SessionProposalInteractor {
         var supportedAccounts: [Account]
         var sessionProperties = [String: String]()
 
-        if SmartAccountEnabler.shared.isSmartAccountEnabled {
+        if WalletKitEnabler.shared.isSmartAccountEnabled {
             let sepolia = Blockchain("eip155:11155111")!
             let sepoliaOwnerAccount = Account(blockchain: sepolia, address: EOAAccount.address)!
-            let smartAccountAddresses = try await SmartAccountEnabler.shared.getSmartAccountsAddresses(ownerAccount: sepoliaOwnerAccount)
+            let smartAccountAddresses = try await WalletKitEnabler.shared.getSmartAccountsAddresses(ownerAccount: sepoliaOwnerAccount)
             supportedAccounts = smartAccountAddresses.map { Account(blockchain: sepolia, address: $0)! }
             sessionProperties = getSessionProperties(addresses: smartAccountAddresses)
         } else {

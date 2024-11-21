@@ -38,11 +38,11 @@ final class SettingsPresenter: ObservableObject {
     }
 
     func enableSmartAccount(_ enable: Bool) {
-        SmartAccountEnabler.shared.isSmartAccountEnabled = enable
+        WalletKitEnabler.shared.isSmartAccountEnabled = enable
     }
 
     func enableChainAbstraction(_ enable: Bool) {
-
+        WalletKitEnabler.shared.isChainAbstractionEnabled = enable
     }
 
     private func getSmartAccountSafe() async throws -> String {

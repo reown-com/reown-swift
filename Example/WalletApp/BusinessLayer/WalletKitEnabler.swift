@@ -1,19 +1,20 @@
 import Foundation
 import ReownWalletKit
 
-class SmartAccountEnabler {
+class WalletKitEnabler {
     enum Errors: Error {
         case smartAccountNotEnabled
     }
 
     // Singleton instance
-    static let shared = SmartAccountEnabler()
+    static let shared = WalletKitEnabler()
 
-    // Use a private queue for thread-safe access to the isSmartAccountEnabled property
+    // Use a private queue for thread-safe access to properties
     private let queue = DispatchQueue(label: "com.smartaccount.manager", attributes: .concurrent)
 
-    // A private backing variable for the thread-safe property
+    // A private backing variable for the thread-safe properties
     private var _isSmartAccountEnabled: Bool = false
+    private var _isChainAbstractionEnabled: Bool = false
 
     // Thread-safe access for setting and getting isSmartAccountEnabled
     var isSmartAccountEnabled: Bool {
@@ -25,6 +26,20 @@ class SmartAccountEnabler {
         set {
             queue.async(flags: .barrier) {
                 self._isSmartAccountEnabled = newValue
+            }
+        }
+    }
+
+    // Thread-safe access for setting and getting isChainAbstractionEnabled
+    var isChainAbstractionEnabled: Bool {
+        get {
+            return queue.sync {
+                _isChainAbstractionEnabled
+            }
+        }
+        set {
+            queue.async(flags: .barrier) {
+                self._isChainAbstractionEnabled = newValue
             }
         }
     }
