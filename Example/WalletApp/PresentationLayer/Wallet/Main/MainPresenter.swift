@@ -71,7 +71,11 @@ extension MainPresenter {
                     AlertPresenter.present(message: "No common chains", type: .error)
                     return
                 }
-                router.present(request: result.request, importAccount: importAccount, context: result.context)
+                if WalletKitEnabler.shared.isChainAbstractionEnabled {
+                    router.presentCATransaction()
+                } else {
+                    router.present(request: result.request, importAccount: importAccount, context: result.context)
+                }
             }
             .store(in: &disposeBag)
     }
