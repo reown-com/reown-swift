@@ -8,9 +8,8 @@ final class CATransactionPresenter: ObservableObject {
     @Published var payingAmount: Double = 10.00
     @Published var balanceAmount: Double = 5.00
     @Published var bridgingAmount: Double = 5.00
-    @Published var bridgingSource: String = "Optimism"
-    @Published var appURL: String = "https://sampleapp.com"
-    @Published var networkName: String = "Arbitrum"
+    @Published var appURL: String = ""
+    @Published var networkName: String = ""
     @Published var estimatedFees: Double = 4.34
     @Published var bridgeFee: Double = 3.00
     @Published var purchaseFee: Double = 1.34
@@ -88,12 +87,26 @@ final class CATransactionPresenter: ObservableObject {
         ]
         return chainIdToNetwork[chainId]!
     }
-}
 
-// MARK: - Private functions
-private extension CATransactionPresenter {
+    func hexAmountToDenominatedUSDC(_ hexAmount: String) -> String {
+        guard let indecValue = hexToDecimal(hexAmount) else {
+            return "Invalid amount"
+        }
+        let usdcValue = Double(indecValue) / 1_000_000
+        return String(format: "%.2f", usdcValue)
+    }
+    
+    func hexToDecimal(_ hex: String) -> Int? {
+        let cleanHex = hex.hasPrefix("0x") ? String(hex.dropFirst(2)) : hex
+
+        return Int(cleanHex, radix: 16)
+    }
+
     func setupInitialState() {
-        // Initialize state if necessary
+        if let session = WalletKit.instance.getSessions().first(where: { $0.topic == sessionRequest.topic }) {
+            self.appURL = session.peer.url
+        }
+        networkName = network(for: sessionRequest.chainId.absoluteString)
     }
 }
 

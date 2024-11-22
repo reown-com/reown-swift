@@ -16,7 +16,8 @@ struct CATransactionView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Paying")
                         .foregroundColor(.gray)
-                    Text("\(presenter.payingAmount, specifier: "%.2f") USDC")
+                    Text("$TODO")
+//                    Text("\(presenter.payingAmount, specifier: "%.2f") USDC")
                         .font(.system(.body, design: .monospaced))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -26,20 +27,21 @@ struct CATransactionView: View {
                     Text("Source of funds")
                         .foregroundColor(.gray)
 
-                    // Iterate over funding sources
                     ForEach(presenter.fundingFrom, id: \.chainId) { funding in
                         HStack {
+                            Spacer() // Push content to the right
                             Image(systemName: "arrow.left.arrow.right.circle.fill")
                                 .foregroundColor(.gray)
                             VStack(alignment: .leading) {
-                                Text("\(funding.amount) \(funding.symbol)")
+                                // Use the presenter for conversion
+                                Text("\(presenter.hexAmountToDenominatedUSDC(funding.amount)) \(funding.symbol)")
                                     .font(.system(.body, design: .monospaced))
                                 Text("from \(presenter.network(for: funding.chainId))")
                                     .font(.footnote)
                                     .foregroundColor(.gray)
                             }
-                            Spacer()
                         }
+                        .frame(maxWidth: .infinity, alignment: .trailing) // Ensure the entire HStack aligns to the trailing edge
                     }
                 }
 
@@ -71,7 +73,8 @@ struct CATransactionView: View {
                         Text("Estimated Fees")
                             .foregroundColor(.gray)
                         Spacer()
-                        Text("$\(presenter.estimatedFees, specifier: "%.2f")")
+                        Text("$TODO")
+//                        Text("$\(presenter.estimatedFees, specifier: "%.2f")")
                             .font(.system(.body, design: .monospaced))
                     }
 
@@ -80,7 +83,8 @@ struct CATransactionView: View {
                             Text("Bridge")
                                 .foregroundColor(.gray)
                             Spacer()
-                            Text("$\(presenter.bridgeFee, specifier: "%.2f")")
+                            Text("$TODO")
+//                            Text("$\(presenter.bridgeFee, specifier: "%.2f")")
                                 .font(.system(.body, design: .monospaced))
                         }
 
@@ -88,7 +92,8 @@ struct CATransactionView: View {
                             Text("Purchase")
                                 .foregroundColor(.gray)
                             Spacer()
-                            Text("$\(presenter.purchaseFee, specifier: "%.2f")")
+//                            Text("$\(presenter.purchaseFee, specifier: "%.2f")")
+                            Text("$TODO")
                                 .font(.system(.body, design: .monospaced))
                         }
 
