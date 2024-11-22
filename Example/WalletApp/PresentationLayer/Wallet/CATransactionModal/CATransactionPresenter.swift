@@ -19,19 +19,24 @@ final class CATransactionPresenter: ObservableObject {
     private let sessionRequest: Request
     private let routeResponseAvailable: RouteResponseAvailable
     let chainAbstractionService: ChainAbstractionService!
-
+    var fundingFrom: [FundingMetadata] {
+        return routeResponseAvailable.metadata.fundingFrom
+    }
+    let router: CATransactionRouter
 
     private var disposeBag = Set<AnyCancellable>()
 
     init(
         sessionRequest: Request,
         importAccount: ImportAccount,
-        routeResponseAvailable: RouteResponseAvailable
+        routeResponseAvailable: RouteResponseAvailable,
+        router: CATransactionRouter
     ) {
         self.sessionRequest = sessionRequest
         self.routeResponseAvailable = routeResponseAvailable
         let prvKey = try! EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
         self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey, routeResponseAvailable: routeResponseAvailable)
+        self.router = router
 
 
         // Any additional setup for the parameters
@@ -47,14 +52,41 @@ final class CATransactionPresenter: ObservableObject {
             do {
                 let signedTransactions = try await chainAbstractionService.signTransactions()
                 try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
+
+                // wait routing is completed
+                // broadcast initial transaction
             } catch {
                 AlertPresenter.present(message: error.localizedDescription, type: .error)
             }
         }
     }
 
-    func rejectTransactions() {
+    @MainActor
+    func rejectTransactions() async throws {
+        do {
+            ActivityIndicatorManager.shared.start()
+            try await WalletKit.instance.respond(
+                topic: sessionRequest.topic,
+                requestId: sessionRequest.id,
+                response: .error(.init(code: 0, message: ""))
+            )
+            ActivityIndicatorManager.shared.stop()
+            router.dismiss()
+        } catch {
+            ActivityIndicatorManager.shared.stop()
+            AlertPresenter.present(message: error.localizedDescription, type: .error)
+//            errorMessage = error.localizedDescription
+//            showError.toggle()
+        }
+    }
 
+    func network(for chainId: String) -> String {
+        let chainIdToNetwork = [
+            "eip155:10": "Optimism",
+            "eip155:42161": "Arbitrium",
+            "eip155:8453": "Base"
+        ]
+        return chainIdToNetwork[chainId]!
     }
 }
 
@@ -67,4 +99,3 @@ private extension CATransactionPresenter {
 
 // MARK: - SceneViewModel
 extension CATransactionPresenter: SceneViewModel {}
-

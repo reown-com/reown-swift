@@ -10,9 +10,13 @@ final class CATransactionModule {
         importAccount: ImportAccount,
         routeResponseAvailable: RouteResponseAvailable
     ) -> UIViewController {
-        let presenter = CATransactionPresenter(sessionRequest: sessionRequest, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable)
+        let router = CATransactionRouter(app: app)
+        let presenter = CATransactionPresenter(sessionRequest: sessionRequest, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, router: router)
         let view = CATransactionView().environmentObject(presenter)
         let viewController = SceneViewController(viewModel: presenter, content: view)
+        router.viewController = viewController
         return viewController
     }
 }
+
+

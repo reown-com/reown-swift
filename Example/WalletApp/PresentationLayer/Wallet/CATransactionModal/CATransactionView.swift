@@ -26,28 +26,19 @@ struct CATransactionView: View {
                     Text("Source of funds")
                         .foregroundColor(.gray)
 
-                    // Balance Row
-                    HStack {
-                        Image(systemName: "creditcard.circle.fill")
-                            .foregroundColor(.blue)
-                        Text("Balance")
-                        Spacer()
-                        Text("\(presenter.balanceAmount, specifier: "%.2f") USDC")
-                            .font(.system(.body, design: .monospaced))
-                    }
-
-                    // Bridging Row
-                    HStack {
-                        Image(systemName: "arrow.left.arrow.right.circle.fill")
-                            .foregroundColor(.gray)
-                        Text("Bridging")
-                        Spacer()
-                        VStack(alignment: .trailing) {
-                            Text("\(presenter.bridgingAmount, specifier: "%.2f") USDC")
-                                .font(.system(.body, design: .monospaced))
-                            Text("from \(presenter.bridgingSource)")
-                                .font(.footnote)
+                    // Iterate over funding sources
+                    ForEach(presenter.fundingFrom, id: \.chainId) { funding in
+                        HStack {
+                            Image(systemName: "arrow.left.arrow.right.circle.fill")
                                 .foregroundColor(.gray)
+                            VStack(alignment: .leading) {
+                                Text("\(funding.amount) \(funding.symbol)")
+                                    .font(.system(.body, design: .monospaced))
+                                Text("from \(presenter.network(for: funding.chainId))")
+                                    .font(.footnote)
+                                    .foregroundColor(.gray)
+                            }
+                            Spacer()
                         }
                     }
                 }
@@ -140,7 +131,9 @@ struct CATransactionView: View {
                 }
 
                 Button(action: {
-                    presenter.rejectTransactions()
+                    Task(priority: .userInitiated) {
+                        try await presenter.rejectTransactions()
+                    }
                 }) {
                     Text("Reject")
                         .foregroundColor(.blue)

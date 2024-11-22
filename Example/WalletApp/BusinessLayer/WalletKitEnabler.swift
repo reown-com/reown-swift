@@ -14,7 +14,7 @@ class WalletKitEnabler {
 
     // A private backing variable for the thread-safe properties
     private var _isSmartAccountEnabled: Bool = false
-    private var _isChainAbstractionEnabled: Bool = false
+    private var _isChainAbstractionEnabled: Bool = true
 
     // Thread-safe access for setting and getting isSmartAccountEnabled
     var isSmartAccountEnabled: Bool {

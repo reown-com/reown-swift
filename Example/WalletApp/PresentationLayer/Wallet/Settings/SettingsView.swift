@@ -6,8 +6,8 @@ import ReownAppKitUI
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
     @State private var copyAlert: Bool = false
-    @State private var isSmartAccountEnabled: Bool = false
-    @State private var isChainAbstractionEnabled: Bool = false
+    @State private var isSmartAccountEnabled: Bool = WalletKitEnabler.shared.isSmartAccountEnabled
+    @State private var isChainAbstractionEnabled: Bool = WalletKitEnabler.shared.isChainAbstractionEnabled
 
 
     var body: some View {
