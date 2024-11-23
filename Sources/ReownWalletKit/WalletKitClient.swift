@@ -336,7 +336,7 @@ public class WalletKitClient {
         return signature
     }
 
-    public func status(orchestrationId: String) async throws -> StatusResponseSuccess {
+    public func status(orchestrationId: String) async throws -> StatusResponse {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
@@ -358,6 +358,14 @@ public class WalletKitClient {
         }
 
         return try await chainAbstractionClient.estimateFees(chainId: chainId)
+    }
+
+    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
+        guard let chainClient = chainAbstractionClient else {
+            throw Errors.chainAbstractionNotEnabled
+        }
+
+        return try await chainClient.waitForSuccess(orchestrationId: orchestrationId, checkIn: checkIn)
     }
 }
 
