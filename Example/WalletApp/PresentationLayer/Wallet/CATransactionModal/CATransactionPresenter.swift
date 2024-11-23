@@ -22,6 +22,7 @@ final class CATransactionPresenter: ObservableObject {
         return routeResponseAvailable.metadata.fundingFrom
     }
     let router: CATransactionRouter
+    let initialTransaction: TransactionData
 
     private var disposeBag = Set<AnyCancellable>()
 
@@ -29,14 +30,15 @@ final class CATransactionPresenter: ObservableObject {
         sessionRequest: Request,
         importAccount: ImportAccount,
         routeResponseAvailable: RouteResponseAvailable,
-        router: CATransactionRouter
+        router: CATransactionRouter,
+        initialTransaction: TransactionData
     ) {
         self.sessionRequest = sessionRequest
         self.routeResponseAvailable = routeResponseAvailable
         let prvKey = try! EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
         self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey, routeResponseAvailable: routeResponseAvailable)
         self.router = router
-
+        self.initialTransaction = initialTransaction
 
         // Any additional setup for the parameters
         setupInitialState()
@@ -51,11 +53,11 @@ final class CATransactionPresenter: ObservableObject {
             do {
                 ActivityIndicatorManager.shared.start()
                 let signedTransactions = try await chainAbstractionService.signTransactions()
+
+                print(signedTransactions[0])
                 try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
                 let orchestrationId = routeResponseAvailable.orchestrationId
 //                let statusResponseCompleted = try await WalletKit.instance.waitForSuccess(orchestrationId: orchestrationId, checkIn: routeResponseAvailable.metadata.checkIn)
-
-
 
 
                 var status: StatusResponse = try await WalletKit.instance.status(orchestrationId: orchestrationId)
@@ -69,22 +71,36 @@ final class CATransactionPresenter: ObservableObject {
                     case .completed(let completed):
                         // Handle the completed status
                         print("Transaction completed: \(completed)")
-                        ActivityIndicatorManager.shared.stop()
-                        return
+                        AlertPresenter.present(message: "routing transactions completed", type: .success)
                     case .error(let error):
                         // Handle the error
                         print("Transaction failed: \(error)")
+                        AlertPresenter.present(message: "routing failed with error: \(error)", type: .error)
                         ActivityIndicatorManager.shared.stop()
                         return
                     }
                 }
 
-                // wait routing is completed
+                try await sendInitialTransaction()
+                ActivityIndicatorManager.shared.stop()
+
                 // broadcast initial transaction
             } catch {
                 AlertPresenter.present(message: error.localizedDescription, type: .error)
             }
         }
+    }
+
+    private func sendInitialTransaction() async throws {
+
+        
+
+        let estimates = try await WalletKit.instance.estimateFees(chainId: tx.chainId)
+        let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
+        let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
+
+        print(maxFeePerGas)
+        print(maxPriorityFeePerGas)
     }
 
     @MainActor
