@@ -49,8 +49,35 @@ final class CATransactionPresenter: ObservableObject {
     func approveTransactions() {
         Task {
             do {
+                ActivityIndicatorManager.shared.start()
                 let signedTransactions = try await chainAbstractionService.signTransactions()
                 try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
+                let orchestrationId = routeResponseAvailable.orchestrationId
+//                let statusResponseCompleted = try await WalletKit.instance.waitForSuccess(orchestrationId: orchestrationId, checkIn: routeResponseAvailable.metadata.checkIn)
+
+
+
+
+                var status: StatusResponse = try await WalletKit.instance.status(orchestrationId: orchestrationId)
+                while true {
+                    switch status {
+                    case .pending(let pending):
+                        let delay = try UInt64(pending.checkIn) * 1_000_000
+                        try await Task.sleep(nanoseconds: delay)
+                        // Fetch the status again after the delay
+                        status = try await WalletKit.instance.status(orchestrationId: orchestrationId)
+                    case .completed(let completed):
+                        // Handle the completed status
+                        print("Transaction completed: \(completed)")
+                        ActivityIndicatorManager.shared.stop()
+                        return
+                    case .error(let error):
+                        // Handle the error
+                        print("Transaction failed: \(error)")
+                        ActivityIndicatorManager.shared.stop()
+                        return
+                    }
+                }
 
                 // wait routing is completed
                 // broadcast initial transaction
