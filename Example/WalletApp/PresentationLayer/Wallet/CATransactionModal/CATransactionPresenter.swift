@@ -22,7 +22,7 @@ final class CATransactionPresenter: ObservableObject {
         return routeResponseAvailable.metadata.fundingFrom
     }
     let router: CATransactionRouter
-    let initialTransaction: TransactionData
+    let importAccount: ImportAccount
 
     private var disposeBag = Set<AnyCancellable>()
 
@@ -31,13 +31,13 @@ final class CATransactionPresenter: ObservableObject {
         importAccount: ImportAccount,
         routeResponseAvailable: RouteResponseAvailable,
         router: CATransactionRouter,
-        initialTransaction: TransactionData
     ) {
         self.sessionRequest = sessionRequest
         self.routeResponseAvailable = routeResponseAvailable
         let prvKey = try! EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
         self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey, routeResponseAvailable: routeResponseAvailable)
         self.router = router
+        self.importAccount = importAccount
         self.initialTransaction = initialTransaction
 
         // Any additional setup for the parameters
@@ -92,15 +92,45 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     private func sendInitialTransaction() async throws {
+        struct Tx: Codable {
+            let data: String
+            let from: String
+            let to: String
+        }
 
-        
 
-        let estimates = try await WalletKit.instance.estimateFees(chainId: tx.chainId)
+        let tx = try! sessionRequest.params.get([Tx].self)[0]
+
+
+
+        let estimates = try await WalletKit.instance.estimateFees(chainId: sessionRequest.chainId.absoluteString)
+
         let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
         let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
 
-        print(maxFeePerGas)
-        print(maxPriorityFeePerGas)
+
+        let ethTransaction = EthereumTransaction(
+            nonce: 0,
+            gasPrice: nil,
+            maxFeePerGas: maxFeePerGas,
+            maxPriorityFeePerGas: maxPriorityFeePerGas,
+            gasLimit: EthereumQuantity(quantity: 1023618),
+            from: try EthereumAddress(hex: tx.from, eip55: false),
+            to: try EthereumAddress(hex: tx.to, eip55: false),
+            value: EthereumQuantity(quantity: 0.gwei),
+            data: EthereumData(Array(hex: tx.data)),
+            accessList: [:],
+            transactionType: .eip1559)
+
+        let chain = sessionRequest.chainId
+        let chainId = EthereumQuantity(quantity: BigUInt(chain.reference, radix: 10)!)
+
+        let privateKey = try EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
+
+        let signedTransaction = try ethTransaction.sign(with: privateKey, chainId: chainId)
+
+        try await chainAbstractionService.broadcastTransactions(transactions: [(signedTransaction, chain.absoluteString)])
+
     }
 
     @MainActor
