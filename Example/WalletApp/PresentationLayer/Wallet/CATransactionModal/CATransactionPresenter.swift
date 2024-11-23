@@ -30,7 +30,7 @@ final class CATransactionPresenter: ObservableObject {
         sessionRequest: Request,
         importAccount: ImportAccount,
         routeResponseAvailable: RouteResponseAvailable,
-        router: CATransactionRouter,
+        router: CATransactionRouter
     ) {
         self.sessionRequest = sessionRequest
         self.routeResponseAvailable = routeResponseAvailable
@@ -38,8 +38,6 @@ final class CATransactionPresenter: ObservableObject {
         self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey, routeResponseAvailable: routeResponseAvailable)
         self.router = router
         self.importAccount = importAccount
-        self.initialTransaction = initialTransaction
-
         // Any additional setup for the parameters
         setupInitialState()
     }
