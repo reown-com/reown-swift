@@ -95,7 +95,6 @@ final class CATransactionPresenter: ObservableObject {
             }
 
             print("🚀 Initiating initial transaction...")
-            fatalError()
             try await sendInitialTransaction()
             ActivityIndicatorManager.shared.stop()
             print("✅ Initial transaction process completed successfully")
@@ -163,6 +162,14 @@ final class CATransactionPresenter: ObservableObject {
         print("📡 Broadcasting initial transaction...")
         try await chainAbstractionService.broadcastTransactions(transactions: [(signedTransaction, chain.absoluteString)])
         print("✅ Initial transaction broadcast complete")
+
+        let result = signedTransaction.r.hex() + signedTransaction.s.hex().dropFirst(2) + String(signedTransaction.v.quantity, radix: 16)
+
+        try await WalletKit.instance.respond(topic: sessionRequest.topic, requestId: sessionRequest.id, response: .response(AnyCodable(result)))
+
+        DispatchQueue.main.async { [weak self] in
+            self?.transactionCompleted = true
+        }
     }
 
     func getNonce(for address: EthereumAddress, chainId: String) async throws -> EthereumQuantity {

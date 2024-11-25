@@ -129,44 +129,44 @@ struct CATransactionView: View {
 
                     // Action Buttons
                     VStack(spacing: 12) {
-                        AsyncButton(
-                            options: [
-                                .showProgressViewOnLoading,
-                                .disableButtonOnLoading,
-                                .showAlertOnError,
-                                .enableNotificationFeedback
-                            ]
-                        ) {
-                            try await presenter.testAsyncSuccess()
-                        } label: {
-                            Text("Test Success")
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.green)
-                                .cornerRadius(12)
-                        }
-
-                        // Error test button
-                        AsyncButton(
-                            options: [
-                                .showProgressViewOnLoading,
-                                .disableButtonOnLoading,
-                                .showAlertOnError,
-                                .enableNotificationFeedback
-                            ]
-                        ) {
-                            try await presenter.testAsyncError()
-                        } label: {
-                            Text("Test Error")
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.red)
-                                .cornerRadius(12)
-                        }
+//                        AsyncButton(
+//                            options: [
+//                                .showProgressViewOnLoading,
+//                                .disableButtonOnLoading,
+//                                .showAlertOnError,
+//                                .enableNotificationFeedback
+//                            ]
+//                        ) {
+//                            try await presenter.testAsyncSuccess()
+//                        } label: {
+//                            Text("Test Success")
+//                                .fontWeight(.semibold)
+//                                .foregroundColor(.white)
+//                                .frame(maxWidth: .infinity)
+//                                .padding()
+//                                .background(Color.green)
+//                                .cornerRadius(12)
+//                        }
+//
+//                        // Error test button
+//                        AsyncButton(
+//                            options: [
+//                                .showProgressViewOnLoading,
+//                                .disableButtonOnLoading,
+//                                .showAlertOnError,
+//                                .enableNotificationFeedback
+//                            ]
+//                        ) {
+//                            try await presenter.testAsyncError()
+//                        } label: {
+//                            Text("Test Error")
+//                                .fontWeight(.semibold)
+//                                .foregroundColor(.white)
+//                                .frame(maxWidth: .infinity)
+//                                .padding()
+//                                .background(Color.red)
+//                                .cornerRadius(12)
+//                        }
 
                         // Original Approve button
                         AsyncButton(
