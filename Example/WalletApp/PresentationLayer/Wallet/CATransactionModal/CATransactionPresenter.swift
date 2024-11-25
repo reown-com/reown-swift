@@ -275,6 +275,29 @@ final class CATransactionPresenter: ObservableObject {
         }
         networkName = network(for: sessionRequest.chainId.absoluteString)
     }
+
+    func onViewOnExplorer() {
+        // Force unwrap the address from the import account
+        let address = importAccount.account.address
+
+        // Mapping of network names to Blockscout URLs
+        let networkBaseURLMap: [String: String] = [
+            "Optimism": "optimism.blockscout.com",
+            "Arbitrium": "arbitrum.blockscout.com",
+            "Base": "base.blockscout.com"
+        ]
+
+        // Force unwrap the base URL for the current network
+        let baseURL = networkBaseURLMap[networkName]!
+
+        // Construct the explorer URL
+        let explorerURL = URL(string: "https://\(baseURL)/address/\(address)")!
+
+        // Open the URL in Safari
+        UIApplication.shared.open(explorerURL, options: [:], completionHandler: nil)
+
+        print("🌐 Opened explorer URL: \(explorerURL)")
+    }
 }
 
 // MARK: - SceneViewModel

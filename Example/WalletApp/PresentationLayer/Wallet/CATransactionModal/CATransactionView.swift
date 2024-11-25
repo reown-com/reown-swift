@@ -274,7 +274,7 @@ struct TransactionCompletedView: View {
 
             // View on Explorer button
             Button(action: {
-              //  presenter.onViewOnExplorer()
+                presenter.onViewOnExplorer()
             }) {
                 HStack {
                     Text("View on Explorer")
