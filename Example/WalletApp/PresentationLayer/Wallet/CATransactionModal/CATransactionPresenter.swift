@@ -19,6 +19,8 @@ final class CATransactionPresenter: ObservableObject {
     @Published var bridgeFee: Double = 3.00
     @Published var purchaseFee: Double = 1.34
     @Published var executionSpeed: String = "Fast (~20 sec)"
+    @Published var transactionCompleted: Bool = false
+
 
     private let sessionRequest: Request
     private let routeResponseAvailable: RouteResponseAvailable
@@ -48,50 +50,62 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     func dismiss() {
-        // Implement dismissal logic if needed
+        router.dismiss()
     }
 
-    func approveTransactions() {
-        Task {
-            do {
-                ActivityIndicatorManager.shared.start()
-                let signedTransactions = try await chainAbstractionService.signTransactions()
+    func approveTransactions() async throws {
+        do {
+            print("🚀 Starting transaction approval process...")
+            ActivityIndicatorManager.shared.start()
 
-                print(signedTransactions[0])
-                try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
-                let orchestrationId = routeResponseAvailable.orchestrationId
-                //                let statusResponseCompleted = try await WalletKit.instance.waitForSuccess(orchestrationId: orchestrationId, checkIn: routeResponseAvailable.metadata.checkIn)
+            print("📝 Signing transactions...")
+            let signedTransactions = try await chainAbstractionService.signTransactions()
+            print("✅ Successfully signed transactions. First transaction: \(signedTransactions[0])")
 
+            print("📡 Broadcasting signed transactions...")
+            try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
+            let orchestrationId = routeResponseAvailable.orchestrationId
+            print("📋 Orchestration ID: \(orchestrationId)")
 
-                var status: StatusResponse = try await WalletKit.instance.status(orchestrationId: orchestrationId)
-                loop: while true {
-                    switch status {
-                    case .pending(let pending):
-                        let delay = try UInt64(pending.checkIn) * 1_000_000
-                        try await Task.sleep(nanoseconds: delay)
-                        // Fetch the status again after the delay
-                        status = try await WalletKit.instance.status(orchestrationId: orchestrationId)
-                    case .completed(let completed):
-                        // Handle the completed status
-                        print("Transaction completed: \(completed)")
-                        AlertPresenter.present(message: "routing transactions completed", type: .success)
-                        break loop // Exit the labeled loop but continue with the function
-                    case .error(let error):
-                        // Handle the error
-                        print("Transaction failed: \(error)")
-                        AlertPresenter.present(message: "routing failed with error: \(error)", type: .error)
-                        ActivityIndicatorManager.shared.stop()
-                        return // Exit the function due to an error
-                    }
+            print("🔄 Starting status check loop...")
+            var status: StatusResponse = try await WalletKit.instance.status(orchestrationId: orchestrationId)
+
+            loop: while true {
+                switch status {
+                case .pending(let pending):
+                    print("⏳ Transaction pending. Waiting for \(pending.checkIn) seconds...")
+                    let delay = try UInt64(pending.checkIn) * 1_000_000
+                    try await Task.sleep(nanoseconds: delay)
+                    print("🔍 Checking status again...")
+                    status = try await WalletKit.instance.status(orchestrationId: orchestrationId)
+
+                case .completed(let completed):
+                    print("✅ Transaction completed successfully!")
+                    print("📊 Completion details: \(completed)")
+                    AlertPresenter.present(message: "routing transactions completed", type: .success)
+                    break loop
+
+                case .error(let error):
+                    print("❌ Transaction failed with error!")
+                    print("💥 Error details: \(error)")
+                    AlertPresenter.present(message: "routing failed with error: \(error)", type: .error)
+                    ActivityIndicatorManager.shared.stop()
+                    return
                 }
-
-                try await sendInitialTransaction()
-                ActivityIndicatorManager.shared.stop()
-
-                // broadcast initial transaction
-            } catch {
-                AlertPresenter.present(message: error.localizedDescription, type: .error)
             }
+
+            print("🚀 Initiating initial transaction...")
+            fatalError()
+            try await sendInitialTransaction()
+            ActivityIndicatorManager.shared.stop()
+            print("✅ Initial transaction process completed successfully")
+            AlertPresenter.present(message: "Initial transaction sent", type: .success)
+
+        } catch {
+            print("❌ Transaction approval failed!")
+            print("💥 Error details: \(error.localizedDescription)")
+            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            throw error
         }
     }
 
@@ -102,19 +116,28 @@ final class CATransactionPresenter: ObservableObject {
             let to: String
         }
 
-        print("will send initial transaction")
+        print("📝 Preparing initial transaction...")
         let tx = try! sessionRequest.params.get([Tx].self)[0]
+        print("📊 Transaction details:")
+        print("   From: \(tx.from)")
+        print("   To: \(tx.to)")
+        print("   Data length: \(tx.data.count) characters")
 
-
-
+        print("💰 Estimating fees...")
         let estimates = try await WalletKit.instance.estimateFees(chainId: sessionRequest.chainId.absoluteString)
+        print("📊 Fee estimates:")
+        print("   Max Priority Fee: \(estimates.maxPriorityFeePerGas)")
+        print("   Max Fee: \(estimates.maxFeePerGas)")
 
         let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
         let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
         let from = try EthereumAddress(hex: tx.from, eip55: false)
 
+        print("🔢 Fetching nonce...")
         let nonce = try await getNonce(for: from, chainId: sessionRequest.chainId.absoluteString)
+        print("✅ Retrieved nonce: \(nonce)")
 
+        print("🔧 Building Ethereum transaction...")
         let ethTransaction = EthereumTransaction(
             nonce: nonce,
             gasPrice: nil,
@@ -130,27 +153,32 @@ final class CATransactionPresenter: ObservableObject {
 
         let chain = sessionRequest.chainId
         let chainId = EthereumQuantity(quantity: BigUInt(chain.reference, radix: 10)!)
+        print("⛓️ Using chain ID: \(chainId)")
 
+        print("🔑 Signing transaction with private key...")
         let privateKey = try EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
-
         let signedTransaction = try ethTransaction.sign(with: privateKey, chainId: chainId)
+        print("✅ Transaction signed successfully")
 
+        print("📡 Broadcasting initial transaction...")
         try await chainAbstractionService.broadcastTransactions(transactions: [(signedTransaction, chain.absoluteString)])
-
+        print("✅ Initial transaction broadcast complete")
     }
 
     func getNonce(for address: EthereumAddress, chainId: String) async throws -> EthereumQuantity {
-        // Create a Web3 provider
+        print("🔢 Getting nonce for address: \(address.hex(eip55: true))")
+        print("⛓️ Chain ID: \(chainId)")
 
-        print("Getting nonce for initial transaction...")
         let projectId = Networking.projectId
         let rpcUrl = "rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
+        print("🌐 Using RPC URL: \(rpcUrl)")
 
         let params = [address.hex(eip55: true), "latest"]
-
         let rpcRequest = RPCRequest(method: "eth_getTransactionCount", params: params)
+        print("📝 Created RPC request for nonce")
 
         guard let url = URL(string: "https://" + rpcUrl) else {
+            print("❌ Failed to create URL from RPC URL string")
             throw Errors.invalidURL
         }
 
@@ -163,28 +191,38 @@ final class CATransactionPresenter: ObservableObject {
         request.httpBody = jsonData
 
         do {
-            // Perform the URL session request
+            print("📡 Sending request to get nonce...")
             let (data, response) = try await URLSession.shared.data(for: request)
 
-            // Validate the response
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("❌ Invalid response type received")
+                throw Errors.invalidResponse
+            }
+
+            print("📊 Response status code: \(httpResponse.statusCode)")
+
+            guard (200...299).contains(httpResponse.statusCode) else {
+                print("❌ Received error status code: \(httpResponse.statusCode)")
                 throw Errors.invalidResponse
             }
 
             let rpcResponse = try JSONDecoder().decode(RPCResponse.self, from: data)
-
             let responseJSON = try JSONSerialization.jsonObject(with: data)
-            print(responseJSON)
+            print("📥 Raw response: \(responseJSON)")
 
             let stringResult = try rpcResponse.result!.get(String.self)
+            print("🔢 Nonce hex string: \(stringResult)")
+
             guard let nonceValue = BigUInt(stringResult.stripHexPrefix(), radix: 16) else {
+                print("❌ Failed to parse nonce value from hex string")
                 throw Errors.invalidData
             }
 
+            print("✅ Successfully retrieved nonce: \(nonceValue)")
             return EthereumQuantity(quantity: nonceValue)
         } catch {
-            print("Error fetching nonce: \(error)")
+            print("❌ Error while fetching nonce:")
+            print("💥 Error details: \(error)")
             throw error
         }
     }
@@ -241,3 +279,38 @@ final class CATransactionPresenter: ObservableObject {
 
 // MARK: - SceneViewModel
 extension CATransactionPresenter: SceneViewModel {}
+
+
+
+
+extension CATransactionPresenter {
+    // Test function that succeeds after delay
+    func testAsyncSuccess() async throws {
+        print("Starting test async operation...")
+        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
+        print("Test async operation completed successfully")
+        DispatchQueue.main.async { [weak self] in
+            self?.transactionCompleted = true
+        }
+    }
+
+    // Test function that throws after delay
+    func testAsyncError() async throws {
+        print("Starting test async operation that will fail...")
+        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
+
+        enum TestError: Error, LocalizedError {
+            case sampleError
+
+            var errorDescription: String? {
+                return "This is a test error"
+            }
+
+            var failureReason: String? {
+                return "The operation failed because this is a test of error handling"
+            }
+        }
+
+        throw TestError.sampleError
+    }
+}
