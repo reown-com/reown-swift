@@ -112,21 +112,22 @@ extension MainPresenter {
 
 
 
+            ActivityIndicatorManager.shared.start()
             let routeResponseSuccess = try await WalletKit.instance.route(transaction: transaction)
 
             await MainActor.run {
                 switch routeResponseSuccess {
                 case .available(let routeResponseAvailable):
-
                     router.presentCATransaction(sessionRequest: request, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, context: context)
-
                 case .notRequired(let routeResponseNotRequired):
                     AlertPresenter.present(message: "Routing not required", type: .success)
                     router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
                 }
             }
+            ActivityIndicatorManager.shared.stop()
         } catch {
             await MainActor.run {
+                ActivityIndicatorManager.shared.stop()
                 AlertPresenter.present(message: "CA error: \(error.localizedDescription)", type: .error)
                 router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
             }
