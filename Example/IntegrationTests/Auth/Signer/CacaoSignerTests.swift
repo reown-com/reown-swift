@@ -57,6 +57,11 @@ class CacaoSignerTest: XCTestCase {
     }
 
     func testCacaoVerify() async throws {
-        try await verifier.verify(signature: signature, message: message, address: "0x15bca56b6e2728aec2532df9d436bd1600e86688", chainId: "eip155:1")
+        do {
+            try await verifier.verify(signature: signature, message: message, address: "0x15bca56b6e2728aec2532df9d436bd1600e86688", chainId: "eip155:1")
+        } catch {
+            print(error)
+            throw error
+        }
     }
 }

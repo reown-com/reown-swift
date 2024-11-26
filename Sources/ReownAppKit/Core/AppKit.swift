@@ -137,7 +137,7 @@ public class AppKit {
             supportsAuthenticatedSession: (config.authRequestParams != nil)
         )
         
-        Task {
+        Task(priority: .background) {
             try? await w3mApiInteractor.fetchWalletImages(for: store.recentWallets + store.customWallets)
             try? await w3mApiInteractor.fetchAllWalletMetadata()
             try? await w3mApiInteractor.fetchFeaturedWallets()
