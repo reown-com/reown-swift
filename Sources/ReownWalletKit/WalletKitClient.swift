@@ -8,7 +8,7 @@ import YttriumWrapper
 ///
 /// Access via `WalletKit.instance`
 public class WalletKitClient {
-    enum Errors: Error {
+    enum Errors: LocalizedError {
         case smartAccountNotEnabled
         case chainAbstractionNotEnabled
     }
@@ -275,12 +275,12 @@ public class WalletKitClient {
 
 
     // MARK: Yttrium
-    public func prepareSendTransactions(_ transactions: [Transaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
+    public func prepareSendTransactions(_ transactions: [FfiTransaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.prepareSendTransactions(transactions)
+        return try await client.prepareSendTransactions(transactions: transactions)
     }
 
     public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: String, ownerAccount: Account) async throws -> String {
@@ -288,7 +288,7 @@ public class WalletKitClient {
             throw Errors.smartAccountNotEnabled
         }
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.doSendTransaction(signatures: signatures, params: doSendTransactionParams)
+        return try await client.doSendTransactions(signatures: signatures, doSendTransactionParams: doSendTransactionParams)
     }
 
     public func getSmartAccount(ownerAccount: Account) async throws -> Account {
@@ -302,39 +302,39 @@ public class WalletKitClient {
         return Account(blockchain: ownerAccount.blockchain, address: address)!
     }
 
-    public func waitForUserOperationReceipt(userOperationHash: String, ownerAccount: Account) async throws -> UserOperationReceipt {
+    public func waitForUserOperationReceipt(userOperationHash: String, ownerAccount: Account) async throws -> String {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
         return try await client.waitForUserOperationReceipt(userOperationHash: userOperationHash)
     }
-
-    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) async throws -> PreparedSignMessage {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.prepareSignMessage(messageHash)
-    }
-
-    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> PreparedSign {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        let signature = try await client.doSignMessage(signatures)
-        return signature
-    }
-
-    public func finalizeSignMessage(_ signatures: [String], signStep3Params: String, ownerAccount: Account) async throws -> String {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        let signature = try await client.finalizeSignMessage(signatures, signStep3Params: signStep3Params)
-        return signature
-    }
+//
+//    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) async throws -> PreparedSignMessage {
+//        guard let smartAccountsManager = smartAccountsManager else {
+//            throw Errors.smartAccountNotEnabled
+//        }
+//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+//        return try await client.prepareSignMessage(messageHash)
+//    }
+//
+//    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> PreparedSign {
+//        guard let smartAccountsManager = smartAccountsManager else {
+//            throw Errors.smartAccountNotEnabled
+//        }
+//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+//        let signature = try await client.doSignMessage(signatures)
+//        return signature
+//    }
+//
+//    public func finalizeSignMessage(_ signatures: [String], signStep3Params: String, ownerAccount: Account) async throws -> String {
+//        guard let smartAccountsManager = smartAccountsManager else {
+//            throw Errors.smartAccountNotEnabled
+//        }
+//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+//        let signature = try await client.finalizeSignMessage(signatures, signStep3Params: signStep3Params)
+//        return signature
+//    }
 
     public func status(orchestrationId: String) async throws -> StatusResponse {
         guard let chainAbstractionClient = chainAbstractionClient else {
@@ -344,7 +344,7 @@ public class WalletKitClient {
         return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
     }
 
-    public func route(transaction: EthTransaction) async throws -> RouteResponseSuccess {
+    public func route(transaction: InitTransaction) async throws -> RouteResponse {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
@@ -360,13 +360,13 @@ public class WalletKitClient {
         return try await chainAbstractionClient.estimateFees(chainId: chainId)
     }
 
-    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
-        guard let chainClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
-        return try await chainClient.waitForSuccess(orchestrationId: orchestrationId, checkIn: checkIn)
-    }
+//    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
+//        guard let chainClient = chainAbstractionClient else {
+//            throw Errors.chainAbstractionNotEnabled
+//        }
+//
+//        return try await chainClient.waitForSuccess(orchestrationId: orchestrationId, checkIn: checkIn)
+//    }
 }
 
 

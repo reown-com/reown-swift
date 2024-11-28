@@ -5,7 +5,7 @@ import ReownWalletKit
 import ReownRouter
 
 final class AuthRequestPresenter: ObservableObject {
-    enum Errors: Error {
+    enum Errors: LocalizedError {
         case noCommonChains
     }
     private let router: AuthRequestRouter

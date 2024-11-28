@@ -3,7 +3,7 @@
 import PackageDescription
 
 // Determine if Yttrium should be used in debug (local) mode
-let yttriumDebug = false
+let yttriumDebug = true
 
 
 // Define dependencies array
@@ -21,11 +21,11 @@ func buildYttriumWrapperTarget() -> Target {
     // Conditionally add Yttrium dependency
     if yttriumDebug {
         var yttriumSwiftSettings: [SwiftSetting] = []
-        dependencies.append(.package(path: "../yttrium/crates/ffi/YttriumCore"))
+        dependencies.append(.package(path: "../yttrium"))
         yttriumSwiftSettings.append(.define("YTTRIUM_DEBUG"))
         return .target(
             name: "YttriumWrapper",
-            dependencies: [.product(name: "YttriumCore", package: "YttriumCore")],
+            dependencies: [.product(name: "Yttrium", package: "yttrium")],
             path: "Sources/YttriumWrapper",
             swiftSettings: yttriumSwiftSettings
         )

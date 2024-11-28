@@ -1,7 +1,7 @@
 import Foundation
 
 public final class WalletKitDecryptionService {
-    enum Errors: Error {
+    enum Errors: LocalizedError {
         case unknownTag
     }
     public enum RequestMethod: UInt {
