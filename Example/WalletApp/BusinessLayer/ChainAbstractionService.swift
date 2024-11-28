@@ -3,7 +3,7 @@ import Foundation
 import Web3
 
 class ChainAbstractionService {
-    enum NetworkError: Error {
+    enum NetworkError: LocalizedError {
         case invalidURL
         case invalidResponse
         case invalidData
@@ -97,7 +97,7 @@ class ChainAbstractionService {
 
 
 extension EthereumTransaction {
-    init(routingTransaction: RoutingTransaction, maxPriorityFeePerGas: EthereumQuantity, maxFeePerGas: EthereumQuantity) throws {
+    init(routingTransaction: Transaction, maxPriorityFeePerGas: EthereumQuantity, maxFeePerGas: EthereumQuantity) throws {
 
         self.init(
             nonce: EthereumQuantity(quantity: BigUInt(routingTransaction.nonce.stripHexPrefix(), radix: 16)!),

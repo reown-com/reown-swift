@@ -4,7 +4,7 @@ import Web3
 import ReownWalletKit
 
 final class CATransactionPresenter: ObservableObject {
-    enum Errors: Error {
+    enum Errors: LocalizedError {
         case invalidURL
         case invalidResponse
         case invalidData
@@ -329,7 +329,7 @@ extension CATransactionPresenter {
         print("Starting test async operation that will fail...")
         try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
 
-        enum TestError: Error, LocalizedError {
+        enum TestError: LocalizedError {
             case sampleError
 
             var errorDescription: String? {

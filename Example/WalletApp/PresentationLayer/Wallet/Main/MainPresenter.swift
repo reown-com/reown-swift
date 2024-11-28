@@ -97,7 +97,7 @@ extension MainPresenter {
         do {
             let tx = try request.params.get([Tx].self)[0]
 
-            let transaction = EthTransaction(
+            let transaction = InitTransaction(
                 from: tx.from,
                 to: tx.to,
                 value: "0",
@@ -117,11 +117,16 @@ extension MainPresenter {
 
             await MainActor.run {
                 switch routeResponseSuccess {
-                case .available(let routeResponseAvailable):
-                    router.presentCATransaction(sessionRequest: request, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, context: context)
-                case .notRequired(let routeResponseNotRequired):
-                    AlertPresenter.present(message: "Routing not required", type: .success)
-                    router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
+                case .success(let routeResponseSuccess):
+                    switch routeResponseSuccess {
+                    case .available(let routeResponseAvailable):
+                        router.presentCATransaction(sessionRequest: request, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, context: context)
+                    case .notRequired(let routeResponseNotRequired):
+                        AlertPresenter.present(message: "Routing not required", type: .success)
+                        router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
+                    }
+                case .error(let routeResponseError):
+                    AlertPresenter.present(message: "Rout response error", type: .success)
                 }
             }
             ActivityIndicatorManager.shared.stop()

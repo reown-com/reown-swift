@@ -377,3 +377,4 @@ extension WalletKitClient {
     }
 }
 #endif
+

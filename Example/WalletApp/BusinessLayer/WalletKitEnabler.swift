@@ -2,7 +2,7 @@ import Foundation
 import ReownWalletKit
 
 class WalletKitEnabler {
-    enum Errors: Error {
+    enum Errors: LocalizedError {
         case smartAccountNotEnabled
     }
 
