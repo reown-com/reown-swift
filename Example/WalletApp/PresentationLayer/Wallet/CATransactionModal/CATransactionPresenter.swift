@@ -63,7 +63,20 @@ final class CATransactionPresenter: ObservableObject {
             print("✅ Successfully signed transactions. First transaction: \(signedTransactions[0])")
 
             print("📡 Broadcasting signed transactions...")
-            try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
+            let txResults = try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
+
+            print("🧾 Fetching transaction receipts...")
+            for (txHash, chainId) in txResults {
+                do {
+                    let receipt = try await chainAbstractionService.getTransactionReceipt(transactionHash: txHash, chainId: chainId)
+                    print("✅ Transaction receipt for \(txHash) on chain \(chainId): \(receipt)")
+
+                } catch {
+                    print("❌ Failed to fetch receipt for \(txHash) on chain \(chainId): \(error)")
+                    throw error
+                }
+            }
+
             let orchestrationId = routeResponseAvailable.orchestrationId
             print("📋 Orchestration ID: \(orchestrationId)")
 
@@ -82,13 +95,13 @@ final class CATransactionPresenter: ObservableObject {
                 case .completed(let completed):
                     print("✅ Transaction completed successfully!")
                     print("📊 Completion details: \(completed)")
-                    AlertPresenter.present(message: "routing transactions completed", type: .success)
+                    AlertPresenter.present(message: "Routing transactions completed", type: .success)
                     break loop
 
                 case .error(let error):
                     print("❌ Transaction failed with error!")
                     print("💥 Error details: \(error)")
-                    AlertPresenter.present(message: "routing failed with error: \(error)", type: .error)
+                    AlertPresenter.present(message: "Routing failed with error: \(error)", type: .error)
                     ActivityIndicatorManager.shared.stop()
                     return
                 }

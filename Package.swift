@@ -3,7 +3,8 @@
 import PackageDescription
 
 // Determine if Yttrium should be used in debug (local) mode
-let yttriumDebug = true
+let yttriumDebug = false
+
 
 
 // Define dependencies array
@@ -20,17 +21,14 @@ let yttriumTarget = buildYttriumWrapperTarget()
 func buildYttriumWrapperTarget() -> Target {
     // Conditionally add Yttrium dependency
     if yttriumDebug {
-        var yttriumSwiftSettings: [SwiftSetting] = []
         dependencies.append(.package(path: "../yttrium"))
-        yttriumSwiftSettings.append(.define("YTTRIUM_DEBUG"))
         return .target(
             name: "YttriumWrapper",
             dependencies: [.product(name: "Yttrium", package: "yttrium")],
-            path: "Sources/YttriumWrapper",
-            swiftSettings: yttriumSwiftSettings
+            path: "Sources/YttriumWrapper"
         )
     } else {
-        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.2.16")))
+        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.2.22")))
         return .target(
             name: "YttriumWrapper",
             dependencies: [.product(name: "Yttrium", package: "yttrium")],
