@@ -13,7 +13,6 @@ public struct MessageVerifierFactory {
     }
 
     public func create(projectId: String) -> MessageVerifier {
-
-        return MessageVerifier(eip191Verifier: EIP191Verifier(crypto: crypto), eip1271Verifier: EIP1271Verifier(projectId: projectId, httpClient: HTTPNetworkClient(host: "rpc.walletconnect.com"), crypto: crypto), crypto: crypto, projectId: projectId)
+        return MessageVerifier(eip191Verifier: EIP191Verifier(crypto: crypto), eip1271Verifier: EIP1271Verifier(projectId: projectId, httpClient: HTTPNetworkClient(host: "rpc.walletconnect.com"), crypto: crypto))
     }
 }
