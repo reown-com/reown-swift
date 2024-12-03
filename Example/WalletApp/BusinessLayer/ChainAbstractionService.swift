@@ -68,21 +68,21 @@ class ChainAbstractionService {
     }
 
     private func getRpcUrl(chainId: String) -> String {
-                    let projectId = Networking.projectId
+//                    let projectId = Networking.projectId
+//
+//        return "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
 
-        return "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
-
-//        switch chainId {
-//        case "eip155:10":
-//            return "https://mainnet.optimism.io"
-//        case "eip155:8453":
-//            return "https://mainnet.base.org"
-//        case "eip155:42161":
-//            return "https://arbitrum.llamarpc.com"
-//        default:
-//            let projectId = Networking.projectId
-//            return "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
-//        }
+        switch chainId {
+        case "eip155:10":
+            return "https://mainnet.optimism.io"
+        case "eip155:8453":
+            return "https://mainnet.base.org"
+        case "eip155:42161":
+            return "https://arbitrum.llamarpc.com"
+        default:
+            let projectId = Networking.projectId
+            return "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
+        }
     }
 
 
