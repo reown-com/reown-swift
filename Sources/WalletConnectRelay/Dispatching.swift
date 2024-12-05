@@ -78,10 +78,10 @@ final class Dispatcher: NSObject, Dispatching {
             do {
                 // Check for task cancellation
                 try Task.checkCancellation()
-                
+
                 // Await the connection handler to establish the connection
                 try await socketConnectionHandler.handleInternalConnect()
-                
+
                 logger.debug("internal connect successful, will try to send a socket frame")
                 // If successful, send the message
                 send(string, completion: completion)
