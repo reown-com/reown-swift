@@ -59,6 +59,7 @@ class ChainAbstractionService {
                 let signedTransaction = try transaction.sign(with: privateKey, chainId: chainId)
 
                 print(signedTransaction.value)
+                print("nonce: \(signedTransaction.nonce)")
                 signedTransactions.append((transaction: signedTransaction, chainId: chain.absoluteString))
             } catch {
                 print("Error processing transaction: \(error)")
@@ -89,6 +90,7 @@ class ChainAbstractionService {
     func broadcastTransactions(transactions: [(transaction: EthereumSignedTransaction, chainId: String)]) async throws -> [(txHash: String, chainId: String)] {
         var transactionResults: [(txHash: String, chainId: String)] = []
 
+        // do it in series
         for transaction in transactions {
             let chainId = transaction.chainId
             let rpcUrl = getRpcUrl(chainId: chainId)
@@ -226,11 +228,11 @@ extension EthereumTransaction {
     init(routingTransaction: Transaction, maxPriorityFeePerGas: EthereumQuantity, maxFeePerGas: EthereumQuantity) throws {
 
         self.init(
-            nonce: EthereumQuantity(quantity: BigUInt(routingTransaction.nonce.stripHexPrefix(), radix: 16)!),
+            nonce: EthereumQuantity(quantity: BigUInt(routingTransaction.nonce.stripHexPrefix(), radix: 10)!),
             gasPrice: nil, // Not needed for EIP1559
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: EthereumQuantity(quantity: BigUInt(routingTransaction.gas.stripHexPrefix(), radix: 16)!),
+            gasLimit: EthereumQuantity(quantity: BigUInt(routingTransaction.gas.stripHexPrefix(), radix: 10)!),
             from: try EthereumAddress(hex: routingTransaction.from, eip55: false),
             to: try EthereumAddress(hex: routingTransaction.to, eip55: false),
             value: EthereumQuantity(quantity: 0.gwei),
