@@ -42,6 +42,22 @@ struct InputConfig {
         return projectId
     }
 
+    static var bundleIdPresentProjectId: String {
+        guard let projectId = config(for: "BUNDLE_ID_PRESENT_PROJECT_ID"), !projectId.isEmpty else {
+            fatalError("BUNDLE_ID_PRESENT_PROJECT_ID is either not defined or empty in Configuration.xcconfig")
+        }
+
+        return projectId
+    }
+
+    static var bundleIdNotPresentProjectId: String {
+        guard let projectId = config(for: "BUNDLE_ID_NOT_PRESENT_PROJECT_ID"), !projectId.isEmpty else {
+            fatalError("BUNDLE_ID_NOT_PRESENT_PROJECT_ID is either not defined or empty in Configuration.xcconfig")
+        }
+
+        return projectId
+    }
+
     static var defaultTimeout: TimeInterval {
         return 45
     }

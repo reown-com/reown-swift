@@ -32,18 +32,18 @@ final class RelayClientEndToEndTests: XCTestCase {
     private var relayA: RelayClient!
     private var relayB: RelayClient!
 
-    func makeRelayClient(prefix: String) -> RelayClient {
+    func makeRelayClient(prefix: String, projectId: String = InputConfig.projectId) -> RelayClient {
         let keyValueStorage = RuntimeKeyValueStorage()
         let logger = ConsoleLogger(prefix: prefix, loggingLevel: .debug)
         let clientIdStorage = ClientIdStorage(defaults: keyValueStorage, keychain: KeychainStorageMock(), logger: logger)
-        let socketAuthenticator = ClientIdAuthenticator(
-            clientIdStorage: clientIdStorage,
-            logger: ConsoleLoggerMock()
-        )
-        let urlFactory = RelayUrlFactory(
-            relayHost: InputConfig.relayHost,
-            projectId: InputConfig.projectId
-        )
+//        let socketAuthenticator = ClientIdAuthenticator(
+//            clientIdStorage: clientIdStorage,
+//            logger: ConsoleLoggerMock()
+//        )
+//        let urlFactory = RelayUrlFactory(
+//            relayHost: InputConfig.relayHost,
+//            projectId: InputConfig.projectId
+//        )
 //        let socket = WebSocket(url: urlFactory.create(bundleId: nil))
         let networkMonitor = NetworkMonitor()
 //
@@ -73,9 +73,10 @@ final class RelayClientEndToEndTests: XCTestCase {
         super.tearDown()
     }
 
-    func testConnect() async {
+    // test_bundleId_present - configured in the cloud to include bundleId for whitelisted apps
+    func testConnectProjectBundleIdPresent() async {
         let randomTopic = String.randomTopic()
-        relayA = makeRelayClient(prefix: "⚽️ A ")
+        relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdPresentProjectId)
 
         let expectation = expectation(description: "RelayA publishes message successfully")
 
@@ -89,7 +90,27 @@ final class RelayClientEndToEndTests: XCTestCase {
         }
 
         // Wait for the expectation with a timeout
-        wait(for: [expectation], timeout: 20.0) // Set the timeout duration in seconds
+        await fulfillment(of: [expectation], timeout: 20.0) // Set the timeout duration in seconds
+    }
+
+    // test_bundleId_not_present - configured in the cloud to not include bundleId for whitelisted apps
+    func testConnectProjectBundleIdNotPresent() async {
+        let randomTopic = String.randomTopic()
+        relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdNotPresentProjectId)
+
+        let expectation = expectation(description: "RelayA publishes message successfully")
+
+        Task {
+            do {
+                try await self.relayA.subscribe(topic: randomTopic)
+                expectation.fulfill() // Mark the expectation as fulfilled upon success
+            } catch {
+                XCTFail("Publish failed with error: \(error)")
+            }
+        }
+
+        // Wait for the expectation with a timeout
+        await fulfillment(of: [expectation], timeout: 20.0) // Set the timeout duration in seconds
     }
 
     func testEndToEndPayload() async throws {
