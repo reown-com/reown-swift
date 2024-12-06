@@ -56,11 +56,10 @@ public struct RelayClientFactory {
             relayHost: relayHost,
             projectId: projectId
         )
-        let socket = socketFactory.create(with: relayUrlFactory.create())
+        let bundleId = Bundle.main.bundleIdentifier
+        let socket = socketFactory.create(with: relayUrlFactory.create(bundleId: bundleId))
+
         socket.request.addValue(EnvironmentInfo.userAgent, forHTTPHeaderField: "User-Agent")
-        if let bundleId = Bundle.main.bundleIdentifier {
-            socket.request.addValue(bundleId, forHTTPHeaderField: "Origin")
-        }
 
         do {
             let authToken = try socketAuthenticator.createAuthToken(url: "wss://" + relayHost)

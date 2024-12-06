@@ -4,13 +4,38 @@
       "id" : "3D7BF967-0C62-49DD-ABA1-BDDEE678ED85",
       "name" : "Configuration 1",
       "options" : {
-
+        "environmentVariableEntries" : [
+          {
+            "key" : "RELAY_HOST",
+            "value" : "$(RELAY_HOST)"
+          },
+          {
+            "key" : "PROJECT_ID",
+            "value" : "$(PROJECT_ID)"
+          },
+          {
+            "key" : "BUNDLE_ID_NOT_PRESENT_PROJECT_ID",
+            "value" : "$(BUNDLE_ID_NOT_PRESENT_PROJECT_ID)"
+          },
+          {
+            "key" : "BUNDLE_ID_PRESENT_PROJECT_ID",
+            "value" : "$(BUNDLE_ID_PRESENT_PROJECT_ID)"
+          }
+        ]
       }
     }
   ],
   "defaultOptions" : {
     "codeCoverage" : false,
     "environmentVariableEntries" : [
+      {
+        "key" : "BUNDLE_ID_NOT_PRESENT_PROJECT_ID",
+        "value" : "$(BUNDLE_ID_NOT_PRESENT_PROJECT_ID)"
+      },
+      {
+        "key" : "BUNDLE_ID_PRESENT_PROJECT_ID",
+        "value" : "$(BUNDLE_ID_PRESENT_PROJECT_ID)"
+      },
       {
         "key" : "RELAY_HOST",
         "value" : "$(RELAY_HOST)"
