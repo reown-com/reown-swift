@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 public struct ShimmerBackground: ViewModifier {
     private let animation: Animation

@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 extension View {
     /// Applies the given transform if the given condition evaluates to `true`.
