@@ -29,6 +29,14 @@
     "codeCoverage" : false,
     "environmentVariableEntries" : [
       {
+        "key" : "BUNDLE_ID_NOT_PRESENT_PROJECT_ID",
+        "value" : "$(BUNDLE_ID_NOT_PRESENT_PROJECT_ID)"
+      },
+      {
+        "key" : "BUNDLE_ID_PRESENT_PROJECT_ID",
+        "value" : "$(BUNDLE_ID_PRESENT_PROJECT_ID)"
+      },
+      {
         "key" : "RELAY_HOST",
         "value" : "$(RELAY_HOST)"
       },
