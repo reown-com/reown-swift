@@ -62,43 +62,20 @@ final class RelayClientEndToEndTests: XCTestCase {
     }
 
     // test_bundleId_present - configured in the cloud to include bundleId for whitelisted apps
-    func testConnectProjectBundleIdPresent() async {
+    func testConnectProjectBundleIdPresent() async throws {
         let randomTopic = String.randomTopic()
         relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdPresentProjectId)
-
-        let expectation = expectation(description: "RelayA publishes message successfully")
-
-        Task {
-            do {
-                try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
-                expectation.fulfill() // Mark the expectation as fulfilled upon success
-            } catch {
-                XCTFail("Publish failed with error: \(error)")
-            }
-        }
-
-        // Wait for the expectation with a timeout
-        await fulfillment(of: [expectation], timeout: 20.0) // Set the timeout duration in seconds
+        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
+        sleep(1)
     }
 
     // test_bundleId_not_present - configured in the cloud to not include bundleId for whitelisted apps
-    func testConnectProjectBundleIdNotPresent() async {
+    func testConnectProjectBundleIdNotPresent() async throws{
         let randomTopic = String.randomTopic()
         relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdNotPresentProjectId)
 
-        let expectation = expectation(description: "RelayA publishes message successfully")
-
-        Task {
-            do {
-                try await self.relayA.subscribe(topic: randomTopic)
-                expectation.fulfill() // Mark the expectation as fulfilled upon success
-            } catch {
-                XCTFail("Publish failed with error: \(error)")
-            }
-        }
-
-        // Wait for the expectation with a timeout
-        await fulfillment(of: [expectation], timeout: 20.0) // Set the timeout duration in seconds
+        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
+        sleep(1)
     }
 
     func testEndToEndPayload() async throws {
