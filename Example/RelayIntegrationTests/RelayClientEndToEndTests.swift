@@ -70,7 +70,7 @@ final class RelayClientEndToEndTests: XCTestCase {
 
         Task {
             do {
-                try await self.relayA.subscribe(topic: randomTopic)
+                try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
                 expectation.fulfill() // Mark the expectation as fulfilled upon success
             } catch {
                 XCTFail("Publish failed with error: \(error)")
