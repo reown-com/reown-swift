@@ -73,7 +73,11 @@ jobs:
     - name: Run Relay integration tests
       if: matrix.type == 'relay-tests'
       shell: bash
-      run: make relay_tests RELAY_HOST=relay.walletconnect.com PROJECT_ID=${{ secrets.PROJECT_ID }}
+      run: make relay_tests \
+        RELAY_HOST=relay.walletconnect.com \
+        PROJECT_ID=${{ secrets.PROJECT_ID }} \
+        BUNDLE_ID_PRESENT_PROJECT_ID=${{ secrets.BUNDLE_ID_PRESENT_PROJECT_ID }} \
+        BUNDLE_ID_NOT_PRESENT_PROJECT_ID=${{ secrets.BUNDLE_ID_NOT_PRESENT_PROJECT_ID }}
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v3

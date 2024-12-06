@@ -20,7 +20,7 @@ build_all:
 	set -o pipefail && env NSUnbufferedIO=YES \
 		xcodebuild \
 		-scheme "WalletConnect-Package" \
-		-destination "platform=iOS Simulator,name=iPhone 14" \
+		-destination "platform=iOS Simulator,name=iPhone 15,OS=17.5" \
 		-derivedDataPath DerivedDataCache \
 		-clonedSourcePackagesDirPath ../SourcePackagesCache \
 		RELAY_HOST='$(RELAY_HOST)' \
@@ -32,7 +32,7 @@ build_all:
 		xcodebuild \
 		-project "Example/ExampleApp.xcodeproj" \
 		-scheme "BuildAll" \
-		-destination "platform=iOS Simulator,name=iPhone 14" \
+		-destination "platform=iOS Simulator,name=iPhone 15,OS=17.5" \
 		-derivedDataPath DerivedDataCache \
 		-clonedSourcePackagesDirPath ../SourcePackagesCache \
 		RELAY_HOST='$(RELAY_HOST)' \

@@ -76,12 +76,18 @@ final class Dispatcher: NSObject, Dispatching {
         // Start the connection process if not already connected
         Task {
             do {
+                // Check for task cancellation
+                try Task.checkCancellation()
+
                 // Await the connection handler to establish the connection
                 try await socketConnectionHandler.handleInternalConnect()
 
                 logger.debug("internal connect successful, will try to send a socket frame")
                 // If successful, send the message
                 send(string, completion: completion)
+            } catch is CancellationError {
+                logger.debug("Task was cancelled")
+                completion(CancellationError())
             } catch {
                 logger.debug("failed to handle internal connect")
                 // If an error occurs during connection, complete with that error
@@ -92,16 +98,22 @@ final class Dispatcher: NSObject, Dispatching {
 
 
     func protectedSend(_ string: String) async throws {
-        var isResumed = false
-        return try await withCheckedThrowingContinuation { continuation in
+        return try await withUnsafeThrowingContinuation { continuation in
+            var isResumed = false
+            let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.dispatcher.protectedSend")
+
             protectedSend(string) { error in
-                if !isResumed {
+                syncQueue.sync {
+                    guard !isResumed else {
+                        return
+                    }
+                    isResumed = true
+
                     if let error = error {
                         continuation.resume(throwing: error)
                     } else {
-                        continuation.resume(returning: ())
+                        continuation.resume()
                     }
-                    isResumed = true
                 }
             }
         }
