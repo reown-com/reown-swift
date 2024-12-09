@@ -38,7 +38,7 @@ final class W3MAPIInteractor: ObservableObject {
             projectId: AppKit.config.projectId,
             metadata: AppKit.config.metadata,
             recommendedIds: AppKit.config.recommendedWalletIds,
-            excludedIds: AppKit.config.excludedWalletIds
+            exclude: AppKit.config.excludedWalletIds
         )
         
         let httpClient = HTTPNetworkClient(host: "api.web3modal.com")
@@ -114,7 +114,7 @@ final class W3MAPIInteractor: ObservableObject {
                     projectId: AppKit.config.projectId,
                     metadata: AppKit.config.metadata,
                     recommendedIds: AppKit.config.recommendedWalletIds,
-                    excludedIds: AppKit.config.excludedWalletIds
+                    exclude: AppKit.config.excludedWalletIds
                 )
             )
         )
