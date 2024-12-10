@@ -360,6 +360,13 @@ public class WalletKitClient {
         return try await chainAbstractionClient.estimateFees(chainId: chainId)
     }
 
+    public func getRouteUiFieds(routeResponse: RouteResponseAvailable, initialTransaction: Transaction, currency: Currency) async throws -> RouteUiFields {
+        guard let chainAbstractionClient = chainAbstractionClient else {
+            throw Errors.chainAbstractionNotEnabled
+        }
+        return try await chainAbstractionClient.getRouteUiFields(routeResponse: routeResponse, initialTransaction: initialTransaction, currency: currency)
+    }
+
 //    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
 //        guard let chainClient = chainAbstractionClient else {
 //            throw Errors.chainAbstractionNotEnabled

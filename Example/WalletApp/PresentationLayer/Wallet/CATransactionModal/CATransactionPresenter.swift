@@ -10,13 +10,13 @@ final class CATransactionPresenter: ObservableObject {
         case invalidData
     }
     // Published properties to be used in the view
-    @Published var payingAmount: Double = 10.00
+    @Published var payingAmount: String = ""
     @Published var balanceAmount: Double = 5.00
     @Published var bridgingAmount: Double = 5.00
     @Published var appURL: String = ""
     @Published var networkName: String = ""
-    @Published var estimatedFees: Double = 4.34
-    @Published var bridgeFee: Double = 3.00
+    @Published var estimatedFees: String = ""
+    @Published var bridgeFee: String = ""
     @Published var purchaseFee: Double = 1.34
     @Published var executionSpeed: String = "Fast (~20 sec)"
     @Published var transactionCompleted: Bool = false
@@ -30,6 +30,7 @@ final class CATransactionPresenter: ObservableObject {
     }
     let router: CATransactionRouter
     let importAccount: ImportAccount
+    var routeUiFields: RouteUiFields? = nil
 
     private var disposeBag = Set<AnyCancellable>()
 
@@ -294,6 +295,49 @@ final class CATransactionPresenter: ObservableObject {
             self.appURL = session.peer.url
         }
         networkName = network(for: sessionRequest.chainId.absoluteString)
+        Task { try await setUpRoutUiFields() }
+    }
+
+    
+
+    func setUpRoutUiFields() async throws {
+        struct Tx: Codable {
+            let data: String
+            let from: String
+            let to: String
+        }
+        let tx = try! sessionRequest.params.get([Tx].self)[0]
+
+        let estimates = try await WalletKit.instance.estimateFees(chainId: sessionRequest.chainId.absoluteString)
+
+        let initTx = Transaction(
+            from: tx.from,
+            to: tx.to,
+            value: "0",
+            gas: "0",
+            data: tx.data,
+            nonce: "0x",
+            chainId: sessionRequest.chainId.absoluteString,
+            gasPrice: "0",
+            maxFeePerGas: estimates.maxFeePerGas,
+            maxPriorityFeePerGas: estimates.maxPriorityFeePerGas
+        )
+        let routUiFields = try await WalletKit.instance.getRouteUiFieds(routeResponse: routeResponseAvailable, initialTransaction: initTx, currency: Currency.usd)
+        print("aaaaaaaa")
+
+        print(routUiFields.localTotal)
+        print("bbbbbb")
+
+        print(routUiFields.localTotal.formatted)
+        print("XXXXXXXXX")
+        print(routUiFields.localTotal.formattedAlt)
+
+        await MainActor.run {
+            payingAmount = routUiFields.localTotal.amount
+            estimatedFees = routUiFields.localTotal.formattedAlt
+            bridgeFee = routUiFields.bridge.first!.localFee.formattedAlt
+        }
+
     }
 
     func onViewOnExplorer() {

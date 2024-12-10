@@ -85,8 +85,7 @@ struct CATransactionView: View {
                                 Text("Estimated Fees")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                Text("$TODO")
-                                //                        Text("$\(presenter.estimatedFees, specifier: "%.2f")")
+                                Text("\(presenter.estimatedFees)")
                                     .font(.system(.body, design: .monospaced))
                             }
 
