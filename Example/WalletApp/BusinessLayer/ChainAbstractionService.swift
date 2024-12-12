@@ -228,11 +228,11 @@ extension EthereumTransaction {
     init(routingTransaction: Transaction, maxPriorityFeePerGas: EthereumQuantity, maxFeePerGas: EthereumQuantity) throws {
 
         self.init(
-            nonce: EthereumQuantity(quantity: BigUInt(routingTransaction.nonce.stripHexPrefix(), radix: 10)!),
+            nonce: EthereumQuantity(quantity: BigUInt(routingTransaction.nonce.stripHexPrefix(), radix: 16)!),
             gasPrice: nil, // Not needed for EIP1559
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: EthereumQuantity(quantity: BigUInt(routingTransaction.gas.stripHexPrefix(), radix: 10)!),
+            gasLimit: EthereumQuantity(quantity: BigUInt(routingTransaction.gas.stripHexPrefix(), radix: 16)!),
             from: try EthereumAddress(hex: routingTransaction.from, eip55: false),
             to: try EthereumAddress(hex: routingTransaction.to, eip55: false),
             value: EthereumQuantity(quantity: 0.gwei),

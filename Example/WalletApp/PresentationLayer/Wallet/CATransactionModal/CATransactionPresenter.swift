@@ -125,6 +125,7 @@ final class CATransactionPresenter: ObservableObject {
             print("❌ Transaction approval failed!")
             print("💥 Error details: \(error.localizedDescription)")
             AlertPresenter.present(message: error.localizedDescription, type: .error)
+            Task { try await respondError() }
             throw error
         }
     }
@@ -252,6 +253,10 @@ final class CATransactionPresenter: ObservableObject {
 
     @MainActor
     func rejectTransactions() async throws {
+        try await respondError()
+    }
+
+    func respondError() async throws {
         do {
             ActivityIndicatorManager.shared.start()
             try await WalletKit.instance.respond(
@@ -260,12 +265,12 @@ final class CATransactionPresenter: ObservableObject {
                 response: .error(.init(code: 0, message: ""))
             )
             ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            await MainActor.run {
+                router.dismiss()
+            }
         } catch {
             ActivityIndicatorManager.shared.stop()
             AlertPresenter.present(message: error.localizedDescription, type: .error)
-            //            errorMessage = error.localizedDescription
-            //            showError.toggle()
         }
     }
 

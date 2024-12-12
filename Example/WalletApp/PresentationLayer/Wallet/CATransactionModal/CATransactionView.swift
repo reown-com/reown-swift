@@ -211,23 +211,10 @@ struct TransactionCompletedView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            // Tada image in gradient circle
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.blue, Color.purple]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: 80, height: 80)
-
-                Image("tada")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 40, height: 40)
-            }
+            Image("tada")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
 
             Text("You successfully sent USDC!")
                 .font(.title3)
@@ -239,7 +226,7 @@ struct TransactionCompletedView: View {
                     Text("Payed")
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("\(presenter.payingAmount) USDC")
+                    Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) USDC")
                         .font(.system(.body, design: .monospaced))
                     Text("on")
                     Text("\(presenter.networkName)")
