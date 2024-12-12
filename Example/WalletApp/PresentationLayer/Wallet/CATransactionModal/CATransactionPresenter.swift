@@ -314,15 +314,10 @@ final class CATransactionPresenter: ObservableObject {
             }
         }
     }
-
     
 
     func setUpRoutUiFields() async throws {
-        struct Tx: Codable {
-            let data: String
-            let from: String
-            let to: String
-        }
+
         let tx = try! sessionRequest.params.get([Tx].self)[0]
 
         let estimates = try await WalletKit.instance.estimateFees(chainId: chainId)
