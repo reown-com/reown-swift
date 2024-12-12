@@ -11,15 +11,14 @@ final class CATransactionPresenter: ObservableObject {
     }
     // Published properties to be used in the view
     @Published var payingAmount: String = ""
-    @Published var balanceAmount: Double = 5.00
-    @Published var bridgingAmount: Double = 5.00
+    @Published var balanceAmount: String = ""
     @Published var appURL: String = ""
-    @Published var networkName: String = ""
+    @Published var networkName: String!
     @Published var estimatedFees: String = ""
     @Published var bridgeFee: String = ""
-    @Published var purchaseFee: Double = 1.34
     @Published var executionSpeed: String = "Fast (~20 sec)"
     @Published var transactionCompleted: Bool = false
+    @Published var fundingFromNetwork: String!
 
 
     private let sessionRequest: Request
@@ -28,9 +27,15 @@ final class CATransactionPresenter: ObservableObject {
     var fundingFrom: [FundingMetadata] {
         return routeResponseAvailable.metadata.fundingFrom
     }
+    var initialTransactionMetadata: InitialTransactionMetadata {
+        return routeResponseAvailable.metadata.initialTransaction
+    }
     let router: CATransactionRouter
     let importAccount: ImportAccount
     var routeUiFields: RouteUiFields? = nil
+    var chainId: String {
+        sessionRequest.chainId.absoluteString
+    }
 
     private var disposeBag = Set<AnyCancellable>()
 
@@ -46,6 +51,8 @@ final class CATransactionPresenter: ObservableObject {
         self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey, routeResponseAvailable: routeResponseAvailable)
         self.router = router
         self.importAccount = importAccount
+        self.networkName = network(for: sessionRequest.chainId.absoluteString)
+        self.fundingFromNetwork = network(for: fundingFrom[0].chainId)
         // Any additional setup for the parameters
         setupInitialState()
     }
@@ -123,11 +130,6 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     private func sendInitialTransaction() async throws {
-        struct Tx: Codable {
-            let data: String
-            let from: String
-            let to: String
-        }
 
         print("📝 Preparing initial transaction...")
         let tx = try! sessionRequest.params.get([Tx].self)[0]
@@ -296,6 +298,16 @@ final class CATransactionPresenter: ObservableObject {
         }
         networkName = network(for: sessionRequest.chainId.absoluteString)
         Task { try await setUpRoutUiFields() }
+        payingAmount = initialTransactionMetadata.amount
+
+        let tx = try! sessionRequest.params.get([Tx].self)[0]
+
+        Task {
+            let balance = try await WalletKit.instance.erc20Balance(chainId: chainId, token: tx.to, owner: importAccount.account.address)
+            await MainActor.run {
+                balanceAmount = balance
+            }
+        }
     }
 
     
@@ -308,7 +320,7 @@ final class CATransactionPresenter: ObservableObject {
         }
         let tx = try! sessionRequest.params.get([Tx].self)[0]
 
-        let estimates = try await WalletKit.instance.estimateFees(chainId: sessionRequest.chainId.absoluteString)
+        let estimates = try await WalletKit.instance.estimateFees(chainId: chainId)
 
         let initTx = Transaction(
             from: tx.from,
@@ -333,7 +345,7 @@ final class CATransactionPresenter: ObservableObject {
         print(routUiFields.localTotal.formattedAlt)
 
         await MainActor.run {
-            payingAmount = routUiFields.localTotal.amount
+
             estimatedFees = routUiFields.localTotal.formattedAlt
             bridgeFee = routUiFields.bridge.first!.localFee.formattedAlt
         }
@@ -367,37 +379,3 @@ final class CATransactionPresenter: ObservableObject {
 // MARK: - SceneViewModel
 extension CATransactionPresenter: SceneViewModel {}
 
-
-
-
-extension CATransactionPresenter {
-    // Test function that succeeds after delay
-    func testAsyncSuccess() async throws {
-        print("Starting test async operation...")
-        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
-        print("Test async operation completed successfully")
-        DispatchQueue.main.async { [weak self] in
-            self?.transactionCompleted = true
-        }
-    }
-
-    // Test function that throws after delay
-    func testAsyncError() async throws {
-        print("Starting test async operation that will fail...")
-        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
-
-        enum TestError: LocalizedError {
-            case sampleError
-
-            var errorDescription: String? {
-                return "This is a test error"
-            }
-
-            var failureReason: String? {
-                return "The operation failed because this is a test of error handling"
-            }
-        }
-
-        throw TestError.sampleError
-    }
-}

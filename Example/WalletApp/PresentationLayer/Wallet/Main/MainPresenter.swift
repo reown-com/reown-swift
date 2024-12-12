@@ -4,6 +4,12 @@ import SwiftUI
 import WalletConnectUtils
 import ReownWalletKit
 
+struct Tx: Codable {
+    let data: String
+    let from: String
+    let to: String
+}
+
 final class MainPresenter {
     private let interactor: MainInteractor
     private let importAccount: ImportAccount
@@ -85,12 +91,6 @@ extension MainPresenter {
     }
 
     private func tryRoutCATransaction(request: Request, context: VerifyContext?) async throws {
-        struct Tx: Codable {
-            let data: String
-            let from: String
-            let to: String
-        }
-
         guard request.method == "eth_sendTransaction" else {
             return
         }

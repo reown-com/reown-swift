@@ -367,6 +367,13 @@ public class WalletKitClient {
         return try await chainAbstractionClient.getRouteUiFields(routeResponse: routeResponse, initialTransaction: initialTransaction, currency: currency)
     }
 
+    public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
+        guard let chainAbstractionClient = chainAbstractionClient else {
+            throw Errors.chainAbstractionNotEnabled
+        }
+        return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
+    }
+
 //    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
 //        guard let chainClient = chainAbstractionClient else {
 //            throw Errors.chainAbstractionNotEnabled

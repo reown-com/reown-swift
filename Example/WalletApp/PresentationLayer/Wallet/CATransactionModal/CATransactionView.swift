@@ -10,10 +10,10 @@ struct CATransactionView: View {
         ZStack {
             if presenter.transactionCompleted {
                 TransactionCompletedView()
-                    .scaleEffect(viewScale) // Apply the renamed property here
+                    .scaleEffect(viewScale)
                     .onAppear {
                         withAnimation(.easeInOut(duration: 0.4)) {
-                            viewScale = 1.0 // Reset scaling for the new view
+                            viewScale = 1.0
                         }
                     }
             } else {
@@ -23,64 +23,106 @@ struct CATransactionView: View {
                         .font(.headline)
                         .padding(.top)
 
+                    // FIRST SECTION (Darker background)
                     VStack(spacing: 20) {
-                        // Paying Section
-                        VStack(alignment: .leading, spacing: 4) {
+                        // Paying Row
+                        HStack {
                             Text("Paying")
                                 .foregroundColor(.gray)
-                            Text("$TODO")
-                            //                    Text("\(presenter.payingAmount, specifier: "%.2f") USDC")
+                            Spacer()
+                            // Replace with the actual amount from presenter
+                            Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) USDC")
                                 .font(.system(.body, design: .monospaced))
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                        // Source of funds
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Source of funds")
-                                .foregroundColor(.gray)
+                        // Source of Funds Title
 
+                        // Subsection (lighter background) for Source of Funds details
+                        VStack(spacing: 4) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Source of funds")
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            // Balance line
+                            HStack {
+                                Image(presenter.networkName)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16)
+                                    .foregroundColor(.gray)
+                                Text("Balance")
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                Text("\(presenter.hexAmountToDenominatedUSDC(presenter.balanceAmount)) USDC")
+                                    .font(.system(.body, design: .monospaced))
+                            }
+
+                            // Bridging line(s)
                             ForEach(presenter.fundingFrom, id: \.chainId) { funding in
                                 HStack {
-                                    Spacer() // Push content to the right
-                                    Image(systemName: "arrow.left.arrow.right.circle.fill")
+                                    Image("bridging")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 32, height: 32)
+                                    Text("Bridging")
                                         .foregroundColor(.gray)
-                                    VStack(alignment: .leading) {
-                                        // Use the presenter for conversion
+                                    Spacer()
+                                    VStack(alignment: .trailing) {
                                         Text("\(presenter.hexAmountToDenominatedUSDC(funding.amount)) \(funding.symbol)")
                                             .font(.system(.body, design: .monospaced))
-                                        Text("from \(presenter.network(for: funding.chainId))")
-                                            .font(.footnote)
-                                            .foregroundColor(.gray)
+                                        HStack{
+                                            Text("from \(presenter.network(for: funding.chainId))")
+                                                .font(.footnote)
+                                                .foregroundColor(.gray)
+                                            Image(presenter.network(for: funding.chainId))
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 12, height: 12)
+                                                .clipShape(Circle())
+                                        }
                                     }
                                 }
-                                .frame(maxWidth: .infinity, alignment: .trailing) // Ensure the entire HStack aligns to the trailing edge
                             }
                         }
+                        .padding()
+                        .background(Color("grey-subsection"))
+                        .cornerRadius(12)
+                    }
+                    .padding()
+                    .background(Color("grey-section"))
+                    .cornerRadius(12)
 
-                        // App and Network
-                        VStack(spacing: 12) {
-                            HStack {
-                                Text("App")
-                                    .foregroundColor(.gray)
-                                Spacer()
-                                Text(presenter.appURL)
+                    // SECOND SECTION (Darker background)
+                    VStack(spacing: 20) {
+                        // App
+                        HStack {
+                            Text("App")
+                                .foregroundColor(.gray)
+                            Spacer()
+                            Text(presenter.appURL)
+                                .foregroundColor(.blue)
+                        }
+
+                        // Network
+                        HStack {
+                            Text("Network")
+                                .foregroundColor(.gray)
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Image(presenter.networkName)
+                                    .resizable() // Ensure the image scales
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32)
                                     .foregroundColor(.blue)
-                            }
-
-                            HStack {
-                                Text("Network")
-                                    .foregroundColor(.gray)
-                                Spacer()
-                                HStack(spacing: 4) {
-                                    Image(systemName: "network")
-                                        .foregroundColor(.blue)
-                                    Text(presenter.networkName)
-                                }
+                                Text(presenter.networkName)
                             }
                         }
 
-                        // Estimated Fees Section
-                        VStack(spacing: 12) {
+                        // Estimated Fees Title
+
+                        // Subsection (lighter background) for fees breakdown
+                        VStack(spacing: 8) {
                             HStack {
                                 Text("Estimated Fees")
                                     .foregroundColor(.gray)
@@ -89,85 +131,36 @@ struct CATransactionView: View {
                                     .font(.system(.body, design: .monospaced))
                             }
 
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Text("Bridge")
-                                        .foregroundColor(.gray)
-                                    Spacer()
-                                    Text("$TODO")
-                                    //                            Text("$\(presenter.bridgeFee, specifier: "%.2f")")
-                                        .font(.system(.body, design: .monospaced))
-                                }
-
-                                HStack {
-                                    Text("Purchase")
-                                        .foregroundColor(.gray)
-                                    Spacer()
-                                    //                            Text("$\(presenter.purchaseFee, specifier: "%.2f")")
-                                    Text("$TODO")
-                                        .font(.system(.body, design: .monospaced))
-                                }
-
-                                HStack {
-                                    Text("Execution")
-                                        .foregroundColor(.gray)
-                                    Spacer()
-                                    Text(presenter.executionSpeed)
-                                        .font(.system(.body, design: .monospaced))
-                                }
+                            
+                            HStack {
+                                Text("Bridge")
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                // Replace "$TODO" with actual fee if available
+                                Text("\(presenter.bridgeFee)")
+                                    .font(.system(.body, design: .monospaced))
                             }
-                            .padding(.leading)
+
+                            HStack {
+                                Text("Execution")
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                Text(presenter.executionSpeed)
+                                    .font(.system(.body, design: .monospaced))
+                            }
                         }
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color("grey-subsection"))
                         .cornerRadius(12)
                     }
-                    .padding(.horizontal)
+                    .padding()
+                    .background(Color("grey-section"))
+                    .cornerRadius(12)
 
                     Spacer()
 
                     // Action Buttons
                     VStack(spacing: 12) {
-//                        AsyncButton(
-//                            options: [
-//                                .showProgressViewOnLoading,
-//                                .disableButtonOnLoading,
-//                                .showAlertOnError,
-//                                .enableNotificationFeedback
-//                            ]
-//                        ) {
-//                            try await presenter.testAsyncSuccess()
-//                        } label: {
-//                            Text("Test Success")
-//                                .fontWeight(.semibold)
-//                                .foregroundColor(.white)
-//                                .frame(maxWidth: .infinity)
-//                                .padding()
-//                                .background(Color.green)
-//                                .cornerRadius(12)
-//                        }
-//
-//                        // Error test button
-//                        AsyncButton(
-//                            options: [
-//                                .showProgressViewOnLoading,
-//                                .disableButtonOnLoading,
-//                                .showAlertOnError,
-//                                .enableNotificationFeedback
-//                            ]
-//                        ) {
-//                            try await presenter.testAsyncError()
-//                        } label: {
-//                            Text("Test Error")
-//                                .fontWeight(.semibold)
-//                                .foregroundColor(.white)
-//                                .frame(maxWidth: .infinity)
-//                                .padding()
-//                                .background(Color.red)
-//                                .cornerRadius(12)
-//                        }
-
-                        // Original Approve button
                         AsyncButton(
                             options: [
                                 .showProgressViewOnLoading,
@@ -209,7 +202,6 @@ struct CATransactionView: View {
     }
 }
 
-
 struct TransactionCompletedView: View {
     @EnvironmentObject var presenter: CATransactionPresenter
 
@@ -219,7 +211,7 @@ struct TransactionCompletedView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            // Original tada image in blue-purple gradient circle
+            // Tada image in gradient circle
             ZStack {
                 Circle()
                     .fill(
@@ -247,11 +239,11 @@ struct TransactionCompletedView: View {
                     Text("Payed")
                         .foregroundColor(.gray)
                     Spacer()
-                        Text("X USDC")
-                            .font(.system(.body, design: .monospaced))
-                        Text("on ")
-                        Text("\(presenter.networkName)")
-                            .font(.system(.body, design: .monospaced))
+                    Text("\(presenter.payingAmount) USDC")
+                        .font(.system(.body, design: .monospaced))
+                    Text("on")
+                    Text("\(presenter.networkName)")
+                        .font(.system(.body, design: .monospaced))
                 }
 
                 HStack {
@@ -261,7 +253,7 @@ struct TransactionCompletedView: View {
                     ForEach(presenter.fundingFrom, id: \.chainId) { funding in
                         Text("\(presenter.hexAmountToDenominatedUSDC(funding.amount)) \(funding.symbol)")
                             .font(.system(.body, design: .monospaced))
-                        Text("from ")
+                        Text("from")
                         Text("\(presenter.network(for: funding.chainId))")
                             .font(.system(.body, design: .monospaced))
                     }
@@ -271,7 +263,6 @@ struct TransactionCompletedView: View {
             .background(Color(.systemGray6))
             .cornerRadius(16)
 
-            // View on Explorer button
             Button(action: {
                 presenter.onViewOnExplorer()
             }) {
@@ -285,7 +276,6 @@ struct TransactionCompletedView: View {
 
             Spacer()
 
-            // Back to App button
             Button(action: {
                 presenter.dismiss()
             }) {
