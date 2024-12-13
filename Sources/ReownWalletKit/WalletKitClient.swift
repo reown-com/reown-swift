@@ -336,6 +336,7 @@ public class WalletKitClient {
 //        return signature
 //    }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func status(orchestrationId: String) async throws -> StatusResponse {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
@@ -344,6 +345,7 @@ public class WalletKitClient {
         return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
     }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func route(transaction: InitTransaction) async throws -> RouteResponse {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
@@ -352,6 +354,7 @@ public class WalletKitClient {
         return try await chainAbstractionClient.route(transaction: transaction)
     }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func estimateFees(chainId: String) async throws -> Eip1559Estimation {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
@@ -360,6 +363,7 @@ public class WalletKitClient {
         return try await chainAbstractionClient.estimateFees(chainId: chainId)
     }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func getRouteUiFieds(routeResponse: RouteResponseAvailable, initialTransaction: Transaction, currency: Currency) async throws -> RouteUiFields {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
@@ -367,13 +371,13 @@ public class WalletKitClient {
         return try await chainAbstractionClient.getRouteUiFields(routeResponse: routeResponse, initialTransaction: initialTransaction, currency: currency)
     }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
     }
-
 //    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
 //        guard let chainClient = chainAbstractionClient else {
 //            throw Errors.chainAbstractionNotEnabled
