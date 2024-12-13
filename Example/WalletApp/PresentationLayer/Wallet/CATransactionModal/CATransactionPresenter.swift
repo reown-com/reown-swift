@@ -335,13 +335,10 @@ final class CATransactionPresenter: ObservableObject {
             maxPriorityFeePerGas: estimates.maxPriorityFeePerGas
         )
         let routUiFields = try await WalletKit.instance.getRouteUiFieds(routeResponse: routeResponseAvailable, initialTransaction: initTx, currency: Currency.usd)
-        print("aaaaaaaa")
 
         print(routUiFields.localTotal)
-        print("bbbbbb")
 
         print(routUiFields.localTotal.formatted)
-        print("XXXXXXXXX")
         print(routUiFields.localTotal.formattedAlt)
 
         await MainActor.run {
