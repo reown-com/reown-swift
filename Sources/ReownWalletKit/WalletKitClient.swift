@@ -342,6 +342,7 @@ public class WalletKitClient {
             throw Errors.chainAbstractionNotEnabled
         }
 
+        
         return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
     }
 

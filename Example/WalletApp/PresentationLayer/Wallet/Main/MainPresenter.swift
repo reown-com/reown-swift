@@ -126,7 +126,14 @@ extension MainPresenter {
                         router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
                     }
                 case .error(let routeResponseError):
-                    AlertPresenter.present(message: "Rout response error", type: .success)
+                    AlertPresenter.present(message: "Route response error", type: .success)
+                    Task {
+                        try await WalletKit.instance.respond(
+                            topic: request.topic,
+                            requestId: request.id,
+                            response: .error(.init(code: 0, message: ""))
+                        )
+                    }
                 }
             }
             ActivityIndicatorManager.shared.stop()
