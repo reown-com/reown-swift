@@ -12,7 +12,7 @@ class NetworkMonitoringMock: NetworkMonitoring {
         networkConnectionStatusPublisherSubject.eraseToAnyPublisher()
     }
     
-    let networkConnectionStatusPublisherSubject = CurrentValueSubject<NetworkConnectionStatus, Never>(.connected)
+    let networkConnectionStatusPublisherSubject = CurrentValueSubject<NetworkConnectionStatus, Never>(.notConnected)
     
     public init() { }
 }

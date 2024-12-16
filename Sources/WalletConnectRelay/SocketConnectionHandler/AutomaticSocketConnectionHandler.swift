@@ -322,82 +322,79 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
             connection.cancel()
         }
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+        try await withCheckedThrowingContinuation { [weak self] (continuation: CheckedContinuation<Void, Error>) in
+            guard let self = self else {
+                return
+            }
+
             var cancellable: AnyCancellable?
 
             func cleanupAndRemoveCancellable() {
-                logger.debug("Cleaning up any cancellable.")
+                self.logger.debug("Cleaning up any cancellable.")
                 if let c = cancellable {
                     c.cancel()
-                    publishers.remove(c)
+                    self.publishers.remove(c)
                 }
             }
 
             func fail(with error: Error) {
-                logger.debug("Failing connection with error: \(error)")
-                guard !isResumed else {
-                    return
-                }
+                self.logger.debug("Failing connection with error: \(error)")
+                guard !isResumed else { return }
                 isResumed = true
                 cleanupAndRemoveCancellable()
-                syncQueue.async { [weak self] in
-                    self?.isConnecting = false
+                self.syncQueue.async {
+                    self.isConnecting = false
                 }
                 continuation.resume(throwing: error)
             }
 
             func succeed() {
-                logger.debug("Connection succeeded, finalizing success flow.")
-                guard !isResumed else {
-                    return
-                }
+                self.logger.debug("Connection succeeded, finalizing success flow.")
+                guard !isResumed else { return }
                 isResumed = true
                 cleanupAndRemoveCancellable()
-                syncQueue.async { [weak self] in
-                    self?.isConnecting = false
+                self.syncQueue.async {
+                    self.isConnecting = false
                 }
                 continuation.resume()
             }
 
             func handleMaxAttemptsReached() {
-                logger.debug("Max immediate attempts reached (\(attempts)/\(maxAttempts)). Triggering reconnection logic.")
-                syncQueue.async { [weak self] in
-                    self?.logger.debug("Setting isConnecting = false and calling handleFailedConnectionAndReconnectIfNeeded() on syncQueue.")
-                    self?.isConnecting = false
-                    self?.handleFailedConnectionAndReconnectIfNeeded()
+                self.logger.debug("Max immediate attempts reached (\(attempts)/\(maxAttempts)). Triggering reconnection logic.")
+                self.syncQueue.async {
+                    self.logger.debug("Setting isConnecting = false and calling handleFailedConnectionAndReconnectIfNeeded() on syncQueue.")
+                    self.isConnecting = false
+                    self.handleFailedConnectionAndReconnectIfNeeded()
                 }
                 fail(with: NetworkError.connectionFailed)
             }
 
-            logger.debug("Setting up subscription to connectionStatusPublisher with timeout \(requestTimeout) seconds.")
+            self.logger.debug("Setting up subscription to connectionStatusPublisher with timeout \(requestTimeout) seconds.")
+
             cancellable = connectionStatusPublisher
                 .setFailureType(to: NetworkError.self)
                 .timeout(.seconds(requestTimeout), scheduler: DispatchQueue.global(), customError: {
-                    [weak self] in
-                    self?.logger.debug("Timeout triggered, returning NetworkError.connectionFailed.")
+                    self.logger.debug("Timeout triggered, returning NetworkError.connectionFailed.")
                     return NetworkError.connectionFailed
                 })
                 .sink(
-                    receiveCompletion: { [weak self] completion in
-                        // This likely means a timeout or an upstream completion
-                        self?.logger.debug("Received completion: \(completion)")
+                    receiveCompletion: { completion in
+                        self.logger.debug("Received completion: \(completion)")
                         if case .failure(let error) = completion {
-                            self?.logger.debug("Connection failed with error: \(error). Will fail the continuation.")
+                            self.logger.debug("Connection failed with error: \(error).")
                             fail(with: error)
-                        } else {
-                            self?.logger.debug("Received a normal completion (no error). This is unexpected in this scenario.")
                         }
                     },
-                    receiveValue: { [weak self] status in
-                        self?.logger.debug("Received value (status): \(status)")
+                    receiveValue: { status in
+                        self.logger.debug("Received value (status): \(status)")
                         switch status {
                         case .connected:
-                            self?.logger.debug("Connection succeeded.")
+                            self.logger.debug("Connection succeeded.")
                             succeed()
 
                         case .disconnected:
                             attempts += 1
-                            self?.logger.debug("Disconnection observed, incrementing attempts to \(attempts)")
+                            self.logger.debug("Disconnection observed, incrementing attempts to \(attempts)")
                             if attempts >= maxAttempts {
                                 handleMaxAttemptsReached()
                             }
@@ -406,10 +403,7 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
                 )
 
             if let c = cancellable {
-                logger.debug("Inserting cancellable into publishers for retention.")
                 self.publishers.insert(c)
-            } else {
-                logger.error("Failed to create a cancellable subscription.")
             }
         }
     }
