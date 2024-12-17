@@ -3,7 +3,7 @@
 import PackageDescription
 
 // Determine if Yttrium should be used in debug (local) mode
-let yttriumDebug = true
+let yttriumDebug = false
 
 
 
@@ -28,7 +28,7 @@ func buildYttriumWrapperTarget() -> Target {
             path: "Sources/YttriumWrapper"
         )
     } else {
-        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.2.22")))
+        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.4.7")))
         return .target(
             name: "YttriumWrapper",
             dependencies: [.product(name: "Yttrium", package: "yttrium")],

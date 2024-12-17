@@ -145,8 +145,8 @@ final class CATransactionPresenter: ObservableObject {
         print("   Max Priority Fee: \(estimates.maxPriorityFeePerGas)")
         print("   Max Fee: \(estimates.maxFeePerGas)")
 
-        let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas, radix: 10)!)
-        let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)!)
+        let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas.stripHexPrefix(), radix: 16)!)
+        let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas.stripHexPrefix(), radix: 16)!)
         let from = try EthereumAddress(hex: tx.from, eip55: false)
 
         print("🔢 Fetching nonce...")

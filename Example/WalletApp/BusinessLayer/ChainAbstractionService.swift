@@ -40,8 +40,8 @@ class ChainAbstractionService {
         for tx in routeResponseAvailable.transactions {
             do {
                 let estimates = try await WalletKit.instance.estimateFees(chainId: tx.chainId)
-                let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas, radix: 10)! * 2)
-                let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas, radix: 10)! * 2)
+                let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas.stripHexPrefix(), radix: 16)! * 2)
+                let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas.stripHexPrefix(), radix: 16)! * 2)
 
                 print(maxFeePerGas)
                 print(maxPriorityFeePerGas)
@@ -69,9 +69,9 @@ class ChainAbstractionService {
     }
 
     private func getRpcUrl(chainId: String) -> String {
-//                    let projectId = Networking.projectId
-//
-//        return "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
+                    let projectId = Networking.projectId
+
+        return "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
 
         switch chainId {
         case "eip155:10":
