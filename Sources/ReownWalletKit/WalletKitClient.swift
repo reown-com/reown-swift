@@ -351,7 +351,7 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func route(transaction: InitialTransaction) async throws -> PrepareResponse {
+    public func prepare(transaction: InitialTransaction) async throws -> PrepareResponse {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
@@ -369,7 +369,7 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func getRouteUiFieds(routeResponse: RouteResponseAvailable, currency: Currency) async throws -> UiFields {
+    public func getUiFields(routeResponse: RouteResponseAvailable, currency: Currency) async throws -> UiFields {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
@@ -385,12 +385,12 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
+    public func waitForSuccessWithTimeout(orchestrationId: String, checkIn: UInt64, timeout: UInt64 = 180) async throws -> StatusResponseCompleted {
         guard let chainClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
 
-        return try await chainClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: 120)
+        return try await chainClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: timeout)
     }
 }
 

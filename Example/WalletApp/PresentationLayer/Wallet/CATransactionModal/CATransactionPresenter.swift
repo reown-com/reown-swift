@@ -88,36 +88,15 @@ final class CATransactionPresenter: ObservableObject {
             let orchestrationId = routeResponseAvailable.orchestrationId
             print("📋 Orchestration ID: \(orchestrationId)")
 
-            print("🔄 Starting status check loop...")
-            var status: StatusResponse = try await WalletKit.instance.status(orchestrationId: orchestrationId)
+            print("🔄 Starting status checking...")
 
-            let x = try await WalletKit.instance.waitForSuccess(orchestrationId: orchestrationId, checkIn: 5)
-//            loop: while true {
-//                switch status {
-//                case .pending(let pending):
-//                    print("⏳ Transaction pending. Waiting for \(pending.checkIn) seconds...")
-//                    let delay = try UInt64(pending.checkIn) * 1_000_000
-//                    try await Task.sleep(nanoseconds: delay)
-//                    print("🔍 Checking status again...")
-//                    status = try await WalletKit.instance.status(orchestrationId: orchestrationId)
-//
-//                case .completed(let completed):
-//                    print("✅ Transaction completed successfully!")
-//                    print("📊 Completion details: \(completed)")
-//                    AlertPresenter.present(message: "Routing transactions completed", type: .success)
-//                    break loop
-//
-//                case .error(let error):
-//                    print("❌ Transaction failed with error!")
-//                    print("💥 Error details: \(error)")
-//                    AlertPresenter.present(message: "Routing failed with error: \(error)", type: .error)
-//                    ActivityIndicatorManager.shared.stop()
-//                    return
-//                }
-//            }
+            let completed = try await WalletKit.instance.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: 5, timeout: 180)
+            print("✅ Routing Transactions completed successfully!")
+            print("📊 Completion details: \(completed)")
+            AlertPresenter.present(message: "Routing transactions completed", type: .success)
 
             print("🚀 Initiating initial transaction...")
-            try await sendInitialTransaction()
+            try await sendInitialTransaction(initialTransaction: routeResponseAvailable.initialTransaction)
             ActivityIndicatorManager.shared.stop()
             print("✅ Initial transaction process completed successfully")
             AlertPresenter.present(message: "Initial transaction sent", type: .success)
@@ -131,7 +110,7 @@ final class CATransactionPresenter: ObservableObject {
         }
     }
 
-    private func sendInitialTransaction() async throws {
+    private func sendInitialTransaction(initialTransaction: Transaction) async throws {
 
         print("📝 Preparing initial transaction...")
         let tx = try! sessionRequest.params.get([Tx].self)[0]
@@ -160,7 +139,7 @@ final class CATransactionPresenter: ObservableObject {
             gasPrice: nil,
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: EthereumQuantity(quantity: 1023618),
+            gasLimit: EthereumQuantity(quantity: BigUInt(initialTransaction.gasLimit.stripHexPrefix(), radix: 16)!),
             from: from,
             to: try EthereumAddress(hex: tx.to, eip55: false),
             value: EthereumQuantity(quantity: 0.gwei),
@@ -321,9 +300,8 @@ final class CATransactionPresenter: ObservableObject {
 
         let tx = try! sessionRequest.params.get([Tx].self)[0]
 
-        let estimates = try await WalletKit.instance.estimateFees(chainId: chainId)
 
-        let routUiFields = try await WalletKit.instance.getRouteUiFieds(routeResponse: routeResponseAvailable, currency: Currency.usd)
+        let routUiFields = try await WalletKit.instance.getUiFields(routeResponse: routeResponseAvailable, currency: Currency.usd)
 
         print(routUiFields.localTotal)
 

@@ -107,7 +107,7 @@ extension MainPresenter {
 
 
             ActivityIndicatorManager.shared.start()
-            let routeResponseSuccess = try await WalletKit.instance.route(transaction: transaction)
+            let routeResponseSuccess = try await WalletKit.instance.prepare(transaction: transaction)
 
             await MainActor.run {
                 switch routeResponseSuccess {
