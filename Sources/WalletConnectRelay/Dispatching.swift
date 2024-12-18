@@ -58,6 +58,7 @@ final class Dispatcher: NSObject, Dispatching {
     }
 
     private func send(_ string: String, completion: @escaping (Error?) -> Void) {
+        logger.debug("sending a socket frame")
         socket.write(string: string) {
             completion(nil)
         }
@@ -66,8 +67,8 @@ final class Dispatcher: NSObject, Dispatching {
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
         logger.debug("will try to send a socket frame")
         // Check if the socket is already connected and ready to send
-        if socket.isConnected && networkMonitor.isConnected {
-            logger.debug("sending a socket frame")
+        if socket.isConnected {
+            logger.debug("socket connected, will attempt to send a socket frame")
             send(string, completion: completion)
             return
         }
