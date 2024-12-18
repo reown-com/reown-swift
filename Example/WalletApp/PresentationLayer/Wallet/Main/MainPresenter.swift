@@ -97,19 +97,13 @@ extension MainPresenter {
         do {
             let tx = try request.params.get([Tx].self)[0]
 
-            let transaction = InitTransaction(
+            let transaction = InitialTransaction(
+                chainId: request.chainId.absoluteString,
                 from: tx.from,
                 to: tx.to,
                 value: "0",
-                gas: "0",
-                gasPrice: "0",
-                data: tx.data,
-                nonce: "0",
-                maxFeePerGas: "0",
-                maxPriorityFeePerGas: "0",
-                chainId: request.chainId.absoluteString
+                input: tx.data
             )
-
 
 
             ActivityIndicatorManager.shared.start()
@@ -126,7 +120,7 @@ extension MainPresenter {
                         router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
                     }
                 case .error(let routeResponseError):
-                    AlertPresenter.present(message: "Route response error", type: .success)
+                    AlertPresenter.present(message: "Route response error: \(routeResponseError)", type: .success)
                     Task {
                         try await WalletKit.instance.respond(
                             topic: request.topic,

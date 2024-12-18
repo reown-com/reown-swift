@@ -232,11 +232,11 @@ extension EthereumTransaction {
             gasPrice: nil, // Not needed for EIP1559
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: EthereumQuantity(quantity: BigUInt(routingTransaction.gas.stripHexPrefix(), radix: 16)!),
+            gasLimit: EthereumQuantity(quantity: BigUInt(routingTransaction.gasLimit.stripHexPrefix(), radix: 16)!),
             from: try EthereumAddress(hex: routingTransaction.from, eip55: false),
             to: try EthereumAddress(hex: routingTransaction.to, eip55: false),
             value: EthereumQuantity(quantity: 0.gwei),
-            data: EthereumData(Array(hex: routingTransaction.data)),
+            data: EthereumData(Array(hex: routingTransaction.input)),
             accessList: [:], // Empty access list for basic transactions
             transactionType: .eip1559 // Specify EIP1559 transaction type
         )

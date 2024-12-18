@@ -275,6 +275,7 @@ public class WalletKitClient {
 
 
     // MARK: Yttrium
+    @available(*, message: "This method is experimental. Use with caution.")
     public func prepareSendTransactions(_ transactions: [FfiTransaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
@@ -283,6 +284,7 @@ public class WalletKitClient {
         return try await client.prepareSendTransactions(transactions: transactions)
     }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: String, ownerAccount: Account) async throws -> String {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
@@ -291,6 +293,7 @@ public class WalletKitClient {
         return try await client.doSendTransactions(signatures: signatures, doSendTransactionParams: doSendTransactionParams)
     }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func getSmartAccount(ownerAccount: Account) async throws -> Account {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
@@ -302,6 +305,7 @@ public class WalletKitClient {
         return Account(blockchain: ownerAccount.blockchain, address: address)!
     }
 
+    @available(*, message: "This method is experimental. Use with caution.")
     public func waitForUserOperationReceipt(userOperationHash: String, ownerAccount: Account) async throws -> String {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
@@ -342,17 +346,17 @@ public class WalletKitClient {
             throw Errors.chainAbstractionNotEnabled
         }
 
-        
+
         return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func route(transaction: InitTransaction) async throws -> RouteResponse {
+    public func route(transaction: InitialTransaction) async throws -> PrepareResponse {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
 
-        return try await chainAbstractionClient.route(transaction: transaction)
+        return try await chainAbstractionClient.prepare(initialTransaction: transaction)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
@@ -365,11 +369,11 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func getRouteUiFieds(routeResponse: RouteResponseAvailable, initialTransaction: Transaction, currency: Currency) async throws -> RouteUiFields {
+    public func getRouteUiFieds(routeResponse: RouteResponseAvailable, currency: Currency) async throws -> UiFields {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
-        return try await chainAbstractionClient.getRouteUiFields(routeResponse: routeResponse, initialTransaction: initialTransaction, currency: currency)
+        return try await chainAbstractionClient.getUiFields(routeResponse: routeResponse, currency: currency)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
@@ -379,13 +383,15 @@ public class WalletKitClient {
         }
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
     }
-//    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
-//        guard let chainClient = chainAbstractionClient else {
-//            throw Errors.chainAbstractionNotEnabled
-//        }
-//
-//        return try await chainClient.waitForSuccess(orchestrationId: orchestrationId, checkIn: checkIn)
-//    }
+
+    @available(*, message: "This method is experimental. Use with caution.")
+    public func waitForSuccess(orchestrationId: String, checkIn: UInt64) async throws -> StatusResponseCompleted {
+        guard let chainClient = chainAbstractionClient else {
+            throw Errors.chainAbstractionNotEnabled
+        }
+
+        return try await chainClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: 120)
+    }
 }
 
 

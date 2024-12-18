@@ -32,7 +32,7 @@ final class CATransactionPresenter: ObservableObject {
     }
     let router: CATransactionRouter
     let importAccount: ImportAccount
-    var routeUiFields: RouteUiFields? = nil
+    var routeUiFields: UiFields? = nil
     var chainId: String {
         sessionRequest.chainId.absoluteString
     }
@@ -91,29 +91,30 @@ final class CATransactionPresenter: ObservableObject {
             print("🔄 Starting status check loop...")
             var status: StatusResponse = try await WalletKit.instance.status(orchestrationId: orchestrationId)
 
-            loop: while true {
-                switch status {
-                case .pending(let pending):
-                    print("⏳ Transaction pending. Waiting for \(pending.checkIn) seconds...")
-                    let delay = try UInt64(pending.checkIn) * 1_000_000
-                    try await Task.sleep(nanoseconds: delay)
-                    print("🔍 Checking status again...")
-                    status = try await WalletKit.instance.status(orchestrationId: orchestrationId)
-
-                case .completed(let completed):
-                    print("✅ Transaction completed successfully!")
-                    print("📊 Completion details: \(completed)")
-                    AlertPresenter.present(message: "Routing transactions completed", type: .success)
-                    break loop
-
-                case .error(let error):
-                    print("❌ Transaction failed with error!")
-                    print("💥 Error details: \(error)")
-                    AlertPresenter.present(message: "Routing failed with error: \(error)", type: .error)
-                    ActivityIndicatorManager.shared.stop()
-                    return
-                }
-            }
+            let x = try await WalletKit.instance.waitForSuccess(orchestrationId: orchestrationId, checkIn: 5)
+//            loop: while true {
+//                switch status {
+//                case .pending(let pending):
+//                    print("⏳ Transaction pending. Waiting for \(pending.checkIn) seconds...")
+//                    let delay = try UInt64(pending.checkIn) * 1_000_000
+//                    try await Task.sleep(nanoseconds: delay)
+//                    print("🔍 Checking status again...")
+//                    status = try await WalletKit.instance.status(orchestrationId: orchestrationId)
+//
+//                case .completed(let completed):
+//                    print("✅ Transaction completed successfully!")
+//                    print("📊 Completion details: \(completed)")
+//                    AlertPresenter.present(message: "Routing transactions completed", type: .success)
+//                    break loop
+//
+//                case .error(let error):
+//                    print("❌ Transaction failed with error!")
+//                    print("💥 Error details: \(error)")
+//                    AlertPresenter.present(message: "Routing failed with error: \(error)", type: .error)
+//                    ActivityIndicatorManager.shared.stop()
+//                    return
+//                }
+//            }
 
             print("🚀 Initiating initial transaction...")
             try await sendInitialTransaction()
@@ -322,19 +323,7 @@ final class CATransactionPresenter: ObservableObject {
 
         let estimates = try await WalletKit.instance.estimateFees(chainId: chainId)
 
-        let initTx = Transaction(
-            from: tx.from,
-            to: tx.to,
-            value: "0",
-            gas: "0",
-            data: tx.data,
-            nonce: "0x",
-            chainId: sessionRequest.chainId.absoluteString,
-            gasPrice: "0",
-            maxFeePerGas: estimates.maxFeePerGas,
-            maxPriorityFeePerGas: estimates.maxPriorityFeePerGas
-        )
-        let routUiFields = try await WalletKit.instance.getRouteUiFieds(routeResponse: routeResponseAvailable, initialTransaction: initTx, currency: Currency.usd)
+        let routUiFields = try await WalletKit.instance.getRouteUiFieds(routeResponse: routeResponseAvailable, currency: Currency.usd)
 
         print(routUiFields.localTotal)
 
