@@ -88,6 +88,8 @@ else
     update_xctestrun --key "CAST_HOST" --value "$CAST_HOST" --target "$XCTESTRUN"
     update_xctestrun --key "EXPLORER_HOST" --value "$EXPLORER_HOST" --target "$XCTESTRUN"
     update_xctestrun --key "JS_CLIENT_API_HOST" --value "$JS_CLIENT_API_HOST" --target "$XCTESTRUN"
+    update_xctestrun --key "BUNDLE_ID_NOT_PRESENT_PROJECT_ID" --value "$BUNDLE_ID_NOT_PRESENT_PROJECT_ID" --target "$XCTESTRUN"
+    update_xctestrun --key "BUNDLE_ID_PRESENT_PROJECT_ID" --value "$BUNDLE_ID_PRESENT_PROJECT_ID" --target "$XCTESTRUN"
 
     (
     set -x

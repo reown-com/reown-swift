@@ -32,24 +32,11 @@ final class RelayClientEndToEndTests: XCTestCase {
     private var relayA: RelayClient!
     private var relayB: RelayClient!
 
-    func makeRelayClient(prefix: String) -> RelayClient {
+    func makeRelayClient(prefix: String, projectId: String = InputConfig.projectId) -> RelayClient {
         let keyValueStorage = RuntimeKeyValueStorage()
         let logger = ConsoleLogger(prefix: prefix, loggingLevel: .debug)
-        let clientIdStorage = ClientIdStorage(defaults: keyValueStorage, keychain: KeychainStorageMock(), logger: logger)
-        let socketAuthenticator = ClientIdAuthenticator(
-            clientIdStorage: clientIdStorage,
-            logger: ConsoleLoggerMock()
-        )
-        let urlFactory = RelayUrlFactory(
-            relayHost: InputConfig.relayHost,
-            projectId: InputConfig.projectId
-        )
-        let socket = WebSocket(url: urlFactory.create())
-        let webSocketFactory = WebSocketFactoryMock(webSocket: socket)
         let networkMonitor = NetworkMonitor()
 
-        let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
-        let socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: SubscriptionsTracker(logger: logger), logger: logger, socketStatusProvider: socketStatusProvider, clientIdAuthenticator: socketAuthenticator)
         
         let keychain = KeychainStorageMock()
         let relayClient = RelayClientFactory.create(
@@ -58,7 +45,7 @@ final class RelayClientEndToEndTests: XCTestCase {
             keyValueStorage: keyValueStorage,
             keychainStorage: keychain,
             socketFactory: DefaultSocketFactory(),
-            socketConnectionType: .manual, 
+            socketConnectionType: .automatic,
             networkMonitor: networkMonitor,
             logger: logger
         )
@@ -74,38 +61,27 @@ final class RelayClientEndToEndTests: XCTestCase {
         super.tearDown()
     }
 
-//    func testSubscribe() {
-//        relayA = makeRelayClient(prefix: "")
-//
-//        do {
-//            try relayA.connect()
-//        } catch {
-//            XCTFail("Failed to connect: \(error)")
-//        }
-//
-//        let subscribeExpectation = expectation(description: "subscribe call succeeds")
-//        subscribeExpectation.assertForOverFulfill = true
-//        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
-//            guard let self = self else {return}
-//            if status == .connected {
-//                Task(priority: .high) {  try await self.relayA.subscribe(topic: "ecb78f2df880c43d3418ddbf871092b847801932e21765b250cc50b9e96a9131") }
-//                subscribeExpectation.fulfill()
-//            }
-//        }.store(in: &publishers)
-//
-//        wait(for: [subscribeExpectation], timeout: InputConfig.defaultTimeout)
-//    }
+    // test_bundleId_present - configured in the cloud to include bundleId for whitelisted apps
+    func testConnectProjectBundleIdPresent() async throws {
+        let randomTopic = String.randomTopic()
+        relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdPresentProjectId)
+        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
+        sleep(1)
+    }
 
-    func testEndToEndPayload() {
+    // test_bundleId_not_present - configured in the cloud to not include bundleId for whitelisted apps
+    func testConnectProjectBundleIdNotPresent() async throws{
+        let randomTopic = String.randomTopic()
+        relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdNotPresentProjectId)
+
+        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
+        sleep(1)
+    }
+
+    func testEndToEndPayload() async throws {
         relayA = makeRelayClient(prefix: "⚽️ A ")
         relayB = makeRelayClient(prefix: "🏀 B ")
 
-        do {
-            try relayA.connect()
-            try relayB.connect()
-        } catch {
-            XCTFail("Failed to connect: \(error)")
-        }
         let randomTopic = String.randomTopic()
         let payloadA = "A"
         let payloadB = "B"
@@ -120,8 +96,7 @@ final class RelayClientEndToEndTests: XCTestCase {
         expectationA.assertForOverFulfill = false
         expectationB.assertForOverFulfill = false
 
-        relayA.messagePublisher.sink { [weak self] topic, payload, _, _ in
-            guard let self = self else { return }
+        relayA.messagePublisher.sink { topic, payload, _, _ in
             (subscriptionATopic, subscriptionAPayload) = (topic, payload)
             expectationA.fulfill()
         }.store(in: &publishers)
@@ -136,22 +111,11 @@ final class RelayClientEndToEndTests: XCTestCase {
             expectationB.fulfill()
         }.store(in: &publishers)
 
-        relayA.socketConnectionStatusPublisher.sink { [weak self] status in
-            guard let self = self else { return }
-            guard status == .connected else { return }
-            Task(priority: .high) {
-                try await self.relayA.subscribe(topic: randomTopic)
-                try await self.relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60)
-            }
-        }.store(in: &publishers)
+        try await self.relayA.subscribe(topic: randomTopic)
+        try await self.relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60)
 
-        relayB.socketConnectionStatusPublisher.sink { [weak self] status in
-            guard let self = self else { return }
-            guard status == .connected else { return }
-            Task(priority: .high) {
-                try await self.relayB.subscribe(topic: randomTopic)
-            }
-        }.store(in: &publishers)
+        try await self.relayB.subscribe(topic: randomTopic)
+
 
         wait(for: [expectationA, expectationB], timeout: InputConfig.defaultTimeout)
 
