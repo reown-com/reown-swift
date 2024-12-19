@@ -2,7 +2,6 @@ import UIKit
 import Combine
 import WalletConnectNetworking
 import ReownWalletKit
-import Yttrium
 
 final class SettingsPresenter: ObservableObject {
 
@@ -11,7 +10,6 @@ final class SettingsPresenter: ObservableObject {
     private let router: SettingsRouter
     private let accountStorage: AccountStorage
     private var disposeBag = Set<AnyCancellable>()
-    @Published var smartAccount: String = "Loading..."
     @Published var smartAccountSafe: String = "Loading..."
 
     init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount) {
@@ -40,11 +38,15 @@ final class SettingsPresenter: ObservableObject {
     }
 
     func enableSmartAccount(_ enable: Bool) {
-        SmartAccountManager.shared.isSmartAccountEnabled = enable
+        WalletKitEnabler.shared.isSmartAccountEnabled = enable
+    }
+
+    func enableChainAbstraction(_ enable: Bool) {
+        WalletKitEnabler.shared.isChainAbstractionEnabled = enable
     }
 
     private func getSmartAccountSafe() async throws -> String {
-        try await SmartAccountSafe.instance.getClient().getAccount().absoluteString
+        try await WalletKit.instance.getSmartAccount(ownerAccount: importAccount.account).absoluteString
     }
 
     var account: String {
@@ -72,23 +74,25 @@ final class SettingsPresenter: ObservableObject {
     }
 
     func sendTransaction() async throws -> String {
-        let client = await SmartAccountSafe.instance.getClient()
 
-        let prepareSendTransactions = try await client.prepareSendTransactions([.init(
-            to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-            value: "0",
-            data: "0x68656c6c6f"
-        )])
+        // hardcoded sepolia
+        let ownerAccount = try! Account(blockchain: Blockchain("eip155:11155111")!, accountAddress: importAccount.account.address)
 
-        let owner = client.ownerAddress
+        let prepareSendTransactions = try await WalletKit.instance.prepareSendTransactions(
+            [.init(
+                to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+                value: "0",
+                data: "0x68656c6c6f"
+            )],
+            ownerAccount: ownerAccount)
 
         let signer = ETHSigner(importAccount: importAccount)
 
         let signature = try signer.signHash(prepareSendTransactions.hash)
 
-        let ownerSignature = OwnerSignature(owner: owner, signature: signature)
+        let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
 
-        return try await client.doSendTransaction(signatures: [ownerSignature], params: prepareSendTransactions.doSendTransactionParams)
+        return try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], doSendTransactionParams: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
     }
 
     func logoutPressed() async throws {

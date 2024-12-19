@@ -1,5 +1,6 @@
 import UIKit
 import Combine
+import Web3
 
 import ReownWalletKit
 
@@ -11,7 +12,7 @@ final class SessionRequestPresenter: ObservableObject {
     let sessionRequest: Request
     let session: Session?
     let validationStatus: VerifyContext.ValidationStatus?
-    
+
     var message: String {
         guard let messages = try? sessionRequest.params.get([String].self),
               let firstMessage = messages.first else {

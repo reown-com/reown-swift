@@ -60,20 +60,30 @@ public struct MessageVerifier {
                        address: String,
                        chainId: String
     ) async throws {
+        try await verifySignature(signature, message: message, address: address, chainId: chainId)
+    }
 
+    // Private helper method containing the common logic
+    private func verifySignature(_ signatureString: String,
+                                 message: String,
+                                 address: String,
+                                 chainId: String
+    ) async throws {
         guard let messageData = message.data(using: .utf8) else {
             throw Errors.utf8EncodingFailed
         }
-        let signatureData = Data(hex: signature)
 
+        let signatureData = Data(hex: signatureString)
         let prefixedMessage = messageData.prefixed
 
+        // Try eip191 verification first for better performance
         do {
             try await eip191Verifier.verify(
                 signature: signatureData,
                 message: prefixedMessage,
                 address: address
             )
+            return  // If 191 verification succeeds, we’re done
         } catch {
             // If eip191 verification fails, try eip1271 verification
             try await eip1271Verifier.verify(
