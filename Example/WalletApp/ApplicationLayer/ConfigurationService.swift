@@ -32,7 +32,7 @@ final class ConfigurationService {
         )
 
         Notify.instance.setLogging(level: .off)
-        Sign.instance.setLogging(level: .off)
+        Sign.instance.setLogging(level: .debug)
         Events.instance.setLogging(level: .off)
 
         if let clientId = try? Networking.interactor.getClientId() {

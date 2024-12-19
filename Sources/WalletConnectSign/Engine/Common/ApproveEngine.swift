@@ -31,6 +31,7 @@ final class ApproveEngine {
     private let rpcHistory: RPCHistory
     private let authRequestSubscribersTracking: AuthRequestSubscribersTracking
     private let eventsClient: EventsClientProtocol
+    private let approveEngineLoggingHelper: ApproveEngineLoggingHelper
 
     private var publishers = Set<AnyCancellable>()
 
@@ -64,6 +65,7 @@ final class ApproveEngine {
         self.rpcHistory = rpcHistory
         self.authRequestSubscribersTracking = authRequestSubscribersTracking
         self.eventsClient = eventsClient
+        self.approveEngineLoggingHelper = ApproveEngineLoggingHelper(logger: logger)
 
         setupRequestSubscriptions()
         setupResponseSubscriptions()
@@ -73,7 +75,10 @@ final class ApproveEngine {
 
     func approveProposal(proposerPubKey: String, validating sessionNamespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil) async throws -> Session {
         eventsClient.startTrace(topic: "")
-        logger.debug("Approving session proposal")
+        logger.debug("Approving session proposal...")
+
+        approveEngineLoggingHelper.logSessionNamespaces(sessionNamespaces)
+
         eventsClient.saveTraceEvent(SessionApproveExecutionTraceEvents.approvingSessionProposal)
 
         guard !sessionNamespaces.isEmpty else {
@@ -394,6 +399,12 @@ private extension ApproveEngine {
     func handleSessionProposeRequest(payload: RequestSubscriptionPayload<SessionType.ProposeParams>) {
         logger.debug("Received Session Proposal")
         let proposal = payload.request
+
+        approveEngineLoggingHelper.logProposalNamespaces(title: "Required Namespaces", proposal.requiredNamespaces)
+        if let optionalNamespaces = proposal.optionalNamespaces {
+            approveEngineLoggingHelper.logProposalNamespaces(title: "Optional Namespaces", optionalNamespaces)
+        }
+
         do { try Namespace.validate(proposal.requiredNamespaces) } catch {
             return respondError(payload: payload, reason: .invalidUpdateRequest, protocolMethod: SessionProposeProtocolMethod.responseAutoReject())
         }
