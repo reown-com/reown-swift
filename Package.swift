@@ -13,26 +13,28 @@ var dependencies: [Package.Dependency] = [
     .package(name: "CoinbaseWalletSDK", url: "https://github.com/MobileWalletProtocol/wallet-mobile-sdk", .upToNextMinor(from: "1.0.0")),
 //    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
 ]
-//var yttriumTarget: Target!
-//// Conditionally add Yttrium dependency
-//if yttriumDebug {
-//    var yttriumSwiftSettings: [SwiftSetting] = []
-//    dependencies.append(.package(path: "../yttrium/crates/ffi/YttriumCore"))
-//    yttriumSwiftSettings.append(.define("YTTRIUM_DEBUG"))
-//    yttriumTarget = .target(
-//        name: "YttriumWrapper",
-//        dependencies: [.product(name: "YttriumCore", package: "YttriumCore")],
-//        path: "Sources/YttriumWrapper",
-//        swiftSettings: yttriumSwiftSettings
-//    )
-//} else {
-//    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .upToNextMinor(from: "0.1.0")))
-//    yttriumTarget = .target(
-//        name: "YttriumWrapper",
-//        dependencies: [.product(name: "Yttrium", package: "yttrium")],
-//        path: "Sources/YttriumWrapper"
-//    )
-//}
+
+
+let yttriumTarget = buildYttriumWrapperTarget()
+
+func buildYttriumWrapperTarget() -> Target {
+    // Conditionally add Yttrium dependency
+    if yttriumDebug {
+        dependencies.append(.package(path: "../yttrium"))
+        return .target(
+            name: "YttriumWrapper",
+            dependencies: [.product(name: "Yttrium", package: "yttrium")],
+            path: "Sources/YttriumWrapper"
+        )
+    } else {
+        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.4.8")))
+        return .target(
+            name: "YttriumWrapper",
+            dependencies: [.product(name: "Yttrium", package: "yttrium")],
+            path: "Sources/YttriumWrapper"
+        )
+    }
+}
 
 let package = Package(
     name: "reown",
@@ -75,20 +77,20 @@ let package = Package(
         .library(
             name: "ReownAppKitUI",
             targets: ["ReownAppKitUI"]),
-//        .library(
-//            name: "YttriumWrapper",
-//            targets: ["YttriumWrapper"])
+        .library(
+            name: "YttriumWrapper",
+            targets: ["YttriumWrapper"])
     ],
     dependencies: dependencies,
     targets: [
         .target(
             name: "WalletConnectSign",
-            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events"],
+            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events", "YttriumWrapper"],
             path: "Sources/WalletConnectSign",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "ReownWalletKit",
-            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
+            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify", "YttriumWrapper"],
             path: "Sources/ReownWalletKit",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
@@ -186,7 +188,7 @@ let package = Package(
             name: "ReownAppKitBackport",
             path: "Sources/ReownAppKitBackport"
         ),
-//        yttriumTarget,
+        yttriumTarget,
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),

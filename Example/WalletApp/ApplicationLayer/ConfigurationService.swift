@@ -14,7 +14,7 @@ final class ConfigurationService {
             projectId: InputConfig.projectId,
             socketFactory: DefaultSocketFactory()
         )
-        Networking.instance.setLogging(level: .debug)
+        Networking.instance.setLogging(level: .off)
 
         let metadata = AppMetadata(
             name: "Example Wallet",
@@ -24,16 +24,16 @@ final class ConfigurationService {
             redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
         )
 
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
         Notify.configure(
             environment: BuildConfiguration.shared.apnsEnvironment,
             crypto: DefaultCryptoProvider()
         )
 
-        Notify.instance.setLogging(level: .debug)
+        Notify.instance.setLogging(level: .off)
         Sign.instance.setLogging(level: .debug)
-        Events.instance.setLogging(level: .debug)
+        Events.instance.setLogging(level: .off)
 
         if let clientId = try? Networking.interactor.getClientId() {
             LoggingService.instance.setUpUser(account: importAccount.account.absoluteString, clientId: clientId)

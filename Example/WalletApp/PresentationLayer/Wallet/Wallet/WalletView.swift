@@ -72,7 +72,7 @@ struct WalletView: View {
                         
                         HStack(spacing: 20) {
                             Spacer()
-                            
+
                             Button {
                                 presenter.onPasteUri()
                             } label: {

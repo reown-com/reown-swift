@@ -4,7 +4,7 @@ import Combine
 import ReownWalletKit
 
 final class WalletPresenter: ObservableObject {
-    enum Errors: Error {
+    enum Errors: LocalizedError {
         case invalidUri(uri: String)
     }
     
@@ -89,7 +89,6 @@ final class WalletPresenter: ObservableObject {
             self?.router.dismiss()
         }
     }
-
     
     func removeSession(at indexSet: IndexSet) async {
         if let index = indexSet.first {
@@ -170,7 +169,7 @@ extension WalletPresenter: SceneViewModel {
 }
 
 // MARK: - LocalizedError
-extension WalletPresenter.Errors: LocalizedError {
+extension WalletPresenter.Errors {
     var errorDescription: String? {
         switch self {
         case .invalidUri(let uri):  return "URI invalid format\n\(uri)"
