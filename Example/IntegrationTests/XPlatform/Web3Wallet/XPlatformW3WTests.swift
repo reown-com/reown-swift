@@ -66,7 +66,8 @@ final class XPlatformW3WTests: XCTestCase {
             signClient: signClient,
             pairingClient: pairingClient,
             pushClient: PushClientMock(),
-            config: WalletKit.Config(crypto: DefaultCryptoProvider(), pimlicoApiKey: nil))
+            config: WalletKit.Config(crypto: DefaultCryptoProvider(), pimlicoApiKey: nil),
+            projectId: InputConfig.projectId)
     }
 
     func testSessionSettle() async throws {
