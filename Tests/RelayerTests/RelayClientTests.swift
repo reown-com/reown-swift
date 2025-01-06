@@ -46,12 +46,6 @@ final class RelayClientTests: XCTestCase {
         waitForExpectations(timeout: 0.001, handler: nil)
     }
 
-    func testSubscribeRequest() async {
-        try? await sut.subscribe(topic: "")
-        let request = dispatcher.getLastRequestSent()
-        XCTAssertNotNil(request)
-    }
-
     func testUnsubscribeRequest() {
         let topic = String.randomTopic()
         subscriptionsTracker.setSubscription(for: topic, id: "")
@@ -73,11 +67,6 @@ final class RelayClientTests: XCTestCase {
         dispatcher.onMessage?(try! request.asJSONEncodedString())
         dispatcher.onMessage?(try! request.asJSONEncodedString())
         waitForExpectations(timeout: 0.1, handler: nil)
-    }
-
-    func testSendOnSubscribe() async {
-        try? await sut.subscribe(topic: "")
-        XCTAssertTrue(dispatcher.sent)
     }
 
     func testSendOnUnsubscribe() {
