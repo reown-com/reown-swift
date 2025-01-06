@@ -79,14 +79,14 @@ final class SignClientTests: XCTestCase {
     }
 
     override func setUp() async throws {
-        (dappPairingClient, dapp, dappKeyValueStorage, dappRelayClient) = Self.makeClients(name: "🧪Dapp")
-        (walletPairingClient, wallet, _, walletRelayClient) = Self.makeClients(name: "🧪Wallet", linkModeUniversalLink: walletLinkModeUniversalLink)
+        (dappPairingClient, dapp, dappKeyValueStorage, dappRelayClient) = Self.makeClients(name: "🍏Dapp")
+        (walletPairingClient, wallet, _, walletRelayClient) = Self.makeClients(name: "🍎Wallet", linkModeUniversalLink: walletLinkModeUniversalLink)
     }
 
     func setUpDappForLinkMode() async throws {
         try await tearDown()
-        (dappPairingClient, dapp, dappKeyValueStorage, dappRelayClient) = Self.makeClients(name: "🧪Dapp", supportLinkMode: true)
-        (walletPairingClient, wallet, _, walletRelayClient) = Self.makeClients(name: "🧪Wallet", linkModeUniversalLink: walletLinkModeUniversalLink, supportLinkMode: true)
+        (dappPairingClient, dapp, dappKeyValueStorage, dappRelayClient) = Self.makeClients(name: "🍏Dapp", supportLinkMode: true)
+        (walletPairingClient, wallet, _, walletRelayClient) = Self.makeClients(name: "🍎Wallet", linkModeUniversalLink: walletLinkModeUniversalLink, supportLinkMode: true)
     }
 
     override func tearDown() {
