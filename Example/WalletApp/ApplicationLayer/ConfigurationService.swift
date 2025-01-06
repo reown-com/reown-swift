@@ -14,7 +14,7 @@ final class ConfigurationService {
             projectId: InputConfig.projectId,
             socketFactory: DefaultSocketFactory()
         )
-        Networking.instance.setLogging(level: .off)
+        Networking.instance.setLogging(level: .debug)
 
         let metadata = AppMetadata(
             name: "Example Wallet",
