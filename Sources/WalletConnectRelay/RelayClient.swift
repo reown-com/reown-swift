@@ -203,8 +203,8 @@ public final class RelayClient {
                 .filter { $0.0 == requestId }
                 // Convert Never to RelayError so we can throw on timeout
                 .setFailureType(to: RelayError.self)
-                // Enforce a 60-second timeout
-                .timeout(.seconds(60), scheduler: concurrentQueue, customError: { .requestTimeout })
+                // Enforce a 30-second timeout
+                .timeout(.seconds(30), scheduler: concurrentQueue, customError: { .requestTimeout })
                 .sink(
                     receiveCompletion: { [unowned self] completion in
                         switch completion {
