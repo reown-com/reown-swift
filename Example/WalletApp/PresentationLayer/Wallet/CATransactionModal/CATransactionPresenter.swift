@@ -22,7 +22,7 @@ final class CATransactionPresenter: ObservableObject {
 
 
     private let sessionRequest: Request
-    private let routeResponseAvailable: RouteResponseAvailable
+    private let routeResponseAvailable: PrepareResponseAvailable
     let chainAbstractionService: ChainAbstractionService!
     var fundingFrom: [FundingMetadata] {
         return routeResponseAvailable.metadata.fundingFrom
@@ -42,7 +42,7 @@ final class CATransactionPresenter: ObservableObject {
     init(
         sessionRequest: Request,
         importAccount: ImportAccount,
-        routeResponseAvailable: RouteResponseAvailable,
+        routeResponseAvailable: PrepareResponseAvailable,
         router: CATransactionRouter
     ) {
         self.sessionRequest = sessionRequest

@@ -276,7 +276,7 @@ public class WalletKitClient {
 
     // MARK: Yttrium
     @available(*, message: "This method is experimental. Use with caution.")
-    public func prepareSendTransactions(_ transactions: [FfiTransaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
+    public func prepareSendTransactions(_ transactions: [Execution], ownerAccount: Account) async throws -> PreparedSendTransaction {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
@@ -285,7 +285,7 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: String, ownerAccount: Account) async throws -> String {
+    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: DoSendTransactionParams, ownerAccount: Account) async throws -> String {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
@@ -369,7 +369,7 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func getUiFields(routeResponse: RouteResponseAvailable, currency: Currency) async throws -> UiFields {
+    public func getUiFields(routeResponse: PrepareResponseAvailable, currency: Currency) async throws -> UiFields {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
