@@ -20,7 +20,7 @@ final class SettingsPresenter: ObservableObject {
         self.importAccount = importAccount
         fetchSmartAccountSafe()
     }
-    
+
     func fetchSmartAccountSafe() {
         Task {
             do {
@@ -39,6 +39,12 @@ final class SettingsPresenter: ObservableObject {
 
     func enableSmartAccount(_ enable: Bool) {
         WalletKitEnabler.shared.isSmartAccountEnabled = enable
+    }
+
+    /// Enables or disables the 7702 Account.
+    /// - Parameter enable: A Boolean value indicating whether to enable the 7702 Account.
+    func enable7702Account(_ enable: Bool) {
+        WalletKitEnabler.shared.is7702AccountEnabled = enable
     }
 
     func enableChainAbstraction(_ enable: Bool) {

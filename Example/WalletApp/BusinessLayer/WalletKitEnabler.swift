@@ -12,11 +12,12 @@ class WalletKitEnabler {
     // Use a private queue for thread-safe access to properties
     private let queue = DispatchQueue(label: "com.smartaccount.manager", attributes: .concurrent)
 
-    // A private backing variable for the thread-safe properties
+    // Private backing variables
     private var _isSmartAccountEnabled: Bool = false
     private var _isChainAbstractionEnabled: Bool = true
+    private var _is7702AccountEnabled: Bool = false
 
-    // Thread-safe access for setting and getting isSmartAccountEnabled
+    // Thread-safe access for isSmartAccountEnabled
     var isSmartAccountEnabled: Bool {
         get {
             return queue.sync {
@@ -26,11 +27,14 @@ class WalletKitEnabler {
         set {
             queue.async(flags: .barrier) {
                 self._isSmartAccountEnabled = newValue
+                if newValue {
+                    self._is7702AccountEnabled = false
+                }
             }
         }
     }
 
-    // Thread-safe access for setting and getting isChainAbstractionEnabled
+    // Thread-safe access for isChainAbstractionEnabled
     var isChainAbstractionEnabled: Bool {
         get {
             return queue.sync {
@@ -40,6 +44,23 @@ class WalletKitEnabler {
         set {
             queue.async(flags: .barrier) {
                 self._isChainAbstractionEnabled = newValue
+            }
+        }
+    }
+
+    // Thread-safe access for is7702AccountEnabled
+    var is7702AccountEnabled: Bool {
+        get {
+            return queue.sync {
+                _is7702AccountEnabled
+            }
+        }
+        set {
+            queue.async(flags: .barrier) {
+                self._is7702AccountEnabled = newValue
+                if newValue {
+                    self._isSmartAccountEnabled = false
+                }
             }
         }
     }
