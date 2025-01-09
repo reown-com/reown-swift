@@ -106,7 +106,7 @@ extension WalletPairService {
 extension WalletPairService.Errors: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .noPendingRequestsForPairing(let topic):   return "No pending requests for pairing, topic: \(topic)"
+        case .noPendingRequestsForPairing(let topic):   return "No pending requests for pairing, topic: \(topic), Please try again with a new connection URI."
         case .networkNotConnected:              return "Pairing failed. You seem to be offline"
         }
     }
