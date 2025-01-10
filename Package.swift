@@ -197,7 +197,7 @@ let package = Package(
             dependencies: ["WalletConnectPairing", "TestingUtils"]),
         .testTarget(
             name: "NotifyTests",
-            dependencies: ["WalletConnectNotify", "TestingUtils"]),
+            dependencies: ["WalletConnectNotify", "TestingUtils", "YttriumWrapper"]),
         .testTarget(
             name: "RelayerTests",
             dependencies: ["WalletConnectRelay", "WalletConnectUtils", "TestingUtils"]),
