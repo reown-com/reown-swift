@@ -160,7 +160,7 @@ final class Signer {
                 var value: String
                 var data: String
             }
-            let params = try request.params.get([Tx].self).map { FfiTransaction(to: $0.to, value: $0.value, data: $0.data)}
+            let params = try request.params.get([Tx].self).map { Execution(to: $0.to, value: $0.value, data: $0.data)}
             let prepareSendTransactions = try await WalletKit.instance.prepareSendTransactions(params, ownerAccount: ownerAccount)
 
             let signer = ETHSigner(importAccount: importAccount)
@@ -179,7 +179,7 @@ final class Signer {
             }
 
             let transactions = calls.map {
-                FfiTransaction(
+                Execution(
                     to: $0.to!,
                     value: $0.value ?? "0",
                     data: $0.data ?? ""

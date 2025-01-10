@@ -8,7 +8,7 @@ final class CATransactionModule {
         app: Application,
         sessionRequest: Request,
         importAccount: ImportAccount,
-        routeResponseAvailable: RouteResponseAvailable
+        routeResponseAvailable: PrepareResponseAvailable
     ) -> UIViewController {
         let router = CATransactionRouter(app: app)
         let presenter = CATransactionPresenter(sessionRequest: sessionRequest, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, router: router)

@@ -276,7 +276,7 @@ public class WalletKitClient {
 
     // MARK: Yttrium
     @available(*, message: "This method is experimental. Use with caution.")
-    public func prepareSendTransactions(_ transactions: [FfiTransaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
+    public func prepareSendTransactions(_ transactions: [Execution], ownerAccount: Account) async throws -> PreparedSendTransaction {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
@@ -285,7 +285,7 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: String, ownerAccount: Account) async throws -> String {
+    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: DoSendTransactionParams, ownerAccount: Account) async throws -> String {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
@@ -313,32 +313,32 @@ public class WalletKitClient {
         let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
         return try await client.waitForUserOperationReceipt(userOperationHash: userOperationHash)
     }
-//
-//    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) async throws -> PreparedSignMessage {
-//        guard let smartAccountsManager = smartAccountsManager else {
-//            throw Errors.smartAccountNotEnabled
-//        }
-//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-//        return try await client.prepareSignMessage(messageHash)
-//    }
-//
-//    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> PreparedSign {
-//        guard let smartAccountsManager = smartAccountsManager else {
-//            throw Errors.smartAccountNotEnabled
-//        }
-//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-//        let signature = try await client.doSignMessage(signatures)
-//        return signature
-//    }
-//
-//    public func finalizeSignMessage(_ signatures: [String], signStep3Params: String, ownerAccount: Account) async throws -> String {
-//        guard let smartAccountsManager = smartAccountsManager else {
-//            throw Errors.smartAccountNotEnabled
-//        }
-//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-//        let signature = try await client.finalizeSignMessage(signatures, signStep3Params: signStep3Params)
-//        return signature
-//    }
+
+    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) throws -> FfiPreparedSignature {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        return client.prepareSignMessage(messageHash: messageHash)
+    }
+
+    public func doSignMessage(_ signatures: [OwnerSignature], ownerAccount: Account) async throws -> SignOutputEnum {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let signature = try await client.doSignMessage(signatures: signatures)
+        return signature
+    }
+
+    public func finalizeSignMessage(_ signatures: [OwnerSignature], signStep3Params: SignStep3Params, ownerAccount: Account) async throws -> String {
+        guard let smartAccountsManager = smartAccountsManager else {
+            throw Errors.smartAccountNotEnabled
+        }
+        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
+        let signature = try await client.finalizeSignMessage(signatures: signatures, signStep3Params: signStep3Params)
+        return signature
+    }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func status(orchestrationId: String) async throws -> StatusResponse {
@@ -369,7 +369,7 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func getUiFields(routeResponse: RouteResponseAvailable, currency: Currency) async throws -> UiFields {
+    public func getUiFields(routeResponse: PrepareResponseAvailable, currency: Currency) async throws -> UiFields {
         guard let chainAbstractionClient = chainAbstractionClient else {
             throw Errors.chainAbstractionNotEnabled
         }
