@@ -62,6 +62,9 @@
 		847F08012A25DBFF00B2A5A4 /* XPlatformW3WTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847F08002A25DBFF00B2A5A4 /* XPlatformW3WTests.swift */; };
 		8486EDD32B4F2EA6008E53C3 /* SwiftMessages in Frameworks */ = {isa = PBXBuildFile; productRef = 8486EDD22B4F2EA6008E53C3 /* SwiftMessages */; };
 		8487A9482A83AD680003D5AF /* LoggingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8487A9472A83AD680003D5AF /* LoggingService.swift */; };
+		848BD1DA2D34DF5E007C2AEF /* SmartAccountSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848BD1D92D34DF5E007C2AEF /* SmartAccountSigner.swift */; };
+		848BD1DC2D34DF72007C2AEF /* GasAbstractionSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848BD1DB2D34DF72007C2AEF /* GasAbstractionSigner.swift */; };
+		848BD1DE2D34DF8F007C2AEF /* EOASigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848BD1DD2D34DF8F007C2AEF /* EOASigner.swift */; };
 		84943C7B2A9BA206007EBAC2 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 84943C7A2A9BA206007EBAC2 /* Mixpanel */; };
 		84943C7D2A9BA328007EBAC2 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 84943C7C2A9BA328007EBAC2 /* Mixpanel */; };
 		849D7A93292E2169006A2BD4 /* NotifyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849D7A92292E2169006A2BD4 /* NotifyTests.swift */; };
@@ -368,6 +371,9 @@
 		847F08002A25DBFF00B2A5A4 /* XPlatformW3WTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPlatformW3WTests.swift; sourceTree = "<group>"; };
 		8487A92E2A7BD2F30003D5AF /* XPlatformProtocolTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = XPlatformProtocolTests.xctestplan; path = ../XPlatformProtocolTests.xctestplan; sourceTree = "<group>"; };
 		8487A9472A83AD680003D5AF /* LoggingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggingService.swift; sourceTree = "<group>"; };
+		848BD1D92D34DF5E007C2AEF /* SmartAccountSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartAccountSigner.swift; sourceTree = "<group>"; };
+		848BD1DB2D34DF72007C2AEF /* GasAbstractionSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GasAbstractionSigner.swift; sourceTree = "<group>"; };
+		848BD1DD2D34DF8F007C2AEF /* EOASigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EOASigner.swift; sourceTree = "<group>"; };
 		849A4F18298281E300E61ACE /* WalletAppRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WalletAppRelease.entitlements; sourceTree = "<group>"; };
 		849A4F19298281F100E61ACE /* PNDecryptionServiceRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PNDecryptionServiceRelease.entitlements; sourceTree = "<group>"; };
 		849D7A92292E2169006A2BD4 /* NotifyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifyTests.swift; sourceTree = "<group>"; };
@@ -963,6 +969,9 @@
 			isa = PBXGroup;
 			children = (
 				84F568C1279582D200D0A289 /* Signer.swift */,
+				848BD1D92D34DF5E007C2AEF /* SmartAccountSigner.swift */,
+				848BD1DB2D34DF72007C2AEF /* GasAbstractionSigner.swift */,
+				848BD1DD2D34DF8F007C2AEF /* EOASigner.swift */,
 				A57E71A5291CF76400325797 /* ETHSigner.swift */,
 				A57E71A7291CF8A500325797 /* SOLSigner.swift */,
 			);
@@ -1960,6 +1969,7 @@
 				C56EE241293F566D004840D1 /* WalletModule.swift in Sources */,
 				C58099352A543CD000AB58F5 /* BlinkAnimation.swift in Sources */,
 				C56EE245293F566D004840D1 /* WalletPresenter.swift in Sources */,
+				848BD1DA2D34DF5E007C2AEF /* SmartAccountSigner.swift in Sources */,
 				C56EE240293F566D004840D1 /* ScanQRView.swift in Sources */,
 				A51606FB2A2F47BD00CACB92 /* DefaultBIP44Provider.swift in Sources */,
 				C56EE250293F566D004840D1 /* ScanTargetView.swift in Sources */,
@@ -2001,6 +2011,7 @@
 				A51811A12A52E83100A52B15 /* SettingsRouter.swift in Sources */,
 				C56EE279293F56D7004840D1 /* Color.swift in Sources */,
 				847BD1E6298A806800076C90 /* NotificationsRouter.swift in Sources */,
+				848BD1DE2D34DF8F007C2AEF /* EOASigner.swift in Sources */,
 				C579FEBA2AFCDFA6008855EB /* ConnectedSheetView.swift in Sources */,
 				C55D3483295DD7140004314A /* AuthRequestView.swift in Sources */,
 				C56EE243293F566D004840D1 /* ScanView.swift in Sources */,
@@ -2023,6 +2034,7 @@
 				C56EE289293F5757004840D1 /* Application.swift in Sources */,
 				C56EE273293F56D7004840D1 /* UIColor.swift in Sources */,
 				A51811982A52E21A00A52B15 /* ConfigurationService.swift in Sources */,
+				848BD1DC2D34DF72007C2AEF /* GasAbstractionSigner.swift in Sources */,
 				C5F32A322954816C00A6476E /* ConnectionDetailsPresenter.swift in Sources */,
 				A5B4F7C32ABB20AE0099AF7C /* SubscriptionInteractor.swift in Sources */,
 				A50D53C52ABA055700A4FD8B /* NotifyPreferencesView.swift in Sources */,
