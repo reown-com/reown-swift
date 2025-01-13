@@ -8,6 +8,7 @@ struct Tx: Codable {
     let data: String
     let from: String
     let to: String
+    let value: String
 }
 
 final class MainPresenter {
@@ -97,9 +98,7 @@ extension MainPresenter {
         do {
             let tx = try request.params.get([Tx].self)[0]
 
-            let transaction = InitialTransaction(
-                chainId: request.chainId.absoluteString,
-                from: tx.from,
+            let call = Call(
                 to: tx.to,
                 value: "0",
                 input: tx.data
@@ -107,8 +106,7 @@ extension MainPresenter {
 
 
             ActivityIndicatorManager.shared.start()
-            let routeResponseSuccess = try await WalletKit.instance.prepare(transaction: transaction)
-
+            let routeResponseSuccess = try await WalletKit.instance.prepare(chainId: request.chainId.absoluteString, from: tx.from, call: call)
             await MainActor.run {
                 switch routeResponseSuccess {
                 case .success(let routeResponseSuccess):

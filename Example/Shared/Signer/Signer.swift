@@ -27,7 +27,7 @@ final class Signer {
 
     private init() {}
 
-    static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
+    static func sign(request: Request, importAccount: ImportAccount, gasAbstracted: Bool) async throws -> AnyCodable {
         let requestedAddress = try await getRequestedAddress(request)
         if requestedAddress == importAccount.account.address {
             return try signWithEOA(request: request, importAccount: importAccount)
@@ -35,6 +35,8 @@ final class Signer {
         let smartAccount = try await WalletKit.instance.getSmartAccount(ownerAccount: importAccount.account)
         if smartAccount.address.lowercased() == requestedAddress.lowercased() {
             return try await signWithSmartAccount(request: request, importAccount: importAccount)
+        } else if gasAbstracted {
+            signGasAbstracted()
         }
         throw Errors.accountForRequestNotFound
     }
@@ -155,12 +157,7 @@ final class Signer {
 //            return AnyCodable(signedMessage)
 
         case "eth_sendTransaction":
-            struct Tx: Codable {
-                var to: String
-                var value: String
-                var data: String
-            }
-            let params = try request.params.get([Tx].self).map { Execution(to: $0.to, value: $0.value, data: $0.data)}
+            let params = try request.params.get([Tx].self).map { Call(to: $0.to, value: $0.value, input: $0.data)}
             let prepareSendTransactions = try await WalletKit.instance.prepareSendTransactions(params, ownerAccount: ownerAccount)
 
             let signer = ETHSigner(importAccount: importAccount)
@@ -179,10 +176,10 @@ final class Signer {
             }
 
             let transactions = calls.map {
-                Execution(
+                Call(
                     to: $0.to!,
                     value: $0.value ?? "0",
-                    data: $0.data ?? ""
+                    input: $0.data ?? ""
                 )
             }
 
@@ -227,6 +224,47 @@ final class Signer {
         }
 
         return dataToSign
+    }
+
+
+    private static func signGasAbstracted(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
+        switch request.method {
+        case "personal_sign":
+            fatalError()
+        case "eth_sendTransaction":
+            let calls = try request.params.get([Tx].self).map { Call(to: $0.to, value: $0.value, input: $0.data)}
+            let preparedGasAbstraction = try await WalletKit.instance.prepare7702(EOA: importAccount.account, calls: calls)
+            let signer = ETHSigner(importAccount: importAccount)
+
+            switch preparedGasAbstraction {
+
+            case .deploymentRequired(auth: let auth, prepareDeployParams: let prepareDeployParams):
+
+
+                let signature = try signer.signHash(auth.hash)
+
+                let authSig = SignedAuthorization(auth: auth.auth, signature: signature)
+
+                // prepare the deployment
+
+                let deployment = try await WalletKit.instance.prepareDeploy(EOA: importAccount.account, authSig: authSig, params: prepareDeployParams)
+
+
+
+            case .deploymentNotRequired(preparedSend: let preparedSend):
+
+                let signature = try signer.signHash(preparedSend.hash)
+
+                let userOpReceipt = try await WalletKit.instance.send(EOA: importAccount.account, signature: signature, params: preparedSend.sendParams)
+
+                return AnyCodable(userOpReceipt)
+            }
+
+        case "wallet_sendCalls":
+            fatalError()
+        default:
+            fatalError()
+        }
     }
 
     private static func dataToHash(_ data: Data) -> [Byte] {
