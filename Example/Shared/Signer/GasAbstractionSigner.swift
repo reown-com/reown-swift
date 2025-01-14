@@ -23,11 +23,17 @@ final class GasAbstractionSigner {
                 let signature = try signer.signHash(auth.hash)
                 let authSig = SignedAuthorization(auth: auth.auth, signature: signature)
 
-                // Prepare the deployment
                 let _ = try await WalletKit.instance
                     .prepareDeploy(EOA: importAccount.account, authSig: authSig, params: prepareDeployParams)
-                // Return something if necessary, or handle the result
-                return AnyCodable("Deployment prepared")
+
+
+                fatalError()
+                // sign
+
+//                let userOpReceipt = try await WalletKit.instance
+//                    .send(EOA: importAccount.account, signature: signature, params: preparedSend.sendParams)
+//
+//                return AnyCodable(userOpReceipt)
 
             case .deploymentNotRequired(preparedSend: let preparedSend):
                 let signature = try signer.signHash(preparedSend.hash)
