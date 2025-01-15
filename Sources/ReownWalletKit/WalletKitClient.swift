@@ -286,6 +286,13 @@ public class WalletKitClient {
 
     }
 
+#if DEBUG
+    public func set7702ForLocalInfra(address: String) {
+
+        gasAbstractionClientsManager!.set7702ForLocalInfra(address: address)
+    }
+#endif
+
     public func prepareDeploy(EOA: Account, authSig: SignedAuthorization, params: PrepareDeployParams) async throws -> PreparedSend {
 
         let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)

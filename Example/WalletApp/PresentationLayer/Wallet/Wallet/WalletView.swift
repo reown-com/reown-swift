@@ -75,7 +75,7 @@ struct WalletView: View {
 
                             // Text button with "test 7702"
                             Button {
-                                Task { await presenter.test7702() }
+                                Task { try await presenter.test7702() }
                             } label: {
                                 Text("test 7702")
                                     .foregroundColor(.white)

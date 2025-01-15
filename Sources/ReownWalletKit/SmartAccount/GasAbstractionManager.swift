@@ -23,6 +23,30 @@ class GasAbstractionClientsManager {
         }
     }
 
+#if DEBUG
+    public func set7702ForLocalInfra(address: String) {
+        let chainId = "eip155:13371337"
+
+        let eoa = Account(blockchain: Blockchain(chainId)!, address: address)!
+        let localRpcUrl = URL(string: "http://localhost:8545")!
+        let localBundlerUrl = URL(string: "http://localhost:4337")!
+        let localPaymasterUrl = URL(string: "http://localhost:3000")!
+
+        let gasAbstractionClient = getOrCreateGasAbstractionClient(for: eoa)
+
+
+        let newClient = gasAbstractionClient
+            .withRpcOverrides(rpcOverrides: [chainId: localRpcUrl.absoluteString])
+            .with4337Urls(
+                bundlerUrl: localBundlerUrl.absoluteString,
+                paymasterUrl: localPaymasterUrl.absoluteString
+            )
+
+        EOAToClient[eoa] = newClient
+
+    }
+#endif
+
     private func createGasAbstractionClient(EOAAccount: Account) -> Client {
 //        let chainId = EOAAccount.reference
         let projectId = Networking.projectId
