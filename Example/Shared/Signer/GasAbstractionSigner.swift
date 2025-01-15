@@ -50,9 +50,11 @@ final class GasAbstractionSigner {
                 )
                 print("[GasAbstractionSigner] preparedSend: \(preparedSend)")
 
+                let userOpSignature = try signer.signHash(preparedSend.hash)
+
                 let userOpReceipt = try await WalletKit.instance.send(
                     EOA: eoa,
-                    signature: signature,
+                    signature: userOpSignature,
                     params: preparedSend.sendParams
                 )
                 print("[GasAbstractionSigner] userOpReceipt: \(userOpReceipt)")
@@ -64,7 +66,6 @@ final class GasAbstractionSigner {
                 print("[GasAbstractionSigner] preparedSend hash: \(preparedSend.hash)")
 
                 let signature = try signer.signHash(preparedSend.hash)
-                print("[GasAbstractionSigner] signature: \(signature)")
 
                 let userOpReceipt = try await WalletKit.instance.send(
                     EOA: eoa,

@@ -74,18 +74,20 @@ final class WalletPresenter: ObservableObject {
     }
 
     func test7702() async {
+        let testAccount = ImportAccount.new()
         ActivityIndicatorManager.shared.start()
-        WalletKit.instance.set7702ForLocalInfra(address: importAccount.account.address)
+        WalletKit.instance.set7702ForLocalInfra(address: testAccount.account.address)
         print("testing 7702")
-        let chainId = Blockchain("eip155:13371337")!
+        let chainId = Blockchain("eip155:11155111")!
         let GASigner = GasAbstractionSigner()
 
-        let tx = Tx(data: "", from: importAccount.account.address, to: "0x23d8eE973EDec76ae91669706a587b9A4aE1361A", value: "")
+        let tx = Tx(data: "", from: testAccount.account.address, to: "0x23d8eE973EDec76ae91669706a587b9A4aE1361A", value: "")
         let request = try! Request(topic: "", method: "eth_sendTransaction", params: AnyCodable([tx]), chainId: chainId)
 
         do {
-            let userOpReceipt = try await GASigner.sign(request: request, importAccount: importAccount, chainId: chainId)
+            let userOpReceipt = try await GASigner.sign(request: request, importAccount: testAccount, chainId: chainId)
             ActivityIndicatorManager.shared.stop()
+            AlertPresenter.present(message: userOpReceipt.description, type: .success)
         } catch {
             print(error)
             AlertPresenter.present(message: error.localizedDescription, type: .error)

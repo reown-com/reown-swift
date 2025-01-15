@@ -25,7 +25,7 @@ class GasAbstractionClientsManager {
 
 #if DEBUG
     public func set7702ForLocalInfra(address: String) {
-        let chainId = "eip155:13371337"
+        let chainId = "eip155:11155111"
 
         let eoa = Account(blockchain: Blockchain(chainId)!, address: address)!
         let localRpcUrl = URL(string: "http://localhost:8545")!
