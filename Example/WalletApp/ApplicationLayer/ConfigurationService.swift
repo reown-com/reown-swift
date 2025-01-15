@@ -26,6 +26,7 @@ final class ConfigurationService {
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
+        WalletKit.instance.set7702ForLocalInfra(address: importAccount.account.address)
         Notify.configure(
             environment: BuildConfiguration.shared.apnsEnvironment,
             crypto: DefaultCryptoProvider()
