@@ -49,7 +49,7 @@ final class Signer {
         // If gas abstracted
         if gasAbstracted {
             let gasAbstractionSigner = GasAbstractionSigner()
-            return try await gasAbstractionSigner.sign(request: request, importAccount: importAccount)
+            return try await gasAbstractionSigner.sign(request: request, importAccount: importAccount, chainId: importAccount.account.blockchain)
         }
 
         // If none of the above matched, throw an error
