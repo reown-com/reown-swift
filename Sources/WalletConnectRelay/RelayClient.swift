@@ -204,7 +204,7 @@ public final class RelayClient {
                 // Convert Never to RelayError so we can throw on timeout
                 .setFailureType(to: RelayError.self)
                 // Enforce a 30-second timeout
-                .timeout(.seconds(30), scheduler: concurrentQueue, customError: { .requestTimeout })
+                .timeout(.seconds(60), scheduler: concurrentQueue, customError: { .requestTimeout })
                 .sink(
                     receiveCompletion: { [unowned self] completion in
                         switch completion {
