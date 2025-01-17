@@ -23,7 +23,7 @@ class AutomaticSocketConnectionHandler {
 
     // MARK: - Configuration
 
-    var requestTimeout: TimeInterval = 15
+    var requestTimeout: TimeInterval = 60
     let maxImmediateAttempts = 3
     var periodicReconnectionInterval: TimeInterval = 5.0
 
