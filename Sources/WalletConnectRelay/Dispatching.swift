@@ -17,7 +17,7 @@ final class Dispatcher: NSObject, Dispatching {
     var socket: WebSocketConnecting
     var socketConnectionHandler: SocketConnectionHandler
 
-    private let defaultTimeout: Int = 15
+    private let defaultTimeout: Int = 60
     private let relayUrlFactory: RelayUrlFactory
     private let networkMonitor: NetworkMonitoring
     private let logger: ConsoleLogging
