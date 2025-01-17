@@ -144,7 +144,7 @@ struct AllWalletsView: View {
                     analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
                     router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
                 } catch {
-                    store.toast = .init(style: .error, message: error.localizedDescription)
+//                    store.toast = .init(style: .error, message: error.localizedDescription)
                 }
             }
         }, label: {
@@ -173,7 +173,7 @@ struct AllWalletsView: View {
                     try await interactor.fetchWallets(search: search)
                 }
             } catch {
-                store.toast = .init(style: .error, message: "Network error")
+//                store.toast = .init(style: .error, message: "Network error")
             }
         }
     }

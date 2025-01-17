@@ -68,7 +68,7 @@ struct ConnectWalletView: View {
                             router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
                             analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
                         } catch {
-                            store.toast = .init(style: .error, message: error.localizedDescription)
+//                            store.toast = .init(style: .error, message: error.localizedDescription)
                         }
                     }
                 }, label: {

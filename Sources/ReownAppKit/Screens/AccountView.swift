@@ -127,7 +127,7 @@ struct AccountView: View {
                 do {
                     try await blockchainApiInteractor.getBalance()
                 } catch {
-                    store.toast = .init(style: .error, message: "Network error")
+//                    store.toast = .init(style: .error, message: "Network error")
                     AppKit.config.onError(error)
                 }
             }
@@ -140,7 +140,7 @@ struct AccountView: View {
                 do {
                     try await blockchainApiInteractor.getIdentity()
                 } catch {
-                    store.toast = .init(style: .error, message: "Network error")
+//                    store.toast = .init(style: .error, message: "Network error")
                     AppKit.config.onError(error)
                 }
             }
@@ -171,7 +171,7 @@ struct AccountView: View {
                 router.setRoute(Router.ConnectingSubpage.connectWallet)
                 try await signInteractor.disconnect()
             } catch {
-                store.toast = .init(style: .error, message: "Network error")
+//                store.toast = .init(style: .error, message: "Network error")
             }
         }
     }
