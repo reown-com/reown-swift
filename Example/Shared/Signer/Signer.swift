@@ -33,7 +33,8 @@ final class Signer {
         let requestedAddress = try await getRequestedAddress(request)
 
         // If EOA address is requested
-        if requestedAddress.lowercased() == importAccount.account.address.lowercased() {
+        if requestedAddress.lowercased() == importAccount.account.address.lowercased()
+            && !gasAbstracted {
             // EOA route
             let eoaSigner = EOASigner()
             return try await eoaSigner.sign(request: request, importAccount: importAccount)

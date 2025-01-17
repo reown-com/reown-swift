@@ -76,7 +76,9 @@ final class WalletPresenter: ObservableObject {
     func test7702() async {
         let testAccount = ImportAccount.new()
         ActivityIndicatorManager.shared.start()
+#if DEBUG
         WalletKit.instance.set7702ForLocalInfra(address: testAccount.account.address)
+#endif
         print("testing 7702")
         let chainId = Blockchain("eip155:11155111")!
         let GASigner = GasAbstractionSigner()
