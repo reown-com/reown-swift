@@ -384,9 +384,9 @@ extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
                             self.logger.debug("Connection failed with error: \(error).")
                             fail(with: error)
                         }
-                        self.syncQueue.async {
-                            self.isConnecting = false
-                        }
+            self.syncQueue.async {
+                    self.isConnecting = false
+                }
                     },
                     receiveValue: { status in
                         self.logger.debug("Received value (status): \(status)")
