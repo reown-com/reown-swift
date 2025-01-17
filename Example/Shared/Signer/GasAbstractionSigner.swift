@@ -19,7 +19,7 @@ final class GasAbstractionSigner {
             let calls = try request.params.get([Tx].self)
                 .map {
                     print("[GasAbstractionSigner] Tx: \($0)")
-                    return Call(to: $0.to, value: $0.value, input: $0.data)
+                    return Call(to: $0.to, value: $0.value!, input: $0.data)
                 }
             print("[GasAbstractionSigner] Prepared \(calls.count) calls")
 

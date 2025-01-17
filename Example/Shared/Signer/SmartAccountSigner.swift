@@ -75,7 +75,7 @@ final class SmartAccountSigner {
 
         case "eth_sendTransaction":
             let params = try request.params.get([Tx].self)
-                .map { Call(to: $0.to, value: $0.value, input: $0.data) }
+                .map { Call(to: $0.to, value: $0.value!, input: $0.data) }
 
             let prepareSendTransactions = try await WalletKit.instance
                 .prepareSendTransactions(params, ownerAccount: ownerAccount)

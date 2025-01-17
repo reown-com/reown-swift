@@ -8,7 +8,7 @@ struct Tx: Codable {
     let data: String
     let from: String
     let to: String
-    let value: String
+    let value: String?
 }
 
 final class MainPresenter {
