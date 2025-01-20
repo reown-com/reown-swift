@@ -73,6 +73,10 @@ final class WalletPresenter: ObservableObject {
         }
     }
 
+    func sendStableCoin() {
+        router.presentSendStableCoin(importAccount: importAccount)
+    }
+
     func test7702() async {
         let testAccount = ImportAccount.new()
         ActivityIndicatorManager.shared.start()

@@ -89,6 +89,16 @@ struct WalletView: View {
                             Spacer()
 
                             Button {
+                                presenter.sendStableCoin()
+                            } label: {
+                                Image(systemName: "paperplane.fill")
+                                    .resizable()
+                                    .frame(width: 40, height: 40)
+                            }
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                            .accessibilityIdentifier("sendStableCoin")
+
+                            Button {
                                 presenter.onPasteUri()
                             } label: {
                                 Image("copy")

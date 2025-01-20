@@ -73,6 +73,11 @@
 		84AEC24F2B4D1EE400E27A5B /* ActivityIndicatorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEC24E2B4D1EE400E27A5B /* ActivityIndicatorManager.swift */; };
 		84AEC2512B4D42C100E27A5B /* AlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEC2502B4D42C100E27A5B /* AlertPresenter.swift */; };
 		84AEC2542B4D43CD00E27A5B /* SwiftMessages in Frameworks */ = {isa = PBXBuildFile; productRef = 84AEC2532B4D43CD00E27A5B /* SwiftMessages */; };
+		84AEF0162D3DD8CA006E43E5 /* SendStableCoinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF0152D3DD8CA006E43E5 /* SendStableCoinView.swift */; };
+		84AEF0192D3DD9C0006E43E5 /* SendStableCoinModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */; };
+		84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */; };
+		84AEF01D2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */; };
+		84AEF01F2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01E2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift */; };
 		84B8154E2991099000FAD54E /* BuildConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8154D2991099000FAD54E /* BuildConfiguration.swift */; };
 		84B8155B2992A18D00FAD54E /* NotifyMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */; };
 		84CA52172C88965C0069BB33 /* ReownRouter in Frameworks */ = {isa = PBXBuildFile; productRef = 84CA52162C88965C0069BB33 /* ReownRouter */; };
@@ -381,6 +386,11 @@
 		84AA01DA28CF0CD7005D48D8 /* XCTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTest.swift; sourceTree = "<group>"; };
 		84AEC24E2B4D1EE400E27A5B /* ActivityIndicatorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityIndicatorManager.swift; sourceTree = "<group>"; };
 		84AEC2502B4D42C100E27A5B /* AlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertPresenter.swift; sourceTree = "<group>"; };
+		84AEF0152D3DD8CA006E43E5 /* SendStableCoinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinView.swift; sourceTree = "<group>"; };
+		84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinModule.swift; sourceTree = "<group>"; };
+		84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinRouter.swift; sourceTree = "<group>"; };
+		84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinPresenter.swift; sourceTree = "<group>"; };
+		84AEF01E2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeToSmartAccountView.swift; sourceTree = "<group>"; };
 		84B8154D2991099000FAD54E /* BuildConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildConfiguration.swift; sourceTree = "<group>"; };
 		84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifyMessageViewModel.swift; sourceTree = "<group>"; };
 		84CE641C27981DED00142511 /* DApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -834,6 +844,17 @@
 			path = Push;
 			sourceTree = "<group>";
 		};
+		84AEF0172D3DD8D3006E43E5 /* SendStableCoin */ = {
+			isa = PBXGroup;
+			children = (
+				84AEF0152D3DD8CA006E43E5 /* SendStableCoinView.swift */,
+				84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */,
+				84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */,
+				84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */,
+			);
+			path = SendStableCoin;
+			sourceTree = "<group>";
+		};
 		84B815592991217F00FAD54E /* PushMessages */ = {
 			isa = PBXGroup;
 			children = (
@@ -1184,6 +1205,8 @@
 				847BD1E9298A807000076C90 /* Notifications */,
 				84B815592991217F00FAD54E /* PushMessages */,
 				84D88C802CE751EE003A6C16 /* CATransactionModal */,
+				84AEF0172D3DD8D3006E43E5 /* SendStableCoin */,
+				84AEF01E2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift */,
 			);
 			path = Wallet;
 			sourceTree = "<group>";
@@ -1989,6 +2012,7 @@
 				C5B2F71029705827000DBA0E /* EthereumTransaction.swift in Sources */,
 				A50D53C32ABA055700A4FD8B /* NotifyPreferencesRouter.swift in Sources */,
 				A5D610C82AB31EE800C20083 /* SegmentedPicker.swift in Sources */,
+				84AEF01F2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift in Sources */,
 				C56EE271293F56D7004840D1 /* View.swift in Sources */,
 				A5B4F7C62ABB20AE0099AF7C /* SubscriptionView.swift in Sources */,
 				C5B2F6FD297055B0000DBA0E /* Signer.swift in Sources */,
@@ -2025,6 +2049,7 @@
 				C55D34B02965FB750004314A /* SessionProposalRouter.swift in Sources */,
 				C55D3495295DFA750004314A /* WelcomeRouter.swift in Sources */,
 				C5B2F6F729705293000DBA0E /* SessionRequestRouter.swift in Sources */,
+				84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */,
 				C56EE24F293F566D004840D1 /* WalletView.swift in Sources */,
 				C55D34B22965FB750004314A /* SessionProposalView.swift in Sources */,
 				C56EE248293F566D004840D1 /* ScanQR.swift in Sources */,
@@ -2050,9 +2075,11 @@
 				C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */,
 				C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */,
 				A57879712A4EDC8100F8D10B /* TextFieldView.swift in Sources */,
+				84AEF01D2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift in Sources */,
 				A5D610CA2AB3249100C20083 /* ListingViewModel.swift in Sources */,
 				84DB38F32983CDAE00BFEE37 /* PushRegisterer.swift in Sources */,
 				A5D610CE2AB3594100C20083 /* ListingsAPI.swift in Sources */,
+				84AEF0162D3DD8CA006E43E5 /* SendStableCoinView.swift in Sources */,
 				84D88C7F2CE751E7003A6C16 /* CATransactionView.swift in Sources */,
 				C5B2F6FB297055B0000DBA0E /* ETHSigner.swift in Sources */,
 				C56EE274293F56D7004840D1 /* SceneViewController.swift in Sources */,
@@ -2073,6 +2100,7 @@
 				C5F32A2C2954814200A6476E /* ConnectionDetailsModule.swift in Sources */,
 				C56EE249293F566D004840D1 /* ScanInteractor.swift in Sources */,
 				C56EE28A293F5757004840D1 /* AppDelegate.swift in Sources */,
+				84AEF0192D3DD9C0006E43E5 /* SendStableCoinModule.swift in Sources */,
 				C5FFEA762ADD8956007282A2 /* BrowserModule.swift in Sources */,
 				C56EE2A3293F6BAF004840D1 /* UIPasteboardWrapper.swift in Sources */,
 				C5B2F6F629705293000DBA0E /* SessionRequestModule.swift in Sources */,
