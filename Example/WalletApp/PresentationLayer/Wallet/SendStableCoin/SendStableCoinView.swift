@@ -26,7 +26,7 @@ struct SendStableCoinView: View {
                     }
                     Spacer()
                     Button(action: {
-                        // TODO: handle upgrade to smart account
+                        presenter.upgradeToSmartAccount()
                     }) {
                         Text("Upgrade to Smart Account")
                             .foregroundColor(.blue)

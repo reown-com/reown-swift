@@ -18,5 +18,7 @@ final class SendStableCoinRouter {
 
     func presentUpgradeToSmartAccount(importAccount: ImportAccount, network: L2) {
 
+        UpgradeToSmartAccountModule.create(app: app, importAccount: importAccount, network: network)
+            .present(from: viewController)
     }
 }

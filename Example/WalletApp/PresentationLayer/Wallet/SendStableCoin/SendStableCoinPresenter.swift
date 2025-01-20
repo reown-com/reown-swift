@@ -17,7 +17,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     init(router: SendStableCoinRouter,
          importAccount: ImportAccount) {
         self.router = router
-
+        self.importAccount = importAccount
     }
 
     func set(network: L2) {
@@ -28,9 +28,3 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         router.presentUpgradeToSmartAccount(importAccount: importAccount, network: selectedNetwork)
     }
 }
-
-
-UpgradeToSmartAccountPresenter
-UpgradeToSmartAccountView
-UpgradeToSmartAccountModule
-UpgradeToSmartAccountRouter

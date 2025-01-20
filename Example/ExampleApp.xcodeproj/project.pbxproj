@@ -78,6 +78,9 @@
 		84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */; };
 		84AEF01D2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */; };
 		84AEF01F2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01E2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift */; };
+		84AEF0222D3DE7C8006E43E5 /* UpgradeToSmartAccountPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF0212D3DE7C8006E43E5 /* UpgradeToSmartAccountPresenter.swift */; };
+		84AEF0242D3DE7D4006E43E5 /* UpgradeToSmartAccountModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF0232D3DE7D4006E43E5 /* UpgradeToSmartAccountModule.swift */; };
+		84AEF0262D3DE7E0006E43E5 /* UpgradeToSmartAccountRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF0252D3DE7E0006E43E5 /* UpgradeToSmartAccountRouter.swift */; };
 		84B8154E2991099000FAD54E /* BuildConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8154D2991099000FAD54E /* BuildConfiguration.swift */; };
 		84B8155B2992A18D00FAD54E /* NotifyMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */; };
 		84CA52172C88965C0069BB33 /* ReownRouter in Frameworks */ = {isa = PBXBuildFile; productRef = 84CA52162C88965C0069BB33 /* ReownRouter */; };
@@ -391,6 +394,9 @@
 		84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinRouter.swift; sourceTree = "<group>"; };
 		84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinPresenter.swift; sourceTree = "<group>"; };
 		84AEF01E2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeToSmartAccountView.swift; sourceTree = "<group>"; };
+		84AEF0212D3DE7C8006E43E5 /* UpgradeToSmartAccountPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeToSmartAccountPresenter.swift; sourceTree = "<group>"; };
+		84AEF0232D3DE7D4006E43E5 /* UpgradeToSmartAccountModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeToSmartAccountModule.swift; sourceTree = "<group>"; };
+		84AEF0252D3DE7E0006E43E5 /* UpgradeToSmartAccountRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeToSmartAccountRouter.swift; sourceTree = "<group>"; };
 		84B8154D2991099000FAD54E /* BuildConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildConfiguration.swift; sourceTree = "<group>"; };
 		84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifyMessageViewModel.swift; sourceTree = "<group>"; };
 		84CE641C27981DED00142511 /* DApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -855,6 +861,17 @@
 			path = SendStableCoin;
 			sourceTree = "<group>";
 		};
+		84AEF0202D3DE7B1006E43E5 /* UpgradeToSmartAccount */ = {
+			isa = PBXGroup;
+			children = (
+				84AEF01E2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift */,
+				84AEF0212D3DE7C8006E43E5 /* UpgradeToSmartAccountPresenter.swift */,
+				84AEF0232D3DE7D4006E43E5 /* UpgradeToSmartAccountModule.swift */,
+				84AEF0252D3DE7E0006E43E5 /* UpgradeToSmartAccountRouter.swift */,
+			);
+			path = UpgradeToSmartAccount;
+			sourceTree = "<group>";
+		};
 		84B815592991217F00FAD54E /* PushMessages */ = {
 			isa = PBXGroup;
 			children = (
@@ -1206,7 +1223,7 @@
 				84B815592991217F00FAD54E /* PushMessages */,
 				84D88C802CE751EE003A6C16 /* CATransactionModal */,
 				84AEF0172D3DD8D3006E43E5 /* SendStableCoin */,
-				84AEF01E2D3DE7A0006E43E5 /* UpgradeToSmartAccountView.swift */,
+				84AEF0202D3DE7B1006E43E5 /* UpgradeToSmartAccount */,
 			);
 			path = Wallet;
 			sourceTree = "<group>";
@@ -1998,6 +2015,7 @@
 				C56EE250293F566D004840D1 /* ScanTargetView.swift in Sources */,
 				C56EE28F293F5757004840D1 /* MigrationConfigurator.swift in Sources */,
 				A5A0844029D2F626000B9B17 /* DefaultCryptoProvider.swift in Sources */,
+				84AEF0262D3DE7E0006E43E5 /* UpgradeToSmartAccountRouter.swift in Sources */,
 				847BD1DD2989494F00076C90 /* TabPage.swift in Sources */,
 				A50D53C42ABA055700A4FD8B /* NotifyPreferencesInteractor.swift in Sources */,
 				A50D53C22ABA055700A4FD8B /* NotifyPreferencesPresenter.swift in Sources */,
@@ -2033,6 +2051,7 @@
 				A74D32BA2A1E25AD00CB8536 /* QueryParameters.swift in Sources */,
 				C56EE270293F56D7004840D1 /* String.swift in Sources */,
 				A51811A12A52E83100A52B15 /* SettingsRouter.swift in Sources */,
+				84AEF0222D3DE7C8006E43E5 /* UpgradeToSmartAccountPresenter.swift in Sources */,
 				C56EE279293F56D7004840D1 /* Color.swift in Sources */,
 				847BD1E6298A806800076C90 /* NotificationsRouter.swift in Sources */,
 				848BD1DE2D34DF8F007C2AEF /* EOASigner.swift in Sources */,
@@ -2090,6 +2109,7 @@
 				A50B6A382B06697B00162B01 /* ProfilingService.swift in Sources */,
 				A5B4F7C52ABB20AE0099AF7C /* SubscriptionRouter.swift in Sources */,
 				C55D3496295DFA750004314A /* WelcomeInteractor.swift in Sources */,
+				84AEF0242D3DE7D4006E43E5 /* UpgradeToSmartAccountModule.swift in Sources */,
 				C5B2F6FC297055B0000DBA0E /* SOLSigner.swift in Sources */,
 				A518119F2A52E83100A52B15 /* SettingsModule.swift in Sources */,
 				84D88C842CE754CC003A6C16 /* CATransactionModule.swift in Sources */,
