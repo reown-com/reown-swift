@@ -286,6 +286,12 @@ public class WalletKitClient {
 
     }
 
+    public func prepareUSDCTransferCall(EOA: Account, to: Account, amount: String) -> Call {
+        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
+
+        return gasAbstractionClient.prepareUsdcTransferCall(chainId: to.blockchainIdentifier, to: to.address, usdcAmount: amount)
+    }
+
 #if DEBUG
     public func set7702ForLocalInfra(address: String) {
 

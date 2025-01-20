@@ -111,7 +111,7 @@ struct UpgradeToSmartAccountView: View {
                 Spacer()
 
                 Button(action: {
-                    presenter.signAndUpgrade()
+                    Task { try await presenter.signAndUpgrade() }
                 }) {
                     Text("Sign & Upgrade")
                         .fontWeight(.semibold)

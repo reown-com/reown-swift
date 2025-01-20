@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import ReownWalletKit
 
 final class SendStableCoinRouter {
     weak var viewController: UIViewController!
@@ -16,9 +17,22 @@ final class SendStableCoinRouter {
         }
     }
 
-    func presentUpgradeToSmartAccount(importAccount: ImportAccount, network: L2) {
+    func presentUpgradeToSmartAccount(
+        importAccount: ImportAccount,
+        network: L2,
+        prepareDeployParams: PrepareDeployParams,
+        auth: PreparedGasAbstractionAuthorization,
+        chainId: Blockchain
+    ) {
 
-        UpgradeToSmartAccountModule.create(app: app, importAccount: importAccount, network: network)
-            .present(from: viewController)
+        UpgradeToSmartAccountModule.create(
+            app: app,
+            importAccount: importAccount,
+            network: network,
+            prepareDeployParams: prepareDeployParams,
+            auth: auth,
+            chainId: chainId
+        )
+        .present(from: viewController)
     }
 }

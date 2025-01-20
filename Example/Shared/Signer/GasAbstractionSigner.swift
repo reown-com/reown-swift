@@ -38,17 +38,14 @@ final class GasAbstractionSigner {
                 print("[GasAbstractionSigner] auth hash: \(auth.hash)")
 
                 let signature = try signer.signHash(auth.hash)
-                print("[GasAbstractionSigner] signature: \(signature)")
 
                 let authSig = SignedAuthorization(auth: auth.auth, signature: signature)
-                print("[GasAbstractionSigner] authSig: \(authSig)")
 
                 let preparedSend = try await WalletKit.instance.prepareDeploy(
                     EOA: eoa,
                     authSig: authSig,
                     params: prepareDeployParams
                 )
-                print("[GasAbstractionSigner] preparedSend: \(preparedSend)")
 
                 let userOpSignature = try signer.signHash(preparedSend.hash)
 

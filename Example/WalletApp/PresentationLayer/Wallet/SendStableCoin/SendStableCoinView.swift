@@ -1,11 +1,10 @@
 import SwiftUI
 
+/// SwiftUI view that binds directly to the presenter's `recipient` and `amount`
 struct SendStableCoinView: View {
     @ObservedObject var presenter: SendStableCoinPresenter
 
-    @State private var recipient: String = ""
-    @State private var amount: String = ""
-    @State private var showNetworkPicker: Bool = false
+    @State private var showNetworkPicker = false
 
     // Example placeholders; adjust as needed
     let myAddressShort = "0x742...f44e"
@@ -73,7 +72,7 @@ struct SendStableCoinView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Recipient")
                         .foregroundColor(.gray)
-                    TextField("0x1234... or ENS", text: $recipient)
+                    TextField("0x1234... or ENS", text: $presenter.recipient)
                         .textFieldStyle(.roundedBorder)
                         .disableAutocorrection(true)
                         .autocapitalization(.none)
@@ -85,7 +84,7 @@ struct SendStableCoinView: View {
                         .foregroundColor(.gray)
 
                     HStack {
-                        TextField("0.00", text: $amount)
+                        TextField("0.00", text: $presenter.amount)
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.roundedBorder)
 
@@ -103,7 +102,6 @@ struct SendStableCoinView: View {
                         .confirmationDialog("Select Network",
                                             isPresented: $showNetworkPicker,
                                             titleVisibility: .visible) {
-                            // Use L2's raw values in the picker
                             Button(L2.Arbitrium.rawValue) {
                                 presenter.set(network: .Arbitrium)
                             }
@@ -118,7 +116,7 @@ struct SendStableCoinView: View {
                     }
                 }
 
-                // Add Transaction button
+                // Add Transaction button (if you need multiple transaction flows)
                 Button(action: {
                     // TODO: handle adding additional transactions
                 }) {
@@ -147,7 +145,18 @@ struct SendStableCoinView: View {
             // Send button
             VStack(spacing: 12) {
                 Button(action: {
-                    // TODO: Add logic to send transaction
+                    Task {
+                        do {
+                            // Now we call presenter's send(), no params needed
+                            try await presenter.send()
+                        } catch {
+                            // If send() throws, show an alert or handle error
+                            AlertPresenter.present(
+                                message: error.localizedDescription,
+                                type: .error
+                            )
+                        }
+                    }
                 }) {
                     Text("Send")
                         .fontWeight(.semibold)
