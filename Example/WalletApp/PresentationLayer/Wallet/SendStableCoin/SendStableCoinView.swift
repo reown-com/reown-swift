@@ -111,6 +111,9 @@ struct SendStableCoinView: View {
                             Button(L2.Optimism.rawValue) {
                                 presenter.set(network: .Optimism)
                             }
+                            Button(L2.Sepolia.rawValue) {
+                                presenter.set(network: .Sepolia)
+                            }
                             Button("Cancel", role: .cancel) {}
                         }
                     }

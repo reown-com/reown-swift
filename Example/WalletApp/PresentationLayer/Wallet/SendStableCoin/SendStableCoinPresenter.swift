@@ -1,11 +1,12 @@
 import Foundation
 import Combine
-import ReownWalletKit
+@preconcurrency import ReownWalletKit
 
 enum L2: String {
     case Arbitrium
     case Optimism
     case Base
+    case Sepolia
 
     var chainId: Blockchain {
         switch self {
@@ -15,13 +16,15 @@ enum L2: String {
             return Blockchain("eip155:10")!
         case .Base:
             return Blockchain("eip155:8453")!
+        case .Sepolia:
+            return Blockchain("eip155:11155111")!
         }
     }
 }
 
 /// Your Presenter for handling logic: building calls, checking deployment, and routing
 final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
-    @Published var selectedNetwork: L2 = .Base
+    @Published var selectedNetwork: L2 = .Sepolia
     @Published var recipient: String = ""
     @Published var amount: String = ""
 
@@ -39,13 +42,19 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     }
 
     /// Reusable method that checks if wallet deployment is required
-    @discardableResult
     func checkDeploymentRequired(for calls: [Call]) async throws -> PreparedGasAbstraction {
-        let eoa = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: importAccount.account.address
-        )
-        return try await WalletKit.instance.prepare7702(EOA: eoa, calls: calls)
+        do {
+            let eoa = try Account(
+                blockchain: selectedNetwork.chainId,
+                accountAddress: importAccount.account.address
+            )
+            let x =  try await WalletKit.instance.prepare7702(EOA: eoa, calls: calls)
+            return x
+
+        } catch {
+            print(error)
+        }
+        fatalError()
     }
 
     /// Called when user taps "Upgrade to Smart Account"
@@ -85,58 +94,71 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
     /// Called when user taps "Send"
     /// Uses the presenter's `recipient` and `amount` directly
-    func send() async throws {
-        // Build calls from the presenter's fields
-        let calls = try getCalls()
+    func send() async  {
+        do {
 
-        // Check if wallet deployment is required
-        let preparedGasAbstraction = try await checkDeploymentRequired(for: calls)
-        let eoa = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: importAccount.account.address
-        )
-        let signer = ETHSigner(importAccount: importAccount)
+            // Build calls from the presenter's fields
+            let calls = try getCalls()
 
-        switch preparedGasAbstraction {
-        case .deploymentRequired(auth: let auth, prepareDeployParams: let deployParams):
-            print("Deployment is required -> Show 'upgrade to smart account' screen")
-            router.presentUpgradeToSmartAccount(
-                importAccount: importAccount,
-                network: selectedNetwork,
-                prepareDeployParams: deployParams,
-                auth: auth,
-                chainId: selectedNetwork.chainId
+            // Check if wallet deployment is required
+            let preparedGasAbstraction = try await checkDeploymentRequired(for: calls)
+            let eoa = try Account(
+                blockchain: selectedNetwork.chainId,
+                accountAddress: importAccount.account.address
             )
+            let signer = ETHSigner(importAccount: importAccount)
 
-        case .deploymentNotRequired(preparedSend: let preparedSend):
-            print("Deployment not required -> sign & send userOp")
+            switch preparedGasAbstraction {
+            case .deploymentRequired(auth: let auth, prepareDeployParams: let deployParams):
+                print("Deployment is required -> Show 'upgrade to smart account' screen")
+                DispatchQueue.main.async { [unowned self] in
+                    router.presentUpgradeToSmartAccount(
+                        importAccount: importAccount,
+                        network: selectedNetwork,
+                        prepareDeployParams: deployParams,
+                        auth: auth,
+                        chainId: selectedNetwork.chainId
+                    )
+                }
 
-            let signature = try signer.signHash(preparedSend.hash)
-            let userOpReceipt = try await WalletKit.instance.send(
-                EOA: eoa,
-                signature: signature,
-                params: preparedSend.sendParams
-            )
-            print("[GasAbstractionSigner] userOpReceipt: \(userOpReceipt)")
+            case .deploymentNotRequired(preparedSend: let preparedSend):
+                print("Deployment not required -> sign & send userOp")
+
+                let signature = try signer.signHash(preparedSend.hash)
+                let userOpReceipt = try await WalletKit.instance.send(
+                    EOA: eoa,
+                    signature: signature,
+                    params: preparedSend.sendParams
+                )
+                print("[GasAbstractionSigner] userOpReceipt: \(userOpReceipt)")
+            }
+        } catch {
+            AlertPresenter.present(message: error.localizedDescription, type: .error)
         }
     }
 
     /// Build the [Call] array from the presenter's current `recipient` and `amount`
     private func getCalls() throws -> [Call] {
-        let eoa = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: importAccount.account.address
-        )
+//        let eoa = try Account(
+//            blockchain: selectedNetwork.chainId,
+//            accountAddress: importAccount.account.address
+//        )
+//
+//        let toAccount = try Account(
+//            blockchain: selectedNetwork.chainId,
+//            accountAddress: recipient
+//        )
+//
+//        let call = WalletKit.instance.prepareUSDCTransferCall(
+//            EOA: eoa,
+//            to: toAccount,
+//            amount: amount
+//        )
 
-        let toAccount = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: recipient
-        )
-
-        let call = WalletKit.instance.prepareUSDCTransferCall(
-            EOA: eoa,
-            to: toAccount,
-            amount: amount
+        let call = Call(
+            to: "0x23d8eE973EDec76ae91669706a587b9A4aE1361A",
+            value: "0",
+            input: ""
         )
 
         return [call]
