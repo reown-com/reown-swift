@@ -1,4 +1,5 @@
 import SwiftUI
+import AsyncButton
 
 struct UpgradeToSmartAccountView: View {
     @ObservedObject var presenter: UpgradeToSmartAccountPresenter
@@ -86,13 +87,6 @@ struct UpgradeToSmartAccountView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
 
-            // Do once toggle
-            Toggle("Do it once and don't ask me again.", isOn: $presenter.doNotAskAgain)
-                .toggleStyle(SwitchToggleStyle(tint: .blue))
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-                .foregroundColor(.white)
-
             Spacer()
 
             // Bottom actions row
@@ -110,18 +104,27 @@ struct UpgradeToSmartAccountView: View {
 
                 Spacer()
 
-                Button(action: {
-                    Task { try await presenter.signAndUpgrade() }
-                }) {
+                AsyncButton(
+                    options: [
+                        .showProgressViewOnLoading,
+                        .disableButtonOnLoading,
+                        .showAlertOnError,
+                        .enableNotificationFeedback
+                    ]
+                ) {
+                    try await presenter.signAndUpgrade()
+                } label: {
                     Text("Sign & Upgrade")
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity)
+                        .padding()
                         .background(
-                            LinearGradient(gradient: Gradient(colors: [.purple, .blue]),
-                                           startPoint: .leading,
-                                           endPoint: .trailing)
+                            LinearGradient(
+                                gradient: Gradient(colors: [.blue, .purple]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
                         .cornerRadius(12)
                 }

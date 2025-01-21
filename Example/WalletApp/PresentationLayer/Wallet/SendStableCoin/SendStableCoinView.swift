@@ -1,6 +1,6 @@
 import SwiftUI
+import AsyncButton
 
-/// SwiftUI view that binds directly to the presenter's `recipient` and `amount`
 struct SendStableCoinView: View {
     @ObservedObject var presenter: SendStableCoinPresenter
 
@@ -88,7 +88,6 @@ struct SendStableCoinView: View {
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.roundedBorder)
 
-                        // Display the enum's raw value instead of a String
                         Button(action: {
                             showNetworkPicker = true
                         }) {
@@ -119,7 +118,7 @@ struct SendStableCoinView: View {
                     }
                 }
 
-                // Add Transaction button (if you need multiple transaction flows)
+                // Add Transaction button
                 Button(action: {
                     // TODO: handle adding additional transactions
                 }) {
@@ -145,22 +144,17 @@ struct SendStableCoinView: View {
 
             Spacer()
 
-            // Send button
             VStack(spacing: 12) {
-                Button(action: {
-                    Task {
-                        do {
-                            // Now we call presenter's send(), no params needed
-                            try await presenter.send()
-                        } catch {
-                            // If send() throws, show an alert or handle error
-                            AlertPresenter.present(
-                                message: error.localizedDescription,
-                                type: .error
-                            )
-                        }
-                    }
-                }) {
+                AsyncButton(
+                    options: [
+                        .showProgressViewOnLoading,
+                        .disableButtonOnLoading,
+                        .showAlertOnError,
+                        .enableNotificationFeedback
+                    ]
+                ) {
+                    try await presenter.send()
+                } label: {
                     Text("Send")
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
@@ -179,5 +173,77 @@ struct SendStableCoinView: View {
             .padding()
         }
         .padding()
+        // Present success screen
+        .sheet(isPresented: $presenter.transactionCompleted) {
+            SendStableCoinCompletedView(presenter: presenter)
+        }
+    }
+}
+
+
+struct SendStableCoinCompletedView: View {
+    @ObservedObject var presenter: SendStableCoinPresenter
+
+    var body: some View {
+        ZStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                // "Tada" or confetti image at top
+                Image("tada")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+
+                // Title
+                Text("Transaction Completed")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+
+                // Subtitle or descriptive text
+                Text("You’ve successfully sent your stablecoin transaction.")
+                    .font(.body)
+                    .foregroundColor(.white.opacity(0.9))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+
+                // Show the transaction hash if present
+                if let txHash = presenter.transactionResult, !txHash.isEmpty {
+                    VStack(spacing: 4) {
+                        Text("Transaction Hash")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.8))
+
+                        Text(txHash)
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .padding(.horizontal, 32)
+                    }
+                }
+
+                Spacer()
+
+                // Done button to dismiss
+                Button(action: {
+                    // Setting transactionCompleted = false hides this sheet
+                    presenter.transactionCompleted = false
+                }) {
+                    Text("Done")
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 24)
+
+                Spacer()
+            }
+            .padding()
+        }
     }
 }

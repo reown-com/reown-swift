@@ -53,6 +53,7 @@ final class UpgradeToSmartAccountPresenter: ObservableObject, SceneViewModel {
             router.dismiss()
         } catch {
             AlertPresenter.present(message: error.localizedDescription, type: .error)
+            print(error)
             ActivityIndicatorManager.shared.stop()
         }
     }
