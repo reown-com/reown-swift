@@ -137,27 +137,27 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
     /// Build the [Call] array from the presenter's current `recipient` and `amount`
     private func getCalls() throws -> [Call] {
-        let eoa = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: importAccount.account.address
-        )
-
-        let toAccount = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: recipient
-        )
-
-        let call = WalletKit.instance.prepareUSDCTransferCall(
-            EOA: eoa,
-            to: toAccount,
-            amount: amount
-        )
-
-//        let call = Call(
-//            to: "0x23d8eE973EDec76ae91669706a587b9A4aE1361A",
-//            value: "0",
-//            input: ""
+//        let eoa = try Account(
+//            blockchain: selectedNetwork.chainId,
+//            accountAddress: importAccount.account.address
 //        )
+//
+//        let toAccount = try Account(
+//            blockchain: selectedNetwork.chainId,
+//            accountAddress: recipient
+//        )
+//
+//        let call = WalletKit.instance.prepareUSDCTransferCall(
+//            EOA: eoa,
+//            to: toAccount,
+//            amount: amount
+//        )
+
+        let call = Call(
+            to: "0x23d8eE973EDec76ae91669706a587b9A4aE1361A",
+            value: "0",
+            input: ""
+        )
 
         return [call]
     }
