@@ -39,10 +39,13 @@ class SessionResponder {
             throw Errors.sessionRequestExpired
         }
 
+        let tvfData =
+
         try await networkingInteractor.respond(
             topic: topic,
             response: RPCResponse(id: requestId, outcome: response),
-            protocolMethod: protocolMethod
+            protocolMethod: protocolMethod,
+            tvfData: <#TVFData?#>
         )
         verifyContextStore.delete(forKey: requestId.string)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in

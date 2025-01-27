@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import WalletConnectUtils
 
 public class NetworkingInteractor: NetworkInteracting {
     private var tasks = Task.DisposeBag()
@@ -180,7 +181,7 @@ public class NetworkingInteractor: NetworkInteracting {
 
             Task(priority: .high) {
                 do {
-                    try await self.request(request, topic: topic, protocolMethod: method, envelopeType: envelopeType)
+                    try await self.request(request, topic: topic, protocolMethod: method, envelopeType: envelopeType, tvfData: nil)
                 } catch {
                     cancel()
                     continuation.resume(throwing: error)
@@ -214,17 +215,24 @@ public class NetworkingInteractor: NetworkInteracting {
             .eraseToAnyPublisher()
     }
 
-    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {
         try rpcHistory.set(request, forTopic: topic, emmitedBy: .local, transportType: .relay)
+
+        let coorelationId = request.id
 
         do {
             let message = try serializer.serialize(topic: topic, encodable: request, envelopeType: envelopeType)
 
-            try await relayClient.publish(topic: topic,
+
+            try await relayClient.publish(
+                topic: topic,
                 payload: message,
                 tag: protocolMethod.requestConfig.tag,
                 prompt: protocolMethod.requestConfig.prompt,
-                ttl: protocolMethod.requestConfig.ttl)
+                ttl: protocolMethod.requestConfig.ttl,
+                tvfData: tvfData,
+                coorelationId: coorelationId
+            )
         } catch {
             if let id = request.id {
                 rpcHistory.delete(id: id)
@@ -233,16 +241,17 @@ public class NetworkingInteractor: NetworkInteracting {
         }
     }
 
-    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {
         try rpcHistory.validate(response)
         let message = try serializer.serialize(topic: topic, encodable: response, envelopeType: envelopeType)
-        try await relayClient.publish(topic: topic, payload: message, tag: protocolMethod.responseConfig.tag, prompt: protocolMethod.responseConfig.prompt, ttl: protocolMethod.responseConfig.ttl)
+        let coorelationId = response.id
+        try await relayClient.publish(topic: topic, payload: message, tag: protocolMethod.responseConfig.tag, prompt: protocolMethod.responseConfig.prompt, ttl: protocolMethod.responseConfig.ttl, tvfData: tvfData, coorelationId: coorelationId)
         try rpcHistory.resolve(response)
     }
 
     public func respondSuccess(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
         let response = RPCResponse(id: requestId, result: true)
-        try await respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType)
+        try await respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
     }
 
     public func getClientId() throws -> String {
@@ -252,7 +261,7 @@ public class NetworkingInteractor: NetworkInteracting {
     public func respondError(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod, reason: Reason, envelopeType: Envelope.EnvelopeType) async throws {
         let error = JSONRPCError(code: reason.code, message: reason.message)
         let response = RPCResponse(id: requestId, error: error)
-        try await respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType)
+        try await respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
     }
 
     private func manageSubscription(_ topic: String, _ encodedEnvelope: String, _ publishedAt: Date, _ attestation: String?) {

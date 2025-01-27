@@ -1,4 +1,5 @@
 import Foundation
+import WalletConnectUtils
 import Combine
 
 public enum SocketConnectionStatus {
@@ -119,7 +120,7 @@ public final class RelayClient {
     }
 
     /// Completes with an acknowledgement from the relay network
-    public func publish(topic: String, payload: String, tag: Int, prompt: Bool, ttl: Int, TVFExtension: Publish.TVF? = nil) async throws {
+    public func publish(topic: String, payload: String, tag: Int, prompt: Bool, ttl: Int, tvfData: TVFData?, coorelationId: RPCID?) async throws {
         #if DEBUG
         if blockPublishing {
             logger.debug("[Publish] Publishing is blocked")

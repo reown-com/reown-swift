@@ -145,7 +145,7 @@ public class NetworkingInteractorMock: NetworkInteracting {
         envelopeType: Envelope.EnvelopeType
     ) async throws -> Response {
 
-        try await self.request(request, topic: topic, protocolMethod: method, envelopeType: envelopeType)
+        try await self.request(request, topic: topic, protocolMethod: method, envelopeType: envelopeType, tvfData: nil)
 
         return try await withCheckedThrowingContinuation { [unowned self] continuation in
             var response, error: AnyCancellable?
@@ -201,12 +201,12 @@ public class NetworkingInteractorMock: NetworkInteracting {
         }
     }
 
-    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {
         requestCallCount += 1
         requests.append((topic, request))
     }
 
-    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {
         didRespondOnTopic = topic
     }
 
