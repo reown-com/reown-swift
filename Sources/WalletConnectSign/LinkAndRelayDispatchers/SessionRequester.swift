@@ -37,9 +37,9 @@ final class SessionRequester {
 
         let rpcRequest = RPCRequest(method: protocolMethod.method, params: sessionRequestParams, rpcid: request.id)
 
-        let tfvData = tvfCollector.collect(rpcMethod: request.method, rpcParams: request.params, chainID: request.chainId, rpcResult: nil, tag: protocolMethod.requestConfig.tag)
+        let tvfData = tvfCollector.collect(rpcMethod: request.method, rpcParams: request.params, chainID: request.chainId, rpcResult: nil, tag: protocolMethod.requestConfig.tag)
 
 
-        try await networkingInteractor.request(rpcRequest, topic: request.topic, protocolMethod: SessionRequestProtocolMethod(), tvfData: tfvData)
+        try await networkingInteractor.request(rpcRequest, topic: request.topic, protocolMethod: SessionRequestProtocolMethod(), tvfData: tvfData)
     }
 }

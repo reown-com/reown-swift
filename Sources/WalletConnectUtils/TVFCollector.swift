@@ -78,7 +78,7 @@ public struct TVFCollector {
     ///   - rpcMethod: The RPC method (e.g., `"eth_sendTransaction"`).
     ///   - rpcParams: An `AnyCodable` containing arbitrary JSON or primitive content.
     ///   - chainID:   A `Blockchain` instance (e.g., `Blockchain("eip155:1")`).
-    ///   - rpcResult: A JSON/string for the RPC result (only needed if `tag == .sessionResponse`).
+    ///   - rpcResult: An optional `RPCResult` representing `.response(AnyCodable)` or `.error(...)`.
     ///   - tag:       Integer that should map to `.sessionRequest (1008)` or `.sessionResponse (1009)`.
     ///
     /// - Returns: `TVFData` if successful, otherwise `nil`.
@@ -86,7 +86,7 @@ public struct TVFCollector {
         rpcMethod: String,
         rpcParams: AnyCodable,
         chainID: Blockchain,
-        rpcResult: String?,
+        rpcResult: RPCResult?,
         tag: Int
     ) -> TVFData? {
 
@@ -133,7 +133,7 @@ public struct TVFCollector {
             return nil
         }
         do {
-            // Attempt to decode the array of EthSendTransaction from the AnyCodable
+            // Attempt to decode the array of EthSendTransaction from AnyCodable
             let transactions = try rpcParams.get([EthSendTransaction].self)
             if let firstTo = transactions.first?.to {
                 return [firstTo]
@@ -145,38 +145,49 @@ public struct TVFCollector {
     }
 
     /// Parse transaction hashes/signatures from `rpcResult` for Solana/EVM/wallet calls.
-    private func collectTxHashes(rpcMethod: String, rpcResult: String?) -> [String]? {
-        // If rpcResult is nil, we can't parse anything
+    private func collectTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
+        // If rpcResult is nil or is an error, we can't parse anything
         guard let rpcResult = rpcResult else {
             return nil
         }
+        switch rpcResult {
+        case .error(_):
+            // We do not parse tx hashes in the event of an error
+            return nil
+        case .response(let anycodable):
+            return parseTxHashes(forMethod: rpcMethod, from: anycodable)
+        }
+    }
 
+    /// Decodes the actual transaction hash(es) from the given `AnyCodable` response value.
+    private func parseTxHashes(forMethod method: String, from anycodable: AnyCodable) -> [String]? {
         do {
-            switch rpcMethod {
-            // EVM or wallet methods simply return the raw string as the transaction hash
-            case _ where evm.contains(rpcMethod) || wallet.contains(rpcMethod):
-                return [rpcResult]
+            switch method {
+            // EVM or wallet methods return the raw string as the transaction hash
+            case _ where evm.contains(method) || wallet.contains(method):
+                // Try to decode as a single string
+                if let rawHash = try? anycodable.get(String.self) {
+                    return [rawHash]
+                }
+                return nil
 
             case Self.SOLANA_SIGN_TRANSACTION:
-                guard let data = rpcResult.data(using: .utf8) else { return nil }
-                let decoded = try JSONDecoder().decode(SolanaSignTransactionResult.self, from: data)
+                let decoded = try anycodable.get(SolanaSignTransactionResult.self)
                 return decoded.signature.map { [$0] }
 
             case Self.SOLANA_SIGN_AND_SEND_TRANSACTION:
-                guard let data = rpcResult.data(using: .utf8) else { return nil }
-                let decoded = try JSONDecoder().decode(SolanaSignAndSendTransactionResult.self, from: data)
+                let decoded = try anycodable.get(SolanaSignAndSendTransactionResult.self)
                 return decoded.signature.map { [$0] }
 
             case Self.SOLANA_SIGN_ALL_TRANSACTION:
-                guard let data = rpcResult.data(using: .utf8) else { return nil }
-                let decoded = try JSONDecoder().decode(SolanaSignAllTransactionsResult.self, from: data)
+                let decoded = try anycodable.get(SolanaSignAllTransactionsResult.self)
                 return decoded.transactions
 
             default:
                 return nil
             }
         } catch {
-            print("Error processing \(rpcMethod): \(error)")
+            print("Error processing \(method): \(error)")
             return nil
         }
     }
