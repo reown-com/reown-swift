@@ -2,7 +2,7 @@
 import Foundation
 import WalletConnectUtils
 
-struct Publish: RelayRPC {
+public struct Publish: RelayRPC {
 
     struct Params: Codable {
         let topic: String
@@ -35,6 +35,14 @@ struct Publish: RelayRPC {
 
     var method: String {
         "irn_publish"
+    }
+
+    public struct TVF {
+        let correlationId: RPCID?
+        let rpcMethods: [String]?
+        let chainId: Blockchain?
+        let txHashes: [String]?
+        let contractAddresses: [String]?
     }
 }
 
