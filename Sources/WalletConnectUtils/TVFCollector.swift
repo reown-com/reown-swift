@@ -36,8 +36,8 @@ public struct TVFCollector {
 
     // MARK: - Tag Enum
     enum Tag: Int {
-        case sessionRequest = 1008
-        case sessionResponse = 1009
+        case sessionRequest = 1108
+        case sessionResponse = 1109
     }
 
     // MARK: - Constants
