@@ -104,7 +104,8 @@ public class WalletKitClient {
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
     private let smartAccountsManager: SafesManager?
-    private let chainAbstractionClient: ChainAbstractionClient?
+    private let chainAbstractionClient: ChainAbstractionClient
+    private let gasAbstractionClientsManager: GasAbstractionClientsManager?
 
     private var account: Account?
 
@@ -113,13 +114,15 @@ public class WalletKitClient {
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
         smartAccountsManager: SafesManager?,
-        chainAbstractionClient: ChainAbstractionClient?
+        chainAbstractionClient: ChainAbstractionClient,
+        gasAbstractionClientsManager: GasAbstractionClientsManager?
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
         self.smartAccountsManager = smartAccountsManager
         self.chainAbstractionClient = chainAbstractionClient
+        self.gasAbstractionClientsManager = gasAbstractionClientsManager
     }
     
     /// For a wallet to approve a session proposal.
@@ -273,10 +276,46 @@ public class WalletKitClient {
         return pairingClient.getPairings()
     }
 
+    // MARK: 7702
 
-    // MARK: Yttrium
+    public func prepare7702(EOA: Account, calls: [Call]) async throws -> PreparedGasAbstraction {
+
+        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
+
+        return try await gasAbstractionClient.prepare(chainId: EOA.blockchainIdentifier, from: EOA.address, calls: calls)
+
+    }
+
+    public func prepareUSDCTransferCall(EOA: Account, to: Account, amount: String) -> Call {
+        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
+
+        return gasAbstractionClient.prepareUsdcTransferCall(chainId: to.blockchainIdentifier, to: to.address, usdcAmount: amount)
+    }
+
+#if DEBUG
+    public func set7702ForLocalInfra(address: String) {
+
+        gasAbstractionClientsManager!.set7702ForLocalInfra(address: address)
+    }
+#endif
+
+    public func prepareDeploy(EOA: Account, authSig: SignedAuthorization, params: PrepareDeployParams) async throws -> PreparedSend {
+
+        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
+
+        return try await gasAbstractionClient.prepareDeploy(authSig: authSig, params: params, sponsor: nil)
+    }
+
+    public func send(EOA: Account, signature: PrimitiveSignature, params: SendParams) async throws -> UserOperationReceipt {
+
+        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
+
+        return try await gasAbstractionClient.send(signature: signature, params: params)
+    }
+
+    // MARK: Yttrium 4337
     @available(*, message: "This method is experimental. Use with caution.")
-    public func prepareSendTransactions(_ transactions: [Execution], ownerAccount: Account) async throws -> PreparedSendTransaction {
+    public func prepareSendTransactions(_ transactions: [Call], ownerAccount: Account) async throws -> PreparedSendTransaction {
         guard let smartAccountsManager = smartAccountsManager else {
             throw Errors.smartAccountNotEnabled
         }
@@ -342,55 +381,32 @@ public class WalletKitClient {
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func status(orchestrationId: String) async throws -> StatusResponse {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
-
         return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func prepare(transaction: InitialTransaction) async throws -> PrepareResponse {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
-        return try await chainAbstractionClient.prepare(initialTransaction: transaction)
+    public func prepare(chainId: String, from: String, call: Call) async throws -> PrepareResponse {
+        return try await chainAbstractionClient.prepare(chainId: chainId, from: from, call: call)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func estimateFees(chainId: String) async throws -> Eip1559Estimation {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
         return try await chainAbstractionClient.estimateFees(chainId: chainId)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func getUiFields(routeResponse: PrepareResponseAvailable, currency: Currency) async throws -> UiFields {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
         return try await chainAbstractionClient.getUiFields(routeResponse: routeResponse, currency: currency)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func waitForSuccessWithTimeout(orchestrationId: String, checkIn: UInt64, timeout: UInt64 = 180) async throws -> StatusResponseCompleted {
-        guard let chainClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
-        return try await chainClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: timeout)
+        return try await chainAbstractionClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: timeout)
     }
 }
 

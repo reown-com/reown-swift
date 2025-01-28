@@ -2,13 +2,12 @@ import SwiftUI
 import AsyncButton
 import ReownAppKitUI
 
-
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
     @State private var copyAlert: Bool = false
     @State private var isSmartAccountEnabled: Bool = WalletKitEnabler.shared.isSmartAccountEnabled
     @State private var isChainAbstractionEnabled: Bool = WalletKitEnabler.shared.isChainAbstractionEnabled
-
+    @State private var is7702AccountEnabled: Bool = WalletKitEnabler.shared.is7702AccountEnabled
 
     var body: some View {
         ScrollView {
@@ -31,6 +30,33 @@ struct SettingsView: View {
                         Toggle("", isOn: $isSmartAccountEnabled)
                             .onChange(of: isSmartAccountEnabled) { newValue in
                                 viewModel.enableSmartAccount(newValue)
+                                if newValue {
+                                    // Ensure mutual exclusivity
+                                    is7702AccountEnabled = false
+                                    WalletKitEnabler.shared.is7702AccountEnabled = false
+                                }
+                            }
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 16)
+                    .background(Color.Foreground100.opacity(0.05).cornerRadius(12))
+
+                    HStack {
+                        Text("7702 Account")
+                            .foregroundColor(.Foreground100)
+                            .font(.paragraph700)
+
+                        Spacer()
+
+                        Toggle("", isOn: $is7702AccountEnabled)
+                            .onChange(of: is7702AccountEnabled) { newValue in
+                                viewModel.enable7702Account(newValue)
+                                if newValue {
+                                    // Ensure mutual exclusivity
+                                    isSmartAccountEnabled = false
+                                    WalletKitEnabler.shared.isSmartAccountEnabled = false
+                                }
                             }
                             .labelsHidden()
                     }
@@ -114,6 +140,7 @@ struct SettingsView: View {
         .onAppear {
             viewModel.objectWillChange.send()
             isSmartAccountEnabled = WalletKitEnabler.shared.isSmartAccountEnabled
+            is7702AccountEnabled = WalletKitEnabler.shared.is7702AccountEnabled
         }
     }
 

@@ -5,8 +5,10 @@ import ReownRouter
 
 final class SessionRequestInteractor {
     func respondSessionRequest(sessionRequest: Request, importAccount: ImportAccount) async throws -> Bool {
+        let gasAbstracted = WalletKitEnabler.shared.is7702AccountEnabled
         do {
-            let result = try await Signer.sign(request: sessionRequest, importAccount: importAccount)
+            let result = try await Signer.sign(request: sessionRequest, importAccount: importAccount, gasAbstracted: gasAbstracted)
+            AlertPresenter.present(message: result.description, type: .success)
             try await WalletKit.instance.respond(
                 topic: sessionRequest.topic,
                 requestId: sessionRequest.id,
