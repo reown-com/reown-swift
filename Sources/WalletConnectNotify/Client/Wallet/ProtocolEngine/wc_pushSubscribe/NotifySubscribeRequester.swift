@@ -62,7 +62,7 @@ class NotifySubscribeRequester {
 
         try await networkingInteractor.subscribe(topic: responseTopic)
 
-        try await networkingInteractor.request(request, topic: subscribeTopic, protocolMethod: protocolMethod, envelopeType: .type1(pubKey: keysY.publicKey.rawRepresentation))
+        try await networkingInteractor.request(request, topic: subscribeTopic, protocolMethod: protocolMethod, envelopeType: .type1(pubKey: keysY.publicKey.rawRepresentation), tvfData: nil)
         return subscriptionAuthWrapper
     }
 

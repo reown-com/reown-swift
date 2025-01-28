@@ -24,10 +24,10 @@ struct SolanaSignAllTransactionsResult: Codable {
 // MARK: - TVFData
 
 public struct TVFData {
-    let rpcMethods: [String]?
-    let chainId: Blockchain?
-    let txHashes: [String]?
-    let contractAddresses: [String]?
+    public let rpcMethods: [String]?
+    public let chainId: Blockchain?
+    public let txHashes: [String]?
+    public let contractAddresses: [String]?
 }
 
 // MARK: - TVFCollector
@@ -69,6 +69,8 @@ public struct TVFCollector {
     private var all: [String] {
         evm + solana + wallet
     }
+
+    public init() {}
 
     // MARK: - Single Public Method
 

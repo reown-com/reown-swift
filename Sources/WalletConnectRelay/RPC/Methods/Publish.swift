@@ -17,17 +17,17 @@ public struct Publish: RelayRPC {
         let txHashes: [String]?
         let contractAddresses: [String]?
 
-        init(topic: String, message: String, ttl: Int, prompt: Bool?, tag: Int?, correlationId: RPCID? = nil, rpcMethods: [String]? = nil, chainId: Blockchain? = nil, txHashes: [String]? = nil, contractAddresses: [String]? = nil) {
+        init(topic: String, message: String, ttl: Int, prompt: Bool?, tag: Int?, correlationId: RPCID?, tvfData: TVFData?) {
             self.topic = topic
             self.message = message
             self.ttl = ttl
             self.prompt = prompt
             self.tag = tag
             self.correlationId = correlationId
-            self.rpcMethods = rpcMethods
-            self.chainId = chainId
-            self.txHashes = txHashes
-            self.contractAddresses = contractAddresses
+            self.rpcMethods = tvfData?.rpcMethods
+            self.chainId = tvfData?.chainId
+            self.txHashes = tvfData?.txHashes
+            self.contractAddresses = tvfData?.contractAddresses
         }
     }
 
@@ -35,14 +35,6 @@ public struct Publish: RelayRPC {
 
     var method: String {
         "irn_publish"
-    }
-
-    public struct TVF {
-        let correlationId: RPCID?
-        let rpcMethods: [String]?
-        let chainId: Blockchain?
-        let txHashes: [String]?
-        let contractAddresses: [String]?
     }
 }
 

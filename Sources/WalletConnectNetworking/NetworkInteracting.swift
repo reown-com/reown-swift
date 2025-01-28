@@ -56,12 +56,28 @@ public protocol NetworkInteracting {
 }
 
 extension NetworkInteracting {
-    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, tvfData: TVFData? = nil) async throws {
+    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod) async throws {
+        try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: nil)
+    }
+
+    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, tvfData: TVFData?) async throws {
         try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: tvfData)
+    }
+
+    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+        try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
+    }
+
+    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod) async throws {
+        try await self.respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: nil)
     }
 
     public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, tvfData: TVFData?) async throws {
         try await self.respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: tvfData)
+    }
+
+    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+        try await self.respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
     }
 
     public func respondSuccess(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod) async throws {

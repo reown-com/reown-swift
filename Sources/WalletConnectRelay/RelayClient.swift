@@ -127,7 +127,7 @@ public final class RelayClient {
             return
         }
         #endif
-        let request = Publish(params: .init(topic: topic, message: payload, ttl: ttl, prompt: prompt, tag: tag)).asRPCRequest()
+        let request = Publish(params: .init(topic: topic, message: payload, ttl: ttl, prompt: prompt, tag: tag, correlationId: coorelationId, tvfData: tvfData)).asRPCRequest()
         let message = try request.asJSONEncodedString()
         
         logger.debug("[Publish] Sending payload on topic: \(topic)")

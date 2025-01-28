@@ -134,13 +134,13 @@ public struct SignClientFactory {
 
         let approveSessionAuthenticateDispatcher = ApproveSessionAuthenticateDispatcher(relaySessionAuthenticateResponder: relaySessionAuthenticateResponder, logger: logger, rpcHistory: rpcHistory, approveSessionAuthenticateUtil: approveSessionAuthenticateUtil, linkSessionAuthenticateResponder: linkSessionAuthenticateResponder)
 
-        let relaySessionRequester = SessionRequester(sessionStore: sessionStore, networkingInteractor: networkingClient, logger: logger)
+        let relaySessionRequester = SessionRequester(sessionStore: sessionStore, networkingInteractor: networkingClient, logger: logger, tvfCollector: TVFCollector())
 
         let linkSessionRequester = LinkSessionRequester(sessionStore: sessionStore, linkEnvelopesDispatcher: linkEnvelopesDispatcher, logger: logger, eventsClient: eventsClient)
         let sessionRequestDispatcher = SessionRequestDispatcher(relaySessionRequester: relaySessionRequester, linkSessionRequester: linkSessionRequester, logger: logger, sessionStore: sessionStore)
         let linkSessionRequestSubscriber = LinkSessionRequestSubscriber(sessionRequestsProvider: sessionRequestsProvider, sessionStore: sessionStore, logger: logger, envelopesDispatcher: linkEnvelopesDispatcher, eventsClient: eventsClient)
 
-        let relaySessionResponder = SessionResponder(logger: logger, sessionStore: sessionStore, networkingInteractor: networkingClient, verifyContextStore: verifyContextStore, sessionRequestsProvider: sessionRequestsProvider, historyService: historyService)
+        let relaySessionResponder = SessionResponder(logger: logger, sessionStore: sessionStore, networkingInteractor: networkingClient, verifyContextStore: verifyContextStore, sessionRequestsProvider: sessionRequestsProvider, historyService: historyService, tvfCollector: TVFCollector())
         let linkSessionResponder = LinkSessionResponder(logger: logger, sessionStore: sessionStore, linkEnvelopesDispatcher: linkEnvelopesDispatcher, sessionRequestsProvider: sessionRequestsProvider, historyService: historyService, eventsClient: eventsClient)
         let sessionResponderDispatcher = SessionResponderDispatcher(relaySessionResponder: relaySessionResponder, linkSessionResponder: linkSessionResponder, logger: logger, sessionStore: sessionStore)
         let linkSessionRequestResponseSubscriber = LinkSessionRequestResponseSubscriber(envelopesDispatcher: linkEnvelopesDispatcher, eventsClient: eventsClient)
