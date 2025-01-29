@@ -237,12 +237,16 @@ extension View {
     }
 }
 
-// 2) A simple view modifier for tapping outside to dismiss.
 struct HideKeyboardOnTapModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onTapGesture {
-                self.hideKeyboard()
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder),
+                    to: nil,
+                    from: nil,
+                    for: nil
+                )
             }
     }
 }
