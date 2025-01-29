@@ -15,6 +15,7 @@
 		8421447F2C81863A004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447E2C81863A004FF494 /* ReownWalletKit */; };
 		842144812C818684004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 842144802C818684004FF494 /* ReownWalletKit */; };
 		842144832C818928004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 842144822C818928004FF494 /* ReownWalletKit */; };
+		842516192D4A1168005CF70B /* L2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842516182D4A1168005CF70B /* L2.swift */; };
 		84310D05298BC980000C15B6 /* MainInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84310D04298BC980000C15B6 /* MainInteractor.swift */; };
 		8439CB89293F658E00F2F2E2 /* PushMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8439CB88293F658E00F2F2E2 /* PushMessage.swift */; };
 		844511922C8B689D00A6A86C /* AppKitLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844511912C8B689D00A6A86C /* AppKitLabApp.swift */; };
@@ -341,6 +342,7 @@
 		767DC83428997F8E00080FA9 /* EthSendTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EthSendTransaction.swift; sourceTree = "<group>"; };
 		840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletKitEnabler.swift; sourceTree = "<group>"; };
+		842516182D4A1168005CF70B /* L2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L2.swift; sourceTree = "<group>"; };
 		84310D04298BC980000C15B6 /* MainInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainInteractor.swift; sourceTree = "<group>"; };
 		8439CB88293F658E00F2F2E2 /* PushMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushMessage.swift; sourceTree = "<group>"; };
 		8445118F2C8B689D00A6A86C /* AppKitLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppKitLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -856,6 +858,7 @@
 				84AEF0152D3DD8CA006E43E5 /* SendStableCoinView.swift */,
 				84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */,
 				84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */,
+				842516182D4A1168005CF70B /* L2.swift */,
 				84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */,
 			);
 			path = SendStableCoin;
@@ -2026,6 +2029,7 @@
 				C5FFEA842ADDAD6D007282A2 /* SafariViewController.swift in Sources */,
 				C55D3497295DFA750004314A /* WelcomeView.swift in Sources */,
 				8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */,
+				842516192D4A1168005CF70B /* L2.swift in Sources */,
 				A57879722A4F225E00F8D10B /* ImportAccount.swift in Sources */,
 				C5B2F71029705827000DBA0E /* EthereumTransaction.swift in Sources */,
 				A50D53C32ABA055700A4FD8B /* NotifyPreferencesRouter.swift in Sources */,
