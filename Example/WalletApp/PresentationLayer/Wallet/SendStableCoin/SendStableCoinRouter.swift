@@ -35,4 +35,16 @@ final class SendStableCoinRouter {
         )
         .present(from: viewController)
     }
+
+    func presentCATransaction(
+        call: Call,
+        from: String,
+        chainId: Blockchain,
+        importAccount: ImportAccount,
+        routeResponseAvailable: PrepareResponseAvailable
+    ) {
+        CATransactionModule.create(app: app, sessionRequest: nil, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, call: call, from: from, chainId: chainId)
+            .present(from: viewController)
+    }
+
 }

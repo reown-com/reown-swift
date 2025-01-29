@@ -23,13 +23,6 @@ struct SendStableCoinView: View {
                         Text(myAddressShort)
                             .font(.system(.body, design: .monospaced))
                     }
-                    Spacer()
-                    Button(action: {
-                        presenter.upgradeToSmartAccount()
-                    }) {
-                        Text("Upgrade to Smart Account")
-                            .foregroundColor(.blue)
-                    }
                 }
             }
             .padding()
@@ -110,33 +103,10 @@ struct SendStableCoinView: View {
                             Button(L2.Optimism.rawValue) {
                                 presenter.set(network: .Optimism)
                             }
-                            Button(L2.Sepolia.rawValue) {
-                                presenter.set(network: .Sepolia)
-                            }
                             Button("Cancel", role: .cancel) {}
                         }
                     }
                 }
-
-                // Add Transaction button
-                Button(action: {
-                    // TODO: handle adding additional transactions
-                }) {
-                    Label("Add Transaction", systemImage: "plus")
-                        .foregroundColor(.blue)
-                }
-            }
-            .padding()
-            .background(Color("grey-section"))
-            .cornerRadius(12)
-
-            // Fees row
-            HStack {
-                Text("Fees")
-                    .foregroundColor(.gray)
-                Spacer()
-                Text(feesApprox)
-                    .font(.system(.body, design: .monospaced))
             }
             .padding()
             .background(Color("grey-section"))
