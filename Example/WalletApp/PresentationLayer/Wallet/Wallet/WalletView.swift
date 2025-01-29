@@ -74,17 +74,17 @@ struct WalletView: View {
                             Spacer()
 
                             // Text button with "test 7702"
-                            Button {
-                                Task { try await presenter.test7702() }
-                            } label: {
-                                Text("test 7702")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color.blue)
-                                    .cornerRadius(8)
-                            }
+//                            Button {
+//                                Task { try await presenter.test7702() }
+//                            } label: {
+//                                Text("test 7702")
+//                                    .foregroundColor(.white)
+//                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+//                                    .padding(.horizontal, 16)
+//                                    .padding(.vertical, 8)
+//                                    .background(Color.blue)
+//                                    .cornerRadius(8)
+//                            }
                             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                             Spacer()
 

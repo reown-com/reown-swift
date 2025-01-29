@@ -73,7 +73,6 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         }
     }
 
-    /// Build the [Call] array from the presenter's current `recipient` and `amount`
     private func getCall() throws -> Call {
         let eoa = try Account(
             blockchain: selectedNetwork.chainId,
@@ -85,10 +84,25 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             accountAddress: recipient
         )
 
+        // 1) Parse the user’s string (e.g. "1") into Decimal:
+        guard let decimalAmount = Decimal(string: amount) else {
+            // Handle parse failure
+            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
+                NSLocalizedDescriptionKey: "Invalid numeric input: \(amount)"
+            ])
+        }
+
+        // 2) Multiply by 10^6 because USDC uses 6 decimals:
+        let baseUnitsDecimal = decimalAmount * Decimal(1_000_000)
+
+        // 3) Convert back to String to pass into prepareUSDCTransferCall:
+        let baseUnitsString = NSDecimalNumber(decimal: baseUnitsDecimal).stringValue
+
+        // Now use `baseUnitsString` as the amount in base units:
         let call = WalletKit.instance.prepareUSDCTransferCall(
             EOA: eoa,
             to: toAccount,
-            amount: amount
+            amount: baseUnitsString
         )
 
         return call
