@@ -16,15 +16,15 @@ final class SessionProposalInteractor {
         var supportedAccounts: [Account]
         var sessionProperties = [String: String]()
 
-        if WalletKitEnabler.shared.isSmartAccountEnabled {
-            let sepolia = Blockchain("eip155:11155111")!
-            let sepoliaOwnerAccount = Account(blockchain: sepolia, address: EOAAccount.address)!
-            let smartAccountAddresses = try await WalletKitEnabler.shared.getSmartAccountsAddresses(ownerAccount: sepoliaOwnerAccount)
-            supportedAccounts = smartAccountAddresses.map { Account(blockchain: sepolia, address: $0)! }
-            sessionProperties = getSessionProperties(addresses: smartAccountAddresses)
-        } else {
+//        if WalletKitEnabler.shared.isSmartAccountEnabled {
+//            let sepolia = Blockchain("eip155:11155111")!
+//            let sepoliaOwnerAccount = Account(blockchain: sepolia, address: EOAAccount.address)!
+//            let smartAccountAddresses = try await WalletKitEnabler.shared.getSmartAccountsAddresses(ownerAccount: sepoliaOwnerAccount)
+//            supportedAccounts = smartAccountAddresses.map { Account(blockchain: sepolia, address: $0)! }
+//            sessionProperties = getSessionProperties(addresses: smartAccountAddresses)
+//        } else {
             supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: EOAAccount.address)! }
-        }
+//        }
 
         /* Use only supported values for production. I.e:
         let supportedMethods = ["eth_signTransaction", "personal_sign", "eth_signTypedData", "eth_sendTransaction", "eth_sign"]

@@ -1,6 +1,39 @@
 import SwiftUI
 import AsyncButton
 
+// MARK: - Keyboard-Dismiss Modifier
+
+/// A view modifier that places a full-screen clear layer behind `content`
+/// so that tapping anywhere outside of a TextField dismisses the keyboard.
+struct HideKeyboardOnTapModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        ZStack {
+            // 1) A full-screen background that's tappable
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil,
+                        from: nil,
+                        for: nil
+                    )
+                }
+            // 2) The actual content on top
+            content
+        }
+    }
+}
+
+/// A convenience extension that applies HideKeyboardOnTapModifier
+extension View {
+    func hideKeyboardOnTap() -> some View {
+        self.modifier(HideKeyboardOnTapModifier())
+    }
+}
+
+// MARK: - Main View
+
 struct SendStableCoinView: View {
     @ObservedObject var presenter: SendStableCoinPresenter
     @State private var showNetworkPicker = false
@@ -19,8 +52,10 @@ struct SendStableCoinView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
                     }
+                    Spacer()
                 }
             }
+            .frame(maxWidth: .infinity) // Ensures full width
             .padding()
             .background(Color("grey-section"))
             .cornerRadius(12)
@@ -63,15 +98,27 @@ struct SendStableCoinView: View {
                         .font(.system(.body, design: .monospaced))
                 }
             }
+            .frame(maxWidth: .infinity)
             .padding()
             .background(Color("grey-section"))
             .cornerRadius(12)
 
             // 3) Transaction card
             VStack(spacing: 20) {
-                Text("Transaction 1")
+                Text("Transaction")
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Stable coin picker: USDC or USDT
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Coin")
+                        .foregroundColor(.gray)
+                    Picker("Stablecoin", selection: $presenter.stableCoinChoice) {
+                        Text("USDC").tag(StableCoinChoice.usdc)
+                        Text("USDT").tag(StableCoinChoice.usdt)
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                }
 
                 // Recipient
                 VStack(alignment: .leading, spacing: 8) {
@@ -123,6 +170,7 @@ struct SendStableCoinView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
             .padding()
             .background(Color("grey-section"))
             .cornerRadius(12)
@@ -167,7 +215,8 @@ struct SendStableCoinView: View {
     }
 }
 
-/// A simple "Transaction Completed" screen
+// MARK: - "Transaction Completed" Screen
+
 struct SendStableCoinCompletedView: View {
     @ObservedObject var presenter: SendStableCoinPresenter
 
@@ -224,36 +273,5 @@ struct SendStableCoinCompletedView: View {
             }
             .padding()
         }
-    }
-}
-
-
-extension View {
-    func hideKeyboard() {
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil, from: nil, for: nil
-        )
-    }
-}
-
-struct HideKeyboardOnTapModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .onTapGesture {
-                UIApplication.shared.sendAction(
-                    #selector(UIResponder.resignFirstResponder),
-                    to: nil,
-                    from: nil,
-                    for: nil
-                )
-            }
-    }
-}
-
-// 3) An easy-to-use helper function for the modifier
-extension View {
-    func hideKeyboardOnTap() -> some View {
-        self.modifier(HideKeyboardOnTapModifier())
     }
 }

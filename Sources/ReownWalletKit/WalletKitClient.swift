@@ -103,9 +103,7 @@ public class WalletKitClient {
     private let signClient: SignClientProtocol
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
-    private let smartAccountsManager: SafesManager?
     private let chainAbstractionClient: ChainAbstractionClient
-    private let gasAbstractionClientsManager: GasAbstractionClientsManager?
 
     private var account: Account?
 
@@ -113,16 +111,12 @@ public class WalletKitClient {
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
-        smartAccountsManager: SafesManager?,
-        chainAbstractionClient: ChainAbstractionClient,
-        gasAbstractionClientsManager: GasAbstractionClientsManager?
+        chainAbstractionClient: ChainAbstractionClient
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
-        self.smartAccountsManager = smartAccountsManager
         self.chainAbstractionClient = chainAbstractionClient
-        self.gasAbstractionClientsManager = gasAbstractionClientsManager
     }
     
     /// For a wallet to approve a session proposal.
@@ -276,107 +270,13 @@ public class WalletKitClient {
         return pairingClient.getPairings()
     }
 
-    // MARK: 7702
-
-    public func prepare7702(EOA: Account, calls: [Call]) async throws -> PreparedGasAbstraction {
-
-        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
-
-        return try await gasAbstractionClient.prepare(chainId: EOA.blockchainIdentifier, from: EOA.address, calls: calls)
-
-    }
-
-    public func prepareUSDCTransferCall(EOA: Account, to: Account, amount: String) -> Call {
-        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
-
-        return gasAbstractionClient.prepareUsdcTransferCall(chainId: to.blockchainIdentifier, to: to.address, usdcAmount: amount)
-    }
-
-#if DEBUG
-    public func set7702ForLocalInfra(address: String) {
-
-        gasAbstractionClientsManager!.set7702ForLocalInfra(address: address)
-    }
-#endif
-
-    public func prepareDeploy(EOA: Account, authSig: SignedAuthorization, params: PrepareDeployParams) async throws -> PreparedSend {
-
-        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
-
-        return try await gasAbstractionClient.prepareDeploy(authSig: authSig, params: params, sponsor: nil)
-    }
-
-    public func send(EOA: Account, signature: PrimitiveSignature, params: SendParams) async throws -> UserOperationReceipt {
-
-        let gasAbstractionClient = gasAbstractionClientsManager!.getOrCreateGasAbstractionClient(for: EOA)
-
-        return try await gasAbstractionClient.send(signature: signature, params: params)
-    }
-
-    // MARK: Yttrium 4337
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func prepareSendTransactions(_ transactions: [Call], ownerAccount: Account) async throws -> PreparedSendTransaction {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.prepareSendTransactions(transactions: transactions)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: DoSendTransactionParams, ownerAccount: Account) async throws -> String {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.doSendTransactions(signatures: signatures, doSendTransactionParams: doSendTransactionParams)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func getSmartAccount(ownerAccount: Account) async throws -> Account {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        let address = try await client.getAddress()
-        
-        // it's safe to force unwrap here because we know that the address and the chain are valid
-        return Account(blockchain: ownerAccount.blockchain, address: address)!
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func waitForUserOperationReceipt(userOperationHash: String, ownerAccount: Account) async throws -> String {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.waitForUserOperationReceipt(userOperationHash: userOperationHash)
-    }
-
-    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) throws -> FfiPreparedSignature {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return client.prepareSignMessage(messageHash: messageHash)
-    }
-
-    public func doSignMessage(_ signatures: [OwnerSignature], ownerAccount: Account) async throws -> SignOutputEnum {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        let signature = try await client.doSignMessage(signatures: signatures)
-        return signature
-    }
-
-    public func finalizeSignMessage(_ signatures: [OwnerSignature], signStep3Params: SignStep3Params, ownerAccount: Account) async throws -> String {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        let signature = try await client.finalizeSignMessage(signatures: signatures, signStep3Params: signStep3Params)
-        return signature
+    public func prepareERC20TransferCall(
+        erc20Address: String,
+        to: String,
+        amount: String
+    ) -> Call {
+        return chainAbstractionClient.prepareErc20TransferCall(
+            erc20Address: erc20Address, to: to, amount: amount)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")

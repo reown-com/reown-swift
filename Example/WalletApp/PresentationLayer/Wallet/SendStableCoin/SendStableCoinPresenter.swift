@@ -3,6 +3,11 @@ import Combine
 @preconcurrency import ReownWalletKit
 import BigInt
 
+enum StableCoinChoice: String, CaseIterable {
+    case usdc = "USDC"
+    case usdt = "USDT"
+}
+
 final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     // MARK: - Published Properties
 
@@ -12,7 +17,23 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             fetchAllBalances()
         }
     }
-    @Published var recipient: String = "0x2bb169662b61f3D8f8318F800F686389C8a72961"
+    /// Which stablecoin to send
+    @Published var stableCoinChoice: StableCoinChoice = .usdc {
+        didSet {
+            // If user picks USDT on Base => not supported
+            if stableCoinChoice == .usdt, selectedNetwork == .Base {
+                AlertPresenter.present(
+                    message: "USDT is not supported on Base.",
+                    type: .error
+                )
+            }
+        }
+    }
+
+    /// Recipient address or ENS
+    @Published var recipient: String = ""
+
+    /// Amount to send (in "human-readable" format, e.g. "1.0" for 1 USDC)
     @Published var amount: String = "1"
 
     /// When true, shows the success sheet
@@ -29,11 +50,20 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     let router: SendStableCoinRouter
     let importAccount: ImportAccount
 
+    // MARK: - Private
+
+    private let userDefaults = UserDefaults.standard
+    private let recipientKey = "lastStableCoinRecipient"
+
     // MARK: - Init
 
     init(router: SendStableCoinRouter, importAccount: ImportAccount) {
         self.router = router
         self.importAccount = importAccount
+
+        // 1) Load the last used recipient from UserDefaults
+        let savedRecipient = userDefaults.string(forKey: recipientKey) ?? ""
+        self.recipient = savedRecipient
 
         // Fetch initial balances for the default selectedNetwork
         fetchAllBalances()
@@ -59,7 +89,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                     token: selectedNetwork.usdcContractAddress,
                     owner: owner
                 )
-              let usdtHex  = try await WalletKit.instance.erc20Balance(
+                let usdtHex = try await WalletKit.instance.erc20Balance(
                     chainId: chainString,
                     token: selectedNetwork.usdtContractAddress,
                     owner: owner
@@ -122,6 +152,12 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
     /// Main send method, which prepares and routes a transaction
     func send() async throws {
+        // 1) Check if USDT is selected on Base => not supported
+        if stableCoinChoice == .usdt, selectedNetwork == .Base {
+            AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
+            return
+        }
+
         do {
             let call = try getCall()
 
@@ -138,6 +174,9 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                     switch routeResponse {
                     case .available(let routeResponseAvailable):
                         // If the route is available, present a CA transaction flow
+                        // We consider this a success scenario for saving the recipient
+                        self.saveRecipientToUserDefaults()
+
                         router.presentCATransaction(
                             call: call,
                             from: importAccount.account.address,
@@ -147,6 +186,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                         )
                     case .notRequired:
                         // Possibly handle a scenario where no special routing is needed
+                        self.saveRecipientToUserDefaults()
                         AlertPresenter.present(message: "Routing not required", type: .success)
                     }
                 case .error(let routeResponseError):
@@ -165,7 +205,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         }
     }
 
-    /// Constructs the `Call` object to send USDC (decimal → base units)
+    /// Constructs the `Call` object to send either USDC or USDT (decimal → base units)
     private func getCall() throws -> Call {
         let eoa = try Account(
             blockchain: selectedNetwork.chainId,
@@ -183,18 +223,31 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             ])
         }
 
-        // 2) Multiply by 10^6 because USDC uses 6 decimals
+        // USDC/USDT => 6 decimals
         let baseUnitsDecimal = decimalAmount * Decimal(1_000_000)
-
-        // 3) Convert that to a String for `prepareUSDCTransferCall`
         let baseUnitsString = NSDecimalNumber(decimal: baseUnitsDecimal).stringValue
 
-        // 4) Create the call object (still using USDC for “sending stablecoin”)
-        let call = WalletKit.instance.prepareUSDCTransferCall(
-            EOA: eoa,
-            to: toAccount,
+        // 2) Determine which contract address to use
+        let tokenAddress: String
+        switch stableCoinChoice {
+        case .usdc:
+            tokenAddress = selectedNetwork.usdcContractAddress
+        case .usdt:
+            // already checked if .Base => throw error => must not get here if base
+            tokenAddress = selectedNetwork.usdtContractAddress
+        }
+
+        // 3) Build the call
+        let call = WalletKit.instance.prepareERC20TransferCall(
+            erc20Address: tokenAddress,
+            to: recipient,
             amount: baseUnitsString
         )
         return call
+    }
+
+    /// Persists the latest recipient in UserDefaults
+    private func saveRecipientToUserDefaults() {
+        userDefaults.set(recipient, forKey: recipientKey)
     }
 }
