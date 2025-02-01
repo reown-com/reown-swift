@@ -112,7 +112,7 @@ runs:
 
     - name: Upload test artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.type }} test_results
         path: ./artifacts.zip

@@ -29,28 +29,14 @@ final class Signer {
     private init() {}
 
     /// Main entry point that decides which signer to call.
-    static func sign(request: Request, importAccount: ImportAccount, gasAbstracted: Bool) async throws -> AnyCodable {
+    static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
         let requestedAddress = try await getRequestedAddress(request)
 
         // If EOA address is requested
-        if requestedAddress.lowercased() == importAccount.account.address.lowercased()
-            && !gasAbstracted {
+        if requestedAddress.lowercased() == importAccount.account.address.lowercased() {
             // EOA route
             let eoaSigner = EOASigner()
             return try await eoaSigner.sign(request: request, importAccount: importAccount)
-        }
-
-        // If it's a smart account
-        let smartAccount = try await WalletKit.instance.getSmartAccount(ownerAccount: importAccount.account)
-        if smartAccount.address.lowercased() == requestedAddress.lowercased() {
-            // Smart account route
-            let smartAccountSigner = SmartAccountSigner()
-            return try await smartAccountSigner.sign(request: request, importAccount: importAccount)
-        }
-        // If gas abstracted
-        if gasAbstracted {
-            let gasAbstractionSigner = GasAbstractionSigner()
-            return try await gasAbstractionSigner.sign(request: request, importAccount: importAccount, chainId: request.chainId)
         }
 
         // If none of the above matched, throw an error

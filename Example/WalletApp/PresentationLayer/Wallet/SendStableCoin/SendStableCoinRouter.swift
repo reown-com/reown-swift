@@ -17,22 +17,15 @@ final class SendStableCoinRouter {
         }
     }
 
-    func presentUpgradeToSmartAccount(
+    func presentCATransaction(
+        call: Call,
+        from: String,
+        chainId: Blockchain,
         importAccount: ImportAccount,
-        network: L2,
-        prepareDeployParams: PrepareDeployParams,
-        auth: PreparedGasAbstractionAuthorization,
-        chainId: Blockchain
+        routeResponseAvailable: PrepareResponseAvailable
     ) {
-
-        UpgradeToSmartAccountModule.create(
-            app: app,
-            importAccount: importAccount,
-            network: network,
-            prepareDeployParams: prepareDeployParams,
-            auth: auth,
-            chainId: chainId
-        )
-        .present(from: viewController)
+        CATransactionModule.create(app: app, sessionRequest: nil, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, call: call, from: from, chainId: chainId)
+            .present(from: viewController)
     }
+
 }

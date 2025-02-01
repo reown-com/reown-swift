@@ -42,7 +42,7 @@ jobs:
       shell: bash
       run: test -d "DerivedDataCache" && tar cfPp products.tar --format posix DerivedDataCache/Build
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: main-derivedData
         path: products.tar

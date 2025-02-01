@@ -1,166 +1,253 @@
 import Foundation
 import Combine
 @preconcurrency import ReownWalletKit
+import BigInt
 
-enum L2: String {
-    case Arbitrium
-    case Optimism
-    case Base
-    case Sepolia
-
-    var chainId: Blockchain {
-        switch self {
-        case .Arbitrium:
-            return Blockchain("eip155:42161")!
-        case .Optimism:
-            return Blockchain("eip155:10")!
-        case .Base:
-            return Blockchain("eip155:8453")!
-        case .Sepolia:
-            return Blockchain("eip155:11155111")!
-        }
-    }
+enum StableCoinChoice: String, CaseIterable {
+    case usdc = "USDC"
+    case usdt = "USDT"
 }
 
-/// Your Presenter for handling logic: building calls, checking deployment, and routing
 final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
-    @Published var selectedNetwork: L2 = .Sepolia
-    @Published var recipient: String = "0x2bb169662b61f3D8f8318F800F686389C8a72961"
-    @Published var amount: String = "1"
-    @Published var transactionCompleted: Bool = false
-    @Published var transactionResult: String? = nil
+    // MARK: - Published Properties
 
-    let router: SendStableCoinRouter
-    let importAccount: ImportAccount
-
-    init(router: SendStableCoinRouter,
-         importAccount: ImportAccount) {
-        self.router = router
-        self.importAccount = importAccount
+    @Published var selectedNetwork: L2 = .Base {
+        didSet {
+            // Whenever the user changes networks, refetch balances
+            fetchAllBalances()
+        }
     }
-
-    func set(network: L2) {
-        selectedNetwork = network
-    }
-
-    /// Reusable method that checks if wallet deployment is required
-    func checkDeploymentRequired(for calls: [Call]) async throws -> PreparedGasAbstraction {
-        let eoa = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: importAccount.account.address
-        )
-        return try await WalletKit.instance.prepare7702(EOA: eoa, calls: calls)
-    }
-
-    /// Called when user taps "Upgrade to Smart Account"
-    /// In this example, it uses the same calls as typed in the text fields.
-    func upgradeToSmartAccount() {
-        Task {
-            do {
-                let calls = try getCalls()
-                let preparedGasAbstraction = try await checkDeploymentRequired(for: calls)
-
-                switch preparedGasAbstraction {
-                case .deploymentRequired(auth: let auth, prepareDeployParams: let params):
-                    // If deployment is required, present the upgrade flow
-                    router.presentUpgradeToSmartAccount(
-                        importAccount: importAccount,
-                        network: selectedNetwork,
-                        prepareDeployParams: params,
-                        auth: auth,
-                        chainId: selectedNetwork.chainId
-                    )
-                case .deploymentNotRequired:
-                    // If not required, hide the button & show alert
-                    AlertPresenter.present(
-                        message: "Upgrade not required",
-                        type: .error
-                    )
-                }
-            } catch {
-                // If something goes wrong with checkDeploymentRequired
+    /// Which stablecoin to send
+    @Published var stableCoinChoice: StableCoinChoice = .usdc {
+        didSet {
+            // If user picks USDT on Base => not supported
+            if stableCoinChoice == .usdt, selectedNetwork == .Base {
                 AlertPresenter.present(
-                    message: error.localizedDescription,
+                    message: "USDT is not supported on Base.",
                     type: .error
                 )
             }
         }
     }
 
-    /// Called when user taps "Send"
-    /// Uses the presenter's `recipient` and `amount` directly
-    func send() async throws  {
-        do {
+    /// Recipient address or ENS
+    @Published var recipient: String = ""
 
-            // Build calls from the presenter's fields
-            let calls = try getCalls()
+    /// Amount to send (in "human-readable" format, e.g. "1.0" for 1 USDC)
+    @Published var amount: String = "1"
 
-            // Check if wallet deployment is required
-            let preparedGasAbstraction = try await checkDeploymentRequired(for: calls)
-            let eoa = try Account(
-                blockchain: selectedNetwork.chainId,
-                accountAddress: importAccount.account.address
-            )
-            let signer = ETHSigner(importAccount: importAccount)
+    /// When true, shows the success sheet
+    @Published var transactionCompleted: Bool = false
+    @Published var transactionResult: String? = nil
 
-            switch preparedGasAbstraction {
-            case .deploymentRequired(auth: let auth, prepareDeployParams: let deployParams):
-                print("Deployment is required -> Show 'upgrade to smart account' screen")
-                await MainActor.run {
-                    router.presentUpgradeToSmartAccount(
-                        importAccount: importAccount,
-                        network: selectedNetwork,
-                        prepareDeployParams: deployParams,
-                        auth: auth,
-                        chainId: selectedNetwork.chainId
-                    )
-                }
+    /// String displayed for USDC balance
+    @Published var usdcBalance: String = "0.00"
+    /// String displayed for USDT balance
+    @Published var usdtBalance: String = "0.00"
+    /// Combined top-level balance (USDC + USDT)
+    @Published var combinedBalance: String = "0.00"
 
-            case .deploymentNotRequired(preparedSend: let preparedSend):
-                print("Deployment not required -> sign & send userOp")
+    let router: SendStableCoinRouter
+    let importAccount: ImportAccount
 
-                let signature = try signer.signHash(preparedSend.hash)
-                let userOpReceipt = try await WalletKit.instance.send(
-                    EOA: eoa,
-                    signature: signature,
-                    params: preparedSend.sendParams
+    // MARK: - Private
+
+    private let userDefaults = UserDefaults.standard
+    private let recipientKey = "lastStableCoinRecipient"
+
+    // MARK: - Init
+
+    init(router: SendStableCoinRouter, importAccount: ImportAccount) {
+        self.router = router
+        self.importAccount = importAccount
+
+        // 1) Load the last used recipient from UserDefaults
+        let savedRecipient = userDefaults.string(forKey: recipientKey) ?? ""
+        self.recipient = savedRecipient
+
+        // Fetch initial balances for the default selectedNetwork
+        fetchAllBalances()
+    }
+
+    /// Sets the chosen network and triggers a refresh
+    func set(network: L2) {
+        selectedNetwork = network
+    }
+
+    // MARK: - Fetch Balances
+
+    /// Fetch both USDC and USDT balances, compute combined, update UI
+    private func fetchAllBalances() {
+        let chainString = selectedNetwork.chainId.absoluteString
+        let owner = importAccount.account.address
+
+        Task {
+            do {
+                // 1) Fetch raw hex balances
+                let usdcHex = try await WalletKit.instance.erc20Balance(
+                    chainId: chainString,
+                    token: selectedNetwork.usdcContractAddress,
+                    owner: owner
                 )
-                print("[GasAbstractionSigner] userOpReceipt: \(userOpReceipt)")
+                let usdtHex = try await WalletKit.instance.erc20Balance(
+                    chainId: chainString,
+                    token: selectedNetwork.usdtContractAddress,
+                    owner: owner
+                )
+
+                // 2) Convert both from hex → Decimal (accounting for 6 decimals in each token)
+                let usdcDecimal = parseHexBalance(usdcHex, decimals: 6)
+                let usdtDecimal = parseHexBalance(usdtHex, decimals: 6)
+
+                // 3) Combine them
+                let combined = usdcDecimal + usdtDecimal
+
+                // 4) Update published properties on MainActor
                 await MainActor.run {
-                    transactionCompleted = true
+                    self.usdcBalance = formatDecimal(usdcDecimal)
+                    self.usdtBalance = formatDecimal(usdtDecimal)
+                    self.combinedBalance = formatDecimal(combined)
+                }
+            } catch {
+                // On error, set them to 0.00
+                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                await MainActor.run {
+                    self.usdcBalance = "0.00"
+                    self.usdtBalance = "0.00"
+                    self.combinedBalance = "0.00"
                 }
             }
-        } catch {
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
         }
     }
 
-    /// Build the [Call] array from the presenter's current `recipient` and `amount`
-    private func getCalls() throws -> [Call] {
-//        let eoa = try Account(
-//            blockchain: selectedNetwork.chainId,
-//            accountAddress: importAccount.account.address
-//        )
-//
-//        let toAccount = try Account(
-//            blockchain: selectedNetwork.chainId,
-//            accountAddress: recipient
-//        )
-//
-//        let call = WalletKit.instance.prepareUSDCTransferCall(
-//            EOA: eoa,
-//            to: toAccount,
-//            amount: amount
-//        )
+    /// Parse a hex string (e.g. "0x123abc") into Decimal and account for `decimals`.
+    private func parseHexBalance(_ hexBalance: String, decimals: Int) -> Decimal {
+        let hexStr = hexBalance.hasPrefix("0x")
+            ? String(hexBalance.dropFirst(2))
+            : hexBalance
 
-        let call = Call(
-            to: "0x23d8eE973EDec76ae91669706a587b9A4aE1361A",
-            value: "0",
-            input: ""
+        guard let bigUInt = BigUInt(hexStr, radix: 16) else {
+            return .zero
+        }
+        // Convert BigUInt -> Decimal
+        let baseDecimal = Decimal(string: bigUInt.description) ?? .zero
+
+        // e.g. USDC/USDT use 6 decimals => divide by 10^6
+        let divisor = pow(Decimal(10), decimals)
+        return baseDecimal / divisor
+    }
+
+    /// Format a Decimal nicely for display (e.g. "123.4567")
+    private func formatDecimal(_ value: Decimal) -> String {
+        let ns = NSDecimalNumber(decimal: value)
+        // For example, max 6 decimal places
+        let formatter = NumberFormatter()
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 6
+        formatter.numberStyle = .decimal
+        return formatter.string(from: ns) ?? "0.00"
+    }
+
+    // MARK: - Send Transaction
+
+    /// Main send method, which prepares and routes a transaction
+    func send() async throws {
+        // 1) Check if USDT is selected on Base => not supported
+        if stableCoinChoice == .usdt, selectedNetwork == .Base {
+            AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
+            return
+        }
+
+        do {
+            let call = try getCall()
+
+            ActivityIndicatorManager.shared.start()
+
+            let routeResponseSuccess = try await WalletKit.instance.prepare(
+                chainId: selectedNetwork.chainId.absoluteString,
+                from: importAccount.account.address,
+                call: call
+            )
+            await MainActor.run {
+                switch routeResponseSuccess {
+                case .success(let routeResponse):
+                    switch routeResponse {
+                    case .available(let routeResponseAvailable):
+                        // If the route is available, present a CA transaction flow
+                        // We consider this a success scenario for saving the recipient
+                        self.saveRecipientToUserDefaults()
+
+                        router.presentCATransaction(
+                            call: call,
+                            from: importAccount.account.address,
+                            chainId: selectedNetwork.chainId,
+                            importAccount: importAccount,
+                            routeResponseAvailable: routeResponseAvailable
+                        )
+                    case .notRequired:
+                        // Possibly handle a scenario where no special routing is needed
+                        self.saveRecipientToUserDefaults()
+                        AlertPresenter.present(message: "Routing not required", type: .success)
+                    }
+                case .error(let routeResponseError):
+                    // Show an error
+                    AlertPresenter.present(message: "Route response error: \(routeResponseError)", type: .error)
+                }
+            }
+
+            ActivityIndicatorManager.shared.stop()
+
+        } catch {
+            await MainActor.run {
+                ActivityIndicatorManager.shared.stop()
+                AlertPresenter.present(message: "CA error: \(error.localizedDescription)", type: .error)
+            }
+        }
+    }
+
+    /// Constructs the `Call` object to send either USDC or USDT (decimal → base units)
+    private func getCall() throws -> Call {
+        let eoa = try Account(
+            blockchain: selectedNetwork.chainId,
+            accountAddress: importAccount.account.address
+        )
+        let toAccount = try Account(
+            blockchain: selectedNetwork.chainId,
+            accountAddress: recipient
         )
 
-        return [call]
+        // 1) Convert the "amount" string to a Decimal
+        guard let decimalAmount = Decimal(string: amount) else {
+            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
+                NSLocalizedDescriptionKey: "Invalid numeric input: \(amount)"
+            ])
+        }
+
+        // USDC/USDT => 6 decimals
+        let baseUnitsDecimal = decimalAmount * Decimal(1_000_000)
+        let baseUnitsString = NSDecimalNumber(decimal: baseUnitsDecimal).stringValue
+
+        // 2) Determine which contract address to use
+        let tokenAddress: String
+        switch stableCoinChoice {
+        case .usdc:
+            tokenAddress = selectedNetwork.usdcContractAddress
+        case .usdt:
+            // already checked if .Base => throw error => must not get here if base
+            tokenAddress = selectedNetwork.usdtContractAddress
+        }
+
+        // 3) Build the call
+        let call = WalletKit.instance.prepareERC20TransferCall(
+            erc20Address: tokenAddress,
+            to: recipient,
+            amount: baseUnitsString
+        )
+        return call
+    }
+
+    /// Persists the latest recipient in UserDefaults
+    private func saveRecipientToUserDefaults() {
+        userDefaults.set(recipient, forKey: recipientKey)
     }
 }
-
-

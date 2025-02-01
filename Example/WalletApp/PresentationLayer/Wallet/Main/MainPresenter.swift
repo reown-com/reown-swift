@@ -112,7 +112,7 @@ extension MainPresenter {
                 case .success(let routeResponseSuccess):
                     switch routeResponseSuccess {
                     case .available(let routeResponseAvailable):
-                        router.presentCATransaction(sessionRequest: request, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, context: context)
+                        router.presentCATransaction(sessionRequest: request, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, context: context, call: call, from: tx.from, chainId: request.chainId)
                     case .notRequired(let routeResponseNotRequired):
                         AlertPresenter.present(message: "Routing not required", type: .success)
                         router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)

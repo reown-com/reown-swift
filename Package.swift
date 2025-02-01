@@ -27,7 +27,7 @@ func buildYttriumWrapperTarget() -> Target {
             path: "Sources/YttriumWrapper"
         )
     } else {
-        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.6.2")))
+        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.7.0")))
         return .target(
             name: "YttriumWrapper",
             dependencies: [.product(name: "Yttrium", package: "yttrium")],
