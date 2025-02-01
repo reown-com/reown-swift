@@ -134,7 +134,6 @@ public final class RelayClient {
 
         try await dispatcher.protectedSend(message)
 
-        print(message)
         return try await withUnsafeThrowingContinuation { continuation in
             var cancellable: AnyCancellable?
             cancellable = requestAcknowledgePublisher

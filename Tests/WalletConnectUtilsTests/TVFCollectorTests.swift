@@ -25,7 +25,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: AnyCodable([String]()),
             chainID: chain,
             rpcResult: nil,
-            tag: 1008
+            tag: 1108
         )
         XCTAssertNil(data)
     }
@@ -43,7 +43,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: nil,
-            tag: 1008
+            tag: 1108
         )
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.rpcMethods, ["eth_sendTransaction"])
@@ -61,7 +61,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: nil,
-            tag: 1008
+            tag: 1108
         )
         XCTAssertNotNil(data)
         XCTAssertNil(data?.contractAddresses)
@@ -79,7 +79,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: rpcResult,
-            tag: 1009
+            tag: 1109
         )
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes, ["0x123abc"])
@@ -94,7 +94,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: rpcResult,
-            tag: 1009
+            tag: 1109
         )
         XCTAssertNotNil(data)
         XCTAssertNil(data?.txHashes)
@@ -113,7 +113,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: rpcResult,
-            tag: 1009
+            tag: 1109
         )
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes, ["0xsolanaSignature"])
@@ -129,7 +129,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: rpcResult,
-            tag: 1009
+            tag: 1109
         )
         XCTAssertNotNil(data)
         XCTAssertNil(data?.txHashes)
@@ -147,7 +147,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: rpcResult,
-            tag: 1009
+            tag: 1109
         )
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes, ["tx1", "tx2"])
@@ -161,7 +161,7 @@ final class TVFCollectorTests: XCTestCase {
             rpcParams: rpcParams,
             chainID: chain,
             rpcResult: rpcResult,
-            tag: 1009
+            tag: 1109
         )
         XCTAssertNil(data)
     }

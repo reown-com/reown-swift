@@ -63,8 +63,8 @@ struct ETHSigner {
     }
 
     func sendTransaction(_ params: AnyCodable) throws -> AnyCodable {
-        let params = try params.get([Tx].self)
-        var transaction = params[0]
+//        let params = try params.get([Tx].self)
+//        var transaction = params[0]
 //        transaction.gas = EthereumQuantity(quantity: BigUInt("1234"))
 //        transaction.nonce = EthereumQuantity(quantity: BigUInt("0"))
 //        transaction.gasPrice = EthereumQuantity(quantity: BigUInt(0))
