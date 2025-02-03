@@ -299,6 +299,10 @@ public class WalletKitClient {
         return try await chainAbstractionClient.getUiFields(routeResponse: routeResponse, currency: currency)
     }
 
+    public func execute(uiFields: UiFields, routeTxnSigs: [FfiPrimitiveSignature], initialTxnSig: FfiPrimitiveSignature) async -> ExecuteDetails {
+        return await chainAbstractionClient.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
+    }
+
     @available(*, message: "This method is experimental. Use with caution.")
     public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
