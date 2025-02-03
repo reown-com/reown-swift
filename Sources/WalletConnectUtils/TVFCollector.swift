@@ -139,7 +139,7 @@ public struct TVFCollector {
                 if TVFCollector.isValidContractData(firstTo) {
                     return [firstTo]
                 } else {
-                    return []
+                    return nil
                 }
             }
         } catch {

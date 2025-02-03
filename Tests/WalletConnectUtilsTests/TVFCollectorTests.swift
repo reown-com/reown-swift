@@ -50,7 +50,7 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertEqual(data?.rpcMethods, ["eth_sendTransaction"])
         XCTAssertEqual(data?.chainId?.absoluteString, "eip155:1")
         // Expecting an empty array because "0x1234567890abcdef" is invalid contract call data.
-        XCTAssertEqual(data?.contractAddresses, [])
+        XCTAssertEqual(data?.contractAddresses, nil)
         XCTAssertNil(data?.txHashes)
     }
 
