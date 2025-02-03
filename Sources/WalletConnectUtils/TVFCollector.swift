@@ -52,14 +52,11 @@ public struct TVFCollector {
     // MARK: - Computed Properties
 
     private var evm: [String] {
-        [Self.ETH_SEND_TRANSACTION,
-         Self.ETH_SEND_RAW_TRANSACTION]
+        [Self.ETH_SEND_TRANSACTION, Self.ETH_SEND_RAW_TRANSACTION]
     }
 
     private var solana: [String] {
-        [Self.SOLANA_SIGN_TRANSACTION,
-         Self.SOLANA_SIGN_AND_SEND_TRANSACTION,
-         Self.SOLANA_SIGN_ALL_TRANSACTION]
+        [Self.SOLANA_SIGN_TRANSACTION, Self.SOLANA_SIGN_AND_SEND_TRANSACTION, Self.SOLANA_SIGN_ALL_TRANSACTION]
     }
 
     private var wallet: [String] {
@@ -81,7 +78,7 @@ public struct TVFCollector {
     ///   - rpcParams: An `AnyCodable` containing arbitrary JSON or primitive content.
     ///   - chainID:   A `Blockchain` instance (e.g., `Blockchain("eip155:1")`).
     ///   - rpcResult: An optional `RPCResult` representing `.response(AnyCodable)` or `.error(...)`.
-    ///   - tag:       Integer that should map to `.sessionRequest (1008)` or `.sessionResponse (1009)`.
+    ///   - tag:       Integer that should map to `.sessionRequest (1108)` or `.sessionResponse (1109)`.
     ///
     /// - Returns: `TVFData` if successful, otherwise `nil`.
     public func collect(
@@ -108,7 +105,7 @@ public struct TVFCollector {
             rpcParams: rpcParams
         )
 
-        // 3. If this is a sessionResponse (1009), gather transaction hashes from rpcResult
+        // 3. If this is a sessionResponse (1109), gather transaction hashes from rpcResult
         let txHashes: [String]? = {
             switch theTag {
             case .sessionRequest:
@@ -138,7 +135,12 @@ public struct TVFCollector {
             // Attempt to decode the array of EthSendTransaction from AnyCodable
             let transactions = try rpcParams.get([EthSendTransaction].self)
             if let firstTo = transactions.first?.to {
-                return [firstTo]
+                // Use our contract data check: if it is valid contract call data, then return it.
+                if TVFCollector.isValidContractData(firstTo) {
+                    return [firstTo]
+                } else {
+                    return []
+                }
             }
         } catch {
             print("Failed to parse EthSendTransaction: \(error)")
@@ -154,7 +156,6 @@ public struct TVFCollector {
         }
         switch rpcResult {
         case .error(_):
-            // We do not parse tx hashes in the event of an error
             return nil
         case .response(let anycodable):
             return parseTxHashes(forMethod: rpcMethod, from: anycodable)
@@ -167,7 +168,6 @@ public struct TVFCollector {
             switch method {
             // EVM or wallet methods return the raw string as the transaction hash
             case _ where evm.contains(method) || wallet.contains(method):
-                // Try to decode as a single string
                 if let rawHash = try? anycodable.get(String.self) {
                     return [rawHash]
                 }
@@ -192,5 +192,26 @@ public struct TVFCollector {
             print("Error processing \(method): \(error)")
             return nil
         }
+    }
+}
+
+// MARK: - Contract Data Check
+
+extension TVFCollector {
+    /// Checks whether a given hex string (possibly prefixed with "0x") is valid contract call data.
+    public static func isValidContractData(_ data: String) -> Bool {
+        var hex = data
+        if hex.hasPrefix("0x") {
+            hex = String(hex.dropFirst(2))
+        }
+        // Ensure there are at least 136 hex characters (8 for method, 64 for recipient, 64 for amount)
+        guard !hex.isEmpty, hex.count >= 73 else { return false }
+        let methodId = hex.prefix(8)
+        guard !methodId.isEmpty else { return false }
+        let recipient = hex.dropFirst(8).prefix(64).drop(while: { $0 == "0" })
+        guard !recipient.isEmpty else { return false }
+        let amount = hex.dropFirst(72).drop(while: { $0 == "0" })
+        guard !amount.isEmpty else { return false }
+        return true
     }
 }

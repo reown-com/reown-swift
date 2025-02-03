@@ -72,7 +72,7 @@ struct ETHSigner {
 //        let signedTx = try transaction.sign(with: self.privateKey, chainId: 4)
 //        let (r, s, v) = (signedTx.r, signedTx.s, signedTx.v)
 //        let result = r.hex() + s.hex().dropFirst(2) + String(v.quantity, radix: 16)
-        return AnyCodable("0x")
+        return AnyCodable("0xabcd12340000000000000000000000111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000f0")
     }
 
     private func dataToHash(_ data: Data) -> Bytes {
