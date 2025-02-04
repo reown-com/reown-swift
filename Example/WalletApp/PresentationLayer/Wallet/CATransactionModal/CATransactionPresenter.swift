@@ -1,6 +1,5 @@
 import UIKit
 import Combine
-import Web3
 import ReownWalletKit
 
 final class CATransactionPresenter: ObservableObject {
@@ -9,6 +8,7 @@ final class CATransactionPresenter: ObservableObject {
         case invalidResponse
         case invalidData
     }
+
     // Published properties to be used in the view
     @Published var payingAmount: String = ""
     @Published var balanceAmount: String = ""
@@ -20,10 +20,8 @@ final class CATransactionPresenter: ObservableObject {
     @Published var transactionCompleted: Bool = false
     @Published var fundingFromNetwork: String!
 
-
     private let sessionRequest: Request?
     private let routeResponseAvailable: PrepareResponseAvailable
-    let chainAbstractionService: ChainAbstractionService!
     var fundingFrom: [FundingMetadata] {
         return routeResponseAvailable.metadata.fundingFrom
     }
@@ -50,8 +48,6 @@ final class CATransactionPresenter: ObservableObject {
     ) {
         self.sessionRequest = sessionRequest
         self.routeResponseAvailable = routeResponseAvailable
-        let prvKey = try! EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
-        self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey, routeResponseAvailable: routeResponseAvailable)
         self.router = router
         self.importAccount = importAccount
         self.chainId = chainId
@@ -68,173 +64,47 @@ final class CATransactionPresenter: ObservableObject {
         router.dismiss()
     }
 
-    func approveTransactions() async throws {
+    func approveTransactions() async throws -> ExecuteDetails {
         do {
             print("🚀 Starting transaction approval process...")
             ActivityIndicatorManager.shared.start()
 
-            print("📝 Signing transactions...")
-            let signedTransactions = try await chainAbstractionService.signTransactions()
-            print("✅ Successfully signed transactions. First transaction: \(signedTransactions[0])")
-
-            print("📡 Broadcasting signed transactions...")
-            let txResults = try await chainAbstractionService.broadcastTransactions(transactions: signedTransactions)
-
-            print("🧾 Fetching transaction receipts...")
-            for (txHash, chainId) in txResults {
-                do {
-                    let receipt = try await chainAbstractionService.getTransactionReceipt(transactionHash: txHash, chainId: chainId)
-                    print("✅ Transaction receipt for \(txHash) on chain \(chainId): \(receipt)")
-
-                } catch {
-                    print("❌ Failed to fetch receipt for \(txHash) on chain \(chainId): \(error)")
-                    throw error
-                }
+            // Check if UI fields have already been fetched
+            let uiFields: UiFields
+            if let existingUiFields = routeUiFields {
+                print("📝 UI Fields already available, using cached version.")
+                uiFields = existingUiFields
+            } else {
+                print("📝 UI Fields not available. Fetching UI Fields from WalletKit...")
+                uiFields = try await WalletKit.instance.getUiFields(routeResponse: routeResponseAvailable, currency: Currency.usd)
+                self.routeUiFields = uiFields
             }
 
-            let orchestrationId = routeResponseAvailable.orchestrationId
-            print("📋 Orchestration ID: \(orchestrationId)")
+            let initialTxHash = uiFields.initial.transactionHashToSign
 
-            print("🔄 Starting status checking...")
+            var routeTxnSigs = [B256]()
+            let signer = ETHSigner(importAccount: importAccount)
 
-            let completed = try await WalletKit.instance.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: 5, timeout: 180)
-            print("✅ Routing Transactions completed successfully!")
-            print("📊 Completion details: \(completed)")
-            AlertPresenter.present(message: "Routing transactions completed", type: .success)
+            print("📝 Signing route transactions...")
+            for txnDetails in uiFields.route {
+                let hash = txnDetails.transactionHashToSign
+                let sig = try! signer.signHash(hash)
+                routeTxnSigs.append(sig)
+                print("🔑 Signed transaction hash: \(hash)")
+            }
 
-            print("🚀 Initiating initial transaction...")
-            try await sendInitialTransaction(initialTransaction: routeResponseAvailable.initialTransaction)
+            let initialTxnSig = try! signer.signHash(initialTxHash)
+            print("🔑 Signed initial transaction hash: \(initialTxHash)")
+
+            print("📝 Executing transactions through WalletKit...")
+            let executeDetails = await WalletKit.instance.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
+
+            print("✅ Transaction approval process completed successfully.")
             ActivityIndicatorManager.shared.stop()
-            print("✅ Initial transaction process completed successfully")
-            AlertPresenter.present(message: "Initial transaction sent", type: .success)
-
+            return executeDetails
         } catch {
-            print("❌ Transaction approval failed!")
-            print("💥 Error details: \(error.localizedDescription)")
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
-            Task { try await respondError() }
-            throw error
-        }
-    }
-
-    private func sendInitialTransaction(initialTransaction: Transaction) async throws {
-
-        print("📝 Preparing initial transaction...")
-        let tx = call
-        print("📊 Transaction details:")
-        print("   From: \(from)")
-        print("   To: \(call.to)")
-
-        print("💰 Estimating fees...")
-        let estimates = try await WalletKit.instance.estimateFees(chainId: chainId.absoluteString)
-        print("📊 Fee estimates:")
-        print("   Max Priority Fee: \(estimates.maxPriorityFeePerGas)")
-        print("   Max Fee: \(estimates.maxFeePerGas)")
-
-        let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas.stripHexPrefix(), radix: 16)!)
-        let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas.stripHexPrefix(), radix: 16)!)
-        let from = try EthereumAddress(hex: from, eip55: false)
-
-        print("🔢 Fetching nonce...")
-        let nonce = try await getNonce(for: from, chainId: chainId.absoluteString)
-        print("✅ Retrieved nonce: \(nonce)")
-
-        print("🔧 Building Ethereum transaction...")
-        let ethTransaction = EthereumTransaction(
-            nonce: nonce,
-            gasPrice: nil,
-            maxFeePerGas: maxFeePerGas,
-            maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: EthereumQuantity(quantity: BigUInt(initialTransaction.gasLimit.stripHexPrefix(), radix: 16)!),
-            from: from,
-            to: try EthereumAddress(hex: tx.to, eip55: false),
-            value: EthereumQuantity(quantity: 0.gwei),
-            data: EthereumData(Array(hex: tx.input)),
-            accessList: [:],
-            transactionType: .eip1559)
-
-        let chainId = EthereumQuantity(quantity: BigUInt(chainId.reference, radix: 10)!)
-        print("⛓️ Using chain ID: \(chainId)")
-
-        print("🔑 Signing transaction with private key...")
-        let privateKey = try EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
-        let signedTransaction = try ethTransaction.sign(with: privateKey, chainId: chainId)
-        print("✅ Transaction signed successfully")
-
-        print("📡 Broadcasting initial transaction...")
-        try await chainAbstractionService.broadcastTransactions(transactions: [(signedTransaction, self.chainId.absoluteString)])
-        print("✅ Initial transaction broadcast complete")
-
-        let result = signedTransaction.r.hex() + signedTransaction.s.hex().dropFirst(2) + String(signedTransaction.v.quantity, radix: 16)
-
-        // respond session request if needed
-        if let sessionRequest = sessionRequest {
-            try await WalletKit.instance.respond(topic: sessionRequest.topic, requestId: sessionRequest.id, response: .response(AnyCodable(result)))
-        }
-
-        await MainActor.run {
-            transactionCompleted = true
-        }
-    }
-
-    func getNonce(for address: EthereumAddress, chainId: String) async throws -> EthereumQuantity {
-        print("🔢 Getting nonce for address: \(address.hex(eip55: true))")
-        print("⛓️ Chain ID: \(chainId)")
-
-        let projectId = Networking.projectId
-        let rpcUrl = "rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
-        print("🌐 Using RPC URL: \(rpcUrl)")
-
-        let params = [address.hex(eip55: true), "latest"]
-        let rpcRequest = RPCRequest(method: "eth_getTransactionCount", params: params)
-        print("📝 Created RPC request for nonce")
-
-        guard let url = URL(string: "https://" + rpcUrl) else {
-            print("❌ Failed to create URL from RPC URL string")
-            throw Errors.invalidURL
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Convert RPC request to JSON data
-        let jsonData = try JSONEncoder().encode(rpcRequest)
-        request.httpBody = jsonData
-
-        do {
-            print("📡 Sending request to get nonce...")
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            guard let httpResponse = response as? HTTPURLResponse else {
-                print("❌ Invalid response type received")
-                throw Errors.invalidResponse
-            }
-
-            print("📊 Response status code: \(httpResponse.statusCode)")
-
-            guard (200...299).contains(httpResponse.statusCode) else {
-                print("❌ Received error status code: \(httpResponse.statusCode)")
-                throw Errors.invalidResponse
-            }
-
-            let rpcResponse = try JSONDecoder().decode(RPCResponse.self, from: data)
-            let responseJSON = try JSONSerialization.jsonObject(with: data)
-            print("📥 Raw response: \(responseJSON)")
-
-            let stringResult = try rpcResponse.result!.get(String.self)
-            print("🔢 Nonce hex string: \(stringResult)")
-
-            guard let nonceValue = BigUInt(stringResult.stripHexPrefix(), radix: 16) else {
-                print("❌ Failed to parse nonce value from hex string")
-                throw Errors.invalidData
-            }
-
-            print("✅ Successfully retrieved nonce: \(nonceValue)")
-            return EthereumQuantity(quantity: nonceValue)
-        } catch {
-            print("❌ Error while fetching nonce:")
-            print("💥 Error details: \(error)")
+            print("❌ Transaction approval failed with error: \(error.localizedDescription)")
+            ActivityIndicatorManager.shared.stop()
             throw error
         }
     }
@@ -245,7 +115,7 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     func respondError() async throws {
-        guard let sessionRequest = sessionRequest else {return}
+        guard let sessionRequest = sessionRequest else { return }
         do {
             ActivityIndicatorManager.shared.start()
             try await WalletKit.instance.respond(
@@ -282,7 +152,6 @@ final class CATransactionPresenter: ObservableObject {
 
     func hexToDecimal(_ hex: String) -> Int? {
         let cleanHex = hex.hasPrefix("0x") ? String(hex.dropFirst(2)) : hex
-
         return Int(cleanHex, radix: 16)
     }
 
@@ -295,7 +164,6 @@ final class CATransactionPresenter: ObservableObject {
         payingAmount = initialTransactionMetadata.amount
 
         let tx = call
-
         Task {
             let balance = try await WalletKit.instance.erc20Balance(chainId: chainId.absoluteString, token: tx.to, owner: importAccount.account.address)
             await MainActor.run {
@@ -303,26 +171,16 @@ final class CATransactionPresenter: ObservableObject {
             }
         }
     }
-    
 
     func setUpRoutUiFields() async throws {
-
-        let tx = call
-
-
-        let routUiFields = try await WalletKit.instance.getUiFields(routeResponse: routeResponseAvailable, currency: Currency.usd)
-
-        print(routUiFields.localTotal)
-
-        print(routUiFields.localTotal.formatted)
-        print(routUiFields.localTotal.formattedAlt)
-
+        routeUiFields = try await WalletKit.instance.getUiFields(routeResponse: routeResponseAvailable, currency: Currency.usd)
+        print("📝 UI Fields setup complete with localTotal: \(routeUiFields!.localTotal)")
+        print("📝 Formatted total: \(routeUiFields!.localTotal.formatted)")
+        print("📝 Alternate formatted total: \(routeUiFields!.localTotal.formattedAlt)")
         await MainActor.run {
-
-            estimatedFees = routUiFields.localTotal.formattedAlt
-            bridgeFee = routUiFields.bridge.first!.localFee.formattedAlt
+            estimatedFees = routeUiFields!.localTotal.formattedAlt
+            bridgeFee = routeUiFields!.bridge.first!.localFee.formattedAlt
         }
-
     }
 
     func onViewOnExplorer() {
@@ -344,11 +202,9 @@ final class CATransactionPresenter: ObservableObject {
 
         // Open the URL in Safari
         UIApplication.shared.open(explorerURL, options: [:], completionHandler: nil)
-
         print("🌐 Opened explorer URL: \(explorerURL)")
     }
 }
 
 // MARK: - SceneViewModel
 extension CATransactionPresenter: SceneViewModel {}
-
