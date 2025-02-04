@@ -1,4 +1,5 @@
 import Foundation
+import WalletConnectUtils
 import Combine
 
 public enum SocketConnectionStatus {
@@ -119,14 +120,14 @@ public final class RelayClient {
     }
 
     /// Completes with an acknowledgement from the relay network
-    public func publish(topic: String, payload: String, tag: Int, prompt: Bool, ttl: Int) async throws {
+    public func publish(topic: String, payload: String, tag: Int, prompt: Bool, ttl: Int, tvfData: TVFData?, coorelationId: RPCID?) async throws {
         #if DEBUG
         if blockPublishing {
             logger.debug("[Publish] Publishing is blocked")
             return
         }
         #endif
-        let request = Publish(params: .init(topic: topic, message: payload, ttl: ttl, prompt: prompt, tag: tag)).asRPCRequest()
+        let request = Publish(params: .init(topic: topic, message: payload, ttl: ttl, prompt: prompt, tag: tag, correlationId: nil, tvfData: nil)).asRPCRequest()
         let message = try request.asJSONEncodedString()
         
         logger.debug("[Publish] Sending payload on topic: \(topic)")

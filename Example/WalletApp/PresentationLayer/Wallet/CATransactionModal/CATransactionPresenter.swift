@@ -21,8 +21,8 @@ final class CATransactionPresenter: ObservableObject {
     @Published var fundingFromNetwork: String!
 
 
-    private let sessionRequest: Request
-    private let routeResponseAvailable: RouteResponseAvailable
+    private let sessionRequest: Request?
+    private let routeResponseAvailable: PrepareResponseAvailable
     let chainAbstractionService: ChainAbstractionService!
     var fundingFrom: [FundingMetadata] {
         return routeResponseAvailable.metadata.fundingFrom
@@ -33,17 +33,20 @@ final class CATransactionPresenter: ObservableObject {
     let router: CATransactionRouter
     let importAccount: ImportAccount
     var routeUiFields: UiFields? = nil
-    var chainId: String {
-        sessionRequest.chainId.absoluteString
-    }
+    let call: Call
+    var chainId: Blockchain
+    let from: String
 
     private var disposeBag = Set<AnyCancellable>()
 
     init(
-        sessionRequest: Request,
+        sessionRequest: Request?,
         importAccount: ImportAccount,
-        routeResponseAvailable: RouteResponseAvailable,
-        router: CATransactionRouter
+        routeResponseAvailable: PrepareResponseAvailable,
+        router: CATransactionRouter,
+        call: Call,
+        from: String,
+        chainId: Blockchain
     ) {
         self.sessionRequest = sessionRequest
         self.routeResponseAvailable = routeResponseAvailable
@@ -51,8 +54,12 @@ final class CATransactionPresenter: ObservableObject {
         self.chainAbstractionService = ChainAbstractionService(privateKey: prvKey, routeResponseAvailable: routeResponseAvailable)
         self.router = router
         self.importAccount = importAccount
-        self.networkName = network(for: sessionRequest.chainId.absoluteString)
+        self.chainId = chainId
+        self.call = call
+        self.from = from
+        self.networkName = network(for: chainId.absoluteString)
         self.fundingFromNetwork = network(for: fundingFrom[0].chainId)
+
         // Any additional setup for the parameters
         setupInitialState()
     }
@@ -113,24 +120,23 @@ final class CATransactionPresenter: ObservableObject {
     private func sendInitialTransaction(initialTransaction: Transaction) async throws {
 
         print("📝 Preparing initial transaction...")
-        let tx = try! sessionRequest.params.get([Tx].self)[0]
+        let tx = call
         print("📊 Transaction details:")
-        print("   From: \(tx.from)")
-        print("   To: \(tx.to)")
-        print("   Data length: \(tx.data.count) characters")
+        print("   From: \(from)")
+        print("   To: \(call.to)")
 
         print("💰 Estimating fees...")
-        let estimates = try await WalletKit.instance.estimateFees(chainId: sessionRequest.chainId.absoluteString)
+        let estimates = try await WalletKit.instance.estimateFees(chainId: chainId.absoluteString)
         print("📊 Fee estimates:")
         print("   Max Priority Fee: \(estimates.maxPriorityFeePerGas)")
         print("   Max Fee: \(estimates.maxFeePerGas)")
 
         let maxPriorityFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxPriorityFeePerGas.stripHexPrefix(), radix: 16)!)
         let maxFeePerGas = EthereumQuantity(quantity: BigUInt(estimates.maxFeePerGas.stripHexPrefix(), radix: 16)!)
-        let from = try EthereumAddress(hex: tx.from, eip55: false)
+        let from = try EthereumAddress(hex: from, eip55: false)
 
         print("🔢 Fetching nonce...")
-        let nonce = try await getNonce(for: from, chainId: sessionRequest.chainId.absoluteString)
+        let nonce = try await getNonce(for: from, chainId: chainId.absoluteString)
         print("✅ Retrieved nonce: \(nonce)")
 
         print("🔧 Building Ethereum transaction...")
@@ -143,12 +149,11 @@ final class CATransactionPresenter: ObservableObject {
             from: from,
             to: try EthereumAddress(hex: tx.to, eip55: false),
             value: EthereumQuantity(quantity: 0.gwei),
-            data: EthereumData(Array(hex: tx.data)),
+            data: EthereumData(Array(hex: tx.input)),
             accessList: [:],
             transactionType: .eip1559)
 
-        let chain = sessionRequest.chainId
-        let chainId = EthereumQuantity(quantity: BigUInt(chain.reference, radix: 10)!)
+        let chainId = EthereumQuantity(quantity: BigUInt(chainId.reference, radix: 10)!)
         print("⛓️ Using chain ID: \(chainId)")
 
         print("🔑 Signing transaction with private key...")
@@ -157,15 +162,18 @@ final class CATransactionPresenter: ObservableObject {
         print("✅ Transaction signed successfully")
 
         print("📡 Broadcasting initial transaction...")
-        try await chainAbstractionService.broadcastTransactions(transactions: [(signedTransaction, chain.absoluteString)])
+        try await chainAbstractionService.broadcastTransactions(transactions: [(signedTransaction, self.chainId.absoluteString)])
         print("✅ Initial transaction broadcast complete")
 
         let result = signedTransaction.r.hex() + signedTransaction.s.hex().dropFirst(2) + String(signedTransaction.v.quantity, radix: 16)
 
-        try await WalletKit.instance.respond(topic: sessionRequest.topic, requestId: sessionRequest.id, response: .response(AnyCodable(result)))
+        // respond session request if needed
+        if let sessionRequest = sessionRequest {
+            try await WalletKit.instance.respond(topic: sessionRequest.topic, requestId: sessionRequest.id, response: .response(AnyCodable(result)))
+        }
 
-        DispatchQueue.main.async { [weak self] in
-            self?.transactionCompleted = true
+        await MainActor.run {
+            transactionCompleted = true
         }
     }
 
@@ -237,6 +245,7 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     func respondError() async throws {
+        guard let sessionRequest = sessionRequest else {return}
         do {
             ActivityIndicatorManager.shared.start()
             try await WalletKit.instance.respond(
@@ -278,17 +287,17 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     func setupInitialState() {
-        if let session = WalletKit.instance.getSessions().first(where: { $0.topic == sessionRequest.topic }) {
+        if let session = WalletKit.instance.getSessions().first(where: { $0.topic == sessionRequest?.topic }) {
             self.appURL = session.peer.url
         }
-        networkName = network(for: sessionRequest.chainId.absoluteString)
+        networkName = network(for: chainId.absoluteString)
         Task { try await setUpRoutUiFields() }
         payingAmount = initialTransactionMetadata.amount
 
-        let tx = try! sessionRequest.params.get([Tx].self)[0]
+        let tx = call
 
         Task {
-            let balance = try await WalletKit.instance.erc20Balance(chainId: chainId, token: tx.to, owner: importAccount.account.address)
+            let balance = try await WalletKit.instance.erc20Balance(chainId: chainId.absoluteString, token: tx.to, owner: importAccount.account.address)
             await MainActor.run {
                 balanceAmount = balance
             }
@@ -298,7 +307,7 @@ final class CATransactionPresenter: ObservableObject {
 
     func setUpRoutUiFields() async throws {
 
-        let tx = try! sessionRequest.params.get([Tx].self)[0]
+        let tx = call
 
 
         let routUiFields = try await WalletKit.instance.getUiFields(routeResponse: routeResponseAvailable, currency: Currency.usd)

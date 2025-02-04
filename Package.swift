@@ -27,7 +27,7 @@ func buildYttriumWrapperTarget() -> Target {
             path: "Sources/YttriumWrapper"
         )
     } else {
-        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.4.8")))
+        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.7.0")))
         return .target(
             name: "YttriumWrapper",
             dependencies: [.product(name: "Yttrium", package: "yttrium")],
@@ -197,7 +197,7 @@ let package = Package(
             dependencies: ["WalletConnectPairing", "TestingUtils"]),
         .testTarget(
             name: "NotifyTests",
-            dependencies: ["WalletConnectNotify", "TestingUtils"]),
+            dependencies: ["WalletConnectNotify", "TestingUtils", "YttriumWrapper"]),
         .testTarget(
             name: "RelayerTests",
             dependencies: ["WalletConnectRelay", "WalletConnectUtils", "TestingUtils"]),

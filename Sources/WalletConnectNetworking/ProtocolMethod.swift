@@ -7,7 +7,7 @@ public protocol ProtocolMethod {
 }
 
 public struct RelayConfig {
-    let tag: Int
+    public let tag: Int
     let prompt: Bool
     let ttl: Int
 

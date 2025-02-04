@@ -18,35 +18,10 @@ final class SettingsPresenter: ObservableObject {
         self.router = router
         self.accountStorage = accountStorage
         self.importAccount = importAccount
-        fetchSmartAccountSafe()
-    }
-    
-    func fetchSmartAccountSafe() {
-        Task {
-            do {
-                let smartAccount = try await getSmartAccountSafe()
-                DispatchQueue.main.async {
-                    self.smartAccountSafe = smartAccount
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.smartAccountSafe = "Failed to load"
-                }
-                print("Failed to get smart account safe: \(error)")
-            }
-        }
-    }
-
-    func enableSmartAccount(_ enable: Bool) {
-        WalletKitEnabler.shared.isSmartAccountEnabled = enable
     }
 
     func enableChainAbstraction(_ enable: Bool) {
         WalletKitEnabler.shared.isChainAbstractionEnabled = enable
-    }
-
-    private func getSmartAccountSafe() async throws -> String {
-        try await WalletKit.instance.getSmartAccount(ownerAccount: importAccount.account).absoluteString
     }
 
     var account: String {
@@ -71,28 +46,6 @@ final class SettingsPresenter: ObservableObject {
 
     func browserPressed() {
         router.presentBrowser()
-    }
-
-    func sendTransaction() async throws -> String {
-
-        // hardcoded sepolia
-        let ownerAccount = try! Account(blockchain: Blockchain("eip155:11155111")!, accountAddress: importAccount.account.address)
-
-        let prepareSendTransactions = try await WalletKit.instance.prepareSendTransactions(
-            [.init(
-                to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-                value: "0",
-                data: "0x68656c6c6f"
-            )],
-            ownerAccount: ownerAccount)
-
-        let signer = ETHSigner(importAccount: importAccount)
-
-        let signature = try signer.signHash(prepareSendTransactions.hash)
-
-        let ownerSignature = OwnerSignature(owner: ownerAccount.address, signature: signature)
-
-        return try await WalletKit.instance.doSendTransaction(signatures: [ownerSignature], doSendTransactionParams: prepareSendTransactions.doSendTransactionParams, ownerAccount: ownerAccount)
     }
 
     func logoutPressed() async throws {

@@ -27,9 +27,9 @@ class ChainAbstractionService {
     }
 
     let privateKey: EthereumPrivateKey
-    private let routeResponseAvailable: RouteResponseAvailable
+    private let routeResponseAvailable: PrepareResponseAvailable
 
-    init(privateKey: EthereumPrivateKey, routeResponseAvailable: RouteResponseAvailable) {
+    init(privateKey: EthereumPrivateKey, routeResponseAvailable: PrepareResponseAvailable) {
         self.privateKey = privateKey
         self.routeResponseAvailable = routeResponseAvailable
     }

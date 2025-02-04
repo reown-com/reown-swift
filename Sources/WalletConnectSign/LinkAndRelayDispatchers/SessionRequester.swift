@@ -1,19 +1,23 @@
 
 import Foundation
+import WalletConnectUtils
 
 final class SessionRequester {
     private let sessionStore: WCSessionStorage
     private let networkingInteractor: NetworkInteracting
     private let logger: ConsoleLogging
+    private let tvfCollector: TVFCollector
 
     init(
         sessionStore: WCSessionStorage,
         networkingInteractor: NetworkInteracting,
-        logger: ConsoleLogging
+        logger: ConsoleLogging,
+        tvfCollector: TVFCollector
     ) {
         self.sessionStore = sessionStore
         self.networkingInteractor = networkingInteractor
         self.logger = logger
+        self.tvfCollector = tvfCollector
     }
 
     func request(_ request: Request) async throws {
@@ -30,7 +34,12 @@ final class SessionRequester {
         let sessionRequestParams = SessionType.RequestParams(request: chainRequest, chainId: request.chainId)
         let ttl = try request.calculateTtl()
         let protocolMethod = SessionRequestProtocolMethod(ttl: ttl)
+
         let rpcRequest = RPCRequest(method: protocolMethod.method, params: sessionRequestParams, rpcid: request.id)
-        try await networkingInteractor.request(rpcRequest, topic: request.topic, protocolMethod: SessionRequestProtocolMethod())
+
+        let tvfData = tvfCollector.collect(rpcMethod: request.method, rpcParams: request.params, chainID: request.chainId, rpcResult: nil, tag: protocolMethod.requestConfig.tag)
+
+
+        try await networkingInteractor.request(rpcRequest, topic: request.topic, protocolMethod: SessionRequestProtocolMethod(), tvfData: tvfData)
     }
 }

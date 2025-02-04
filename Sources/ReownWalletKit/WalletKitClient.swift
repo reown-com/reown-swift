@@ -103,8 +103,7 @@ public class WalletKitClient {
     private let signClient: SignClientProtocol
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
-    private let smartAccountsManager: SafesManager?
-    private let chainAbstractionClient: ChainAbstractionClient?
+    private let chainAbstractionClient: ChainAbstractionClient
 
     private var account: Account?
 
@@ -112,13 +111,11 @@ public class WalletKitClient {
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
-        smartAccountsManager: SafesManager?,
-        chainAbstractionClient: ChainAbstractionClient?
+        chainAbstractionClient: ChainAbstractionClient
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
-        self.smartAccountsManager = smartAccountsManager
         self.chainAbstractionClient = chainAbstractionClient
     }
     
@@ -273,124 +270,43 @@ public class WalletKitClient {
         return pairingClient.getPairings()
     }
 
-
-    // MARK: Yttrium
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func prepareSendTransactions(_ transactions: [FfiTransaction], ownerAccount: Account) async throws -> PreparedSendTransaction {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.prepareSendTransactions(transactions: transactions)
+    public func prepareERC20TransferCall(
+        erc20Address: String,
+        to: String,
+        amount: String
+    ) -> Call {
+        return chainAbstractionClient.prepareErc20TransferCall(
+            erc20Address: erc20Address, to: to, amount: amount)
     }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func doSendTransaction(signatures: [OwnerSignature], doSendTransactionParams: String, ownerAccount: Account) async throws -> String {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.doSendTransactions(signatures: signatures, doSendTransactionParams: doSendTransactionParams)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func getSmartAccount(ownerAccount: Account) async throws -> Account {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        let address = try await client.getAddress()
-        
-        // it's safe to force unwrap here because we know that the address and the chain are valid
-        return Account(blockchain: ownerAccount.blockchain, address: address)!
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func waitForUserOperationReceipt(userOperationHash: String, ownerAccount: Account) async throws -> String {
-        guard let smartAccountsManager = smartAccountsManager else {
-            throw Errors.smartAccountNotEnabled
-        }
-        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-        return try await client.waitForUserOperationReceipt(userOperationHash: userOperationHash)
-    }
-//
-//    public func prepareSignMessage(_ messageHash: String, ownerAccount: Account) async throws -> PreparedSignMessage {
-//        guard let smartAccountsManager = smartAccountsManager else {
-//            throw Errors.smartAccountNotEnabled
-//        }
-//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-//        return try await client.prepareSignMessage(messageHash)
-//    }
-//
-//    public func doSignMessage(_ signatures: [String], ownerAccount: Account) async throws -> PreparedSign {
-//        guard let smartAccountsManager = smartAccountsManager else {
-//            throw Errors.smartAccountNotEnabled
-//        }
-//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-//        let signature = try await client.doSignMessage(signatures)
-//        return signature
-//    }
-//
-//    public func finalizeSignMessage(_ signatures: [String], signStep3Params: String, ownerAccount: Account) async throws -> String {
-//        guard let smartAccountsManager = smartAccountsManager else {
-//            throw Errors.smartAccountNotEnabled
-//        }
-//        let client = smartAccountsManager.getOrCreateSafe(for: ownerAccount)
-//        let signature = try await client.finalizeSignMessage(signatures, signStep3Params: signStep3Params)
-//        return signature
-//    }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func status(orchestrationId: String) async throws -> StatusResponse {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
-
         return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func prepare(transaction: InitialTransaction) async throws -> PrepareResponse {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
-        return try await chainAbstractionClient.prepare(initialTransaction: transaction)
+    public func prepare(chainId: String, from: String, call: Call) async throws -> PrepareResponse {
+        return try await chainAbstractionClient.prepare(chainId: chainId, from: from, call: call)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func estimateFees(chainId: String) async throws -> Eip1559Estimation {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
         return try await chainAbstractionClient.estimateFees(chainId: chainId)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func getUiFields(routeResponse: RouteResponseAvailable, currency: Currency) async throws -> UiFields {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
+    public func getUiFields(routeResponse: PrepareResponseAvailable, currency: Currency) async throws -> UiFields {
         return try await chainAbstractionClient.getUiFields(routeResponse: routeResponse, currency: currency)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
-        guard let chainAbstractionClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func waitForSuccessWithTimeout(orchestrationId: String, checkIn: UInt64, timeout: UInt64 = 180) async throws -> StatusResponseCompleted {
-        guard let chainClient = chainAbstractionClient else {
-            throw Errors.chainAbstractionNotEnabled
-        }
-
-        return try await chainClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: timeout)
+        return try await chainAbstractionClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: timeout)
     }
 }
 

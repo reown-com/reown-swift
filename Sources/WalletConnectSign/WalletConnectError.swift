@@ -11,7 +11,6 @@ enum WalletConnectError: Error {
     case invalidEvent
     case invalidUpdateExpiryValue
     case unauthorizedNonControllerCall
-    case pairingAlreadyExist
     case topicGenerationFailed
     case invalidPermissions // TODO: Refactor into actual cases
     case unsupportedNamespace(SignReasonCode)
@@ -49,8 +48,6 @@ extension WalletConnectError {
             return "Method must be called by a controller client."
         case .topicGenerationFailed:
             return "Failed to generate topic from random bytes."
-        case .pairingAlreadyExist:
-            return "Pairing already exist"
         case .invalidPermissions:
             return "Invalid permissions for call."
         case .unsupportedNamespace(let reason):

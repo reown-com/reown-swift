@@ -65,7 +65,7 @@ final class RelayClientEndToEndTests: XCTestCase {
     func testConnectProjectBundleIdPresent() async throws {
         let randomTopic = String.randomTopic()
         relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdPresentProjectId)
-        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
+        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60, tvfData: nil, coorelationId: nil)
         sleep(1)
     }
 
@@ -74,7 +74,7 @@ final class RelayClientEndToEndTests: XCTestCase {
         let randomTopic = String.randomTopic()
         relayA = makeRelayClient(prefix: "⚽️ X ", projectId: InputConfig.bundleIdNotPresentProjectId)
 
-        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60)
+        try await self.relayA.publish(topic: randomTopic, payload: "", tag: 0, prompt: false, ttl: 60, tvfData: nil, coorelationId: nil)
         sleep(1)
     }
 
@@ -106,13 +106,13 @@ final class RelayClientEndToEndTests: XCTestCase {
             (subscriptionBTopic, subscriptionBPayload) = (topic, payload)
             Task(priority: .high) {
                 sleep(1)
-                try await self.relayB.publish(topic: randomTopic, payload: payloadB, tag: 0, prompt: false, ttl: 60)
+                try await self.relayB.publish(topic: randomTopic, payload: payloadB, tag: 0, prompt: false, ttl: 60, tvfData: nil, coorelationId: nil)
             }
             expectationB.fulfill()
         }.store(in: &publishers)
 
         try await self.relayA.subscribe(topic: randomTopic)
-        try await self.relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60)
+        try await self.relayA.publish(topic: randomTopic, payload: payloadA, tag: 0, prompt: false, ttl: 60, tvfData: nil, coorelationId: nil)
 
         try await self.relayB.subscribe(topic: randomTopic)
 

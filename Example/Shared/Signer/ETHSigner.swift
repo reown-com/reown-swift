@@ -63,16 +63,16 @@ struct ETHSigner {
     }
 
     func sendTransaction(_ params: AnyCodable) throws -> AnyCodable {
-        let params = try params.get([EthereumTransaction].self)
-        var transaction = params[0]
+//        let params = try params.get([Tx].self)
+//        var transaction = params[0]
 //        transaction.gas = EthereumQuantity(quantity: BigUInt("1234"))
-        transaction.nonce = EthereumQuantity(quantity: BigUInt("0"))
-        transaction.gasPrice = EthereumQuantity(quantity: BigUInt(0))
-        print(transaction.description)
-        let signedTx = try transaction.sign(with: self.privateKey, chainId: 4)
-        let (r, s, v) = (signedTx.r, signedTx.s, signedTx.v)
-        let result = r.hex() + s.hex().dropFirst(2) + String(v.quantity, radix: 16)
-        return AnyCodable(result)
+//        transaction.nonce = EthereumQuantity(quantity: BigUInt("0"))
+//        transaction.gasPrice = EthereumQuantity(quantity: BigUInt(0))
+//        print(transaction.description)
+//        let signedTx = try transaction.sign(with: self.privateKey, chainId: 4)
+//        let (r, s, v) = (signedTx.r, signedTx.s, signedTx.v)
+//        let result = r.hex() + s.hex().dropFirst(2) + String(v.quantity, radix: 16)
+        return AnyCodable("0xabcd12340000000000000000000000111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000f0")
     }
 
     private func dataToHash(_ data: Data) -> Bytes {

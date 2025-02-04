@@ -282,7 +282,8 @@ private extension ApproveEngine {
 
     func setupRequestSubscriptions() {
         pairingRegisterer.register(method: SessionProposeProtocolMethod.responseAutoReject())
-            .sink { [unowned self] (payload: RequestSubscriptionPayload<SessionType.ProposeParams>) in
+            .sink { [weak self] (payload: RequestSubscriptionPayload<SessionType.ProposeParams>) in
+                guard let self = self else { return }
                 guard let pairing = pairingStore.getPairing(forTopic: payload.topic) else { return }
                 let responseApproveMethod = SessionAuthenticatedProtocolMethod.responseApprove().method
                 if let methods = pairing.methods,
@@ -417,7 +418,8 @@ private extension ApproveEngine {
             return
         }
         
-        Task(priority: .high) {
+        Task(priority: .high) { [weak self] in
+            guard let self = self else {return}
             do {
                 let response: VerifyResponse
                 if let attestation = payload.attestation,

@@ -7,6 +7,7 @@ final class SessionRequestInteractor {
     func respondSessionRequest(sessionRequest: Request, importAccount: ImportAccount) async throws -> Bool {
         do {
             let result = try await Signer.sign(request: sessionRequest, importAccount: importAccount)
+            AlertPresenter.present(message: result.description, type: .success)
             try await WalletKit.instance.respond(
                 topic: sessionRequest.topic,
                 requestId: sessionRequest.id,

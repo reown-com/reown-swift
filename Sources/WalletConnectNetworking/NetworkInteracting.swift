@@ -10,8 +10,8 @@ public protocol NetworkInteracting {
     func unsubscribe(topic: String)
     func batchSubscribe(topics: [String]) async throws
     func batchUnsubscribe(topics: [String]) async throws
-    func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws
-    func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws
+    func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws
+    func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws
     func respondSuccess(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws
     func respondError(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod, reason: Reason, envelopeType: Envelope.EnvelopeType) async throws
     func handleHistoryRequest(topic: String, request: RPCRequest)
@@ -57,11 +57,27 @@ public protocol NetworkInteracting {
 
 extension NetworkInteracting {
     public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod) async throws {
-        try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: .type0)
+        try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: nil)
+    }
+
+    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, tvfData: TVFData?) async throws {
+        try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: tvfData)
+    }
+
+    public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+        try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
     }
 
     public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod) async throws {
-        try await self.respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: .type0)
+        try await self.respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: nil)
+    }
+
+    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, tvfData: TVFData?) async throws {
+        try await self.respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: tvfData)
+    }
+
+    public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws {
+        try await self.respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
     }
 
     public func respondSuccess(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod) async throws {
