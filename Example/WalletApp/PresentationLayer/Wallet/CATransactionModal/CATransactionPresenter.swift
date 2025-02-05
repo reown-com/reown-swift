@@ -97,10 +97,17 @@ final class CATransactionPresenter: ObservableObject {
             print("🔑 Signed initial transaction hash: \(initialTxHash)")
 
             print("📝 Executing transactions through WalletKit...")
-            let executeDetails = await WalletKit.instance.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
+            let executeDetails = try await WalletKit.instance.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
 
             print("✅ Transaction approval process completed successfully.")
+            AlertPresenter.present(message: "Transaction approved successfully", type: .success)
+            if let sessionRequest = sessionRequest {
+                try await WalletKit.instance.respond(topic: sessionRequest.topic, requestId: sessionRequest.id, response: .response(AnyCodable(executeDetails.initialTxnHash)))
+            }
             ActivityIndicatorManager.shared.stop()
+            await MainActor.run {
+                transactionCompleted = true
+            }
             return executeDetails
         } catch {
             print("❌ Transaction approval failed with error: \(error.localizedDescription)")

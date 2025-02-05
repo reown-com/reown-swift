@@ -300,8 +300,8 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func execute(uiFields: UiFields, routeTxnSigs: [FfiPrimitiveSignature], initialTxnSig: FfiPrimitiveSignature) async -> ExecuteDetails {
-        return await chainAbstractionClient.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
+    public func execute(uiFields: UiFields, routeTxnSigs: [FfiPrimitiveSignature], initialTxnSig: FfiPrimitiveSignature) async throws -> ExecuteDetails {
+        return try await chainAbstractionClient.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
