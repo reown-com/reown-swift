@@ -21,16 +21,15 @@ final class CATransactionPresenter: ObservableObject {
     @Published var fundingFromNetwork: String!
 
     private let sessionRequest: Request?
-    private let routeResponseAvailable: PrepareResponseAvailable
     var fundingFrom: [FundingMetadata] {
-        return routeResponseAvailable.metadata.fundingFrom
+        return uiFields.routeResponse.metadata.fundingFrom
     }
     var initialTransactionMetadata: InitialTransactionMetadata {
-        return routeResponseAvailable.metadata.initialTransaction
+        return uiFields.routeResponse.metadata.initialTransaction
     }
     let router: CATransactionRouter
     let importAccount: ImportAccount
-    var routeUiFields: UiFields? = nil
+    var uiFields: UiFields
     let call: Call
     var chainId: Blockchain
     let from: String
@@ -40,23 +39,21 @@ final class CATransactionPresenter: ObservableObject {
     init(
         sessionRequest: Request?,
         importAccount: ImportAccount,
-        routeResponseAvailable: PrepareResponseAvailable,
         router: CATransactionRouter,
         call: Call,
         from: String,
-        chainId: Blockchain
+        chainId: Blockchain,
+        uiFields: UiFields
     ) {
         self.sessionRequest = sessionRequest
-        self.routeResponseAvailable = routeResponseAvailable
         self.router = router
         self.importAccount = importAccount
         self.chainId = chainId
         self.call = call
         self.from = from
+        self.uiFields = uiFields
         self.networkName = network(for: chainId.absoluteString)
         self.fundingFromNetwork = network(for: fundingFrom[0].chainId)
-
-        // Any additional setup for the parameters
         setupInitialState()
     }
 
@@ -68,17 +65,6 @@ final class CATransactionPresenter: ObservableObject {
         do {
             print("🚀 Starting transaction approval process...")
             ActivityIndicatorManager.shared.start()
-
-            // Check if UI fields have already been fetched
-            let uiFields: UiFields
-            if let existingUiFields = routeUiFields {
-                print("📝 UI Fields already available, using cached version.")
-                uiFields = existingUiFields
-            } else {
-                print("📝 UI Fields not available. Fetching UI Fields from WalletKit...")
-                uiFields = try await WalletKit.instance.getUiFields(routeResponse: routeResponseAvailable, currency: Currency.usd)
-                self.routeUiFields = uiFields
-            }
 
             let initialTxHash = uiFields.initial.transactionHashToSign
 
@@ -163,11 +149,13 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     func setupInitialState() {
+        estimatedFees = uiFields.localTotal.formattedAlt
+        bridgeFee = uiFields.bridge.first!.localFee.formattedAlt
+
         if let session = WalletKit.instance.getSessions().first(where: { $0.topic == sessionRequest?.topic }) {
             self.appURL = session.peer.url
         }
         networkName = network(for: chainId.absoluteString)
-        Task { try await setUpRoutUiFields() }
         payingAmount = initialTransactionMetadata.amount
 
         let tx = call
@@ -176,17 +164,6 @@ final class CATransactionPresenter: ObservableObject {
             await MainActor.run {
                 balanceAmount = balance
             }
-        }
-    }
-
-    func setUpRoutUiFields() async throws {
-        routeUiFields = try await WalletKit.instance.getUiFields(routeResponse: routeResponseAvailable, currency: Currency.usd)
-        print("📝 UI Fields setup complete with localTotal: \(routeUiFields!.localTotal)")
-        print("📝 Formatted total: \(routeUiFields!.localTotal.formatted)")
-        print("📝 Alternate formatted total: \(routeUiFields!.localTotal.formattedAlt)")
-        await MainActor.run {
-            estimatedFees = routeUiFields!.localTotal.formattedAlt
-            bridgeFee = routeUiFields!.bridge.first!.localFee.formattedAlt
         }
     }
 

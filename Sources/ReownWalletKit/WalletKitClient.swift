@@ -290,13 +290,18 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
+    public func prepareDetail(chainId: String, from: FfiAddress, call: Call, localCurrency: Currency) async throws -> PrepareDetailedResponse {
+        return try await chainAbstractionClient.prepareDetailed(chainId: chainId, from: from, call: call, localCurrency: localCurrency)
+    }
+
+    @available(*, message: "This method is experimental. Use with caution.")
     public func estimateFees(chainId: String) async throws -> Eip1559Estimation {
         return try await chainAbstractionClient.estimateFees(chainId: chainId)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func getUiFields(routeResponse: PrepareResponseAvailable, currency: Currency) async throws -> UiFields {
-        return try await chainAbstractionClient.getUiFields(routeResponse: routeResponse, currency: currency)
+    public func getUiFields(routeResponse: PrepareResponseAvailable, localCurrency: Currency) async throws -> UiFields {
+        return try await chainAbstractionClient.getUiFields(routeResponse: routeResponse, localCurrency: localCurrency)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")

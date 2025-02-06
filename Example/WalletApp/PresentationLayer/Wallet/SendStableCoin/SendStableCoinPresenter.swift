@@ -163,16 +163,24 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
             ActivityIndicatorManager.shared.start()
 
-            let routeResponseSuccess = try await WalletKit.instance.prepare(
+//            let routeResponseSuccess = try await WalletKit.instance.prepare(
+//                chainId: selectedNetwork.chainId.absoluteString,
+//                from: importAccount.account.address,
+//                call: call
+//            )
+
+            let routeResponseSuccess = try await WalletKit.instance.prepareDetail(
                 chainId: selectedNetwork.chainId.absoluteString,
                 from: importAccount.account.address,
-                call: call
+                call: call,
+                localCurrency: .usd
             )
+
             await MainActor.run {
                 switch routeResponseSuccess {
                 case .success(let routeResponse):
                     switch routeResponse {
-                    case .available(let routeResponseAvailable):
+                    case .available(let UiFileds):
                         // If the route is available, present a CA transaction flow
                         // We consider this a success scenario for saving the recipient
                         self.saveRecipientToUserDefaults()
@@ -182,7 +190,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                             from: importAccount.account.address,
                             chainId: selectedNetwork.chainId,
                             importAccount: importAccount,
-                            routeResponseAvailable: routeResponseAvailable
+                            uiFields: UiFileds
                         )
                     case .notRequired:
                         // Possibly handle a scenario where no special routing is needed

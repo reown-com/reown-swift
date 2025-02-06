@@ -106,13 +106,13 @@ extension MainPresenter {
 
 
             ActivityIndicatorManager.shared.start()
-            let routeResponseSuccess = try await WalletKit.instance.prepare(chainId: request.chainId.absoluteString, from: tx.from, call: call)
+            let routeResponseSuccess = try await WalletKit.instance.prepareDetail(chainId: request.chainId.absoluteString, from: tx.from, call: call, localCurrency: .usd)
             await MainActor.run {
                 switch routeResponseSuccess {
                 case .success(let routeResponseSuccess):
                     switch routeResponseSuccess {
-                    case .available(let routeResponseAvailable):
-                        router.presentCATransaction(sessionRequest: request, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, context: context, call: call, from: tx.from, chainId: request.chainId)
+                    case .available(let uiFields):
+                        router.presentCATransaction(sessionRequest: request, importAccount: importAccount, context: context, call: call, from: tx.from, chainId: request.chainId, uiFields: uiFields)
                     case .notRequired(let routeResponseNotRequired):
                         AlertPresenter.present(message: "Routing not required", type: .success)
                         router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
