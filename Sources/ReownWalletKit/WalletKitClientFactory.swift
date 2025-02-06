@@ -8,7 +8,7 @@ struct WalletKitClientFactory {
         pushClient: PushClientProtocol,
         config: WalletKit.Config
     ) -> WalletKitClient {
-        let metadata = PulseMetadata(url: nil, bundleId: Bundle.main.bundleIdentifier, packageName: nil, sdkVersion: EnvironmentInfo.sdkName, sdkPlatform: "")
+        let metadata = PulseMetadata(url: nil, bundleId: Bundle.main.bundleIdentifier, packageName: nil, sdkVersion: EnvironmentInfo.sdkName, sdkPlatform: "mobile")
         let chainAbstractionClient = ChainAbstractionClient(projectId: Networking.projectId, pulseMetadata: metadata)
         return WalletKitClient(
             signClient: signClient,
@@ -26,7 +26,7 @@ struct WalletKitClientFactory {
         config: WalletKit.Config,
         projectId: String
     ) -> WalletKitClient {
-        let metadata = PulseMetadata(url: nil, bundleId: Bundle.main.bundleIdentifier, packageName: nil, sdkVersion: EnvironmentInfo.sdkName, sdkPlatform: "")
+        let metadata = PulseMetadata(url: nil, bundleId: Bundle.main.bundleIdentifier, packageName: nil, sdkVersion: EnvironmentInfo.sdkName, sdkPlatform: "mobile")
         let chainAbstractionClient = ChainAbstractionClient(projectId: projectId, pulseMetadata: metadata)
         return WalletKitClient(
             signClient: signClient,
