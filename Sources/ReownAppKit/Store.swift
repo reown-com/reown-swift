@@ -3,7 +3,7 @@ import SwiftUI
 
 enum ConnectionProviderType {
     case wc
-    case cb
+//    case cb
 }
 
 class Store: ObservableObject {

@@ -148,8 +148,8 @@ final class NetworkDetailViewModel: ObservableObject {
                         chainId: .init(from.id)!
                     )
             )
-        case .cb:
-            try await AppKit.instance.request(.wallet_switchEthereumChain(chainId: to.chainReference))
+//        case .cb:
+//            try await AppKit.instance.request(.wallet_switchEthereumChain(chainId: to.chainReference))
         case .none:
             break
         }
@@ -178,20 +178,20 @@ final class NetworkDetailViewModel: ObservableObject {
                     chainId: .init(from.id)!
                 )
             )
-        case .cb:
-            try await AppKit.instance.request(
-                .wallet_addEthereumChain(
-                    chainId: addChainParams.chainId,
-                    blockExplorerUrls: addChainParams.blockExplorerUrls,
-                     chainName: addChainParams.chainName,
-                     iconUrls: addChainParams.iconUrls,
-                    nativeCurrency: .init(
-                        name: addChainParams.nativeCurrency.name,
-                        symbol: addChainParams.nativeCurrency.symbol,
-                        decimals: addChainParams.nativeCurrency.decimals
-                    ),
-                     rpcUrls: addChainParams.rpcUrls
-                 ))
+//        case .cb:
+//            try await AppKit.instance.request(
+//                .wallet_addEthereumChain(
+//                    chainId: addChainParams.chainId,
+//                    blockExplorerUrls: addChainParams.blockExplorerUrls,
+//                     chainName: addChainParams.chainName,
+//                     iconUrls: addChainParams.iconUrls,
+//                    nativeCurrency: .init(
+//                        name: addChainParams.nativeCurrency.name,
+//                        symbol: addChainParams.nativeCurrency.symbol,
+//                        decimals: addChainParams.nativeCurrency.decimals
+//                    ),
+//                     rpcUrls: addChainParams.rpcUrls
+//                 ))
         case .none:
             break
         }

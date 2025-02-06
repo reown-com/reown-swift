@@ -1,6 +1,6 @@
-import class CoinbaseWalletSDK.CoinbaseWalletSDK
-import struct CoinbaseWalletSDK.Action
-import struct CoinbaseWalletSDK.ActionError
+//import class CoinbaseWalletSDK.CoinbaseWalletSDK
+//import struct CoinbaseWalletSDK.Action
+//import struct CoinbaseWalletSDK.ActionError
 import Combine
 import Foundation
 import UIKit
@@ -175,44 +175,44 @@ public class AppKitClient {
                     )
                 )
             }
-        case .cb:
-                    
-            guard let jsonRpc = request.toCbAction() else { return }
-                    
-            // Execute on main as Coinbase SDK is not dispatching on main when calling UIApplication.openUrl()
-            DispatchQueue.main.async {
-                CoinbaseWalletSDK.shared.makeRequest(
-                    .init(
-                        actions: [
-                            Action(jsonRpc: jsonRpc)
-                        ]
-                    )
-                ) { result in
-                    let response: W3MResponse
-                    switch result {
-                    case let .success(payload):
-                        
-                        switch payload.content.first {
-                        case let .success(JSONString):
-                            response = .init(result: .response(AnyCodable(JSONString)))
-                        case let .failure(error):
-                            response = .init(result: .error(.init(code: error.code, message: error.message)))
-                        case .none:
-                            response = .init(result: .error(.init(code: -1, message: "Empty response")))
-                        }
-                    case let .failure(error):
-                        AppKit.config.onError(error)
-                        
-                        if let cbError = error as? ActionError {
-                            response = .init(result: .error(.init(code: cbError.code, message: cbError.message)))
-                        } else {
-                            response = .init(result: .error(.init(code: -1, message: error.localizedDescription)))
-                        }
-                    }
-                    
-                    self.coinbaseResponseSubject.send(response)
-                }
-            }
+//        case .cb:
+//                    
+//            guard let jsonRpc = request.toCbAction() else { return }
+//                    
+//            // Execute on main as Coinbase SDK is not dispatching on main when calling UIApplication.openUrl()
+//            DispatchQueue.main.async {
+//                CoinbaseWalletSDK.shared.makeRequest(
+//                    .init(
+//                        actions: [
+//                            Action(jsonRpc: jsonRpc)
+//                        ]
+//                    )
+//                ) { result in
+//                    let response: W3MResponse
+//                    switch result {
+//                    case let .success(payload):
+//                        
+//                        switch payload.content.first {
+//                        case let .success(JSONString):
+//                            response = .init(result: .response(AnyCodable(JSONString)))
+//                        case let .failure(error):
+//                            response = .init(result: .error(.init(code: error.code, message: error.message)))
+//                        case .none:
+//                            response = .init(result: .error(.init(code: -1, message: "Empty response")))
+//                        }
+//                    case let .failure(error):
+//                        AppKit.config.onError(error)
+//                        
+//                        if let cbError = error as? ActionError {
+//                            response = .init(result: .error(.init(code: cbError.code, message: cbError.message)))
+//                        } else {
+//                            response = .init(result: .error(.init(code: -1, message: error.localizedDescription)))
+//                        }
+//                    }
+//                    
+//                    self.coinbaseResponseSubject.send(response)
+//                }
+//            }
         case .none:
             break
         }
@@ -247,13 +247,13 @@ public class AppKitClient {
                 analyticsService.track(.DISCONNECT_ERROR)
                 throw error
             }
-        case .cb:
-            if case let .failure(error) = CoinbaseWalletSDK.shared.resetSession() {
-                analyticsService.track(.DISCONNECT_ERROR)
-                throw error
-            } else {
-                analyticsService.track(.DISCONNECT_SUCCESS)
-            }
+//        case .cb:
+//            if case let .failure(error) = CoinbaseWalletSDK.shared.resetSession() {
+//                analyticsService.track(.DISCONNECT_ERROR)
+//                throw error
+//            } else {
+//                analyticsService.track(.DISCONNECT_SUCCESS)
+//            }
         case .none:
             break
         }
@@ -330,12 +330,13 @@ public class AppKitClient {
                 return false
             }
         }
-        do {
-            return try CoinbaseWalletSDK.shared.handleResponse(url)
-        } catch {
-            store.toast = .init(style: .error, message: error.localizedDescription)
-            return false
-        }
+        return false
+//        do {
+//            return try CoinbaseWalletSDK.shared.handleResponse(url)
+//        } catch {
+//            store.toast = .init(style: .error, message: error.localizedDescription)
+//            return false
+//        }
     }
 
     private func setUpConnectionEvents() {

@@ -1,4 +1,4 @@
-import CoinbaseWalletSDK
+//import CoinbaseWalletSDK
 import Foundation
 import SwiftUI
 
@@ -38,12 +38,6 @@ public class AppKit {
             store.session = session
             store.connectedWith = .wc
             store.account = .init(from: session)
-        } else if config.coinbaseEnabled,
-                  CoinbaseWalletSDK.shared.isConnected() {
-
-            let storedAccount = AccountStorage.read()
-            store.connectedWith = .cb
-            store.account = storedAccount
         } else {
             AccountStorage.clear()
         }
@@ -122,11 +116,11 @@ public class AppKit {
         
         store.customWallets = customWallets
         
-        configureCoinbaseIfNeeded(
-            store: store,
-            metadata: metadata,
-            w3mApiInteractor: w3mApiInteractor
-        )
+//        configureCoinbaseIfNeeded(
+//            store: store,
+//            metadata: metadata,
+//            w3mApiInteractor: w3mApiInteractor
+//        )
         
         AppKit.viewModel = Web3ModalViewModel(
             router: router,
@@ -149,75 +143,75 @@ public class AppKit {
         AppKit.config.sessionParams = sessionParams
     }
     
-    private static func configureCoinbaseIfNeeded(
-        store: Store,
-        metadata: AppMetadata,
-        w3mApiInteractor: W3MAPIInteractor
-    ) {
-        guard AppKit.config.coinbaseEnabled else { return }
-        
-        if let redirectLink = metadata.redirect?.universal ?? metadata.redirect?.native {
-            CoinbaseWalletSDK.configure(callback: URL(string: redirectLink)!)
-        } else {
-            CoinbaseWalletSDK.configure(
-                callback: URL(string: "w3mdapp://")!
-            )
-        }
-            
-        var wallet: Wallet = .init(
-            id: "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa",
-            name: "Coinbase",
-            homepage: "https://www.coinbase.com/wallet/",
-            imageId: "a5ebc364-8f91-4200-fcc6-be81310a0000",
-            order: 4,
-            mobileLink: nil,
-            linkMode: nil,
-            desktopLink: nil,
-            webappLink: nil,
-            appStore: "https://apps.apple.com/us/app/coinbase-wallet-nfts-crypto/id1278383455",
-            alternativeConnectionMethod: {
-                CoinbaseWalletSDK.shared.initiateHandshake { result, account in
-                    switch result {
-                        case .success:
-                            guard
-                                let account = account,
-                                let blockchain = Blockchain(
-                                    namespace: account.chain == "eth" ? "eip155" : "",
-                                    reference: String(account.networkId)
-                                )
-                            else { return }
-                        
-                            store.connectedWith = .cb
-                            store.account = .init(
-                                address: account.address,
-                                chain: blockchain
-                            )
-                        
-                            withAnimation {
-                                store.isModalShown = false
-                            }
-                            AppKit.viewModel.router.setRoute(Router.AccountSubpage.profile)
-                            
-                            let matchingChain = ChainPresets.ethChains.first(where: {
-                                $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference
-                            })
-                        
-                            store.selectedChain = matchingChain
-                        case .failure(let error):
-                            store.toast = .init(style: .error, message: error.localizedDescription)
-                    }
-                }
-            }
-        )
-            
-        wallet.isInstalled = CoinbaseWalletSDK.isCoinbaseWalletInstalled()
-            
-        store.customWallets.append(wallet)
-            
-        Task { [wallet] in
-            try? await w3mApiInteractor.fetchWalletImages(for: [wallet])
-        }
-    }
+//    private static func configureCoinbaseIfNeeded(
+//        store: Store,
+//        metadata: AppMetadata,
+//        w3mApiInteractor: W3MAPIInteractor
+//    ) {
+//        guard AppKit.config.coinbaseEnabled else { return }
+//        
+//        if let redirectLink = metadata.redirect?.universal ?? metadata.redirect?.native {
+//            CoinbaseWalletSDK.configure(callback: URL(string: redirectLink)!)
+//        } else {
+//            CoinbaseWalletSDK.configure(
+//                callback: URL(string: "w3mdapp://")!
+//            )
+//        }
+//            
+//        var wallet: Wallet = .init(
+//            id: "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa",
+//            name: "Coinbase",
+//            homepage: "https://www.coinbase.com/wallet/",
+//            imageId: "a5ebc364-8f91-4200-fcc6-be81310a0000",
+//            order: 4,
+//            mobileLink: nil,
+//            linkMode: nil,
+//            desktopLink: nil,
+//            webappLink: nil,
+//            appStore: "https://apps.apple.com/us/app/coinbase-wallet-nfts-crypto/id1278383455",
+//            alternativeConnectionMethod: {
+//                CoinbaseWalletSDK.shared.initiateHandshake { result, account in
+//                    switch result {
+//                        case .success:
+//                            guard
+//                                let account = account,
+//                                let blockchain = Blockchain(
+//                                    namespace: account.chain == "eth" ? "eip155" : "",
+//                                    reference: String(account.networkId)
+//                                )
+//                            else { return }
+//                        
+//                            store.connectedWith = .cb
+//                            store.account = .init(
+//                                address: account.address,
+//                                chain: blockchain
+//                            )
+//                        
+//                            withAnimation {
+//                                store.isModalShown = false
+//                            }
+//                            AppKit.viewModel.router.setRoute(Router.AccountSubpage.profile)
+//                            
+//                            let matchingChain = ChainPresets.ethChains.first(where: {
+//                                $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference
+//                            })
+//                        
+//                            store.selectedChain = matchingChain
+//                        case .failure(let error):
+//                            store.toast = .init(style: .error, message: error.localizedDescription)
+//                    }
+//                }
+//            }
+//        )
+//            
+//        wallet.isInstalled = CoinbaseWalletSDK.isCoinbaseWalletInstalled()
+//            
+//        store.customWallets.append(wallet)
+//            
+//        Task { [wallet] in
+//            try? await w3mApiInteractor.fetchWalletImages(for: [wallet])
+//        }
+//    }
 
 }
 

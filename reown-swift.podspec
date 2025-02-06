@@ -52,7 +52,6 @@ Pod::Spec.new do |spec|
     ss.dependency 'reown-swift/ReownAppKitUI'
     ss.dependency 'reown-swift/ReownAppKitBackport'
     ss.dependency 'DSF_QRCode', '~> 16.1.1'
-    ss.dependency 'CoinbaseWalletSDK', '~> 1.0.0'
     ss.resource_bundles = {
       'ReownAppKit' => [
         'Sources/ReownAppKit/Resources/*'
