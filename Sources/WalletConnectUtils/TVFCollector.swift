@@ -5,7 +5,7 @@ import Foundation
 struct EthSendTransaction: Codable {
     let from: String?
     let to: String?
-    let data: String?
+    let data: String?   // This field contains the call data
     let value: String?
 }
 
@@ -99,7 +99,8 @@ public struct TVFCollector {
             return nil
         }
 
-        // 2. Gather contract addresses if this is eth_sendTransaction
+        // 2. Gather contract addresses if this is an eth_sendTransaction
+        // Now we check the call data (the "data" field) instead of "to".
         let contractAddresses = extractContractAddressesIfNeeded(
             rpcMethod: rpcMethod,
             rpcParams: rpcParams
@@ -125,7 +126,8 @@ public struct TVFCollector {
 
     // MARK: - Private Helpers
 
-    /// Parse contract addresses from `rpcParams` if the method is `"eth_sendTransaction"`.
+    /// Parse contract addresses from `rpcParams` if the method is "eth_sendTransaction".
+    /// Now, instead of checking the "to" field, we check the "data" field.
     private func extractContractAddressesIfNeeded(rpcMethod: String,
                                                   rpcParams: AnyCodable) -> [String]? {
         guard rpcMethod == Self.ETH_SEND_TRANSACTION else {
@@ -134,12 +136,13 @@ public struct TVFCollector {
         do {
             // Attempt to decode the array of EthSendTransaction from AnyCodable
             let transactions = try rpcParams.get([EthSendTransaction].self)
-            if let firstTo = transactions.first?.to {
-                // Use our contract data check: if it is valid contract call data, then return it.
-                if TVFCollector.isValidContractData(firstTo) {
-                    return [firstTo]
-                } else {
-                    return nil
+            if let transaction = transactions.first,
+               let callData = transaction.data,
+               !callData.isEmpty,
+               TVFCollector.isValidContractData(callData) {
+                // If the call data is valid contract call data, return the "to" address.
+                if let to = transaction.to {
+                    return [to]
                 }
             }
         } catch {
@@ -199,12 +202,13 @@ public struct TVFCollector {
 
 extension TVFCollector {
     /// Checks whether a given hex string (possibly prefixed with "0x") is valid contract call data.
+    /// This function is now meant to check the transaction's call data.
     public static func isValidContractData(_ data: String) -> Bool {
         var hex = data
         if hex.hasPrefix("0x") {
             hex = String(hex.dropFirst(2))
         }
-        // Ensure there are at least 136 hex characters (8 for method, 64 for recipient, 64 for amount)
+        // Require at least 73 hex characters:
         guard !hex.isEmpty, hex.count >= 73 else { return false }
         let methodId = hex.prefix(8)
         guard !methodId.isEmpty else { return false }
