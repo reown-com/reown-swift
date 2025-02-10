@@ -290,34 +290,6 @@ public class WalletKitClient {
     }
 }
 
-public class ChainAbstractionNamespace {
-    private let chainAbstractionClient: ChainAbstractionClient
-
-    init(chainAbstractionClient: ChainAbstractionClient) {
-        self.chainAbstractionClient = chainAbstractionClient
-    }
-//
-//    @available(*, message: "This method is experimental. Use with caution.")
-//    public func status(orchestrationId: String) async throws -> StatusResponse {
-//        return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
-//    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func prepare(chainId: String, from: FfiAddress, call: Call, localCurrency: Currency) async throws -> PrepareDetailedResponse {
-        return try await chainAbstractionClient.prepareDetailed(chainId: chainId, from: from, call: call, localCurrency: localCurrency)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func execute(uiFields: UiFields, routeTxnSigs: [FfiPrimitiveSignature], initialTxnSig: FfiPrimitiveSignature) async throws -> ExecuteDetails {
-        return try await chainAbstractionClient.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
-    }
-//
-//    @available(*, message: "This method is experimental. Use with caution.")
-//    public func waitForSuccessWithTimeout(orchestrationId: String, checkIn: UInt64, timeout: UInt64 = 180) async throws -> StatusResponseCompleted {
-//        return try await chainAbstractionClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: timeout)
-//    }
-}
-
 
 #if DEBUG
 extension WalletKitClient {
