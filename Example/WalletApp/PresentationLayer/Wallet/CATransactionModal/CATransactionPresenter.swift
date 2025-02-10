@@ -83,7 +83,7 @@ final class CATransactionPresenter: ObservableObject {
             print("🔑 Signed initial transaction hash: \(initialTxHash)")
 
             print("📝 Executing transactions through WalletKit...")
-            let executeDetails = try await WalletKit.instance.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
+            let executeDetails = try await WalletKit.instance.ChainAbstraction.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
 
             print("✅ Transaction approval process completed successfully.")
             AlertPresenter.present(message: "Transaction approved successfully", type: .success)

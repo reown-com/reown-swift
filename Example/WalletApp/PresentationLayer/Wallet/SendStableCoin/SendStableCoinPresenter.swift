@@ -163,13 +163,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
             ActivityIndicatorManager.shared.start()
 
-//            let routeResponseSuccess = try await WalletKit.instance.prepare(
-//                chainId: selectedNetwork.chainId.absoluteString,
-//                from: importAccount.account.address,
-//                call: call
-//            )
-
-            let routeResponseSuccess = try await WalletKit.instance.prepareDetail(
+            let routeResponseSuccess = try await WalletKit.instance.ChainAbstraction.prepare(
                 chainId: selectedNetwork.chainId.absoluteString,
                 from: importAccount.account.address,
                 call: call,

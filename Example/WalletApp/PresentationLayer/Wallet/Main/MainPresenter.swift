@@ -105,7 +105,7 @@ extension MainPresenter {
             )
 
             ActivityIndicatorManager.shared.start()
-            let routeResponseSuccess = try await WalletKit.instance.prepareDetail(chainId: request.chainId.absoluteString, from: tx.from, call: call, localCurrency: .usd)
+            let routeResponseSuccess = try await WalletKit.instance.ChainAbstraction.prepare(chainId: request.chainId.absoluteString, from: tx.from, call: call, localCurrency: .usd)
             await MainActor.run {
                 switch routeResponseSuccess {
                 case .success(let routeResponseSuccess):
