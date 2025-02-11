@@ -218,8 +218,9 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             accountAddress: recipient
         )
 
-        // 1) Convert the "amount" string to a Decimal
-        guard let decimalAmount = Decimal(string: amount) else {
+        // 1) Normalize the decimal separator and try to convert to Decimal
+        let normalizedAmount = amount.replacingOccurrences(of: ",", with: ".")
+        guard let decimalAmount = Decimal(string: normalizedAmount) else {
             throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
                 NSLocalizedDescriptionKey: "Invalid numeric input: \(amount)"
             ])
@@ -227,7 +228,19 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
         // USDC/USDT => 6 decimals
         let baseUnitsDecimal = decimalAmount * Decimal(1_000_000)
-        let baseUnitsString = NSDecimalNumber(decimal: baseUnitsDecimal).stringValue
+
+        // Use a number formatter to ensure consistent string conversion
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0 // No decimal places for base units
+        formatter.groupingSeparator = "" // No thousand separators
+        formatter.decimalSeparator = "." // Force decimal point
+
+        guard let baseUnitsString = formatter.string(from: NSDecimalNumber(decimal: baseUnitsDecimal)) else {
+            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
+                NSLocalizedDescriptionKey: "Failed to convert amount to string"
+            ])
+        }
 
         // 2) Determine which contract address to use
         let tokenAddress: String
@@ -235,7 +248,6 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         case .usdc:
             tokenAddress = selectedNetwork.usdcContractAddress
         case .usdt:
-            // already checked if .Base => throw error => must not get here if base
             tokenAddress = selectedNetwork.usdtContractAddress
         }
 
@@ -247,7 +259,6 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         )
         return call
     }
-
     /// Persists the latest recipient in UserDefaults
     private func saveRecipientToUserDefaults() {
         userDefaults.set(recipient, forKey: recipientKey)
