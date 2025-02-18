@@ -30,7 +30,7 @@ final class W3MAPIInteractor: ObservableObject {
         DispatchQueue.main.async {
             self.isLoading = true
         }
-        
+
         let params = Web3ModalAPI.GetWalletsParams(
             page: search.isEmpty ? store.currentPage : 1,
             entries: search.isEmpty ? entriesPerPage : 100,
@@ -38,9 +38,10 @@ final class W3MAPIInteractor: ObservableObject {
             projectId: AppKit.config.projectId,
             metadata: AppKit.config.metadata,
             recommendedIds: AppKit.config.recommendedWalletIds,
+            include: AppKit.config.includedWalletIds,
             exclude: AppKit.config.excludedWalletIds
         )
-        
+
         let httpClient = HTTPNetworkClient(host: "api.web3modal.com")
         let response = try await httpClient.request(
             GetWalletsResponse.self,
@@ -114,6 +115,7 @@ final class W3MAPIInteractor: ObservableObject {
                     projectId: AppKit.config.projectId,
                     metadata: AppKit.config.metadata,
                     recommendedIds: AppKit.config.recommendedWalletIds,
+                    include: AppKit.config.includedWalletIds,
                     exclude: AppKit.config.excludedWalletIds
                 )
             )
