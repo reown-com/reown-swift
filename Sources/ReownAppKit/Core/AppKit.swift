@@ -66,6 +66,7 @@ public class AppKit {
 
         let includeWebWallets: Bool
         let recommendedWalletIds: [String]
+        let includedWalletIds: [String]
         let excludedWalletIds: [String]
         let customWallets: [Wallet]
         let coinbaseEnabled: Bool
@@ -91,6 +92,7 @@ public class AppKit {
         authRequestParams: AuthRequestParams?,
         includeWebWallets: Bool = true,
         recommendedWalletIds: [String] = [],
+        includedWalletIds: [String] = [],
         excludedWalletIds: [String] = [],
         customWallets: [Wallet] = [],
         coinbaseEnabled: Bool = true,
@@ -106,6 +108,7 @@ public class AppKit {
             authRequestParams: authRequestParams,
             includeWebWallets: includeWebWallets,
             recommendedWalletIds: recommendedWalletIds,
+            includedWalletIds: includedWalletIds,
             excludedWalletIds: excludedWalletIds,
             customWallets: customWallets,
             coinbaseEnabled: coinbaseEnabled,
