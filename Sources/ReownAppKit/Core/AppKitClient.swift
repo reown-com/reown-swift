@@ -59,7 +59,10 @@ public class AppKitClient {
     }
     
     public var coinbaseResponseSubject = PassthroughSubject<W3MResponse, Never>()
+    public var coinbaseConnectedSubject = PassthroughSubject<Void, Never>()
     
+    public var didSelectWalletSubject = PassthroughSubject<Wallet, Never>()
+
     /// Publisher that sends web socket connection status
     public var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> {
         signClient.socketConnectionStatusPublisher.eraseToAnyPublisher()
@@ -162,6 +165,15 @@ public class AppKitClient {
                         topic: session.topic,
                         method: request.rawValues.method,
                         params: AnyCodable(any: [message, address]),
+                        chainId: blockchain
+                    )
+                )
+            } else if case let .eth_signTypedData_v4(address, typedDataJson) = request {
+                try await signClient.request(
+                    params: .init(
+                        topic: session.topic,
+                        method: request.rawValues.method,
+                        params: AnyCodable(any: [address, typedDataJson]),
                         chainId: blockchain
                     )
                 )
@@ -324,15 +336,21 @@ public class AppKitClient {
            queryItems.contains(where: { $0.name == "wc_ev" }) {
             do {
                 try signClient.dispatchEnvelope(url.absoluteString)
+                print("Handle deeplink Wallet Connect")
                 return true
             } catch {
+                print("Handle deeplink Wallet Connect with error \(error)")
                 store.toast = .init(style: .error, message: error.localizedDescription)
                 return false
             }
         }
+        
         do {
-            return try CoinbaseWalletSDK.shared.handleResponse(url)
+            let handled = try CoinbaseWalletSDK.shared.handleResponse(url)
+            print("Handle Coinbase SDK deeplink with response: \(handled)")
+            return handled
         } catch {
+            print("Handle Coinbase SDK deeplink with error \(error)")
             store.toast = .init(style: .error, message: error.localizedDescription)
             return false
         }

@@ -2,19 +2,24 @@ import Foundation
 
 public struct Wallet: Codable, Identifiable {
     public let id: String
-    let name: String
-    let homepage: String
-    let imageId: String?
-    let imageUrl: String?
-    let order: Int
-    let mobileLink: String?
-    let linkMode: String?
-    let desktopLink: String?
-    let webappLink: String?
-    let appStore: String?
-    
-    var lastTimeUsed: Date?
-    var isInstalled: Bool = false
+    public let name: String
+    public let homepage: String
+    public let imageId: String?
+    public let imageUrl: String?
+    public let order: Int
+    public let mobileLink: String?
+    public let linkMode: String?
+    public let desktopLink: String?
+    public let webappLink: String?
+    public let appStore: String?
+    public var lastTimeUsed: Date?
+    public var isInstalled: Bool = false
+    public var isRecent: Bool {
+        if let lastTimeUsed {
+            abs(lastTimeUsed.timeIntervalSinceNow) < (24 * 60 * 60 * 7)
+        } else { false }
+    }
+    var customDidSelect: Bool = false
     var alternativeConnectionMethod: (() -> Void)? = nil
     
     enum CodingKeys: String, CodingKey {
@@ -33,6 +38,7 @@ public struct Wallet: Codable, Identifiable {
         // Decorated
         case lastTimeUsed
         case isInstalled
+        case customDidSelect
     }
     
     public init(
@@ -49,6 +55,7 @@ public struct Wallet: Codable, Identifiable {
         appStore: String? = nil, 
         lastTimeUsed: Date? = nil, 
         isInstalled: Bool = false,
+        customDidSelect: Bool = false,
         alternativeConnectionMethod: (() -> Void)? = nil
     ) {
         self.id = id
@@ -64,6 +71,7 @@ public struct Wallet: Codable, Identifiable {
         self.appStore = appStore
         self.lastTimeUsed = lastTimeUsed
         self.isInstalled = isInstalled
+        self.customDidSelect = customDidSelect
         self.alternativeConnectionMethod = alternativeConnectionMethod
     }
     
@@ -82,6 +90,7 @@ public struct Wallet: Codable, Identifiable {
         self.appStore = try container.decodeIfPresent(String.self, forKey: .appStore)
         self.lastTimeUsed = try container.decodeIfPresent(Date.self, forKey: .lastTimeUsed)
         self.isInstalled = try container.decodeIfPresent(Bool.self, forKey: .isInstalled) ?? false
+        self.customDidSelect = try container.decodeIfPresent(Bool.self, forKey: .customDidSelect) ?? false
     }
 }
 

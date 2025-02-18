@@ -10,15 +10,7 @@ class RecentWalletsStorage {
             return []
         }
         
-        return wallets.filter { wallet in
-            guard let lastTimeUsed = wallet.lastTimeUsed else {
-                assertionFailure("Shouldn't happen we stored wallet without `lastTimeUsed`")
-                return false
-            }
-            
-            // Consider Recent only for 3 days
-            return abs(lastTimeUsed.timeIntervalSinceNow) < (24 * 60 * 60 * 3)
-        }
+        return wallets
     }
     
     static func saveRecentWallets(defaults: UserDefaults = .standard, _ wallets: [Wallet])  {
@@ -31,7 +23,6 @@ class RecentWalletsStorage {
                 .sorted(by: { lhs, rhs in
                     lhs.lastTimeUsed! > rhs.lastTimeUsed!
                 })
-                .prefix(2)
         )
         
         var uniqueValues: [Wallet] = []

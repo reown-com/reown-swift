@@ -88,6 +88,15 @@ final class W3MAPIInteractor: ObservableObject {
             )
         )
     
+        // Determine if there are new schemes that should be added to app's LSApplicationQueriesSchemes
+        let registeredSchemes = response.data.map { $0.ios_schema }
+        let newSchemes = registeredSchemes.filter { !store.queryableWalletSchemes.contains($0) }.map { $0.replacingOccurrences(of: "://", with: "") }
+        if newSchemes.count > 0 {
+            print("[AppKit] \(newSchemes.count) of \(registeredSchemes.count) schemes should be added to your app's Info.plist:\n\(newSchemes)\n")
+        }
+
+        // Detect which wallets are installed
+        var installedSchemes: [String] = []
         let installedWallets: [String?] = try await response.data.concurrentMap { walletMetadata in
             guard
                 let nativeUrl = URL(string: walletMetadata.ios_schema),
@@ -95,7 +104,8 @@ final class W3MAPIInteractor: ObservableObject {
             else {
                 return nil
             }
-                
+            
+            installedSchemes.append(walletMetadata.ios_schema)
             return walletMetadata.id
         }
             
@@ -103,17 +113,53 @@ final class W3MAPIInteractor: ObservableObject {
     }
     
     func fetchFeaturedWallets() async throws {
+        let walletsToFetch = AppKit.config.recommendedWalletIds + store.installedWalletIds
         let httpClient = HTTPNetworkClient(host: "api.web3modal.com")
         let response = try await httpClient.request(
             GetWalletsResponse.self,
             at: Web3ModalAPI.getWallets(
                 params: .init(
                     page: 1,
-                    entries: 4,
+                    entries: max(walletsToFetch.count, 6),
                     search: "",
                     projectId: AppKit.config.projectId,
                     metadata: AppKit.config.metadata,
-                    recommendedIds: AppKit.config.recommendedWalletIds,
+                    recommendedIds: walletsToFetch,
+                    exclude: AppKit.config.excludedWalletIds
+                )
+            )
+        )
+        
+        try await fetchWalletImages(for: response.data)
+        
+        DispatchQueue.main.async { [self] in
+            
+            var wallets = response.data
+            
+            for index in wallets.indices {
+                let contains = store.installedWalletIds.contains(wallets[index].id)
+                wallets[index].isInstalled = contains
+            }
+            
+            self.store.totalNumberOfWallets = response.count
+            self.store.featuredWallets.append(contentsOf: wallets)
+        }
+    }
+    
+    // Use this to populate the totalNumberOfWallets. The fetch with 'include' only returns the # returned instead of total
+    func fetchAllWalletsFirstPage() async throws {
+        let walletsToFetch = AppKit.config.recommendedWalletIds + store.installedWalletIds
+        let httpClient = HTTPNetworkClient(host: "api.web3modal.com")
+        let response = try await httpClient.request(
+            GetWalletsResponse.self,
+            at: Web3ModalAPI.getWallets(
+                params: .init(
+                    page: 1,
+                    entries: entriesPerPage,
+                    search: "",
+                    projectId: AppKit.config.projectId,
+                    metadata: AppKit.config.metadata,
+                    recommendedIds: [],
                     exclude: AppKit.config.excludedWalletIds
                 )
             )

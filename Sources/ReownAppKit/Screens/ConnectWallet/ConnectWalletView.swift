@@ -11,24 +11,48 @@ struct ConnectWalletView: View {
     let displayWCConnection = false
     
     var wallets: [Wallet] {
-        var recentWallets = store.recentWallets
-        
-        let result = (store.featuredWallets + store.customWallets).map { featuredWallet in
+        let recentWallets = store.recentWallets
+        /// CustomWallets must be added first to preserve their data and not get overwritten.
+        /// Then, FeaturedWallets are added to the set.
+        /// Finally, RecentWallets are added to the set, and if there are any duplicates, the lastTimeUsed property is updated.
+        let unsortedWallets = Set(store.customWallets).union(store.featuredWallets).union(recentWallets).map { featuredWallet in
+            
             var featuredWallet = featuredWallet
-            let (index, matchingRecentWallet) = recentWallets.enumerated().first { (index, recentWallet) in
-                featuredWallet.id == recentWallet.id
-            } ?? (nil, nil)
+            if let recent = recentWallets.first(where: { $0.id == featuredWallet.id }) {
+                featuredWallet.lastTimeUsed = recent.lastTimeUsed
+            }
             
-            
-            if let match = matchingRecentWallet, let matchingIndex = index  {
-                featuredWallet.lastTimeUsed = match.lastTimeUsed
-                recentWallets.remove(at: matchingIndex)
+            if featuredWallet.isInstalled, !store.installedWalletIds.contains(featuredWallet.id) {
+                store.installedWalletIds.append(featuredWallet.id)
             }
             
             return featuredWallet
         }
         
-        return (recentWallets + result)
+        let recommended = AppKit.config.recommendedWalletIds
+        let installed = store.installedWalletIds
+        let distantPast = Date.distantPast
+        
+        return Array(unsortedWallets
+            .sorted(by: { $0.order < $1.order } )
+            .sorted(by: {
+                if installed.contains($0.id) && installed.contains($1.id) {
+                    return installed.firstIndex(of: $0.id)! < installed.firstIndex(of: $1.id)!
+                } else {
+                    return installed.contains($0.id) && !installed.contains($1.id)
+                }
+            } )
+            .sorted(by: {
+                if recommended.contains($0.id) && recommended.contains($1.id) {
+                    return recommended.firstIndex(of: $0.id)! < recommended.firstIndex(of: $1.id)!
+                } else {
+                    return recommended.contains($0.id) && !recommended.contains($1.id)
+                }
+            } )
+            .sorted(by: { $0.lastTimeUsed ?? distantPast > $1.lastTimeUsed ?? distantPast } )
+            .sorted(by: { $0.id == DesktopWallet_walletId && $1.id != DesktopWallet_walletId } )
+            .prefix(5)
+        )
     }
     
     var body: some View {
@@ -58,10 +82,16 @@ struct ConnectWalletView: View {
     private func featuredWallets() -> some View {
         ForEach(wallets, id: \.self) { wallet in
             Group {
-                let isRecent: Bool = wallet.lastTimeUsed != nil
-                let tagTitle: String? = isRecent ? "RECENT" : nil
-                
+                let isRecent: Bool = wallet.isRecent
+                let isInstalled: Bool = wallet.isInstalled
+                let tagTitle: String? = isRecent ? "RECENT" : isInstalled ? "INSTALLED" : nil
+
                 Button(action: {
+                    AppKit.instance.didSelectWalletSubject.send(wallet)
+                    if wallet.customDidSelect {
+                        store.isModalShown = false
+                        return
+                    }
                     Task {
                         do {
                             try await signInteractor.connect(walletUniversalLink: wallet.linkMode)

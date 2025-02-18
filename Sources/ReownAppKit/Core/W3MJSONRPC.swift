@@ -7,6 +7,12 @@ public enum W3MJSONRPC: Codable {
         address: String,
         message: String
     )
+    
+    case eth_signTypedData_v4(
+        address: String,
+        typedDataJson: String
+    )
+    
     case eth_signTransaction(
         from: String,
         to: String?,

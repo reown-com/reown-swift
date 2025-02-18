@@ -6,6 +6,10 @@ import SwiftUI
 import UIKit
 #endif
 
+public let DesktopWallet_walletId = "desktopWallet"
+public let MetaMask_walletId = "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96"
+public let Coinbase_walletId = "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa"
+
 /// AppKit instance wrapper
 ///
 /// ```Swift
@@ -67,6 +71,7 @@ public class AppKit {
         let includeWebWallets: Bool
         let recommendedWalletIds: [String]
         let excludedWalletIds: [String]
+        let queryableWalletSchemes: [String]
         let customWallets: [Wallet]
         let coinbaseEnabled: Bool
 
@@ -92,6 +97,7 @@ public class AppKit {
         includeWebWallets: Bool = true,
         recommendedWalletIds: [String] = [],
         excludedWalletIds: [String] = [],
+        queryableWalletSchemes: [String] = [],
         customWallets: [Wallet] = [],
         coinbaseEnabled: Bool = true,
         onError: @escaping (Error) -> Void = { _ in }
@@ -107,6 +113,7 @@ public class AppKit {
             includeWebWallets: includeWebWallets,
             recommendedWalletIds: recommendedWalletIds,
             excludedWalletIds: excludedWalletIds,
+            queryableWalletSchemes: queryableWalletSchemes,
             customWallets: customWallets,
             coinbaseEnabled: coinbaseEnabled,
             onError: onError
@@ -141,12 +148,17 @@ public class AppKit {
             try? await w3mApiInteractor.fetchWalletImages(for: store.recentWallets + store.customWallets)
             try? await w3mApiInteractor.fetchAllWalletMetadata()
             try? await w3mApiInteractor.fetchFeaturedWallets()
+            try? await w3mApiInteractor.fetchAllWalletsFirstPage()
             try? await w3mApiInteractor.prefetchChainImages()
         }
     }
     
     public static func set(sessionParams: SessionParams) {
         AppKit.config.sessionParams = sessionParams
+    }
+    
+    public static func set(authRequestParams: AuthRequestParams?) {
+        AppKit.config.authRequestParams = authRequestParams
     }
     
     private static func configureCoinbaseIfNeeded(
@@ -176,7 +188,11 @@ public class AppKit {
             webappLink: nil,
             appStore: "https://apps.apple.com/us/app/coinbase-wallet-nfts-crypto/id1278383455",
             alternativeConnectionMethod: {
-                CoinbaseWalletSDK.shared.initiateHandshake { result, account in
+                CoinbaseWalletSDK.shared.initiateHandshake(
+                    initialActions: [
+                        Action(jsonRpc: .eth_requestAccounts)
+                    ]
+                ) { result, account in
                     switch result {
                         case .success:
                             guard
@@ -203,6 +219,9 @@ public class AppKit {
                             })
                         
                             store.selectedChain = matchingChain
+                        
+                            instance.coinbaseConnectedSubject.send()
+
                         case .failure(let error):
                             store.toast = .init(style: .error, message: error.localizedDescription)
                     }

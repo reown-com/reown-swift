@@ -138,6 +138,11 @@ struct AllWalletsView: View {
     
     private func gridElement(for wallet: Wallet) -> some View {
         Button(action: {
+            AppKit.instance.didSelectWalletSubject.send(wallet)
+            if wallet.customDidSelect {
+                store.isModalShown = false
+                return
+            }
             Task {
                 do {
                     try await signInteractor.connect(walletUniversalLink: wallet.linkMode)

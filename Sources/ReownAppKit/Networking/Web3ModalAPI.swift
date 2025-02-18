@@ -44,7 +44,8 @@ enum Web3ModalAPI: HTTPService {
                 "page": "\(params.page)",
                 "entries": "\(params.entries)",
                 "search": params.search ?? "",
-                "recommendedIds": params.recommendedIds.joined(separator: ","),
+                "include": params.recommendedIds.joined(separator: ","),
+                "recommendedIds": params.recommendedIds.joined(separator: ","), // BUG - use include
                 "exclude": params.exclude.joined(separator: ","),
                 "platform": "ios",
             ]
