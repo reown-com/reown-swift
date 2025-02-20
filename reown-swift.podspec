@@ -26,7 +26,7 @@ Pod::Spec.new do |spec|
 
   spec.subspec 'WalletKit' do |ss|
     ss.source_files = 'Sources/ReownWalletKit/**/*.{h,m,swift}'
-    ss.dependency 'YttriumWrapper', '0.4.8'
+    ss.dependency 'YttriumWrapper', '0.8.24'
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/WalletConnectPush'
     ss.dependency 'reown-swift/WalletConnectVerify'
@@ -76,6 +76,7 @@ Pod::Spec.new do |spec|
 
   spec.subspec 'WalletConnectSigner' do |ss|
     ss.source_files = 'Sources/WalletConnectSigner/**/*.{h,m,swift}'
+    ss.dependency 'YttriumWrapper', '0.8.24'
     ss.dependency 'reown-swift/WalletConnectNetworking'
   end
 
@@ -116,6 +117,7 @@ Pod::Spec.new do |spec|
   spec.subspec 'WalletConnectRelay' do |ss|
     ss.source_files = 'Sources/WalletConnectRelay/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectJWT'
+    ss.dependency 'reown-swift/WalletConnectUtils'
     ss.resource_bundles = {
       'reown_WalletConnectRelay' => [
          'Sources/WalletConnectRelay/PackageConfig.json'
