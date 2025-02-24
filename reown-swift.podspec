@@ -23,51 +23,17 @@ spec.pod_target_xcconfig = {
   'HEADER_SEARCH_PATHS' => [
     '${PODS_ROOT}/YttriumWrapper/platforms/swift/target/ios/libuniffi_yttrium.xcframework/ios-arm64/Headers/yttriumFFI',
     '${PODS_ROOT}/YttriumWrapper/platforms/swift/target/ios/libuniffi_yttrium.xcframework/ios-arm64_x86_64-simulator/Headers/yttriumFFI'
-  ],
-  'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/YttriumWrapper/platforms/swift/target/ios/',
-  'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
-  'OTHER_LDFLAGS' => '-framework YttriumWrapper'
+  ]
 }
-
-
-spec.prepare_command = <<-SCRIPT
-  # Find and remove duplicate module maps in the YttriumWrapper
-  # This script will be run after YttriumWrapper is installed but before reown-swift is built
-
-  DERIVED_DATA_DIR="$HOME/Library/Developer/Xcode/DerivedData"
-  FRAMEWORK_INTERMEDIATES_DIR=$(find "$DERIVED_DATA_DIR" -path "*/Build/Products/*/XCFrameworkIntermediates/YttriumWrapper" 2>/dev/null)
-
-  if [ -n "$FRAMEWORK_INTERMEDIATES_DIR" ]; then
-    echo "Found YttriumWrapper intermediates at: $FRAMEWORK_INTERMEDIATES_DIR"
-
-    # Find duplicate module maps and keep only one
-    if [ -f "$FRAMEWORK_INTERMEDIATES_DIR/Headers/yttriumFFI/module.modulemap" ] && [ -f "$FRAMEWORK_INTERMEDIATES_DIR/Headers/module.modulemap" ]; then
-      echo "Found duplicate module maps. Removing one..."
-      rm -f "$FRAMEWORK_INTERMEDIATES_DIR/Headers/yttriumFFI/module.modulemap"
-      echo "Removed duplicate module map at: $FRAMEWORK_INTERMEDIATES_DIR/Headers/yttriumFFI/module.modulemap"
-    fi
-  else
-    echo "YttriumWrapper intermediates not found in DerivedData."
-  fi
-SCRIPT
-
-
-
-
 
   spec.default_subspecs = 'WalletKit'
 
-    spec.dependency 'YttriumWrapper', '0.8.32'  # Move to root level
-
-
   spec.subspec 'WalletKit' do |ss|
     ss.source_files = 'Sources/ReownWalletKit/**/*.{h,m,swift}'
+    ss.dependency 'YttriumWrapper', '0.8.34'
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/WalletConnectPush'
     ss.dependency 'reown-swift/WalletConnectVerify'
-      ss.xcconfig = {
-    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/YttriumWrapper/platforms/swift/target/ios/'
-  }
     end
 
 
@@ -88,9 +54,7 @@ SCRIPT
   spec.subspec 'WalletConnectSigner' do |ss|
     ss.source_files = 'Sources/WalletConnectSigner/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectNetworking'
-      ss.xcconfig = {
-    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/YttriumWrapper/platforms/swift/target/ios/'
-  }
+    ss.dependency 'YttriumWrapper', '0.8.34'
   end
 
   spec.subspec 'WalletConnectIdentity' do |ss|
