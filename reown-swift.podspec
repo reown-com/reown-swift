@@ -18,13 +18,9 @@ Pod::Spec.new do |spec|
 
   spec.platform     = :ios, '13.0'
   spec.swift_versions = '5.9'
-spec.pod_target_xcconfig = {
-  'OTHER_SWIFT_FLAGS' => '-DCocoaPods',
-  'HEADER_SEARCH_PATHS' => [
-    '${PODS_ROOT}/YttriumWrapper/platforms/swift/target/ios/libuniffi_yttrium.xcframework/ios-arm64/Headers/yttriumFFI',
-    '${PODS_ROOT}/YttriumWrapper/platforms/swift/target/ios/libuniffi_yttrium.xcframework/ios-arm64_x86_64-simulator/Headers/yttriumFFI'
-  ]
-}
+  spec.pod_target_xcconfig = {
+    'OTHER_SWIFT_FLAGS' => '-DCocoaPods'
+  }
 
   spec.default_subspecs = 'WalletKit'
 

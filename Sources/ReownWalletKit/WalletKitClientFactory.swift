@@ -1,4 +1,5 @@
 import Foundation
+import YttriumWrapper
 
 struct WalletKitClientFactory {
     static func create(
