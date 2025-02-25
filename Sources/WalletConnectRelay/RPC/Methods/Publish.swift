@@ -1,7 +1,7 @@
 
 import Foundation
 
-public struct PublishX: RelayRPC {
+public struct Publish: RelayRPC {
 
     struct Params: Codable {
         let topic: String
