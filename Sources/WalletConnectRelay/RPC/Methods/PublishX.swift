@@ -3,7 +3,7 @@ import Foundation
 import JSONRPC
 import WalletConnectUtils
 
-public struct Publish: RelayRPC {
+public struct PublishX: RelayRPC {
 
     struct Params: Codable {
         let topic: String
