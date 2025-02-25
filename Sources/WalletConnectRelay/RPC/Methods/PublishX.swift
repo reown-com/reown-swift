@@ -1,7 +1,5 @@
 
 import Foundation
-import JSONRPC
-import WalletConnectUtils
 
 public struct PublishX: RelayRPC {
 
