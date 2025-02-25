@@ -18,9 +18,11 @@ Pod::Spec.new do |spec|
 
   spec.platform     = :ios, '13.0'
   spec.swift_versions = '5.9'
-  spec.pod_target_xcconfig = {
-    'OTHER_SWIFT_FLAGS' => '-DCocoaPods'
-  }
+spec.pod_target_xcconfig = {
+  'OTHER_SWIFT_FLAGS' => '-DCocoaPods',
+  'HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/reown-swift/Sources/**',
+  'SWIFT_INCLUDE_PATHS' => '$(PODS_ROOT)/reown-swift/Sources/**'
+}
 
   spec.default_subspecs = 'WalletKit'
 
@@ -73,6 +75,7 @@ Pod::Spec.new do |spec|
   spec.subspec 'WalletConnectNetworking' do |ss|
     ss.source_files = 'Sources/WalletConnectNetworking/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectRelay'
+    ss.dependency 'reown-swift/WalletConnectUtils'
     ss.dependency 'reown-swift/HTTPClient'
   end
 
@@ -90,6 +93,8 @@ Pod::Spec.new do |spec|
   spec.subspec 'WalletConnectRelay' do |ss|
     ss.source_files = 'Sources/WalletConnectRelay/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectJWT'
+    ss.dependency 'reown-swift/JSONRPC'
+    ss.dependency 'reown-swift/WalletConnectUtils'
     ss.resource_bundles = {
       'reown_WalletConnectRelay' => [
          'Sources/WalletConnectRelay/PackageConfig.json'
