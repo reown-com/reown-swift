@@ -34,6 +34,33 @@ spec.pod_target_xcconfig = {
     ss.dependency 'reown-swift/WalletConnectVerify'
     end
 
+  spec.subspec 'ReownAppKitBackport' do |ss|
+    ss.source_files = 'Sources/ReownAppKitBackport/**/*.{h,m,swift}'
+  end
+
+  spec.subspec 'ReownAppKitUI' do |ss|
+    ss.source_files = 'Sources/ReownAppKitUI/**/*.{h,m,swift}'
+    ss.dependency 'reown-swift/ReownAppKitBackport'
+    ss.resource_bundles = {
+      'ReownAppKitUI' => [
+        'Sources/ReownAppKitUI/Resources/*'
+      ]
+    }
+  end
+  
+  spec.subspec 'ReownAppKit' do |ss|
+    ss.source_files = 'Sources/ReownAppKit/**/*.{h,m,swift}'
+    ss.dependency 'reown-swift/WalletConnectSign'
+    ss.dependency 'reown-swift/ReownAppKitUI'
+    ss.dependency 'reown-swift/ReownAppKitBackport'
+    ss.dependency 'DSF_QRCode', '~> 16.1.1'
+    ss.dependency 'CoinbaseWalletSDK', '~> 1.0.0'
+    ss.resource_bundles = {
+      'ReownAppKit' => [
+        'Sources/ReownAppKit/Resources/*'
+      ]
+    }
+  end
 
   spec.subspec 'WalletConnectSign' do |ss|
     ss.source_files = 'Sources/WalletConnectSign/**/*.{h,m,swift}'
