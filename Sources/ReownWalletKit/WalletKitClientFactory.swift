@@ -12,7 +12,6 @@ struct WalletKitClientFactory {
         let metadata = PulseMetadata(
             url: nil,
             bundleId: Bundle.main.bundleIdentifier,
-            packageName: nil,
             sdkVersion: EnvironmentInfo.sdkName,
             sdkPlatform: "mobile"
         )
