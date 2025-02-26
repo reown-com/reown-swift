@@ -1,4 +1,5 @@
 import Foundation
+import YttriumWrapper
 
 public class ChainAbstractionNamespace {
     private let chainAbstractionClient: ChainAbstractionClient
