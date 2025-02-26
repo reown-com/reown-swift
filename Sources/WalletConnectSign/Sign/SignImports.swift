@@ -4,4 +4,5 @@
 @_exported import WalletConnectVerify
 @_exported import WalletConnectRelay
 @_exported import Events
+@_exported import WalletConnectUtils
 #endif
