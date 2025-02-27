@@ -83,7 +83,27 @@ struct AllWalletsView: View {
                 ),
                 spacing: Spacing.l
             ) {
-                ForEach(store.wallets.sorted(by: { $0.order < $1.order }), id: \.self) { wallet in
+                ForEach(store.wallets.sorted { wallet1, wallet2 in
+                    let index1 = AppKit.config.recommendedWalletIds.firstIndex(of: wallet1.id)
+                    let index2 = AppKit.config.recommendedWalletIds.firstIndex(of: wallet2.id)
+                    
+                    // Both wallets are in the recommendedWalletIds array
+                    if let index1 = index1, let index2 = index2 {
+                        return index1 < index2 // Maintain the order they were specified in the array
+                    }
+                    // Only wallet1 is in the recommendedWalletIds array
+                    else if index1 != nil {
+                        return true
+                    }
+                    // Only wallet2 is in the recommendedWalletIds array
+                    else if index2 != nil {
+                        return false
+                    }
+                    // Neither wallet is in the recommendedWalletIds array
+                    else {
+                        return wallet1.order < wallet2.order
+                    }
+                }, id: \.self) { wallet in
                     gridElement(for: wallet)
                 }
                 
