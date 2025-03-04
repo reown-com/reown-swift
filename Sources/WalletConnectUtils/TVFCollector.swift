@@ -186,7 +186,19 @@ public struct TVFCollector {
 
             case Self.SOLANA_SIGN_ALL_TRANSACTION:
                 let decoded = try anycodable.get(SolanaSignAllTransactionsResult.self)
-                return decoded.transactions
+                if let transactions = decoded.transactions {
+                    var txHashes = [String]()
+                    for transaction in transactions {
+                        do {
+                            let signature = try SolanaSignatureExtractor.extractSignature(from: transaction)
+                            txHashes.append(signature)
+                        } catch {
+                            print("Error extracting signature from transaction: \(error)")
+                        }
+                    }
+                    return txHashes.isEmpty ? nil : txHashes
+                }
+                return nil
 
             default:
                 return nil
