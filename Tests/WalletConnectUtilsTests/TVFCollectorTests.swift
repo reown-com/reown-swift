@@ -155,19 +155,36 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNil(data?.txHashes)
     }
 
-    func testSessionResponse_SolanaSignAllTransactions_ReturnsTransactions() {
-        let rpcParams = AnyCodable([String]())
-        let responseData = ["transactions": ["tx1", "tx2"]]
+    func testSessionResponse_SolanaSignAllTransactions_ExtractsSignaturesCorrectly() {
+        // Arrange
+        let transactions = [
+            "AYxQUCwuEoBMHp45bxp9yyegtoVUcyyc0idYrBan1PW/mWWA4MrXsbytuJt9FP1tXH5ZxYYyKc3YmBM+hcueqA4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAanHwLXEo8xArFhOhqld18H+7VdHJSIY4f27y1qCK4AoDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==",
+            "AWHu1QYry2PqYQAxDBXUtxBjRorQecJEVzje2rVY2rKJ6usAMAC/f0GGSqxpWlaS93wIfg3FqPPMzAKDdxgTwQwBAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAA58ONgFXrro2UqR0pvpUDFIqAYRJMYUnemdWXhfWu8VcDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==",
+            "AeJw688VKMWEeOHsYhe03By/2rqJHTQeq6W4L1ZLdbT2l/Nim8ctL3erMyH9IWPsQP73uaarRmiVfanEJHx7uQ4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAtIy17v5fs39LuoitzpBhVrg8ZIQF/3ih1N9dQ+X3shEDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMjTgAAAAAAAA=="
+        ]
+        
+        let responseData = ["transactions": transactions]
         let rpcResult = makeResponse(responseData)
+        
+        // Expected signatures
+        let expectedSignatures = [
+            "3oi6k2bd1fQdUenuMSeP3Zr18a3iRMuFcbgTnehBrQZP6nftmsVqMi1np4ENJr5HmuSgSsejfUYYpqTCXhnadSjw",
+            "2xZgx9T8kpRRmbkWhBzyfwH6FFc5ZTXAsZUAnU6MyemAqR2fqic7LAbi1ZjALC51NYkyC7hYKFB1rxRTXMQKmTmD",
+            "5XanD5KnkqzH3RjyqHzPCSRrNXYW2ADH4bge4oMi9KnDBrkFvugagH3LytFZFmBhZEEcyxPsZqeyF4cgLpEXVFR7"
+        ]
+        
+        // Act
         let data = tvf.collect(
             rpcMethod: "solana_signAllTransactions",
-            rpcParams: rpcParams,
+            rpcParams: AnyCodable([String]()),
             chainID: chain,
             rpcResult: rpcResult,
             tag: 1109
         )
+        
+        // Assert
         XCTAssertNotNil(data)
-        XCTAssertEqual(data?.txHashes, ["tx1", "tx2"])
+        XCTAssertEqual(data?.txHashes, expectedSignatures)
     }
 
     func testSessionResponse_UnsupportedMethod_ReturnsNil() {
