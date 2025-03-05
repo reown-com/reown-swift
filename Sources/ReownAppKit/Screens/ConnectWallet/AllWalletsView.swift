@@ -14,6 +14,7 @@ struct AllWalletsView: View {
     @EnvironmentObject var signInteractor: SignInteractor
 
     @State var searchTerm: String = ""
+    @State private var hasSearched: Bool = false
     let searchTermPublisher = PassthroughSubject<String, Never>()
     
     private let semaphore = AsyncSemaphore(count: 1)
@@ -131,11 +132,23 @@ struct AllWalletsView: View {
     @ViewBuilder
     private func searchGrid() -> some View {
         Group {
-            ZStack(alignment: .center) {
+            ZStack(alignment: .top) {
                 Spacer().frame(maxWidth: .infinity, maxHeight: .infinity)
                     
                 ProgressView()
                     .opacity(interactor.isLoading ? 1 : 0)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+                if hasSearched && !interactor.isLoading && store.searchedWallets.isEmpty {
+                    VStack {
+                        Spacer().frame(height: 80)
+                        Text("No results found")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 16, weight: .medium))
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
                     
                 let columns = Array(
                     repeating: GridItem(.flexible()),
@@ -151,9 +164,11 @@ struct AllWalletsView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 30)
                 }
+                .opacity(store.searchedWallets.isEmpty ? 0 : 1)
             }
         }
         .animation(.default, value: interactor.isLoading)
+        .animation(.default, value: store.searchedWallets.isEmpty)
     }
     
     private func gridElement(for wallet: Wallet) -> some View {
@@ -191,6 +206,11 @@ struct AllWalletsView: View {
             do {
                 try await semaphore.withTurn {
                     try await interactor.fetchWallets(search: search)
+                }
+                if !search.isEmpty {
+                    DispatchQueue.main.async {
+                        self.hasSearched = true
+                    }
                 }
             } catch {
                 store.toast = .init(style: .error, message: "Network error")
