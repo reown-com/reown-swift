@@ -178,8 +178,6 @@ final class ApproveEngine {
 
             sessionStore.setSession(session)
 
-            let x = sessionStore.getSession(forTopic: session.topic)
-
             Task {
                 networkingInteractor.unsubscribe(topic: pairingTopic)
             }

@@ -199,7 +199,7 @@ struct WCSession: SequenceObject, Equatable {
 extension WCSession {
 
     enum CodingKeys: String, CodingKey {
-        case topic, pairingTopic, relay, selfParticipant, peerParticipant, expiryDate, acknowledged, controller, namespaces, timestamp, requiredNamespaces, sessionProperties, transportType, verifyContext
+        case topic, pairingTopic, relay, selfParticipant, peerParticipant, expiryDate, acknowledged, controller, namespaces, timestamp, requiredNamespaces, sessionProperties, transportType, verifyContext, scopedProperties
     }
 
     init(from decoder: Decoder) throws {
@@ -211,6 +211,7 @@ extension WCSession {
         self.peerParticipant = try container.decode(Participant.self, forKey: .peerParticipant)
         self.namespaces = try container.decode([String: SessionNamespace].self, forKey: .namespaces)
         self.sessionProperties = try container.decodeIfPresent([String: String].self, forKey: .sessionProperties)
+        self.scopedProperties = try container.decodeIfPresent([String: String].self, forKey: .scopedProperties)
         self.acknowledged = try container.decode(Bool.self, forKey: .acknowledged)
         self.expiryDate = try container.decode(Date.self, forKey: .expiryDate)
         self.timestamp = try container.decode(Date.self, forKey: .timestamp)
@@ -230,6 +231,7 @@ extension WCSession {
         try container.encode(peerParticipant, forKey: .peerParticipant)
         try container.encode(namespaces, forKey: .namespaces)
         try container.encode(sessionProperties, forKey: .sessionProperties)
+        try container.encode(scopedProperties, forKey: .scopedProperties)
         try container.encode(acknowledged, forKey: .acknowledged)
         try container.encode(expiryDate, forKey: .expiryDate)
         try container.encode(timestamp, forKey: .timestamp)
