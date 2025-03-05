@@ -20,7 +20,7 @@ struct AllWalletsView: View {
     private let semaphore = AsyncSemaphore(count: 1)
     
     var isSearching: Bool {
-        searchTerm.count >= 2
+        searchTerm.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
     }
     
     var body: some View {
@@ -57,18 +57,19 @@ struct AllWalletsView: View {
             searchTermPublisher
                 .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
                 .filter { string in
-                    string.count >= 2
+                    string.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
                 }
                 .removeDuplicates()
         ) { debouncedSearchTerm in
-            fetchWallets(search: debouncedSearchTerm)
+            let trimmedSearchTerm = debouncedSearchTerm.trimmingCharacters(in: .whitespacesAndNewlines)
+            fetchWallets(search: trimmedSearchTerm)
         }
         .onReceive(
             searchTermPublisher
                 .receive(on: DispatchQueue.main)
                 .removeDuplicates()
         ) { searchTerm in
-            if searchTerm.count < 2 {
+            if searchTerm.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 {
                 store.searchedWallets = []
             }
         }
