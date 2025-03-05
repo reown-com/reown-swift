@@ -25,6 +25,7 @@ struct WCSession: SequenceObject, Equatable {
     private(set) var namespaces: [String: SessionNamespace]
     private(set) var requiredNamespaces: [String: ProposalNamespace]
     private(set) var sessionProperties: [String: String]?
+    private(set) var scopedProperties: [String: String]?
 
     static var defaultTimeToLive: Int64 {
         Int64(7*Time.day)
@@ -54,6 +55,7 @@ struct WCSession: SequenceObject, Equatable {
         self.peerParticipant = peerParticipant
         self.namespaces = settleParams.namespaces
         self.sessionProperties = settleParams.sessionProperties
+        self.scopedProperties = settleParams.scopedProperties
         self.requiredNamespaces = requiredNamespaces
         self.acknowledged = acknowledged
         self.expiryDate = Date(timeIntervalSince1970: TimeInterval(settleParams.expiry))

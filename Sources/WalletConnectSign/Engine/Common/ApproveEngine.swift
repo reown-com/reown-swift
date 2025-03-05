@@ -73,7 +73,7 @@ final class ApproveEngine {
     }
 
 
-    func approveProposal(proposerPubKey: String, validating sessionNamespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil) async throws -> Session {
+    func approveProposal(proposerPubKey: String, validating sessionNamespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil) async throws -> Session {
         eventsClient.startTrace(topic: "")
         logger.debug("Approving session proposal...")
 
@@ -151,6 +151,7 @@ final class ApproveEngine {
             proposal: proposal,
             namespaces: sessionNamespaces,
             sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
             pairingTopic: pairingTopic
         )
 
@@ -176,6 +177,8 @@ final class ApproveEngine {
             }
 
             sessionStore.setSession(session)
+
+            let x = sessionStore.getSession(forTopic: session.topic)
 
             Task {
                 networkingInteractor.unsubscribe(topic: pairingTopic)
@@ -221,7 +224,7 @@ final class ApproveEngine {
         kms.deleteSymmetricKey(for: pairingTopic)
     }
 
-    func settle(topic: String, proposal: SessionProposal, namespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, pairingTopic: String) async throws -> WCSession {
+    func settle(topic: String, proposal: SessionProposal, namespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil, pairingTopic: String) async throws -> WCSession {
         guard let agreementKeys = kms.getAgreementSecret(for: topic) else {
             throw Errors.agreementMissingOrInvalid
         }
@@ -243,6 +246,7 @@ final class ApproveEngine {
             controller: selfParticipant,
             namespaces: namespaces,
             sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
             expiry: Int64(expiry)
         )
 
