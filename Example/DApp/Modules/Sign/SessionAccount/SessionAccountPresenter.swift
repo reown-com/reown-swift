@@ -89,7 +89,7 @@ extension SessionAccountPresenter {
     private func getRequest(for method: String) throws -> AnyCodable {
         let account = session.namespaces.first!.value.accounts.first!.address
         if method == "eth_sendTransaction" {
-            let tx = Stub.tx
+            let tx = Stub.tx(from: account)
             return AnyCodable(tx)
         } else if method == "personal_sign" {
             return AnyCodable(["0x4d7920656d61696c206973206a6f686e40646f652e636f6d202d2031363533333933373535313531", account])
@@ -139,6 +139,16 @@ private enum Stub {
                                 gasPrice: "0x013e3d2ed4",
                                 value: "0x00",
                                 nonce: "0x09")]
+
+    static func tx(from: String) -> [Transaction] {
+        return [Transaction(from: from,
+                            to: "0x9b2055d370f73ec7d8a03e965129118dc8f5bf83",
+                            data: "0x",
+                            gasLimit: "0x5208",
+                            gasPrice: "0x013e3d2ed4",
+                            value: "0x186A0",
+                            nonce: "0x09")]
+    }
     static let eth_signTypedData = """
 {
 "types": {
