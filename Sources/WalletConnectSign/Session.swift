@@ -11,9 +11,30 @@ public struct Session: Codable {
     public let requiredNamespaces: [String: ProposalNamespace]
     public let namespaces: [String: SessionNamespace]
     public let sessionProperties: [String: String]?
+    public let scopedProperties: [String: String]?
     public let expiryDate: Date
     public static var defaultTimeToLive: Int64 {
         WCSession.defaultTimeToLive
+    }
+    
+    public init(
+        topic: String,
+        pairingTopic: String,
+        peer: AppMetadata,
+        requiredNamespaces: [String: ProposalNamespace],
+        namespaces: [String: SessionNamespace],
+        sessionProperties: [String: String]?,
+        scopedProperties: [String: String]?,
+        expiryDate: Date
+    ) {
+        self.topic = topic
+        self.pairingTopic = pairingTopic
+        self.peer = peer
+        self.requiredNamespaces = requiredNamespaces
+        self.namespaces = namespaces
+        self.sessionProperties = sessionProperties
+        self.scopedProperties = scopedProperties
+        self.expiryDate = expiryDate
     }
 }
 

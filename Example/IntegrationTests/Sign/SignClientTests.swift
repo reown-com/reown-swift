@@ -112,11 +112,21 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: sessionNamespaces = \(sessionNamespaces)")
 
         print("🧪TEST: Step 3 - Subscribing to wallet.sessionProposalPublisher...")
+        let scopedProperties: [String: String] = [
+            "eip155": """
+            {
+                "walletService": [{
+                    "url": "https://your-wallet-service.com",
+                    "methods": ["wallet_getAssets"]
+                }]
+            }
+            """
+        ]
         wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
             print("🧪TEST: Wallet received a session proposal with id: \(proposal.id). Approving with sessionNamespaces.")
             Task(priority: .high) {
                 do {
-                    _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
+                    _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces, scopedProperties: scopedProperties)
                     print("🧪TEST: Wallet approved session proposal. ID: \(proposal.id)")
                 } catch {
                     XCTFail("🧪TEST: Wallet failed to approve session proposal: \(error)")

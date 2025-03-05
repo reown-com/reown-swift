@@ -189,6 +189,7 @@ struct WCSession: SequenceObject, Equatable {
             requiredNamespaces: requiredNamespaces,
             namespaces: namespaces,
             sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
             expiryDate: expiryDate
         )
     }
