@@ -1,11 +1,13 @@
-
 import Foundation
+
 
 final class SessionRequester {
     private let sessionStore: WCSessionStorage
     private let networkingInteractor: NetworkInteracting
     private let logger: ConsoleLogging
     private let tvfCollector: TVFCollector
+    private let walletServiceRequester: WalletServiceSessionRequester
+    private let walletServiceFinder: WalletServiceFinder
 
     init(
         sessionStore: WCSessionStorage,
@@ -17,6 +19,8 @@ final class SessionRequester {
         self.networkingInteractor = networkingInteractor
         self.logger = logger
         self.tvfCollector = tvfCollector
+        self.walletServiceRequester = WalletServiceSessionRequester(logger: logger)
+        self.walletServiceFinder = WalletServiceFinder(logger: logger)
     }
 
     func request(_ request: Request) async throws {
@@ -29,6 +33,26 @@ final class SessionRequester {
             logger.debug("Invalid namespaces")
             throw WalletConnectError.invalidPermissions
         }
+        
+        // Check if this request should be redirected to a wallet service
+        if let walletServiceURL = walletServiceFinder.findMatchingWalletService(for: request, in: session) {
+            logger.debug("Redirecting request to wallet service: \(walletServiceURL)")
+            do {
+                let _ = try await walletServiceRequester.request(request, to: walletServiceURL)
+                logger.debug("Wallet service request completed successfully")
+                return
+            } catch let error as WalletServiceSessionRequester.Errors {
+                logger.error("Wallet service request failed: \(error)")
+                // If wallet service request fails, fall back to the normal relay request
+                logger.debug("Falling back to relay request")
+            } catch {
+                logger.error("Unknown error in wallet service request: \(error)")
+                // If wallet service request fails, fall back to the normal relay request
+                logger.debug("Falling back to relay request")
+            }
+        }
+        
+        // Default flow - send through relay
         let chainRequest = SessionType.RequestParams.Request(method: request.method, params: request.params, expiryTimestamp: request.expiryTimestamp)
         let sessionRequestParams = SessionType.RequestParams(request: chainRequest, chainId: request.chainId)
         let ttl = try request.calculateTtl()
@@ -37,7 +61,6 @@ final class SessionRequester {
         let rpcRequest = RPCRequest(method: protocolMethod.method, params: sessionRequestParams, rpcid: request.id)
 
         let tvfData = tvfCollector.collect(rpcMethod: request.method, rpcParams: request.params, chainID: request.chainId, rpcResult: nil, tag: protocolMethod.requestConfig.tag)
-
 
         try await networkingInteractor.request(rpcRequest, topic: request.topic, protocolMethod: SessionRequestProtocolMethod(), tvfData: tvfData)
     }
