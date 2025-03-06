@@ -154,7 +154,7 @@ public class AppKitClient {
         switch store.connectedWith {
         case .wc:
             guard
-                let session = getSessions().first,
+                let session = store.session,
                 let chain = getSelectedChain(),
                 let blockchain = Blockchain(namespace: chain.chainNamespace, reference: chain.chainReference)
             else { return }
@@ -293,6 +293,24 @@ public class AppKitClient {
             AppKit.config.onError(error)
             throw error
         }
+    }
+    
+    public func isConnectedToCoinbase() -> Bool {
+        store.connectedWith == .cb
+    }
+    
+    public func getSession() -> Session? {
+        store.session
+    }
+    
+    public func getAccount() -> W3MAccount? {
+        store.account
+    }
+    
+    public func selectAccount(_ account: W3MAccount, in session: Session) {
+        store.connectedWith = .wc
+        store.session = session
+        store.account = account
     }
     
     public func getAddress() -> String? {

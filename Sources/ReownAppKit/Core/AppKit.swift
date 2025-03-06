@@ -1,6 +1,7 @@
 import CoinbaseWalletSDK
 import Foundation
 import SwiftUI
+import WalletConnectUtils
 
 #if canImport(UIKit)
 import UIKit
@@ -44,7 +45,6 @@ public class AppKit {
             store.account = .init(from: session)
         } else if config.coinbaseEnabled,
                   CoinbaseWalletSDK.shared.isConnected() {
-
             let storedAccount = AccountStorage.read()
             store.connectedWith = .cb
             store.account = storedAccount
@@ -151,6 +151,53 @@ public class AppKit {
             try? await w3mApiInteractor.fetchAllWalletsFirstPage()
             try? await w3mApiInteractor.prefetchChainImages()
         }
+    }
+    
+    public func currentSession() -> Session? {
+        let store = Store.shared
+        return switch store.connectedWith {
+        case .wc: store.session
+        default: nil
+        }
+    }
+    
+    public func currentAccount() -> W3MAccount? {
+        Store.shared.account
+    }
+    
+    @MainActor
+    public static func selectSessionAccount(account: WalletConnectUtils.Account?) {
+        let store = Store.shared
+        
+        guard let account else {
+            clearCurrentAccount()
+            return
+        }
+        
+        if let session = instance.getSessions().first(where: { session in
+            session.accounts.contains(account)
+        }) {
+            store.session = session
+            store.connectedWith = .wc
+            store.account = .init(from: session)
+        } else if config.coinbaseEnabled,
+           CoinbaseWalletSDK.shared.ownPublicKey.rawRepresentation
+            .base64EncodedString().caseInsensitiveCompare(account.address) == .orderedSame
+        {
+            store.session = nil
+            store.connectedWith = .cb
+            store.account = .init(from: account)
+        } else {
+            print("Cannot select account that's not in a connected session. Setting to nil")
+            clearCurrentAccount()
+        }
+    }
+    
+    @MainActor
+    public static func clearCurrentAccount() {
+        Store.shared.account = nil
+        Store.shared.session = nil
+        Store.shared.connectedWith = nil
     }
     
     public static func set(sessionParams: SessionParams) {

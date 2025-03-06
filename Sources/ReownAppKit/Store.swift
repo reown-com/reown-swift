@@ -1,13 +1,13 @@
 import Combine
 import SwiftUI
 
-enum ConnectionProviderType {
+public enum ConnectionProviderType {
     case wc
     case cb
 }
 
-class Store: ObservableObject {
-    static var shared: Store = .init()
+public class Store: ObservableObject {
+    public static var shared: Store = .init()
     
     @Published var isModalShown: Bool = false
     @Published var retryShown = false
@@ -23,9 +23,9 @@ class Store: ObservableObject {
     @Published var identity: Identity?
     @Published var balance: Double?
     
-    @Published var connectedWith: ConnectionProviderType?
-    @Published var connecting: Bool = false
-    @Published var account: W3MAccount? {
+    @Published public var connectedWith: ConnectionProviderType?
+    @Published public var connecting: Bool = false
+    @Published public var account: W3MAccount? {
         didSet {
             let matchingChain = ChainPresets.ethChains.first(where: {
                 $0.chainNamespace == account?.chain.namespace && $0.chainReference == account?.chain.reference
@@ -36,20 +36,9 @@ class Store: ObservableObject {
             AccountStorage.save(account)
         }
     }
-    
     // WalletConnect specific
-    @Published var session: Session? {
-        didSet {
-            if let blockchain = session?.accounts.first?.blockchain {
-                let matchingChain = ChainPresets.ethChains.first(where: {
-                    $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference
-                })
-                
-                Store.shared.selectedChain = matchingChain
-            }
-        }
-    }
-    @Published var uri: WalletConnectURI?
+    @Published public var session: Session?
+    @Published public var uri: WalletConnectURI?
     
     @Published var wallets: Set<Wallet> = []
     @Published var featuredWallets: [Wallet] = []
@@ -80,9 +69,9 @@ class Store: ObservableObject {
     @Published var toast: Toast? = nil
 }
 
-struct W3MAccount: Codable {
-    let address: String
-    let chain: Blockchain
+public struct W3MAccount: Codable {
+    public let address: String
+    public let chain: Blockchain
 }
 
 extension W3MAccount {
@@ -92,6 +81,10 @@ extension W3MAccount {
             return nil
         }
         
+        self.init(from: account)
+    }
+    
+    init?(from account: Account) {
         self.init(address: account.address, chain: account.blockchain)
     }
     
