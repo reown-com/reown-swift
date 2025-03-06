@@ -282,7 +282,8 @@ public final class SignClient: SignClientProtocol {
     public func connect(
         requiredNamespaces: [String: ProposalNamespace],
         optionalNamespaces: [String: ProposalNamespace]? = nil,
-        sessionProperties: [String: String]? = nil
+        sessionProperties: [String: String]? = nil,
+        scopedProperties: [String: String]? = nil
     ) async throws -> WalletConnectURI {
         logger.debug("Connecting Application")
         let pairingURI = try await pairingClient.create()
@@ -291,6 +292,7 @@ public final class SignClient: SignClientProtocol {
             namespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
             relay: RelayProtocolOptions(protocol: "irn", data: nil)
         )
         return pairingURI

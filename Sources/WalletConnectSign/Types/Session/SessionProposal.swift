@@ -7,6 +7,7 @@ struct SessionProposal: Codable, Equatable {
     let requiredNamespaces: [String: ProposalNamespace]
     let optionalNamespaces: [String: ProposalNamespace]?
     let sessionProperties: [String: String]?
+    let scopedProperties: [String: String]?
     let expiryTimestamp: UInt64?
 
     static let proposalTtl: TimeInterval = 300 // 5 minutes
@@ -15,12 +16,14 @@ struct SessionProposal: Codable, Equatable {
                   proposer: Participant,
                   requiredNamespaces: [String : ProposalNamespace],
                   optionalNamespaces: [String : ProposalNamespace]? = nil,
-                  sessionProperties: [String : String]? = nil) {
+                  sessionProperties: [String : String]? = nil,
+                  scopedProperties: [String : String]? = nil) {
         self.relays = relays
         self.proposer = proposer
         self.requiredNamespaces = requiredNamespaces
         self.optionalNamespaces = optionalNamespaces
         self.sessionProperties = sessionProperties
+        self.scopedProperties = scopedProperties
         self.expiryTimestamp = UInt64(Date().timeIntervalSince1970 + Self.proposalTtl)
     }
 
@@ -32,6 +35,7 @@ struct SessionProposal: Codable, Equatable {
             requiredNamespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces ?? [:],
             sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
             proposal: self
         )
     }

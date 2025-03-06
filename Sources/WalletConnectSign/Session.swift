@@ -47,6 +47,7 @@ extension Session {
         public let requiredNamespaces: [String: ProposalNamespace]
         public let optionalNamespaces: [String: ProposalNamespace]?
         public let sessionProperties: [String: String]?
+        public let scopedProperties: [String: String]?
 
         // TODO: Refactor internal objects to manage only needed data
         internal let proposal: SessionProposal
@@ -62,6 +63,7 @@ extension Session {
             requiredNamespaces: [String: ProposalNamespace],
             optionalNamespaces: [String: ProposalNamespace]?,
             sessionProperties: [String: String]?,
+            scopedProperties: [String: String]?,
             proposal: SessionProposal
         ) {
             self.id = id
@@ -70,6 +72,7 @@ extension Session {
             self.requiredNamespaces = requiredNamespaces
             self.optionalNamespaces = optionalNamespaces
             self.sessionProperties = sessionProperties
+            self.scopedProperties = scopedProperties
             self.proposal = proposal
         }
     }

@@ -56,6 +56,7 @@ extension SessionType.SettleParams {
             controller: Participant.stub(),
             namespaces: SessionNamespace.stubDictionary(),
             sessionProperties: nil,
+            scopedProperties: nil,
             expiry: Int64(Date.distantFuture.timeIntervalSince1970))
     }
 }
