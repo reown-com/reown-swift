@@ -37,7 +37,7 @@ final class W3MAPIInteractor: ObservableObject {
             search: search,
             projectId: AppKit.config.projectId,
             metadata: AppKit.config.metadata,
-            recommendedIds: AppKit.config.recommendedWalletIds,
+            recommendedIds: [], // leave this empty or the request will only return these!
             exclude: AppKit.config.excludedWalletIds
         )
         
