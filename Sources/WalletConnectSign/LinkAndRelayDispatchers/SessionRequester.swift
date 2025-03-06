@@ -1,26 +1,29 @@
 import Foundation
+import WalletConnectUtils
 
 
 final class SessionRequester {
     private let sessionStore: WCSessionStorage
     private let networkingInteractor: NetworkInteracting
     private let logger: ConsoleLogging
-    private let tvfCollector: TVFCollector
-    private let walletServiceRequester: WalletServiceSessionRequester
+    private let tvfCollector: TVFCollectorProtocol
+    private let walletServiceRequester: WalletServiceSessionRequestable
     private let walletServiceFinder: WalletServiceFinder
 
     init(
         sessionStore: WCSessionStorage,
         networkingInteractor: NetworkInteracting,
         logger: ConsoleLogging,
-        tvfCollector: TVFCollector
+        tvfCollector: TVFCollectorProtocol,
+        walletServiceRequester: WalletServiceSessionRequestable? = nil,
+        walletServiceFinder: WalletServiceFinder? = nil
     ) {
         self.sessionStore = sessionStore
         self.networkingInteractor = networkingInteractor
         self.logger = logger
         self.tvfCollector = tvfCollector
-        self.walletServiceRequester = WalletServiceSessionRequester(logger: logger)
-        self.walletServiceFinder = WalletServiceFinder(logger: logger)
+        self.walletServiceRequester = walletServiceRequester ?? WalletServiceSessionRequester(logger: logger)
+        self.walletServiceFinder = walletServiceFinder ?? WalletServiceFinder(logger: logger)
     }
 
     func request(_ request: Request) async throws {

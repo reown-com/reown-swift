@@ -36,7 +36,28 @@ final class WCSessionStorageMock: WCSessionStorage {
     }
 
     func deleteAll() {
-        sessions = [:]
+        sessions.removeAll()
+    }
+
+    func getSessions() -> [WCSession] {
+        return Array(sessions.values)
+    }
+
+    func deleteSession(forTopic topic: String) {
+        sessions.removeValue(forKey: topic)
+    }
+
+    func deleteSessions(forPairingTopic topic: String) {
+        for (sessionTopic, session) in sessions where session.pairingTopic == topic {
+            sessions.removeValue(forKey: sessionTopic)
+        }
+    }
+
+    func acknowledge(topic: String) {
+        if var session = sessions[topic] {
+            session.acknowledge()
+            sessions[topic] = session
+        }
     }
 }
 
