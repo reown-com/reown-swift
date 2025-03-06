@@ -68,8 +68,22 @@ final class SessionRequesterTests: XCTestCase {
         }
         """
         
+        // Create accounts for the namespace
+        let accounts = [Account(blockchain: mockChainId, address: "0x1234")!]
+        
+        // Create namespaces that include our test method
+        let namespaces = [
+            "eip155": SessionNamespace(
+                chains: [mockChainId],
+                accounts: accounts,
+                methods: [mockMethod],
+                events: ["chainChanged"]
+            )
+        ]
+        
         let mockSession = WCSession.stub(
             topic: mockTopic,
+            namespaces: namespaces,
             scopedProperties: ["eip155:1": mockWalletService]
         )
         sessionStoreMock.setSession(mockSession)
@@ -93,7 +107,23 @@ final class SessionRequesterTests: XCTestCase {
     
     func testRequest_DelegatesToNetworking_WhenNoMatchingServiceExists() async throws {
         // Arrange
-        let mockSession = WCSession.stub(topic: mockTopic)
+        // Create accounts for the namespace
+        let accounts = [Account(blockchain: mockChainId, address: "0x1234")!]
+        
+        // Create namespaces that include our test method
+        let namespaces = [
+            "eip155": SessionNamespace(
+                chains: [mockChainId],
+                accounts: accounts,
+                methods: [mockMethod],
+                events: ["chainChanged"]
+            )
+        ]
+        
+        let mockSession = WCSession.stub(
+            topic: mockTopic,
+            namespaces: namespaces
+        )
         sessionStoreMock.setSession(mockSession)
         
         let request = try! Request(
