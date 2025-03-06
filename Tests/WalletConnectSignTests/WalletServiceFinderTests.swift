@@ -265,32 +265,8 @@ final class WalletServiceFinderTests: XCTestCase {
     // MARK: - Helper Methods
     
     private func createMockSession(scopedProperties: [String: String]?) -> WCSession {
-        let selfPublicKey = "self_public_key"
-        let peerParticipant = Participant(
-            publicKey: "peer_public_key",
-            metadata: AppMetadata.stub()
-        )
-        return WCSession(
-            topic: "mock_topic",
-            pairingTopic: "pairing_topic",
-            timestamp: Date(),
-            selfParticipant: Participant(
-                publicKey: selfPublicKey,
-                metadata: AppMetadata.stub()
-            ),
-            peerParticipant: peerParticipant,
-            settleParams: SessionType.SettleParams(
-                relay: RelayProtocolOptions(protocol: "irn", data: nil),
-                controller: peerParticipant,
-                namespaces: [:],
-                sessionProperties: nil,
-                scopedProperties: scopedProperties,
-                expiry: Int64(Date().timeIntervalSince1970 + 86400)
-            ),
-            requiredNamespaces: [:],
-            acknowledged: true,
-            transportType: .relay,
-            verifyContext: nil
+        return WCSession.stub(
+            scopedProperties: scopedProperties
         )
     }
     

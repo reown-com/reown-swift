@@ -74,6 +74,7 @@ struct WCSession: SequenceObject, Equatable {
         peerParticipant: Participant,
         namespaces: [String: SessionNamespace],
         sessionProperties: [String: String],
+        scopedProperties: [String: String]?,
         requiredNamespaces: [String: ProposalNamespace],
         events: Set<String>,
         accounts: Set<Account>,
@@ -91,6 +92,7 @@ struct WCSession: SequenceObject, Equatable {
         self.peerParticipant = peerParticipant
         self.namespaces = namespaces
         self.sessionProperties = sessionProperties
+        self.scopedProperties = scopedProperties
         self.requiredNamespaces = requiredNamespaces
         self.acknowledged = acknowledged
         self.expiryDate = Date(timeIntervalSince1970: TimeInterval(expiryTimestamp))
