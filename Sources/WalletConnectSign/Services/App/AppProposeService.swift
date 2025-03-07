@@ -23,6 +23,7 @@ final class AppProposeService {
         namespaces: [String: ProposalNamespace],
         optionalNamespaces: [String: ProposalNamespace]? = nil,
         sessionProperties: [String: String]? = nil,
+        scopedProperties: [String: String]? = nil,
         relay: RelayProtocolOptions
     ) async throws {
         logger.debug("Propose Session on topic: \(pairingTopic)")
@@ -44,7 +45,8 @@ final class AppProposeService {
             proposer: proposer,
             requiredNamespaces: namespaces,
             optionalNamespaces: optionalNamespaces ?? [:],
-            sessionProperties: sessionProperties
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties
         )
         
         let request = RPCRequest(method: protocolMethod.method, params: proposal)

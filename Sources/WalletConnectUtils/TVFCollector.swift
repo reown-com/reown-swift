@@ -1,5 +1,17 @@
 import Foundation
 
+// MARK: - TVFCollectorProtocol
+
+public protocol TVFCollectorProtocol {
+    func collect(
+        rpcMethod: String,
+        rpcParams: AnyCodable,
+        chainID: Blockchain,
+        rpcResult: RPCResult?,
+        tag: Int
+    ) -> TVFData?
+}
+
 // MARK: - Supporting Models
 
 struct EthSendTransaction: Codable {
@@ -32,7 +44,7 @@ public struct TVFData {
 
 // MARK: - TVFCollector
 
-public struct TVFCollector {
+public class TVFCollector: TVFCollectorProtocol {
 
     // MARK: - Tag Enum
     enum Tag: Int {
@@ -231,3 +243,41 @@ extension TVFCollector {
         return true
     }
 }
+
+#if DEBUG
+public class TVFCollectorMock: TVFCollectorProtocol {
+    public struct CollectCall {
+        let method: String
+        let params: AnyCodable
+        let chainID: Blockchain?
+        let result: RPCResult?
+        let tag: Int
+    }
+    
+    private(set) public var collectCalls: [CollectCall] = []
+    public var mockResult: TVFData?
+    
+    public init(mockResult: TVFData? = nil) {
+        self.mockResult = mockResult
+    }
+    
+    public func collect(
+        rpcMethod: String,
+        rpcParams: AnyCodable,
+        chainID: Blockchain,
+        rpcResult: RPCResult?,
+        tag: Int
+    ) -> TVFData? {
+        collectCalls.append(
+            CollectCall(
+                method: rpcMethod,
+                params: rpcParams,
+                chainID: chainID,
+                result: RPCResult.response(AnyCodable("")),
+                tag: tag
+            )
+        )
+        return mockResult
+    }
+}
+#endif

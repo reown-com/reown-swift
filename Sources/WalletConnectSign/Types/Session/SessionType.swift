@@ -17,6 +17,7 @@ internal enum SessionType {
         let controller: Participant
         let namespaces: [String: SessionNamespace]
         let sessionProperties: [String: String]?
+        let scopedProperties: [String: String]?
         let expiry: Int64
     }
 
