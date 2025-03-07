@@ -8,13 +8,13 @@ final class CATransactionModule {
         app: Application,
         sessionRequest: Request?,
         importAccount: ImportAccount,
-        routeResponseAvailable: PrepareResponseAvailable,
         call: Call,
         from: String,
-        chainId: Blockchain
+        chainId: Blockchain,
+        uiFields: UiFields
     ) -> UIViewController {
         let router = CATransactionRouter(app: app)
-        let presenter = CATransactionPresenter(sessionRequest: sessionRequest, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, router: router, call: call, from: from, chainId: chainId)
+        let presenter = CATransactionPresenter(sessionRequest: sessionRequest, importAccount: importAccount, router: router, call: call, from: from, chainId: chainId, uiFields: uiFields)
         let view = CATransactionView().environmentObject(presenter)
         let viewController = SceneViewController(viewModel: presenter, content: view)
         router.viewController = viewController

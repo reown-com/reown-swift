@@ -1,6 +1,5 @@
 
 import Foundation
-import WalletConnectUtils
 
 public struct Publish: RelayRPC {
 
@@ -10,7 +9,7 @@ public struct Publish: RelayRPC {
         let ttl: Int
         let prompt: Bool?
         let tag: Int?
-        
+
         let correlationId: RPCID?
         let rpcMethods: [String]?
         let chainId: Blockchain?

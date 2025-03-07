@@ -30,17 +30,17 @@ final class W3MAPIInteractor: ObservableObject {
         DispatchQueue.main.async {
             self.isLoading = true
         }
-        
+
         let params = Web3ModalAPI.GetWalletsParams(
             page: search.isEmpty ? store.currentPage : 1,
             entries: search.isEmpty ? entriesPerPage : 100,
             search: search,
             projectId: AppKit.config.projectId,
             metadata: AppKit.config.metadata,
-            recommendedIds: [], // leave this empty or the request will only return these!
+            include: AppKit.config.includedWalletIds,
             exclude: AppKit.config.excludedWalletIds
         )
-        
+
         let httpClient = HTTPNetworkClient(host: "api.web3modal.com")
         let response = try await httpClient.request(
             GetWalletsResponse.self,
@@ -57,6 +57,31 @@ final class W3MAPIInteractor: ObservableObject {
             for index in wallets.indices {
                 let contains = store.installedWalletIds.contains(wallets[index].id)
                 wallets[index].isInstalled = contains
+            }
+            
+            // Sort wallets based on recommendedWalletIds if they are set
+            if !AppKit.config.recommendedWalletIds.isEmpty {
+                wallets.sort { wallet1, wallet2 in
+                    let index1 = AppKit.config.recommendedWalletIds.firstIndex(of: wallet1.id)
+                    let index2 = AppKit.config.recommendedWalletIds.firstIndex(of: wallet2.id)
+                    
+                    // Both wallets are in the recommendedWalletIds array
+                    if let index1 = index1, let index2 = index2 {
+                        return index1 < index2 // Maintain the order they were specified in the array
+                    }
+                    // Only wallet1 is in the recommendedWalletIds array
+                    else if index1 != nil {
+                        return true
+                    }
+                    // Only wallet2 is in the recommendedWalletIds array
+                    else if index2 != nil {
+                        return false
+                    }
+                    // Neither wallet is in the recommendedWalletIds array
+                    else {
+                        return wallet1.order < wallet2.order
+                    }
+                }
             }
             
             if !search.isEmpty {
@@ -115,6 +140,8 @@ final class W3MAPIInteractor: ObservableObject {
     func fetchFeaturedWallets() async throws {
         let walletsToFetch = AppKit.config.recommendedWalletIds + store.installedWalletIds
         let httpClient = HTTPNetworkClient(host: "api.web3modal.com")
+        let include = AppKit.config.includedWalletIds + AppKit.config.recommendedWalletIds
+        
         let response = try await httpClient.request(
             GetWalletsResponse.self,
             at: Web3ModalAPI.getWallets(
@@ -124,7 +151,7 @@ final class W3MAPIInteractor: ObservableObject {
                     search: "",
                     projectId: AppKit.config.projectId,
                     metadata: AppKit.config.metadata,
-                    recommendedIds: walletsToFetch,
+                    include: walletsToFetch,
                     exclude: AppKit.config.excludedWalletIds
                 )
             )
@@ -159,7 +186,7 @@ final class W3MAPIInteractor: ObservableObject {
                     search: "",
                     projectId: AppKit.config.projectId,
                     metadata: AppKit.config.metadata,
-                    recommendedIds: [],
+                    include: AppKit.config.includedWalletIds,
                     exclude: AppKit.config.excludedWalletIds
                 )
             )
@@ -174,6 +201,31 @@ final class W3MAPIInteractor: ObservableObject {
             for index in wallets.indices {
                 let contains = store.installedWalletIds.contains(wallets[index].id)
                 wallets[index].isInstalled = contains
+            }
+            
+            // Sort featured wallets based on recommendedWalletIds if they are set
+            if !AppKit.config.recommendedWalletIds.isEmpty {
+                wallets.sort { wallet1, wallet2 in
+                    let index1 = AppKit.config.recommendedWalletIds.firstIndex(of: wallet1.id)
+                    let index2 = AppKit.config.recommendedWalletIds.firstIndex(of: wallet2.id)
+                    
+                    // Both wallets are in the recommendedWalletIds array
+                    if let index1 = index1, let index2 = index2 {
+                        return index1 < index2 // Maintain the order they were specified in the array
+                    }
+                    // Only wallet1 is in the recommendedWalletIds array
+                    else if index1 != nil {
+                        return true
+                    }
+                    // Only wallet2 is in the recommendedWalletIds array
+                    else if index2 != nil {
+                        return false
+                    }
+                    // Neither wallet is in the recommendedWalletIds array
+                    else {
+                        return wallet1.order < wallet2.order
+                    }
+                }
             }
             
             self.store.totalNumberOfWallets = response.count

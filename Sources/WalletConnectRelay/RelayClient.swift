@@ -1,5 +1,4 @@
 import Foundation
-import WalletConnectUtils
 import Combine
 
 public enum SocketConnectionStatus {
@@ -127,7 +126,7 @@ public final class RelayClient {
             return
         }
         #endif
-        let request = Publish(params: .init(topic: topic, message: payload, ttl: ttl, prompt: prompt, tag: tag, correlationId: nil, tvfData: nil)).asRPCRequest()
+        let request = Publish(params: .init(topic: topic, message: payload, ttl: ttl, prompt: prompt, tag: tag, correlationId: coorelationId, tvfData: tvfData)).asRPCRequest()
         let message = try request.asJSONEncodedString()
         
         logger.debug("[Publish] Sending payload on topic: \(topic)")

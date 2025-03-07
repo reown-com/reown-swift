@@ -1,17 +1,21 @@
-name: cocoapods
+name: Cocoapods Release
 
 on:
   release:
     types: [ published ]
+  workflow_dispatch:
+
 jobs:
   set-user-agent:
     runs-on: macos-latest-xlarge
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
+          ref: ${{ github.ref_name }}
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Publish to CocoaPod register
+      - name: Publish to CocoaPods trunk
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
         run: |

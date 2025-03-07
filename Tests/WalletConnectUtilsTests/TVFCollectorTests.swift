@@ -11,7 +11,6 @@ final class TVFCollectorTests: XCTestCase {
         return .response(AnyCodable(any: value))
     }
 
-    // Helper: define sample .error(RPCError)
     private func makeError(code: Int, message: String) -> RPCResult {
         return .error(JSONRPCError(code: code, message: message))
     }
@@ -29,14 +28,14 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNil(data)
     }
 
-    func testSessionRequest_EthSendTransaction_ParsesContractAddress() {
-        // "eth_sendTransaction" — parse the "to" field from rpcParams.
-        // Here we supply a normal address string "0x1234567890abcdef" which is not long enough to be valid contract data.
-        // Therefore, the updated collector should return an empty array rather than returning the address.
+    func testSessionRequest_EthSendTransaction_NormalTransaction_NoContractData() {
+        // Supply a normal transaction with empty call data.
+        // In this case the transaction is not a contract call so contractAddresses should be nil.
         let rpcParams = AnyCodable([
             [
                 "from": "0x9876543210fedcba",
-                "to": "0x1234567890abcdef"
+                "to": "0x1234567890abcdef",
+                "data": ""  // empty data indicates no contract call
             ]
         ])
         let data = tvf.collect(
@@ -49,8 +48,7 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.rpcMethods, ["eth_sendTransaction"])
         XCTAssertEqual(data?.chainId?.absoluteString, "eip155:1")
-        // Expecting an empty array because "0x1234567890abcdef" is invalid contract call data.
-        XCTAssertEqual(data?.contractAddresses, [])
+        XCTAssertNil(data?.contractAddresses)
         XCTAssertNil(data?.txHashes)
     }
 
@@ -73,12 +71,13 @@ final class TVFCollectorTests: XCTestCase {
         // Construct a valid contract call data string:
         // - 8 hex chars for method ID: "abcd1234"
         // - 64 hex chars for recipient: "0000000000000000000000001111111111111111111111111111111111111111"
-        // - 64 hex chars for amount: "00000000000000000000000000000000000000000000000000000000000000f0"
+        // - At least 1 hex char for amount (here we use 62 zeros then "f0")
         let validContractData = "0xabcd12340000000000000000000000111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000f0"
         let rpcParams = AnyCodable([
             [
                 "from": "0x9876543210fedcba",
-                "to": validContractData
+                "to": "0x1234567890abcdef",
+                "data": validContractData
             ]
         ])
         let data = tvf.collect(
@@ -89,8 +88,8 @@ final class TVFCollectorTests: XCTestCase {
             tag: 1108
         )
         XCTAssertNotNil(data)
-        // When contract data is valid the collector returns the value.
-        XCTAssertEqual(data?.contractAddresses, [validContractData])
+        // Expecting the valid contract call data to be detected so that the "to" address is returned.
+        XCTAssertEqual(data?.contractAddresses, ["0x1234567890abcdef"])
     }
 
     // MARK: - Session Response (tag = 1109)
@@ -156,19 +155,36 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNil(data?.txHashes)
     }
 
-    func testSessionResponse_SolanaSignAllTransactions_ReturnsTransactions() {
-        let rpcParams = AnyCodable([String]())
-        let responseData = ["transactions": ["tx1", "tx2"]]
+    func testSessionResponse_SolanaSignAllTransactions_ExtractsSignaturesCorrectly() {
+        // Arrange
+        let transactions = [
+            "AYxQUCwuEoBMHp45bxp9yyegtoVUcyyc0idYrBan1PW/mWWA4MrXsbytuJt9FP1tXH5ZxYYyKc3YmBM+hcueqA4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAanHwLXEo8xArFhOhqld18H+7VdHJSIY4f27y1qCK4AoDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==",
+            "AWHu1QYry2PqYQAxDBXUtxBjRorQecJEVzje2rVY2rKJ6usAMAC/f0GGSqxpWlaS93wIfg3FqPPMzAKDdxgTwQwBAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAA58ONgFXrro2UqR0pvpUDFIqAYRJMYUnemdWXhfWu8VcDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==",
+            "AeJw688VKMWEeOHsYhe03By/2rqJHTQeq6W4L1ZLdbT2l/Nim8ctL3erMyH9IWPsQP73uaarRmiVfanEJHx7uQ4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAtIy17v5fs39LuoitzpBhVrg8ZIQF/3ih1N9dQ+X3shEDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMjTgAAAAAAAA=="
+        ]
+        
+        let responseData = ["transactions": transactions]
         let rpcResult = makeResponse(responseData)
+        
+        // Expected signatures
+        let expectedSignatures = [
+            "3oi6k2bd1fQdUenuMSeP3Zr18a3iRMuFcbgTnehBrQZP6nftmsVqMi1np4ENJr5HmuSgSsejfUYYpqTCXhnadSjw",
+            "2xZgx9T8kpRRmbkWhBzyfwH6FFc5ZTXAsZUAnU6MyemAqR2fqic7LAbi1ZjALC51NYkyC7hYKFB1rxRTXMQKmTmD",
+            "5XanD5KnkqzH3RjyqHzPCSRrNXYW2ADH4bge4oMi9KnDBrkFvugagH3LytFZFmBhZEEcyxPsZqeyF4cgLpEXVFR7"
+        ]
+        
+        // Act
         let data = tvf.collect(
             rpcMethod: "solana_signAllTransactions",
-            rpcParams: rpcParams,
+            rpcParams: AnyCodable([String]()),
             chainID: chain,
             rpcResult: rpcResult,
             tag: 1109
         )
+        
+        // Assert
         XCTAssertNotNil(data)
-        XCTAssertEqual(data?.txHashes, ["tx1", "tx2"])
+        XCTAssertEqual(data?.txHashes, expectedSignatures)
     }
 
     func testSessionResponse_UnsupportedMethod_ReturnsNil() {

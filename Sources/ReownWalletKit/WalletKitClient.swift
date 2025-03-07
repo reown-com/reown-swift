@@ -107,16 +107,21 @@ public class WalletKitClient {
 
     private var account: Account?
 
+    // Namespaces
+    public let ChainAbstraction: ChainAbstractionNamespace
+
     init(
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
-        chainAbstractionClient: ChainAbstractionClient
+        chainAbstractionClient: ChainAbstractionClient,
+        ChainAbstractionNamespace: ChainAbstractionNamespace
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
         self.chainAbstractionClient = chainAbstractionClient
+        self.ChainAbstraction = ChainAbstractionNamespace
     }
     
     /// For a wallet to approve a session proposal.
@@ -280,33 +285,8 @@ public class WalletKitClient {
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
-    public func status(orchestrationId: String) async throws -> StatusResponse {
-        return try await chainAbstractionClient.status(orchestrationId: orchestrationId)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func prepare(chainId: String, from: String, call: Call) async throws -> PrepareResponse {
-        return try await chainAbstractionClient.prepare(chainId: chainId, from: from, call: call)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func estimateFees(chainId: String) async throws -> Eip1559Estimation {
-        return try await chainAbstractionClient.estimateFees(chainId: chainId)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func getUiFields(routeResponse: PrepareResponseAvailable, currency: Currency) async throws -> UiFields {
-        return try await chainAbstractionClient.getUiFields(routeResponse: routeResponse, currency: currency)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
     public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
-    }
-
-    @available(*, message: "This method is experimental. Use with caution.")
-    public func waitForSuccessWithTimeout(orchestrationId: String, checkIn: UInt64, timeout: UInt64 = 180) async throws -> StatusResponseCompleted {
-        return try await chainAbstractionClient.waitForSuccessWithTimeout(orchestrationId: orchestrationId, checkIn: checkIn, timeout: timeout)
     }
 }
 

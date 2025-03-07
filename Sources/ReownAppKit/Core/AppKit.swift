@@ -70,6 +70,7 @@ public class AppKit {
 
         let includeWebWallets: Bool
         let recommendedWalletIds: [String]
+        let includedWalletIds: [String]
         let excludedWalletIds: [String]
         let queryableWalletSchemes: [String]
         let customWallets: [Wallet]
@@ -96,6 +97,7 @@ public class AppKit {
         authRequestParams: AuthRequestParams?,
         includeWebWallets: Bool = true,
         recommendedWalletIds: [String] = [],
+        includedWalletIds: [String] = [],
         excludedWalletIds: [String] = [],
         queryableWalletSchemes: [String] = [],
         customWallets: [Wallet] = [],
@@ -112,6 +114,7 @@ public class AppKit {
             authRequestParams: authRequestParams,
             includeWebWallets: includeWebWallets,
             recommendedWalletIds: recommendedWalletIds,
+            includedWalletIds: includedWalletIds,
             excludedWalletIds: excludedWalletIds,
             queryableWalletSchemes: queryableWalletSchemes,
             customWallets: customWallets,
