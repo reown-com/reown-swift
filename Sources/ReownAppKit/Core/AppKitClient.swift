@@ -335,18 +335,6 @@ public class AppKitClient {
         store.selectedChain = chain
     }
     
-    public func launchCurrentWallet() {
-        guard
-            let session = store.session,
-            let urlString = session.peer.redirect?.native ?? session.peer.redirect?.universal,
-            let url = URL(string: urlString)
-        else { return }
-        
-        DispatchQueue.main.async {
-            UIApplication.shared.open(url, completionHandler: nil)
-        }
-    }
-    
     @discardableResult
     public func handleDeeplink(_ url: URL) -> Bool {
         if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
