@@ -258,7 +258,14 @@ public class AppKitClient {
             break
         }
     }
-    
+
+    /// For dapp and wallet to extend a session to 7 days
+    /// - Parameters:
+    ///   - topic: Topic of the session that is intended to be extended.
+    public func extend(topic: String) async throws {
+        try await signClient.extend(topic: topic)
+    }
+
     /// Query sessions
     /// - Returns: All sessions
     public func getSessions() -> [Session] {
