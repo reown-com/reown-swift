@@ -44,14 +44,9 @@ final class SessionRequester {
                 let _ = try await walletServiceRequester.request(request, to: walletServiceURL)
                 logger.debug("Wallet service request completed successfully")
                 return
-            } catch let error as WalletServiceSessionRequester.Errors {
-                logger.error("Wallet service request failed: \(error)")
-                // If wallet service request fails, fall back to the normal relay request
-                logger.debug("Falling back to relay request")
             } catch {
-                logger.error("Unknown error in wallet service request: \(error)")
-                // If wallet service request fails, fall back to the normal relay request
-                logger.debug("Falling back to relay request")
+                logger.error("Wallet service request failed: \(error)")
+                throw error
             }
         }
         

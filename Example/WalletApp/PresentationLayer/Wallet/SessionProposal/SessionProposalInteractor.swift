@@ -39,7 +39,7 @@ final class SessionProposalInteractor {
             "eip155": """
             {
                 "walletService": [{
-                    "url": "https://your-wallet-service.com",
+                    "url": "https://rpc.walletconnect.org/v1/wallet",
                     "methods": ["wallet_getAssets"]
                 }]
             }
