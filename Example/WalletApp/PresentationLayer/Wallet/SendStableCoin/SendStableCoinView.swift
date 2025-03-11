@@ -134,7 +134,7 @@ struct SendStableCoinView: View {
                     Picker("Stablecoin", selection: $presenter.stableCoinChoice) {
                         Text("USDC").tag(StableCoinChoice.usdc)
                         Text("USDT").tag(StableCoinChoice.usdt)
-                        Text("DAI").tag(StableCoinChoice.usds)
+                        Text("USDS").tag(StableCoinChoice.usds)
                     }
                     .pickerStyle(SegmentedPickerStyle())
                 }

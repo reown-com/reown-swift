@@ -40,7 +40,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                     )
                 } else if stableCoinChoice == .usds {
                     AlertPresenter.present(
-                        message: "DAI is not supported on Base.",
+                        message: "USDS is not supported on Base.",
                         type: .error
                     )
                 }
@@ -191,7 +191,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                 AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
                 return
             } else if stableCoinChoice == .usds {
-                AlertPresenter.present(message: "DAI is not supported on Base.", type: .error)
+                AlertPresenter.present(message: "USDS is not supported on Base.", type: .error)
                 return
             }
         }
