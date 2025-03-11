@@ -103,16 +103,16 @@ struct SendStableCoinView: View {
                         .font(.system(.body, design: .monospaced))
                 }
                 
-                // USDS row
+                // USDS (DAI) row
                 HStack {
-                    Image("usdt") // Reusing USDT icon as a placeholder, can be replaced with USDS icon
+                    Image("usdt") // Reusing USDT icon as a placeholder, can be replaced with DAI icon
                         .resizable()
                         .scaledToFit()
                         .frame(width: 24, height: 24)
                     Text("DAI Stablecoin")
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("\(presenter.usdsBalance) USDS")
+                    Text("\(presenter.usdsBalance) DAI")
                         .font(.system(.body, design: .monospaced))
                 }
             }
@@ -134,7 +134,7 @@ struct SendStableCoinView: View {
                     Picker("Stablecoin", selection: $presenter.stableCoinChoice) {
                         Text("USDC").tag(StableCoinChoice.usdc)
                         Text("USDT").tag(StableCoinChoice.usdt)
-                        Text("USDS").tag(StableCoinChoice.usds)
+                        Text("DAI").tag(StableCoinChoice.usds)
                     }
                     .pickerStyle(SegmentedPickerStyle())
                 }

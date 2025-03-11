@@ -7,12 +7,22 @@ enum StableCoinChoice: String, CaseIterable {
     case usdc = "USDC"
     case usdt = "USDT"
     case usds = "USDS"
+    
+    /// Number of decimals for each token
+    var decimals: Int {
+        switch self {
+        case .usdc, .usdt:
+            return 6  // USDC and USDT use 6 decimals
+        case .usds:
+            return 18 // USDS (DAI) uses 18 decimals
+        }
+    }
 }
 
 final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     // MARK: - Published Properties
 
-    @Published var selectedNetwork: L2 = .Base {
+    @Published var selectedNetwork: L2 = .Arbitrium {
         didSet {
             // Whenever the user changes networks, refetch balances
             fetchAllBalances()
@@ -30,7 +40,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                     )
                 } else if stableCoinChoice == .usds {
                     AlertPresenter.present(
-                        message: "USDS is not supported on Base.",
+                        message: "DAI is not supported on Base.",
                         type: .error
                     )
                 }
@@ -115,10 +125,10 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                     )
                 }
 
-                // 2) Convert both from hex → Decimal (accounting for 6 decimals in each token)
+                // 2) Convert hex balances to Decimal with appropriate decimals
                 let usdcDecimal = parseHexBalance(usdcHex, decimals: 6)
                 let usdtDecimal = parseHexBalance(usdtHex, decimals: 6)
-                let usdsDecimal = parseHexBalance(usdsHex, decimals: 6)
+                let usdsDecimal = parseHexBalance(usdsHex, decimals: 18)  // USDS has 18 decimals
 
                 // 3) Combine them
                 let combined = usdcDecimal + usdtDecimal + usdsDecimal
@@ -181,7 +191,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                 AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
                 return
             } else if stableCoinChoice == .usds {
-                AlertPresenter.present(message: "USDS is not supported on Base.", type: .error)
+                AlertPresenter.present(message: "DAI is not supported on Base.", type: .error)
                 return
             }
         }
@@ -254,8 +264,9 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             ])
         }
 
-        // USDC/USDT/USDS => 6 decimals
-        let baseUnitsDecimal = decimalAmount * Decimal(1_000_000)
+        // Convert to base units using the appropriate number of decimals
+        let decimalPlaces = stableCoinChoice.decimals
+        let baseUnitsDecimal = decimalAmount * pow(10, decimalPlaces)
 
         // Use a number formatter to ensure consistent string conversion
         let formatter = NumberFormatter()
