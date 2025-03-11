@@ -42,4 +42,17 @@ enum L2: String {
             return "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2"
         }
     }
+    
+    /// USDS contract address for each network
+    var usdsContractAddress: String {
+        switch self {
+        case .Arbitrium:
+            return "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+        case .Optimism:
+            return "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+        case .Base:
+            // Not supported on Base
+            return ""
+        }
+    }
 }

@@ -6,6 +6,7 @@ import BigInt
 enum StableCoinChoice: String, CaseIterable {
     case usdc = "USDC"
     case usdt = "USDT"
+    case usds = "USDS"
 }
 
 final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
@@ -20,12 +21,19 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     /// Which stablecoin to send
     @Published var stableCoinChoice: StableCoinChoice = .usdc {
         didSet {
-            // If user picks USDT on Base => not supported
-            if stableCoinChoice == .usdt, selectedNetwork == .Base {
-                AlertPresenter.present(
-                    message: "USDT is not supported on Base.",
-                    type: .error
-                )
+            // Check for unsupported combinations
+            if selectedNetwork == .Base {
+                if stableCoinChoice == .usdt {
+                    AlertPresenter.present(
+                        message: "USDT is not supported on Base.",
+                        type: .error
+                    )
+                } else if stableCoinChoice == .usds {
+                    AlertPresenter.present(
+                        message: "USDS is not supported on Base.",
+                        type: .error
+                    )
+                }
             }
         }
     }
@@ -44,7 +52,9 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     @Published var usdcBalance: String = "0.00"
     /// String displayed for USDT balance
     @Published var usdtBalance: String = "0.00"
-    /// Combined top-level balance (USDC + USDT)
+    /// String displayed for USDS balance
+    @Published var usdsBalance: String = "0.00"
+    /// Combined top-level balance (USDC + USDT + USDS)
     @Published var combinedBalance: String = "0.00"
 
     let router: SendStableCoinRouter
@@ -94,18 +104,30 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                     token: selectedNetwork.usdtContractAddress,
                     owner: owner
                 )
+                
+                // Get USDS balance (if supported on this network)
+                var usdsHex = "0x0"
+                if !selectedNetwork.usdsContractAddress.isEmpty {
+                    usdsHex = try await WalletKit.instance.erc20Balance(
+                        chainId: chainString,
+                        token: selectedNetwork.usdsContractAddress,
+                        owner: owner
+                    )
+                }
 
                 // 2) Convert both from hex → Decimal (accounting for 6 decimals in each token)
                 let usdcDecimal = parseHexBalance(usdcHex, decimals: 6)
                 let usdtDecimal = parseHexBalance(usdtHex, decimals: 6)
+                let usdsDecimal = parseHexBalance(usdsHex, decimals: 6)
 
                 // 3) Combine them
-                let combined = usdcDecimal + usdtDecimal
+                let combined = usdcDecimal + usdtDecimal + usdsDecimal
 
                 // 4) Update published properties on MainActor
                 await MainActor.run {
                     self.usdcBalance = formatDecimal(usdcDecimal)
                     self.usdtBalance = formatDecimal(usdtDecimal)
+                    self.usdsBalance = formatDecimal(usdsDecimal)
                     self.combinedBalance = formatDecimal(combined)
                 }
             } catch {
@@ -114,6 +136,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                 await MainActor.run {
                     self.usdcBalance = "0.00"
                     self.usdtBalance = "0.00"
+                    self.usdsBalance = "0.00"
                     self.combinedBalance = "0.00"
                 }
             }
@@ -152,10 +175,15 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
     /// Main send method, which prepares and routes a transaction
     func send() async throws {
-        // 1) Check if USDT is selected on Base => not supported
-        if stableCoinChoice == .usdt, selectedNetwork == .Base {
-            AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
-            return
+        // Check for unsupported combinations
+        if selectedNetwork == .Base {
+            if stableCoinChoice == .usdt {
+                AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
+                return
+            } else if stableCoinChoice == .usds {
+                AlertPresenter.present(message: "USDS is not supported on Base.", type: .error)
+                return
+            }
         }
 
         do {
@@ -226,7 +254,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             ])
         }
 
-        // USDC/USDT => 6 decimals
+        // USDC/USDT/USDS => 6 decimals
         let baseUnitsDecimal = decimalAmount * Decimal(1_000_000)
 
         // Use a number formatter to ensure consistent string conversion
@@ -249,6 +277,8 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             tokenAddress = selectedNetwork.usdcContractAddress
         case .usdt:
             tokenAddress = selectedNetwork.usdtContractAddress
+        case .usds:
+            tokenAddress = selectedNetwork.usdsContractAddress
         }
 
         // 3) Build the call
