@@ -112,7 +112,7 @@ struct SendStableCoinView: View {
                     Text("DAI Stablecoin")
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("\(presenter.usdsBalance) DAI")
+                    Text("\(presenter.usdsBalance) USDS")
                         .font(.system(.body, design: .monospaced))
                 }
             }
