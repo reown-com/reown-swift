@@ -1,6 +1,7 @@
 import UIKit
 import Combine
 import ReownWalletKit
+import Foundation
 
 final class CATransactionPresenter: ObservableObject {
     enum Errors: LocalizedError {
@@ -19,6 +20,8 @@ final class CATransactionPresenter: ObservableObject {
     @Published var executionSpeed: String = "Fast (~20 sec)"
     @Published var transactionCompleted: Bool = false
     @Published var fundingFromNetwork: String!
+    @Published var payingTokenSymbol: String = "USDC"
+    @Published var payingTokenDecimals: Int = 6 // Default to USDC's 6 decimals
 
     private let sessionRequest: Request?
     var fundingFrom: [FundingMetadata] {
@@ -54,7 +57,38 @@ final class CATransactionPresenter: ObservableObject {
         self.uiFields = uiFields
         self.networkName = network(for: chainId.absoluteString)
         self.fundingFromNetwork = network(for: fundingFrom[0].chainId)
+        
+        // Determine token type based on the contract address (if available)
+        let tokenAddress = call.to.lowercased()
+        // Check if the token is DAI/USDS based on the contract addresses
+        if isDAIToken(tokenAddress, chainId: chainId.absoluteString) {
+            self.payingTokenSymbol = "DAI"
+            self.payingTokenDecimals = 18
+        } else {
+            // Default to USDC with 6 decimals
+            self.payingTokenSymbol = "USDC"
+            self.payingTokenDecimals = 6
+        }
+
         setupInitialState()
+    }
+    
+    // Helper method to determine if a token is DAI based on its address
+    private func isDAIToken(_ tokenAddress: String, chainId: String) -> Bool {
+        // Get the blockchain from the chainId string
+        if let blockchain = Blockchain(chainId) {
+            // Find which L2 network this corresponds to
+            let l2Networks: [L2] = [.Arbitrium, .Optimism, .Base]
+            
+            for network in l2Networks {
+                if network.chainId == blockchain {
+                    // Check if this token address matches the DAI/USDS address for this network
+                    return tokenAddress.lowercased() == network.usdsContractAddress.lowercased()
+                }
+            }
+        }
+        
+        return false
     }
 
     func dismiss() {
@@ -135,12 +169,17 @@ final class CATransactionPresenter: ObservableObject {
         return chainIdToNetwork[chainId]!
     }
 
+    // Updated to respect token decimals
     func hexAmountToDenominatedUSDC(_ hexAmount: String) -> String {
         guard let indecValue = hexToDecimal(hexAmount) else {
             return "Invalid amount"
         }
-        let usdcValue = Double(indecValue) / 1_000_000
-        return String(format: "%.2f", usdcValue)
+        
+        // Use the appropriate divisor based on token decimals
+        let divisor = pow(10.0, Double(payingTokenDecimals))
+        let tokenValue = Double(indecValue) / divisor
+        
+        return String(format: "%.2f", tokenValue)
     }
 
     func hexToDecimal(_ hex: String) -> Int? {

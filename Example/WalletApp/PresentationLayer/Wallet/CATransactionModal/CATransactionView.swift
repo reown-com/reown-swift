@@ -30,8 +30,8 @@ struct CATransactionView: View {
                             Text("Paying")
                                 .foregroundColor(.gray)
                             Spacer()
-                            // Replace with the actual amount from presenter
-                            Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) USDC")
+                            // Use the token symbol from presenter
+                            Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) \(presenter.payingTokenSymbol)")
                                 .font(.system(.body, design: .monospaced))
                         }
 
@@ -54,7 +54,8 @@ struct CATransactionView: View {
                                 Text("Balance")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                Text("\(presenter.hexAmountToDenominatedUSDC(presenter.balanceAmount)) USDC")
+                                // Use the token symbol from presenter
+                                Text("\(presenter.hexAmountToDenominatedUSDC(presenter.balanceAmount)) \(presenter.payingTokenSymbol)")
                                     .font(.system(.body, design: .monospaced))
                             }
 
@@ -216,7 +217,7 @@ struct TransactionCompletedView: View {
                 .scaledToFit()
                 .frame(width: 60, height: 60)
 
-            Text("You successfully sent USDC!")
+            Text("You successfully sent \(presenter.payingTokenSymbol)!")
                 .font(.title3)
                 .foregroundColor(.gray)
 
@@ -226,7 +227,7 @@ struct TransactionCompletedView: View {
                     Text("Payed")
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) USDC")
+                    Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) \(presenter.payingTokenSymbol)")
                         .font(.system(.body, design: .monospaced))
                     Text("on")
                     Text("\(presenter.networkName)")
