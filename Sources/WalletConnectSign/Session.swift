@@ -11,9 +11,30 @@ public struct Session: Codable {
     public let requiredNamespaces: [String: ProposalNamespace]
     public let namespaces: [String: SessionNamespace]
     public let sessionProperties: [String: String]?
+    public let scopedProperties: [String: String]?
     public let expiryDate: Date
     public static var defaultTimeToLive: Int64 {
         WCSession.defaultTimeToLive
+    }
+    
+    public init(
+        topic: String,
+        pairingTopic: String,
+        peer: AppMetadata,
+        requiredNamespaces: [String: ProposalNamespace],
+        namespaces: [String: SessionNamespace],
+        sessionProperties: [String: String]?,
+        scopedProperties: [String: String]?,
+        expiryDate: Date
+    ) {
+        self.topic = topic
+        self.pairingTopic = pairingTopic
+        self.peer = peer
+        self.requiredNamespaces = requiredNamespaces
+        self.namespaces = namespaces
+        self.sessionProperties = sessionProperties
+        self.scopedProperties = scopedProperties
+        self.expiryDate = expiryDate
     }
 }
 
@@ -26,6 +47,7 @@ extension Session {
         public let requiredNamespaces: [String: ProposalNamespace]
         public let optionalNamespaces: [String: ProposalNamespace]?
         public let sessionProperties: [String: String]?
+        public let scopedProperties: [String: String]?
 
         // TODO: Refactor internal objects to manage only needed data
         internal let proposal: SessionProposal
@@ -41,6 +63,7 @@ extension Session {
             requiredNamespaces: [String: ProposalNamespace],
             optionalNamespaces: [String: ProposalNamespace]?,
             sessionProperties: [String: String]?,
+            scopedProperties: [String: String]?,
             proposal: SessionProposal
         ) {
             self.id = id
@@ -49,6 +72,7 @@ extension Session {
             self.requiredNamespaces = requiredNamespaces
             self.optionalNamespaces = optionalNamespaces
             self.sessionProperties = sessionProperties
+            self.scopedProperties = scopedProperties
             self.proposal = proposal
         }
     }
