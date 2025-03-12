@@ -54,15 +54,6 @@
           "revision": "84b3d3f25a2e3b140ec12bb0d22c35b58f817d44",
           "version": "1.0.0"
         }
-      },
-      {
-        "package": "Yttrium",
-        "repositoryURL": "https://github.com/reown-com/yttrium",
-        "state": {
-          "branch": null,
-          "revision": "331244f5a569787452be5ec05b5699927c646878",
-          "version": "0.8.35"
-        }
       }
     ]
   },

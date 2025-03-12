@@ -149,11 +149,25 @@ final class CATransactionPresenter: ObservableObject {
             let signer = ETHSigner(importAccount: importAccount)
 
             print("📝 Signing route transactions...")
-            for txnDetails in uiFields.route {
-                let hash = txnDetails.transactionHashToSign
-                let sig = try! signer.signHash(hash)
-                routeTxnSigs.append(sig)
-                print("🔑 Signed transaction hash: \(hash)")
+            for route in uiFields.route {
+                switch route {
+                case .eip155(let txnDetails):
+                    for txnDetail in txnDetails {
+                        print("EVM transaction detected")
+                        let hash = txnDetail.transactionHashToSign
+                        let sig = try! signer.signHash(hash)
+                        routeTxnSigs.append(sig)
+                        print("🔑 Signed transaction hash: \(hash)")
+                    }
+                case .solana(let solanaTxnDetails):
+                    for txnDetail in solanaTxnDetails {
+                        print("Solana transaction detected")
+                        let hash = txnDetail.transactionHashToSign
+                        let sig = try! signer.signHash(hash)
+                        routeTxnSigs.append(sig)
+                        print("🔑 Signed transaction hash: \(hash)")
+                    }
+                }
             }
 
             let initialTxnSig = try! signer.signHash(initialTxHash)
