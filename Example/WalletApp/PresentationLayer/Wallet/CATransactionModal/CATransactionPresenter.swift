@@ -156,6 +156,7 @@ final class CATransactionPresenter: ObservableObject {
                     for txnDetail in txnDetails {
                         print("EVM transaction detected")
                         let hash = txnDetail.transactionHashToSign
+                            // sign with sol signer
                         let sig = try! signer.signHash(hash)
                         eip155Sigs.append(sig)
                         print("🔑 Signed transaction hash: \(hash)")

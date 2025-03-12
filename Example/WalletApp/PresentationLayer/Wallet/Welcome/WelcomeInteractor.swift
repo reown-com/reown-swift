@@ -58,7 +58,7 @@ class SolanaAccountStorage {
     }
     
     /// Creates a Solana account from a private key
-    private func createAccount(from privateKey: String) throws -> Account {
+    func createAccount(from privateKey: String) throws -> Account {
         let secretKey = Data(Base58.decode(privateKey))
         
         do {

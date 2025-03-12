@@ -3,6 +3,7 @@ import Combine
 @preconcurrency import ReownWalletKit
 import BigInt
 
+
 enum StableCoinChoice: String, CaseIterable {
     case usdc = "USDC"
     case usdt = "USDT"
@@ -201,10 +202,20 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
             ActivityIndicatorManager.shared.start()
 
+            // Get the Solana account address (optional)
+            let solanaAccount = SolanaAccountStorage().getAddress()
+            let eip155Account = importAccount.account.address
+            
+            // Create an array with only non-nil accounts
+            var accounts = [eip155Account]
+            if let solanaAccount = solanaAccount {
+                accounts.append(solanaAccount)
+            }
+
             let routeResponseSuccess = try await WalletKit.instance.ChainAbstraction.prepare(
                 chainId: selectedNetwork.chainId.absoluteString,
                 from: importAccount.account.address,
-                call: call,
+                call: call, accounts: accounts,
                 localCurrency: .usd
             )
 

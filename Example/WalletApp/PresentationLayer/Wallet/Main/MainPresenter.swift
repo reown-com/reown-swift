@@ -107,8 +107,14 @@ extension MainPresenter {
             let solanaAccount = SolanaAccountStorage().getAddress()
             let eip155Account = importAccount.account.address
 
+            // Create an array with only non-nil accounts
+            var accounts = [eip155Account]
+            if let solanaAccount = solanaAccount {
+                accounts.append(solanaAccount)
+            }
+
             ActivityIndicatorManager.shared.start()
-            let routeResponseSuccess = try await WalletKit.instance.ChainAbstraction.prepare(chainId: request.chainId.absoluteString, from: tx.from, call: call, accounts: [solanaAccount, eip155Account], localCurrency: .usd)
+            let routeResponseSuccess = try await WalletKit.instance.ChainAbstraction.prepare(chainId: request.chainId.absoluteString, from: tx.from, call: call, accounts: accounts, localCurrency: .usd)
             await MainActor.run {
                 switch routeResponseSuccess {
                 case .success(let routeResponseSuccess):
