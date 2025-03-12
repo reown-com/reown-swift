@@ -128,7 +128,7 @@ struct CATransactionView: View {
                                 Text("Estimated Fees")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                Text("\(presenter.estimatedFees)")
+                                Text("\(presenter.formattedEstimatedFees)")
                                     .font(.system(.body, design: .monospaced))
                             }
 
@@ -137,8 +137,7 @@ struct CATransactionView: View {
                                 Text("Bridge")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                // Replace "$TODO" with actual fee if available
-                                Text("\(presenter.bridgeFee)")
+                                Text("\(presenter.formattedBridgeFee)")
                                     .font(.system(.body, design: .monospaced))
                             }
 

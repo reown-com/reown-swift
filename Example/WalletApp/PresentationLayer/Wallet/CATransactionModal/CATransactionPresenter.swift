@@ -22,6 +22,10 @@ final class CATransactionPresenter: ObservableObject {
     @Published var fundingFromNetwork: String!
     @Published var payingTokenSymbol: String = "USDC"
     @Published var payingTokenDecimals: Int = 6 // Default to USDC's 6 decimals
+    
+    // Formatted fees with proper decimal places
+    @Published var formattedEstimatedFees: String = ""
+    @Published var formattedBridgeFee: String = ""
 
     private let sessionRequest: Request?
     var fundingFrom: [FundingMetadata] {
@@ -89,6 +93,45 @@ final class CATransactionPresenter: ObservableObject {
         }
         
         return false
+    }
+
+    // MARK: - Fee Formatting Methods
+    
+    /// Formats a fee amount string to display with proper decimal places based on token type
+    func formatFeeAmount(_ feeString: String) -> String {
+        // Check if the fee string has a currency symbol and extract the number part
+        if let numberPart = extractAmountFromFormattedString(feeString),
+           let feeValue = Double(numberPart) {
+            
+            // The fees are displayed in USD, but we want to adjust the precision based on the token's decimals
+            // For USDC/USDT with 6 decimals, standard 2 decimal places is fine
+            // For DAI with 18 decimals, we might want to show more precision
+            let formattedValue: String
+            
+            if payingTokenDecimals == 18 {
+                // For DAI/USDS (18 decimals), show more precision if needed
+                formattedValue = String(format: "%.4f", feeValue)
+            } else {
+                // For USDC/USDT (6 decimals), standard 2 decimal places
+                formattedValue = String(format: "%.2f", feeValue)
+            }
+            
+            return "$\(formattedValue)"
+        }
+        
+        // Return the original string if parsing fails
+        return feeString
+    }
+    
+    /// Extracts the numeric part from a formatted fee string (e.g. "$1.23" -> "1.23")
+    private func extractAmountFromFormattedString(_ formattedString: String) -> String? {
+        // Find the numeric part (assume it's after a currency symbol)
+        // This is a simple extraction - handles strings like "$1.23"
+        if let currencyIndex = formattedString.firstIndex(of: "$") {
+            let numberPart = formattedString[formattedString.index(after: currencyIndex)...]
+            return String(numberPart).trimmingCharacters(in: .whitespaces)
+        }
+        return nil
     }
 
     func dismiss() {
@@ -188,8 +231,13 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     func setupInitialState() {
+        // Get the original fee strings
         estimatedFees = uiFields.localTotal.formattedAlt
         bridgeFee = uiFields.bridge.first!.localFee.formattedAlt
+        
+        // Now format them with proper decimal places
+        formattedEstimatedFees = formatFeeAmount(estimatedFees)
+        formattedBridgeFee = formatFeeAmount(bridgeFee)
 
         if let session = WalletKit.instance.getSessions().first(where: { $0.topic == sessionRequest?.topic }) {
             self.appURL = session.peer.url
