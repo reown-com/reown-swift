@@ -2,12 +2,14 @@ import UIKit
 import Combine
 import ReownWalletKit
 import Foundation
+import TweetNacl
 
 final class CATransactionPresenter: ObservableObject {
     enum Errors: LocalizedError {
         case invalidURL
         case invalidResponse
         case invalidData
+        case noSolanaAccountFound
     }
 
     // Published properties to be used in the view
@@ -164,10 +166,21 @@ final class CATransactionPresenter: ObservableObject {
                     routeTxnSigs.append(.eip155(eip155Sigs))
                 case .solana(let solanaTxnDetails):
                     var solanaSigs = [String]()
+                    guard let solAccount = SolanaAccountStorage().getAccount() else {
+                        throw Errors.noSolanaAccountFound
+                    }
                     for txnDetail in solanaTxnDetails {
                         print("Solana transaction detected")
+
                         let hash = txnDetail.transactionHashToSign
-                        let sig = try! signer.signHash(hash)
+
+
+                        let signature = try! NaclSign.signDetached(
+                            message: hash.rawRepresentation,
+                            secretKey: solAccount.secretKey
+                        )
+                        let sig = Base58.encode(signature)
+
                         solanaSigs.append(sig)
                         print("🔑 Signed transaction hash: \(hash)")
                     }

@@ -57,6 +57,17 @@ class SolanaAccountStorage {
         }
     }
     
+    /// Returns a Solana Account object from the stored private key
+    func getAccount() -> Account? {
+        guard let privateKey = getPrivateKey() else { return nil }
+        
+        do {
+            return try createAccount(from: privateKey)
+        } catch {
+            return nil
+        }
+    }
+    
     /// Creates a Solana account from a private key
     func createAccount(from privateKey: String) throws -> Account {
         let secretKey = Data(Base58.decode(privateKey))
