@@ -196,6 +196,9 @@ struct SendStableCoinView: View {
                             Button(L2.Optimism.rawValue) {
                                 presenter.set(network: .Optimism)
                             }
+                            Button(L2.Solana.rawValue) {
+                                presenter.set(network: .Solana)
+                            }
                             Button("Cancel", role: .cancel) {}
                         }
                     }

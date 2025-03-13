@@ -5,6 +5,7 @@ enum L2: String {
     case Arbitrium
     case Optimism
     case Base
+    case Solana
 
     /// The chain ID in "eip155:<number>" format
     var chainId: Blockchain {
@@ -15,6 +16,8 @@ enum L2: String {
             return Blockchain("eip155:10")!
         case .Base:
             return Blockchain("eip155:8453")!
+        case .Solana:
+            return Blockchain("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")!
         }
     }
 
@@ -28,6 +31,8 @@ enum L2: String {
             return "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
         case .Base:
             return "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        case .Solana:
+            return "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         }
     }
 
@@ -40,6 +45,8 @@ enum L2: String {
             return "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"
         case .Base:
             return "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2"
+        case .Solana:
+            return "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
         }
     }
     
@@ -52,6 +59,9 @@ enum L2: String {
             return "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
         case .Base:
             // Not supported on Base
+            return ""
+        case .Solana:
+            // Not supported on Solana
             return ""
         }
     }

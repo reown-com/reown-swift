@@ -21,10 +21,30 @@ enum StableCoinChoice: String, CaseIterable {
 }
 
 final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
+    // MARK: - Error Types
+    
+    enum Errors: Error {
+        case invalidInput(String)
+        case unsupportedToken(String)
+    }
+    
     // MARK: - Published Properties
 
     @Published var selectedNetwork: L2 = .Arbitrium {
         didSet {
+            // If user switches to Solana, check if we have a Solana account
+            if selectedNetwork == .Solana {
+                if SolanaAccountStorage().getAddress() == nil {
+                    AlertPresenter.present(
+                        message: "No Solana account found. Please import a Solana account first.",
+                        type: .error
+                    )
+                    // Revert to previous network
+                    selectedNetwork = oldValue
+                    return
+                }
+            }
+            
             // Whenever the user changes networks, refetch balances
             fetchAllBalances()
         }
@@ -41,9 +61,17 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                     )
                 } else if stableCoinChoice == .usds {
                     AlertPresenter.present(
-                        message: "USDS is not supported on Base.",
+                        message: "DAI is not supported on Base.",
                         type: .error
                     )
+                }
+            } else if selectedNetwork == .Solana {
+                if stableCoinChoice == .usds {
+                    AlertPresenter.present(
+                        message: "DAI is not supported on Solana.",
+                        type: .error
+                    )
+                    stableCoinChoice = .usdc
                 }
             }
         }
@@ -100,30 +128,54 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     /// Fetch both USDC and USDT balances, compute combined, update UI
     private func fetchAllBalances() {
         let chainString = selectedNetwork.chainId.absoluteString
-        let owner = importAccount.account.address
+        
+        // Determine owner based on network type
+        let owner: String
+        if selectedNetwork == .Solana {
+            // For Solana, use the Solana account address
+            guard let solanaOwner = SolanaAccountStorage().getAddress() else {
+                AlertPresenter.present(message: "No Solana account found", type: .error)
+                return
+            }
+            owner = solanaOwner
+        } else {
+            // For EVM chains, use the importAccount address
+            owner = importAccount.account.address
+        }
 
         Task {
             do {
-                // 1) Fetch raw hex balances
-                let usdcHex = try await WalletKit.instance.erc20Balance(
-                    chainId: chainString,
-                    token: selectedNetwork.usdcContractAddress,
-                    owner: owner
-                )
-                let usdtHex = try await WalletKit.instance.erc20Balance(
-                    chainId: chainString,
-                    token: selectedNetwork.usdtContractAddress,
-                    owner: owner
-                )
-                
-                // Get USDS balance (if supported on this network)
+                // Variables to store balances
+                var usdcHex = "0x0"
+                var usdtHex = "0x0"
                 var usdsHex = "0x0"
-                if !selectedNetwork.usdsContractAddress.isEmpty {
-                    usdsHex = try await WalletKit.instance.erc20Balance(
+                
+                if selectedNetwork == .Solana {
+                    // For Solana, use the solanaBalance method
+                    usdcHex = solanaBalance(token: selectedNetwork.usdcContractAddress, owner: owner)
+                    usdtHex = solanaBalance(token: selectedNetwork.usdtContractAddress, owner: owner)
+                    // DAI/USDS is not supported on Solana
+                } else {
+                    // For EVM chains, use erc20Balance
+                    usdcHex = try await WalletKit.instance.erc20Balance(
                         chainId: chainString,
-                        token: selectedNetwork.usdsContractAddress,
+                        token: selectedNetwork.usdcContractAddress,
                         owner: owner
                     )
+                    usdtHex = try await WalletKit.instance.erc20Balance(
+                        chainId: chainString,
+                        token: selectedNetwork.usdtContractAddress,
+                        owner: owner
+                    )
+                    
+                    // Get USDS balance (if supported on this network)
+                    if !selectedNetwork.usdsContractAddress.isEmpty {
+                        usdsHex = try await WalletKit.instance.erc20Balance(
+                            chainId: chainString,
+                            token: selectedNetwork.usdsContractAddress,
+                            owner: owner
+                        )
+                    }
                 }
 
                 // 2) Convert hex balances to Decimal with appropriate decimals
@@ -152,6 +204,14 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                 }
             }
         }
+    }
+    
+    /// Placeholder method for fetching Solana token balances
+    private func solanaBalance(token: String, owner: String) -> String {
+        // This is just a placeholder - not implemented yet
+        // In a real implementation, this would query the Solana blockchain
+        // for the SPL token balance of the given owner
+        return "0x0" // Return zero balance for now
     }
 
     /// Parse a hex string (e.g. "0x123abc") into Decimal and account for `decimals`.
@@ -192,9 +252,13 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                 AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
                 return
             } else if stableCoinChoice == .usds {
-                AlertPresenter.present(message: "USDS is not supported on Base.", type: .error)
+                AlertPresenter.present(message: "DAI is not supported on Base.", type: .error)
                 return
             }
+        } else if selectedNetwork == .Solana {
+            // Solana sending is not supported yet
+            AlertPresenter.present(message: "Sending on Solana network not supported", type: .error)
+            return
         }
 
         do {
@@ -205,6 +269,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             // Get the Solana account address (optional)
             let solanaAccount = SolanaAccountStorage().getAddress()
             let eip155Account = importAccount.account.address
+
             
             // Create an array with only non-nil accounts
             var accounts = [eip155Account]
@@ -215,7 +280,8 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             let routeResponseSuccess = try await WalletKit.instance.ChainAbstraction.prepare(
                 chainId: selectedNetwork.chainId.absoluteString,
                 from: importAccount.account.address,
-                call: call, accounts: accounts,
+                call: call, 
+                accounts: accounts,
                 localCurrency: .usd
             )
 
@@ -258,6 +324,17 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
     /// Constructs the `Call` object to send either USDC or USDT (decimal → base units)
     private func getCall() throws -> Call {
+        // Handle Solana differently from EVM chains
+        if selectedNetwork == .Solana {
+            // Solana sending is not supported in this version
+            throw Errors.unsupportedToken("Sending on Solana network not supported")
+        } else {
+            return try getEVMCall()
+        }
+    }
+    
+    /// Constructs a Call object for EVM token transfers
+    private func getEVMCall() throws -> Call {
         let eoa = try Account(
             blockchain: selectedNetwork.chainId,
             accountAddress: importAccount.account.address
@@ -270,9 +347,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         // 1) Normalize the decimal separator and try to convert to Decimal
         let normalizedAmount = amount.replacingOccurrences(of: ",", with: ".")
         guard let decimalAmount = Decimal(string: normalizedAmount) else {
-            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
-                NSLocalizedDescriptionKey: "Invalid numeric input: \(amount)"
-            ])
+            throw Errors.invalidInput("Invalid numeric input: \(amount)")
         }
 
         // Convert to base units using the appropriate number of decimals
@@ -287,9 +362,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         formatter.decimalSeparator = "." // Force decimal point
 
         guard let baseUnitsString = formatter.string(from: NSDecimalNumber(decimal: baseUnitsDecimal)) else {
-            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
-                NSLocalizedDescriptionKey: "Failed to convert amount to string"
-            ])
+            throw Errors.invalidInput("Failed to convert amount to string")
         }
 
         // 2) Determine which contract address to use
@@ -300,17 +373,20 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         case .usdt:
             tokenAddress = selectedNetwork.usdtContractAddress
         case .usds:
+            if selectedNetwork.usdsContractAddress.isEmpty {
+                throw Errors.unsupportedToken("DAI is not supported on this network")
+            }
             tokenAddress = selectedNetwork.usdsContractAddress
         }
 
-        // 3) Build the call
-        let call = WalletKit.instance.prepareERC20TransferCall(
+        // 3) Build the call for EVM
+        return WalletKit.instance.prepareERC20TransferCall(
             erc20Address: tokenAddress,
             to: recipient,
             amount: baseUnitsString
         )
-        return call
     }
+
     /// Persists the latest recipient in UserDefaults
     private func saveRecipientToUserDefaults() {
         userDefaults.set(recipient, forKey: recipientKey)

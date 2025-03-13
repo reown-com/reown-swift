@@ -83,8 +83,13 @@ final class CATransactionPresenter: ObservableObject {
     private func isDAIToken(_ tokenAddress: String, chainId: String) -> Bool {
         // Get the blockchain from the chainId string
         if let blockchain = Blockchain(chainId) {
+            // Solana doesn't support DAI
+            if blockchain.namespace == "solana" {
+                return false
+            }
+            
             // Find which L2 network this corresponds to
-            let l2Networks: [L2] = [.Arbitrium, .Optimism, .Base]
+            let l2Networks: [L2] = [.Arbitrium, .Optimism, .Base, .Solana]
             
             for network in l2Networks {
                 if network.chainId == blockchain {
