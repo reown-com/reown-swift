@@ -42,6 +42,8 @@ class SolanaBalancesProvider {
     /// The base URL for the WalletConnect RPC
     private let baseURL: String = "https://rpc.walletconnect.com/v1/account"
 
+    /// The SDK version header value
+    private let sdkVersion: String = "react-solana-5.1.8"
 
     /// Fetches Solana token balances for a given wallet address
     /// - Parameters:
@@ -71,6 +73,7 @@ class SolanaBalancesProvider {
         // 3. Create the request
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.addValue(sdkVersion, forHTTPHeaderField: "x-sdk-version")
 
         // 4. Make the request
         let (data, response) = try await URLSession.shared.data(for: request)
