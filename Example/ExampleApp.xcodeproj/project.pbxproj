@@ -76,6 +76,7 @@
 		84AEF0192D3DD9C0006E43E5 /* SendStableCoinModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */; };
 		84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */; };
 		84AEF01D2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */; };
+		84B73CAF2D833E6000EC1793 /* SolanaBalancesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B73CAE2D833E6000EC1793 /* SolanaBalancesProvider.swift */; };
 		84B8154E2991099000FAD54E /* BuildConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8154D2991099000FAD54E /* BuildConfiguration.swift */; };
 		84B8155B2992A18D00FAD54E /* NotifyMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */; };
 		84CA52172C88965C0069BB33 /* ReownRouter in Frameworks */ = {isa = PBXBuildFile; productRef = 84CA52162C88965C0069BB33 /* ReownRouter */; };
@@ -386,6 +387,7 @@
 		84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinModule.swift; sourceTree = "<group>"; };
 		84AEF01A2D3DD9F1006E43E5 /* SendStableCoinRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinRouter.swift; sourceTree = "<group>"; };
 		84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinPresenter.swift; sourceTree = "<group>"; };
+		84B73CAE2D833E6000EC1793 /* SolanaBalancesProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolanaBalancesProvider.swift; sourceTree = "<group>"; };
 		84B8154D2991099000FAD54E /* BuildConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildConfiguration.swift; sourceTree = "<group>"; };
 		84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifyMessageViewModel.swift; sourceTree = "<group>"; };
 		84CE641C27981DED00142511 /* DApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -841,6 +843,7 @@
 		84AEF0172D3DD8D3006E43E5 /* SendStableCoin */ = {
 			isa = PBXGroup;
 			children = (
+				84B73CAE2D833E6000EC1793 /* SolanaBalancesProvider.swift */,
 				84AEF0152D3DD8CA006E43E5 /* SendStableCoinView.swift */,
 				84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */,
 				84AEF01C2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift */,
@@ -1998,6 +2001,7 @@
 				C5FFEA842ADDAD6D007282A2 /* SafariViewController.swift in Sources */,
 				C55D3497295DFA750004314A /* WelcomeView.swift in Sources */,
 				8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */,
+				84B73CAF2D833E6000EC1793 /* SolanaBalancesProvider.swift in Sources */,
 				842516192D4A1168005CF70B /* L2.swift in Sources */,
 				A57879722A4F225E00F8D10B /* ImportAccount.swift in Sources */,
 				C5B2F71029705827000DBA0E /* EthereumTransaction.swift in Sources */,
