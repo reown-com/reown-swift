@@ -14,12 +14,20 @@ enum StableCoinChoice: String, CaseIterable {
         case .usdc, .usdt:
             return 6  // USDC and USDT use 6 decimals
         case .usds:
-            return 18 // USDS (DAI) uses 18 decimals
+            return 18 // USDS uses 18 decimals
         }
     }
 }
 
 final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
+    // MARK: - Error Types
+    
+    enum Errors: Error {
+        case invalidInput(String)
+        case unsupportedToken(String)
+        case networkError(String)
+    }
+    
     // MARK: - Published Properties
 
     @Published var selectedNetwork: L2 = .Arbitrium {
@@ -38,11 +46,16 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                         message: "USDT is not supported on Base.",
                         type: .error
                     )
-                } else if stableCoinChoice == .usds {
+                }
+                // USDS is supported on Base, no error needed
+            } else {
+                // Not on Base - check if USDS was selected
+                if stableCoinChoice == .usds {
                     AlertPresenter.present(
-                        message: "USDS is not supported on Base.",
+                        message: "USDS is only supported on Base.",
                         type: .error
                     )
+                    stableCoinChoice = .usdc // Revert to USDC
                 }
             }
         }
@@ -190,8 +203,12 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             if stableCoinChoice == .usdt {
                 AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
                 return
-            } else if stableCoinChoice == .usds {
-                AlertPresenter.present(message: "USDS is not supported on Base.", type: .error)
+            }
+            // USDS is supported on Base - continue
+        } else {
+            // Not on Base - check if USDS was selected
+            if stableCoinChoice == .usds {
+                AlertPresenter.present(message: "USDS is only supported on Base.", type: .error)
                 return
             }
         }
@@ -259,9 +276,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         // 1) Normalize the decimal separator and try to convert to Decimal
         let normalizedAmount = amount.replacingOccurrences(of: ",", with: ".")
         guard let decimalAmount = Decimal(string: normalizedAmount) else {
-            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
-                NSLocalizedDescriptionKey: "Invalid numeric input: \(amount)"
-            ])
+            throw Errors.invalidInput("Invalid numeric input: \(amount)")
         }
 
         // Convert to base units using the appropriate number of decimals
@@ -276,9 +291,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         formatter.decimalSeparator = "." // Force decimal point
 
         guard let baseUnitsString = formatter.string(from: NSDecimalNumber(decimal: baseUnitsDecimal)) else {
-            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
-                NSLocalizedDescriptionKey: "Failed to convert amount to string"
-            ])
+            throw Errors.invalidInput("Failed to convert amount to string")
         }
 
         // 2) Determine which contract address to use
@@ -289,6 +302,9 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         case .usdt:
             tokenAddress = selectedNetwork.usdtContractAddress
         case .usds:
+            if selectedNetwork.usdsContractAddress.isEmpty {
+                throw Errors.unsupportedToken("USDS is only supported on Base")
+            }
             tokenAddress = selectedNetwork.usdsContractAddress
         }
 

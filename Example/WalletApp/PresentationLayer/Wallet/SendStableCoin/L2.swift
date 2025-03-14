@@ -47,12 +47,13 @@ enum L2: String {
     var usdsContractAddress: String {
         switch self {
         case .Arbitrium:
-            return "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
-        case .Optimism:
-            return "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
-        case .Base:
-            // Not supported on Base
+            // Not supported on Arbitrium
             return ""
+        case .Optimism:
+            // Not supported on Optimism
+            return ""
+        case .Base:
+            return "0x820c137fa70c8691f0e44dc420a5e53c168921dc"
         }
     }
 }
