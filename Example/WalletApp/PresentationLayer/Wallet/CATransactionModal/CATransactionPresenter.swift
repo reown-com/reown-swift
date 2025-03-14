@@ -66,9 +66,9 @@ final class CATransactionPresenter: ObservableObject {
         
         // Determine token type based on the contract address (if available)
         let tokenAddress = call.to.lowercased()
-        // Check if the token is DAI/USDS based on the contract addresses
-        if isDAIToken(tokenAddress, chainId: chainId.absoluteString) {
-            self.payingTokenSymbol = "DAI"
+        // Check if the token is USDS based on the contract addresses
+        if isUSDSToken(tokenAddress, chainId: chainId.absoluteString) {
+            self.payingTokenSymbol = "USDS"
             self.payingTokenDecimals = 18
         } else {
             // Default to USDC with 6 decimals
@@ -79,8 +79,8 @@ final class CATransactionPresenter: ObservableObject {
         setupInitialState()
     }
     
-    // Helper method to determine if a token is DAI based on its address
-    private func isDAIToken(_ tokenAddress: String, chainId: String) -> Bool {
+    // Helper method to determine if a token is USDS based on its address
+    private func isUSDSToken(_ tokenAddress: String, chainId: String) -> Bool {
         // Get the blockchain from the chainId string
         if let blockchain = Blockchain(chainId) {
             // Solana doesn't support DAI
@@ -93,7 +93,7 @@ final class CATransactionPresenter: ObservableObject {
             
             for network in l2Networks {
                 if network.chainId == blockchain {
-                    // Check if this token address matches the DAI/USDS address for this network
+                    // Check if this token address matches the USDS address for this network
                     return tokenAddress.lowercased() == network.usdsContractAddress.lowercased()
                 }
             }
@@ -112,11 +112,11 @@ final class CATransactionPresenter: ObservableObject {
             
             // The fees are displayed in USD, but we want to adjust the precision based on the token's decimals
             // For USDC/USDT with 6 decimals, standard 2 decimal places is fine
-            // For DAI with 18 decimals, we might want to show more precision
+            // For USDS with 18 decimals, we might want to show more precision
             let formattedValue: String
             
             if payingTokenDecimals == 18 {
-                // For DAI/USDS (18 decimals), show more precision if needed
+                // For USDS (18 decimals), show more precision if needed
                 formattedValue = String(format: "%.4f", feeValue)
             } else {
                 // For USDC/USDT (6 decimals), standard 2 decimal places

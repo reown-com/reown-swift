@@ -109,7 +109,7 @@ struct SendStableCoinView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 24, height: 24)
-                    Text("DAI Stablecoin")
+                    Text("USDS Stablecoin")
                         .foregroundColor(.gray)
                     Spacer()
                     Text("\(presenter.usdsBalance) USDS")

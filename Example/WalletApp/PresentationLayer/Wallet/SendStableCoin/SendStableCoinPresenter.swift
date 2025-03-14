@@ -15,7 +15,7 @@ enum StableCoinChoice: String, CaseIterable {
         case .usdc, .usdt:
             return 6  // USDC and USDT use 6 decimals
         case .usds:
-            return 18 // USDS (DAI) uses 18 decimals
+            return 18 // USDS uses 18 decimals
         }
     }
 }
@@ -62,19 +62,24 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                         message: "USDT is not supported on Base.",
                         type: .error
                     )
-                } else if stableCoinChoice == .usds {
-                    AlertPresenter.present(
-                        message: "DAI is not supported on Base.",
-                        type: .error
-                    )
                 }
+                // USDS is supported on Base, no error needed
             } else if selectedNetwork == .Solana {
                 if stableCoinChoice == .usds {
                     AlertPresenter.present(
-                        message: "DAI is not supported on Solana.",
+                        message: "USDS is not supported on Solana.",
                         type: .error
                     )
                     stableCoinChoice = .usdc
+                }
+            } else {
+                // Not on Base or Solana - check if USDS was selected
+                if stableCoinChoice == .usds {
+                    AlertPresenter.present(
+                        message: "USDS is only supported on Base.",
+                        type: .error
+                    )
+                    stableCoinChoice = .usdc // Revert to USDC
                 }
             }
         }
