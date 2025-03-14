@@ -244,7 +244,8 @@ final class CATransactionPresenter: ObservableObject {
         let chainIdToNetwork = [
             "eip155:10": "Optimism",
             "eip155:42161": "Arbitrium",
-            "eip155:8453": "Base"
+            "eip155:8453": "Base",
+            "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": "Solana"
         ]
         return chainIdToNetwork[chainId]!
     }

@@ -26,7 +26,7 @@ struct WalletKitClientFactory {
             #endif
         }()
 
-        let chainAbstractionClient = ChainAbstractionClient(projectId: usedProjectId, pulseMetadata: metadata)
+        let chainAbstractionClient = ChainAbstractionClient.newWithBlockchainApiUrl(projectId: usedProjectId, pulseMetadata: metadata, blockchainApiUrl: "https://criterion-deviant-trend-indexed.trycloudflare.com/")
         let ChainAbstractionNamespace = ChainAbstractionNamespace(chainAbstractionClient: chainAbstractionClient)
 
         return WalletKitClient(

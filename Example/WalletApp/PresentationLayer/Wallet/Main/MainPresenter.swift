@@ -104,8 +104,8 @@ extension MainPresenter {
                 input: tx.data
             )
 
-            let solanaAccount = SolanaAccountStorage().getAddress()
-            let eip155Account = importAccount.account.address
+            let solanaAccount = SolanaAccountStorage().getCaip10Account()?.absoluteString
+            let eip155Account = importAccount.account.absoluteString
 
             // Create an array with only non-nil accounts
             var accounts = [eip155Account]

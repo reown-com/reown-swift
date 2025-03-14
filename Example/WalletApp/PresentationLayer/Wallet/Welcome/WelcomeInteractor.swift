@@ -20,6 +20,7 @@ final class WelcomeInteractor {
 import Foundation
 import SolanaSwift
 import TweetNacl
+import ReownWalletKit
 
 class SolanaAccountStorage {
     enum Errors: Error {
@@ -27,10 +28,11 @@ class SolanaAccountStorage {
     }
     
     static var storageKey = "solana_privateKey"
-    
+    private let chainId: Blockchain = Blockchain("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")!
+
     /// Saves a private key to UserDefaults and returns the created account
     @discardableResult
-    func savePrivateKey(_ privateKey: String) -> Account? {
+    func savePrivateKey(_ privateKey: String) -> SolanaSwift.Account? {
         do {
             let account = try createAccount(from: privateKey)
             UserDefaults.standard.set(privateKey, forKey: Self.storageKey)
@@ -56,9 +58,14 @@ class SolanaAccountStorage {
             return nil
         }
     }
-    
+
+    func getCaip10Account() -> ReownWalletKit.Account? {
+        guard let address = getAddress() else { return nil }
+        return Account(blockchain: chainId, address: address)!
+    }
+
     /// Returns a Solana Account object from the stored private key
-    func getAccount() -> Account? {
+    func getAccount() -> SolanaSwift.Account? {
         guard let privateKey = getPrivateKey() else { return nil }
         
         do {
@@ -69,9 +76,9 @@ class SolanaAccountStorage {
     }
     
     /// Creates a Solana account from a private key
-    func createAccount(from privateKey: String) throws -> Account {
-        let secretKey = Data(Base58.decode(privateKey))
-        
+    func createAccount(from privateKey: String) throws -> SolanaSwift.Account {
+        let secretKey = Data(SolanaSwift.Base58.decode(privateKey))
+
         do {
             return try Account(secretKey: secretKey)
         } catch {
