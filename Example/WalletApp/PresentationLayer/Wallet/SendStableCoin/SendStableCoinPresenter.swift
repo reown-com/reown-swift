@@ -443,15 +443,6 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     
     /// Constructs a Call object for EVM token transfers
     private func getEVMCall() throws -> Call {
-        let eoa = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: importAccount.account.address
-        )
-        let toAccount = try Account(
-            blockchain: selectedNetwork.chainId,
-            accountAddress: recipient
-        )
-
         // 1) Normalize the decimal separator and try to convert to Decimal
         let normalizedAmount = amount.replacingOccurrences(of: ",", with: ".")
         guard let decimalAmount = Decimal(string: normalizedAmount) else {

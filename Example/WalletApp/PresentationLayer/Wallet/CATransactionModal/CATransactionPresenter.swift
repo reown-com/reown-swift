@@ -2,7 +2,6 @@ import UIKit
 import Combine
 import ReownWalletKit
 import Foundation
-import TweetNacl
 
 final class CATransactionPresenter: ObservableObject {
     enum Errors: LocalizedError {
@@ -171,7 +170,7 @@ final class CATransactionPresenter: ObservableObject {
                     routeTxnSigs.append(.eip155(eip155Sigs))
                 case .solana(let solanaTxnDetails):
                     var solanaSigs = [String]()
-                    guard let solAccount = SolanaAccountStorage().getAccount() else {
+                    guard let privateKey = SolanaAccountStorage().getPrivateKey() else {
                         throw Errors.noSolanaAccountFound
                     }
                     for txnDetail in solanaTxnDetails {
@@ -179,14 +178,9 @@ final class CATransactionPresenter: ObservableObject {
 
                         let hash = txnDetail.transactionHashToSign
 
+                        let signature = try solanaSignPrehashWithBase58Key(base58Key: privateKey, message: hash)
 
-                        let signature = try! NaclSign.signDetached(
-                            message: hash.rawRepresentation,
-                            secretKey: solAccount.secretKey
-                        )
-                        let sig = Base58.encode(signature)
-
-                        solanaSigs.append(sig)
+                        solanaSigs.append(signature)
                         print("🔑 Signed transaction hash: \(hash)")
                     }
                     routeTxnSigs.append(.solana(solanaSigs))
