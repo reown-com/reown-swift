@@ -178,7 +178,7 @@ final class CATransactionPresenter: ObservableObject {
 
                         let hash = txnDetail.transactionHashToSign
 
-                        let signature = try solanaSignPrehashWithBase58Key(base58Key: privateKey, message: hash)
+                        let signature = solanaSignPrehash(keypair: privateKey, message: hash)
 
                         solanaSigs.append(signature)
                         print("🔑 Signed transaction hash: \(hash)")

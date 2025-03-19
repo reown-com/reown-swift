@@ -76,7 +76,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                 // Not on Base or Solana - check if USDS was selected
                 if stableCoinChoice == .usds {
                     AlertPresenter.present(
-                        message: "USDS is only supported on Base.",
+                        message: "USDS is only supported on \(selectedNetwork.rawValue).",
                         type: .error
                     )
                     stableCoinChoice = .usdc // Revert to USDC
@@ -359,10 +359,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             if stableCoinChoice == .usdt {
                 AlertPresenter.present(message: "USDT is not supported on Base.", type: .error)
                 return
-            } else if stableCoinChoice == .usds {
-                AlertPresenter.present(message: "DAI is not supported on Base.", type: .error)
-                return
-            }
+            } 
         } else if selectedNetwork == .Solana {
             // Solana sending is not supported yet
             AlertPresenter.present(message: "Sending on Solana network not supported", type: .error)
@@ -409,9 +406,13 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                             importAccount: importAccount,
                             uiFields: UiFileds
                         )
-                    case .notRequired:
+                    case .notRequired(let routeResponseNotRequired):
                         // Possibly handle a scenario where no special routing is needed
                         self.saveRecipientToUserDefaults()
+
+                        routeResponseNotRequired.initialTransaction
+
+
                         AlertPresenter.present(message: "Routing not required", type: .success)
                     }
                 case .error(let routeResponseError):
@@ -490,4 +491,6 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     private func saveRecipientToUserDefaults() {
         userDefaults.set(recipient, forKey: recipientKey)
     }
+
+
 }
