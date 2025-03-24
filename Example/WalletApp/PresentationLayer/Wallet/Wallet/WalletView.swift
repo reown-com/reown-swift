@@ -91,7 +91,7 @@ struct WalletView: View {
                             Button {
                                 presenter.sendStableCoin()
                             } label: {
-                                Image(systemName: "paperplane.fill")
+                                Image(systemName: "dollarsign.circle.fill")
                                     .resizable()
                                     .frame(width: 40, height: 40)
                             }
@@ -101,7 +101,7 @@ struct WalletView: View {
                             Button {
                                 presenter.sendEthereum()
                             } label: {
-                                Image(systemName: "ethereum")
+                                Image(systemName: "paperplane.fill")
                                     .resizable()
                                     .frame(width: 40, height: 40)
                             }

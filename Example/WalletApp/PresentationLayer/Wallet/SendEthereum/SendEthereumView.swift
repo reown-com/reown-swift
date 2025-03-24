@@ -5,16 +5,54 @@ struct SendEthereumView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        NavigationView {
+        VStack {
+            // Top bar with title and close button
+            HStack {
+                Text("Send ETH")
+                    .font(.headline)
+                    .padding(.leading)
+                
+                Spacer()
+                
+                closeButton
+                    .padding(.trailing)
+            }
+            .padding(.top)
+            
             Form {
+                addressSection
                 balanceSection
                 recipientSection
                 amountSection
                 networkSection
-                sendButton
             }
-            .navigationTitle("Send ETH")
-            .navigationBarItems(trailing: closeButton)
+            
+            // Button moved outside the Form to avoid border styling
+            Button(action: {
+                Task {
+                    do {
+                        try await presenter.send()
+                    } catch {
+                        print("Error sending ETH: \(error)")
+                    }
+                }
+            }) {
+                Text("Send")
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.blue, .purple]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
     }
     
@@ -23,6 +61,17 @@ struct SendEthereumView: View {
             Image(systemName: "xmark")
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.primary)
+        }
+    }
+    
+    private var addressSection: some View {
+        Section(header: Text("MY ADDRESS")) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(presenter.importAccount.account.address)
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+            }
         }
     }
     
@@ -56,21 +105,6 @@ struct SendEthereumView: View {
                 Text("ETH")
                     .foregroundColor(.secondary)
             }
-            
-            HStack {
-                Spacer()
-                Button("MAX") {
-                    presenter.amount = presenter.ethBalance
-                }
-                .font(.caption)
-                .foregroundColor(.blue)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 4)
-                        .strokeBorder(Color.blue, lineWidth: 1)
-                )
-            }
         }
     }
     
@@ -83,38 +117,6 @@ struct SendEthereumView: View {
                 }
             }
             .pickerStyle(MenuPickerStyle())
-        }
-    }
-    
-    private var sendButton: some View {
-        Section {
-            Button(action: {
-                Task {
-                    do {
-                        try await presenter.send()
-                    } catch {
-                        print("Error sending ETH: \(error)")
-                    }
-                }
-            }) {
-                Text("Send ETH")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .foregroundColor(.white)
-                    .padding(.vertical, 12)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color.blue100,
-                                Color.blue200
-                            ]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(8)
-            }
-            .buttonStyle(PlainButtonStyle())
         }
     }
 }
