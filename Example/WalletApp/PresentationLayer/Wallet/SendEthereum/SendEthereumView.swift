@@ -78,7 +78,7 @@ struct SendEthereumView: View {
     private var balanceSection: some View {
         Section(header: Text("BALANCE")) {
             HStack {
-                Text("Your ETH Balance")
+                Text("ETH Balance")
                 Spacer()
                 Text("\(presenter.ethBalance) ETH")
                     .fontWeight(.semibold)
@@ -88,7 +88,7 @@ struct SendEthereumView: View {
     
     private var recipientSection: some View {
         Section(header: Text("RECIPIENT")) {
-            TextField("ETH Address or ENS", text: $presenter.recipient)
+            TextField("ETH Address", text: $presenter.recipient)
                 .autocapitalization(.none)
                 .autocorrectionDisabled()
         }

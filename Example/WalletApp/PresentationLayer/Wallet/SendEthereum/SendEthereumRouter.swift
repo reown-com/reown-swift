@@ -29,6 +29,6 @@ final class SendEthereumRouter {
             chainId: chainId,
             uiFields: uiFields
         )
-        .present()
+        .present(from: viewController)
     }
 } 
