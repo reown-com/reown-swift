@@ -202,21 +202,18 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
         let decimalPlaces = 18
         let baseUnitsDecimal = decimalAmount * pow(10, decimalPlaces)
         
-        // Use a number formatter to ensure consistent string conversion
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 0 // No decimal places for base units
-        formatter.groupingSeparator = "" // No thousand separators
-        formatter.decimalSeparator = "." // Force decimal point
-        
-        guard let baseUnitsString = formatter.string(from: NSDecimalNumber(decimal: baseUnitsDecimal)) else {
-            throw Errors.invalidInput("Failed to convert amount to string")
+        // Convert to BigUInt
+        guard let baseUnitsBigInt = BigUInt(baseUnitsDecimal.description) else {
+            throw Errors.invalidInput("Failed to convert amount to BigUInt")
         }
+        
+        // Convert to hex string with "0x" prefix
+        let hexValue = "0x" + String(baseUnitsBigInt, radix: 16)
         
         // For ETH transfers, we use a standard call with empty data
         return Call(
             to: recipient,
-            value: baseUnitsString,
+            value: hexValue,
             input: "0x"
         )
     }
