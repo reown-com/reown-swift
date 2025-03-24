@@ -15,7 +15,7 @@ struct WalletView: View {
                         VStack(spacing: 10) {
                             Image("connect-template")
                             
-                            Text("Apps you connect with will appear here. To connect scan or paste the code that’s displayed in the app.")
+                            Text("Apps you connect with will appear here. To connect scan or paste the code that's displayed in the app.")
                                 .foregroundColor(.grey50)
                                 .font(.system(size: 15, weight: .regular, design: .rounded))
                                 .multilineTextAlignment(.center)
@@ -97,6 +97,16 @@ struct WalletView: View {
                             }
                             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                             .accessibilityIdentifier("sendStableCoin")
+
+                            Button {
+                                presenter.sendEthereum()
+                            } label: {
+                                Image(systemName: "ethereum")
+                                    .resizable()
+                                    .frame(width: 40, height: 40)
+                            }
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                            .accessibilityIdentifier("sendEthereum")
 
                             Button {
                                 presenter.onPasteUri()
