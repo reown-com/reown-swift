@@ -17,6 +17,17 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     
     @Published var selectedNetwork: L2 = .Arbitrium {
         didSet {
+            // Check if Solana was selected and if so, revert and show error
+            if selectedNetwork == .Solana {
+                AlertPresenter.present(
+                    message: "Sending ETH is not supported on Solana network.",
+                    type: .error
+                )
+                // Revert to previous network
+                selectedNetwork = oldValue
+                return
+            }
+            
             // Whenever the user changes networks, refetch balances
             fetchEthBalance()
         }
@@ -66,12 +77,11 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     
     /// Fetch ETH balance for the selected network
     private func fetchEthBalance() {
-        // For now, just return a mocked value
+        // For now, just return a mocked value - excluding Solana
         let mockedBalances: [L2: String] = [
             .Arbitrium: "1.5",
             .Base: "0.75",
-            .Optimism: "2.3",
-            .Solana: "3.2"
+            .Optimism: "2.3"
         ]
         
         // Use the mocked balance for the selected network, or a default value
@@ -110,6 +120,17 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     
     /// Main send method, which prepares and routes a transaction
     func send() async throws {
+        // Double-check that we're not attempting to send on Solana
+        if selectedNetwork == .Solana {
+            await MainActor.run {
+                AlertPresenter.present(
+                    message: "Sending ETH is not supported on Solana network.",
+                    type: .error
+                )
+            }
+            return
+        }
+        
         do {
             let call = try getCall()
             
