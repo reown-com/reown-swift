@@ -1,12 +1,14 @@
 import UIKit
 import Combine
 import ReownWalletKit
+import Foundation
 
 final class CATransactionPresenter: ObservableObject {
     enum Errors: LocalizedError {
         case invalidURL
         case invalidResponse
         case invalidData
+        case noSolanaAccountFound
     }
 
     // Published properties to be used in the view
@@ -19,6 +21,12 @@ final class CATransactionPresenter: ObservableObject {
     @Published var executionSpeed: String = "Fast (~20 sec)"
     @Published var transactionCompleted: Bool = false
     @Published var fundingFromNetwork: String!
+    @Published var payingTokenSymbol: String = "USDC"
+    @Published var payingTokenDecimals: Int = 6 // Default to USDC's 6 decimals
+    
+    // Formatted fees with proper decimal places
+    @Published var formattedEstimatedFees: String = ""
+    @Published var formattedBridgeFee: String = ""
 
     private let sessionRequest: Request?
     var fundingFrom: [FundingMetadata] {
@@ -54,7 +62,82 @@ final class CATransactionPresenter: ObservableObject {
         self.uiFields = uiFields
         self.networkName = network(for: chainId.absoluteString)
         self.fundingFromNetwork = network(for: fundingFrom[0].chainId)
+        
+        // Determine token type based on the contract address (if available)
+        let tokenAddress = call.to.lowercased()
+        // Check if the token is USDS based on the contract addresses
+        if isUSDSToken(tokenAddress, chainId: chainId.absoluteString) {
+            self.payingTokenSymbol = "USDS"
+            self.payingTokenDecimals = 18
+        } else {
+            // Default to USDC with 6 decimals
+            self.payingTokenSymbol = "USDC"
+            self.payingTokenDecimals = 6
+        }
+
         setupInitialState()
+    }
+    
+    // Helper method to determine if a token is USDS based on its address
+    private func isUSDSToken(_ tokenAddress: String, chainId: String) -> Bool {
+        // Get the blockchain from the chainId string
+        if let blockchain = Blockchain(chainId) {
+            // Solana doesn't support DAI
+            if blockchain.namespace == "solana" {
+                return false
+            }
+            
+            // Find which L2 network this corresponds to
+            let l2Networks: [L2] = [.Arbitrium, .Optimism, .Base, .Solana]
+            
+            for network in l2Networks {
+                if network.chainId == blockchain {
+                    // Check if this token address matches the USDS address for this network
+                    return tokenAddress.lowercased() == network.usdsContractAddress.lowercased()
+                }
+            }
+        }
+        
+        return false
+    }
+
+    // MARK: - Fee Formatting Methods
+    
+    /// Formats a fee amount string to display with proper decimal places based on token type
+    func formatFeeAmount(_ feeString: String) -> String {
+        // Check if the fee string has a currency symbol and extract the number part
+        if let numberPart = extractAmountFromFormattedString(feeString),
+           let feeValue = Double(numberPart) {
+            
+            // The fees are displayed in USD, but we want to adjust the precision based on the token's decimals
+            // For USDC/USDT with 6 decimals, standard 2 decimal places is fine
+            // For USDS with 18 decimals, we might want to show more precision
+            let formattedValue: String
+            
+            if payingTokenDecimals == 18 {
+                // For USDS (18 decimals), show more precision if needed
+                formattedValue = String(format: "%.4f", feeValue)
+            } else {
+                // For USDC/USDT (6 decimals), standard 2 decimal places
+                formattedValue = String(format: "%.2f", feeValue)
+            }
+            
+            return "$\(formattedValue)"
+        }
+        
+        // Return the original string if parsing fails
+        return feeString
+    }
+    
+    /// Extracts the numeric part from a formatted fee string (e.g. "$1.23" -> "1.23")
+    private func extractAmountFromFormattedString(_ formattedString: String) -> String? {
+        // Find the numeric part (assume it's after a currency symbol)
+        // This is a simple extraction - handles strings like "$1.23"
+        if let currencyIndex = formattedString.firstIndex(of: "$") {
+            let numberPart = formattedString[formattedString.index(after: currencyIndex)...]
+            return String(numberPart).trimmingCharacters(in: .whitespaces)
+        }
+        return nil
     }
 
     func dismiss() {
@@ -68,15 +151,40 @@ final class CATransactionPresenter: ObservableObject {
 
             let initialTxHash = uiFields.initial.transactionHashToSign
 
-            var routeTxnSigs = [B256]()
+            var routeTxnSigs = [RouteSig]()
             let signer = ETHSigner(importAccount: importAccount)
 
             print("📝 Signing route transactions...")
-            for txnDetails in uiFields.route {
-                let hash = txnDetails.transactionHashToSign
-                let sig = try! signer.signHash(hash)
-                routeTxnSigs.append(sig)
-                print("🔑 Signed transaction hash: \(hash)")
+            for route in uiFields.route {
+                switch route {
+                case .eip155(let txnDetails):
+                    var eip155Sigs = [String]()
+                    for txnDetail in txnDetails {
+                        print("EVM transaction detected")
+                        let hash = txnDetail.transactionHashToSign
+                            // sign with sol signer
+                        let sig = try! signer.signHash(hash)
+                        eip155Sigs.append(sig)
+                        print("🔑 Signed transaction hash: \(hash)")
+                    }
+                    routeTxnSigs.append(.eip155(eip155Sigs))
+                case .solana(let solanaTxnDetails):
+                    var solanaSigs = [String]()
+                    guard let privateKey = SolanaAccountStorage().getPrivateKey() else {
+                        throw Errors.noSolanaAccountFound
+                    }
+                    for txnDetail in solanaTxnDetails {
+                        print("Solana transaction detected")
+
+                        let hash = txnDetail.transactionHashToSign
+
+                        let signature = solanaSignPrehash(keypair: privateKey, message: hash)
+
+                        solanaSigs.append(signature)
+                        print("🔑 Signed transaction hash: \(hash)")
+                    }
+                    routeTxnSigs.append(.solana(solanaSigs))
+                }
             }
 
             let initialTxnSig = try! signer.signHash(initialTxHash)
@@ -130,17 +238,23 @@ final class CATransactionPresenter: ObservableObject {
         let chainIdToNetwork = [
             "eip155:10": "Optimism",
             "eip155:42161": "Arbitrium",
-            "eip155:8453": "Base"
+            "eip155:8453": "Base",
+            "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": "Solana"
         ]
         return chainIdToNetwork[chainId]!
     }
 
+    // Updated to respect token decimals
     func hexAmountToDenominatedUSDC(_ hexAmount: String) -> String {
         guard let indecValue = hexToDecimal(hexAmount) else {
             return "Invalid amount"
         }
-        let usdcValue = Double(indecValue) / 1_000_000
-        return String(format: "%.2f", usdcValue)
+        
+        // Use the appropriate divisor based on token decimals
+        let divisor = pow(10.0, Double(payingTokenDecimals))
+        let tokenValue = Double(indecValue) / divisor
+        
+        return String(format: "%.2f", tokenValue)
     }
 
     func hexToDecimal(_ hex: String) -> Int? {
@@ -149,8 +263,13 @@ final class CATransactionPresenter: ObservableObject {
     }
 
     func setupInitialState() {
+        // Get the original fee strings
         estimatedFees = uiFields.localTotal.formattedAlt
         bridgeFee = uiFields.bridge.first!.localFee.formattedAlt
+        
+        // Now format them with proper decimal places
+        formattedEstimatedFees = formatFeeAmount(estimatedFees)
+        formattedBridgeFee = formatFeeAmount(bridgeFee)
 
         if let session = WalletKit.instance.getSessions().first(where: { $0.topic == sessionRequest?.topic }) {
             self.appURL = session.peer.url
