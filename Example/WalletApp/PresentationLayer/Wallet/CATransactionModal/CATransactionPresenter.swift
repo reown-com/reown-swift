@@ -77,28 +77,6 @@ final class CATransactionPresenter: ObservableObject {
 
         setupInitialState()
     }
-    
-    // Helper method to determine if a token is USDS based on its address
-    private func isUSDSToken(_ tokenAddress: String, chainId: String) -> Bool {
-        // Get the blockchain from the chainId string
-        if let blockchain = Blockchain(chainId) {
-            // Solana doesn't support DAI
-            if blockchain.namespace == "solana" {
-                return false
-            }
-            
-            let chains: [Chain] = [.Arbitrium, .Optimism, .Base, .Solana]
-
-            for network in chains {
-                if network.chainId == blockchain {
-                    // Check if this token address matches the USDS address for this network
-                    return tokenAddress.lowercased() == network.usdsContractAddress.lowercased()
-                }
-            }
-        }
-        
-        return false
-    }
 
     // MARK: - Fee Formatting Methods
     
