@@ -111,7 +111,7 @@ struct SendEthereumView: View {
     private var networkSection: some View {
         Section(header: Text("NETWORK")) {
             Picker("Network", selection: $presenter.selectedNetwork) {
-                let supportedNetworks: [L2] = [.Arbitrium, .Base, .Optimism]
+                let supportedNetworks: [Chain] = [.Arbitrium, .Base, .Optimism]
                 ForEach(supportedNetworks, id: \.self) { network in
                     Text(network.rawValue).tag(network)
                 }

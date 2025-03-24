@@ -87,10 +87,9 @@ final class CATransactionPresenter: ObservableObject {
                 return false
             }
             
-            // Find which L2 network this corresponds to
-            let l2Networks: [L2] = [.Arbitrium, .Optimism, .Base, .Solana]
-            
-            for network in l2Networks {
+            let chains: [Chain] = [.Arbitrium, .Optimism, .Base, .Solana]
+
+            for network in chains {
                 if network.chainId == blockchain {
                     // Check if this token address matches the USDS address for this network
                     return tokenAddress.lowercased() == network.usdsContractAddress.lowercased()

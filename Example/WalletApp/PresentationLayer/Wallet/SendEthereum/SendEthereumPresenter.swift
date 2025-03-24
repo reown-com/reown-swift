@@ -15,7 +15,7 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     
     // MARK: - Published Properties
     
-    @Published var selectedNetwork: L2 = .Arbitrium {
+    @Published var selectedNetwork: Chain = .Arbitrium {
         didSet {
             // Check if Solana was selected and if so, revert and show error
             if selectedNetwork == .Solana {
@@ -69,7 +69,7 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     }
     
     /// Sets the chosen network and triggers a refresh
-    func set(network: L2) {
+    func set(network: Chain) {
         selectedNetwork = network
     }
     
@@ -78,7 +78,7 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     /// Fetch ETH balance for the selected network
     private func fetchEthBalance() {
         // For now, just return a mocked value - excluding Solana
-        let mockedBalances: [L2: String] = [
+        let mockedBalances: [Chain: String] = [
             .Arbitrium: "1.5",
             .Base: "0.75",
             .Optimism: "2.3"

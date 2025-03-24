@@ -33,7 +33,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     
     // MARK: - Published Properties
 
-    @Published var selectedNetwork: L2 = .Arbitrium {
+    @Published var selectedNetwork: Chain = .Arbitrium {
         didSet {
             // If user switches to Solana, check if we have a Solana account
             if selectedNetwork == .Solana {
@@ -127,7 +127,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
     }
 
     /// Sets the chosen network and triggers a refresh
-    func set(network: L2) {
+    func set(network: Chain) {
         selectedNetwork = network
     }
 
