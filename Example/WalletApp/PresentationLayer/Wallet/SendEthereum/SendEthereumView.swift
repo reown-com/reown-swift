@@ -80,8 +80,13 @@ struct SendEthereumView: View {
             HStack {
                 Text("ETH Balance")
                 Spacer()
-                Text("\(presenter.ethBalance) ETH")
-                    .fontWeight(.semibold)
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("\(presenter.ethBalance) ETH")
+                        .fontWeight(.semibold)
+                    Text(presenter.ethDollarValue)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
             }
         }
     }

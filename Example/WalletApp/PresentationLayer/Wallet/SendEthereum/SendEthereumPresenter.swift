@@ -42,6 +42,9 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     /// String displayed for ETH balance
     @Published var ethBalance: String = "0.00"
     
+    /// Dollar value of the ETH balance
+    @Published var ethDollarValue: String = "$0.00"
+    
     /// When true, shows the success sheet
     @Published var transactionCompleted: Bool = false
     @Published var transactionResult: String? = nil
@@ -53,6 +56,7 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     
     private let userDefaults = UserDefaults.standard
     private let recipientKey = "lastEthRecipient"
+    private let balanceProvider = EthBalanceProvider()
     
     // MARK: - Init
     
@@ -77,15 +81,32 @@ final class SendEthereumPresenter: ObservableObject, SceneViewModel {
     
     /// Fetch ETH balance for the selected network
     private func fetchEthBalance() {
-        // For now, just return a mocked value - excluding Solana
-        let mockedBalances: [Chain: String] = [
-            .Arbitrium: "1.5",
-            .Base: "0.75",
-            .Optimism: "2.3"
-        ]
-        
-        // Use the mocked balance for the selected network, or a default value
-        self.ethBalance = mockedBalances[selectedNetwork] ?? "1.0"
+        Task {
+            do {
+                // Attempt to fetch the real balance from the API
+                let address = importAccount.account.address
+                
+                let (balance, dollarValue) = try await balanceProvider.fetchBalance(
+                    address: address,
+                    chainId: selectedNetwork.chainId,
+                    tokenSymbol: "ETH"
+                )
+                
+                await MainActor.run {
+                    self.ethBalance = balance
+                    self.ethDollarValue = dollarValue
+                }
+            } catch {
+                // Set default values in case of error
+                print("Error fetching ETH balance: \(error.localizedDescription)")
+                AlertPresenter.present(message: "Error fetching ETH balance", type: .error)
+
+                await MainActor.run {
+                    self.ethBalance = "0.00"
+                    self.ethDollarValue = "$0.00"
+                }
+            }
+        }
     }
     
     /// Parse a hex string (e.g. "0x123abc") into Decimal and account for `decimals`.

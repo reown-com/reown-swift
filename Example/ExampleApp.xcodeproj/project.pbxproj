@@ -81,6 +81,7 @@
 		84B73D2B2D9161F900EC1793 /* SendEthereumPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B73D252D9161F900EC1793 /* SendEthereumPresenter.swift */; };
 		84B73D2C2D9161F900EC1793 /* SendEthereumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B73D272D9161F900EC1793 /* SendEthereumView.swift */; };
 		84B73D2E2D916B4500EC1793 /* Chain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B73D2D2D916B4500EC1793 /* Chain.swift */; };
+		84B73D302D918B0F00EC1793 /* EthBalanceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B73D2F2D918B0F00EC1793 /* EthBalanceProvider.swift */; };
 		84B8154E2991099000FAD54E /* BuildConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8154D2991099000FAD54E /* BuildConfiguration.swift */; };
 		84B8155B2992A18D00FAD54E /* NotifyMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */; };
 		84CA52172C88965C0069BB33 /* ReownRouter in Frameworks */ = {isa = PBXBuildFile; productRef = 84CA52162C88965C0069BB33 /* ReownRouter */; };
@@ -396,6 +397,7 @@
 		84B73D262D9161F900EC1793 /* SendEthereumRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendEthereumRouter.swift; sourceTree = "<group>"; };
 		84B73D272D9161F900EC1793 /* SendEthereumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendEthereumView.swift; sourceTree = "<group>"; };
 		84B73D2D2D916B4500EC1793 /* Chain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chain.swift; sourceTree = "<group>"; };
+		84B73D2F2D918B0F00EC1793 /* EthBalanceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EthBalanceProvider.swift; sourceTree = "<group>"; };
 		84B8154D2991099000FAD54E /* BuildConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildConfiguration.swift; sourceTree = "<group>"; };
 		84B8155A2992A18D00FAD54E /* NotifyMessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifyMessageViewModel.swift; sourceTree = "<group>"; };
 		84CE641C27981DED00142511 /* DApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -866,6 +868,7 @@
 			children = (
 				84B73D242D9161F900EC1793 /* SendEthereumModule.swift */,
 				84B73D252D9161F900EC1793 /* SendEthereumPresenter.swift */,
+				84B73D2F2D918B0F00EC1793 /* EthBalanceProvider.swift */,
 				84B73D262D9161F900EC1793 /* SendEthereumRouter.swift */,
 				84B73D272D9161F900EC1793 /* SendEthereumView.swift */,
 			);
@@ -2022,6 +2025,7 @@
 				C55D3497295DFA750004314A /* WelcomeView.swift in Sources */,
 				8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */,
 				84B73CAF2D833E6000EC1793 /* SolanaBalancesProvider.swift in Sources */,
+				84B73D302D918B0F00EC1793 /* EthBalanceProvider.swift in Sources */,
 				A57879722A4F225E00F8D10B /* ImportAccount.swift in Sources */,
 				C5B2F71029705827000DBA0E /* EthereumTransaction.swift in Sources */,
 				A50D53C32ABA055700A4FD8B /* NotifyPreferencesRouter.swift in Sources */,
