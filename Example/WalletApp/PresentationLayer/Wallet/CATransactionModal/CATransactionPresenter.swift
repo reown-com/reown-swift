@@ -2,6 +2,7 @@ import UIKit
 import Combine
 import ReownWalletKit
 import Foundation
+import BigInt
 
 final class CATransactionPresenter: ObservableObject {
     enum Errors: LocalizedError {
@@ -21,12 +22,15 @@ final class CATransactionPresenter: ObservableObject {
     @Published var executionSpeed: String = "Fast (~20 sec)"
     @Published var transactionCompleted: Bool = false
     @Published var fundingFromNetwork: String!
-    @Published var payingTokenSymbol: String = "USDC"
-    @Published var payingTokenDecimals: Int = 6 // Default to USDC's 6 decimals
-    
+    @Published var payingTokenSymbol: String = ""
+    @Published var payingTokenDecimals: UInt8 = 6 // Default to USDC's 6 decimals
+
     // Formatted fees with proper decimal places
     @Published var formattedEstimatedFees: String = ""
     @Published var formattedBridgeFee: String = ""
+    
+    // Dollar value of the transaction
+    @Published var payingDollarValue: String = "$0.00"
 
     private let sessionRequest: Request?
     var fundingFrom: [FundingMetadata] {
@@ -41,6 +45,9 @@ final class CATransactionPresenter: ObservableObject {
     let call: Call
     var chainId: Blockchain
     let from: String
+    
+    // Add balance provider for token balances
+    private let balanceProvider = EthBalanceProvider()
 
     private var disposeBag = Set<AnyCancellable>()
 
@@ -63,17 +70,10 @@ final class CATransactionPresenter: ObservableObject {
         self.networkName = network(for: chainId.absoluteString)
         self.fundingFromNetwork = network(for: fundingFrom[0].chainId)
         
-        // Determine token type based on the contract address (if available)
-        let tokenAddress = call.to.lowercased()
-        // Check if the token is USDS based on the contract addresses
-        if isUSDSToken(tokenAddress, chainId: chainId.absoluteString) {
-            self.payingTokenSymbol = "USDS"
-            self.payingTokenDecimals = 18
-        } else {
-            // Default to USDC with 6 decimals
-            self.payingTokenSymbol = "USDC"
-            self.payingTokenDecimals = 6
-        }
+        // Get token information from initialTransactionMetadata
+        self.payingTokenSymbol = uiFields.routeResponse.metadata.initialTransaction.symbol
+
+        self.payingTokenDecimals = uiFields.routeResponse.metadata.initialTransaction.decimals
 
         setupInitialState()
     }
@@ -108,19 +108,8 @@ final class CATransactionPresenter: ObservableObject {
         if let numberPart = extractAmountFromFormattedString(feeString),
            let feeValue = Double(numberPart) {
             
-            // The fees are displayed in USD, but we want to adjust the precision based on the token's decimals
-            // For USDC/USDT with 6 decimals, standard 2 decimal places is fine
-            // For USDS with 18 decimals, we might want to show more precision
-            let formattedValue: String
-            
-            if payingTokenDecimals == 18 {
-                // For USDS (18 decimals), show more precision if needed
-                formattedValue = String(format: "%.4f", feeValue)
-            } else {
-                // For USDC/USDT (6 decimals), standard 2 decimal places
-                formattedValue = String(format: "%.2f", feeValue)
-            }
-            
+            // Format fees consistently with 2 decimal places since they're in USD
+            let formattedValue = String(format: "%.2f", feeValue)
             return "$\(formattedValue)"
         }
         
@@ -243,44 +232,124 @@ final class CATransactionPresenter: ObservableObject {
         return chainIdToNetwork[chainId]!
     }
 
-    // Updated to respect token decimals
-    func hexAmountToDenominatedUSDC(_ hexAmount: String) -> String {
-        guard let indecValue = hexToDecimal(hexAmount) else {
+    // Updated to handle different token types based on metadata
+    func formatTokenAmount(_ hexAmount: String, decimals: UInt8) -> String {
+        // Convert hex to BigUInt for better handling of large numbers
+        let cleanHex = hexAmount.hasPrefix("0x") ? String(hexAmount.dropFirst(2)) : hexAmount
+        guard let bigUIntValue = BigUInt(cleanHex, radix: 16) else {
             return "Invalid amount"
         }
         
-        // Use the appropriate divisor based on token decimals
-        let divisor = pow(10.0, Double(payingTokenDecimals))
-        let tokenValue = Double(indecValue) / divisor
+        // Convert to Decimal for proper decimal formatting
+        let decimalValue = Decimal(string: bigUIntValue.description) ?? .zero
         
-        return String(format: "%.2f", tokenValue)
-    }
-
-    func hexToDecimal(_ hex: String) -> Int? {
-        let cleanHex = hex.hasPrefix("0x") ? String(hex.dropFirst(2)) : hex
-        return Int(cleanHex, radix: 16)
+        // Use the appropriate divisor based on token decimals
+        let divisor = pow(10, Int(decimals))
+        let tokenValue = decimalValue / divisor
+        
+        // Format based on token type
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        
+        if decimals == 18 && payingTokenSymbol == "ETH" {
+            // For ETH, show 5 decimal places
+            formatter.maximumFractionDigits = 5
+        } else if decimals == 18 {
+            // For tokens with 18 decimals (like USDS), show 4 decimal places
+            formatter.maximumFractionDigits = 4
+        } else {
+            // For tokens with fewer decimals (like USDC/USDT), show 2 decimal places
+            formatter.maximumFractionDigits = 2
+        }
+        
+        let valueString = formatter.string(from: NSDecimalNumber(decimal: tokenValue)) ?? "0.00"
+        return valueString
     }
 
     func setupInitialState() {
-        // Get the original fee strings
+        // Get transaction fees
         estimatedFees = uiFields.localTotal.formattedAlt
-        bridgeFee = uiFields.bridge.first!.localFee.formattedAlt
+        if !uiFields.bridge.isEmpty {
+            bridgeFee = uiFields.bridge.first!.localFee.formattedAlt
+        }
         
-        // Now format them with proper decimal places
+        // Format fees with proper decimal places (maintain 2 decimal places for USD values)
         formattedEstimatedFees = formatFeeAmount(estimatedFees)
         formattedBridgeFee = formatFeeAmount(bridgeFee)
 
+        // Get app URL if available
         if let session = WalletKit.instance.getSessions().first(where: { $0.topic == sessionRequest?.topic }) {
             self.appURL = session.peer.url
         }
+        
+        // Set network name
         networkName = network(for: chainId.absoluteString)
-        payingAmount = initialTransactionMetadata.amount
-
-        let tx = call
+        
+        // Get transaction amount and token information from metadata
+        let metadata = uiFields.routeResponse.metadata.initialTransaction
+        let hexAmount = metadata.amount
+        
+        // Format the paying amount with proper decimal places based on token decimals
+        payingAmount = formatTokenAmount(hexAmount, decimals: payingTokenDecimals)
+        
+        // Set the dollar value if available from uiFields (using localTotal as an approximation)
+        let formattedAlt = uiFields.localTotal.formattedAlt
+        if formattedAlt.hasPrefix("$") {
+            payingDollarValue = formattedAlt
+        }
+        
+        // Fetch token balance
+        fetchBalance()
+    }
+    
+    private func fetchBalance() {
         Task {
-            let balance = try await WalletKit.instance.erc20Balance(chainId: chainId.absoluteString, token: tx.to, owner: importAccount.account.address)
-            await MainActor.run {
-                balanceAmount = balance
+            do {
+                if payingTokenSymbol == "ETH" {
+                    // Use EthBalanceProvider for ETH balance
+                    let (balance, _) = try await balanceProvider.fetchBalance(
+                        address: importAccount.account.address,
+                        chainId: chainId,
+                        tokenSymbol: "ETH"
+                    )
+                    
+                    await MainActor.run {
+                        self.balanceAmount = balance
+                    }
+                } else {
+                    // For other tokens, check if we have a token contract address
+                    let tokenContract = initialTransactionMetadata.tokenContract
+                    if tokenContract.isEmpty || tokenContract == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" {
+                        // Native token (like ETH)
+                        let (balance, _) = try await balanceProvider.fetchBalance(
+                            address: importAccount.account.address,
+                            chainId: chainId,
+                            tokenSymbol: payingTokenSymbol
+                        )
+                        
+                        await MainActor.run {
+                            self.balanceAmount = balance
+                        }
+                    } else {
+                        // ERC20 token
+                        let hexBalance = try await WalletKit.instance.erc20Balance(
+                            chainId: chainId.absoluteString,
+                            token: tokenContract,
+                            owner: importAccount.account.address
+                        )
+                        
+                        await MainActor.run {
+                            // Convert hex balance to human-readable format using the token's decimals
+                            self.balanceAmount = formatTokenAmount(hexBalance, decimals: payingTokenDecimals)
+                        }
+                    }
+                }
+            } catch {
+                print("Error fetching balance: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.balanceAmount = "0.00"
+                }
             }
         }
     }
@@ -310,6 +379,15 @@ final class CATransactionPresenter: ObservableObject {
 
 // MARK: - SceneViewModel
 extension CATransactionPresenter: SceneViewModel {}
+
+// MARK: - Extensions for API Models
+extension FundingMetadata {
+    /// Returns the decimals as UInt8 for use with formatTokenAmount
+    var decimalsUInt8: UInt8 {
+        // First convert to Int explicitly, then to UInt8 to avoid ambiguity
+        return UInt8(Int(decimals))
+    }
+}
 
 
 
