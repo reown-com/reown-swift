@@ -1,7 +1,6 @@
 import ReownWalletKit
 
-/// Example L2 enumerations
-enum L2: String {
+enum Chain: String {
     case Arbitrium
     case Optimism
     case Base
@@ -49,7 +48,7 @@ enum L2: String {
             return "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
         }
     }
-    
+
     /// USDS contract address for each network
     var usdsContractAddress: String {
         switch self {
@@ -66,3 +65,4 @@ enum L2: String {
         }
     }
 }
+

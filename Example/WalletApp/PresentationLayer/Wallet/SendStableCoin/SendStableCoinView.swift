@@ -187,16 +187,16 @@ struct SendStableCoinView: View {
                             isPresented: $showNetworkPicker,
                             titleVisibility: .visible
                         ) {
-                            Button(L2.Arbitrium.rawValue) {
+                            Button(Chain.Arbitrium.rawValue) {
                                 presenter.set(network: .Arbitrium)
                             }
-                            Button(L2.Base.rawValue) {
+                            Button(Chain.Base.rawValue) {
                                 presenter.set(network: .Base)
                             }
-                            Button(L2.Optimism.rawValue) {
+                            Button(Chain.Optimism.rawValue) {
                                 presenter.set(network: .Optimism)
                             }
-                            Button(L2.Solana.rawValue) {
+                            Button(Chain.Solana.rawValue) {
                                 presenter.set(network: .Solana)
                             }
                             Button("Cancel", role: .cancel) {}
