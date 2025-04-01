@@ -30,9 +30,14 @@ struct CATransactionView: View {
                             Text("Paying")
                                 .foregroundColor(.gray)
                             Spacer()
-                            // Replace with the actual amount from presenter
-                            Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) USDC")
-                                .font(.system(.body, design: .monospaced))
+                            // Use the token symbol from presenter
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("\(presenter.payingAmount) \(presenter.payingTokenSymbol)")
+                                    .font(.system(.body, design: .monospaced))
+                                Text(presenter.payingDollarValue)
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
                         }
 
                         // Source of Funds Title
@@ -54,7 +59,8 @@ struct CATransactionView: View {
                                 Text("Balance")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                Text("\(presenter.hexAmountToDenominatedUSDC(presenter.balanceAmount)) USDC")
+                                // Use the token symbol from presenter
+                                Text("\(presenter.balanceAmount) \(presenter.payingTokenSymbol)")
                                     .font(.system(.body, design: .monospaced))
                             }
 
@@ -69,7 +75,7 @@ struct CATransactionView: View {
                                         .foregroundColor(.gray)
                                     Spacer()
                                     VStack(alignment: .trailing) {
-                                        Text("\(presenter.hexAmountToDenominatedUSDC(funding.amount)) \(funding.symbol)")
+                                        Text("\(presenter.formatTokenAmount(funding.amount, decimals: funding.decimalsUInt8)) \(funding.symbol)")
                                             .font(.system(.body, design: .monospaced))
                                         HStack{
                                             Text("from \(presenter.network(for: funding.chainId))")
@@ -127,7 +133,7 @@ struct CATransactionView: View {
                                 Text("Estimated Fees")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                Text("\(presenter.estimatedFees)")
+                                Text("\(presenter.formattedEstimatedFees)")
                                     .font(.system(.body, design: .monospaced))
                             }
 
@@ -136,8 +142,7 @@ struct CATransactionView: View {
                                 Text("Bridge")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                // Replace "$TODO" with actual fee if available
-                                Text("\(presenter.bridgeFee)")
+                                Text("\(presenter.formattedBridgeFee)")
                                     .font(.system(.body, design: .monospaced))
                             }
 
@@ -216,18 +221,23 @@ struct TransactionCompletedView: View {
                 .scaledToFit()
                 .frame(width: 60, height: 60)
 
-            Text("You successfully sent USDC!")
+            Text("You successfully sent \(presenter.payingTokenSymbol)!")
                 .font(.title3)
                 .foregroundColor(.gray)
 
             // Transaction details
             VStack(spacing: 24) {
                 HStack {
-                    Text("Payed")
+                    Text("Paid")
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("\(presenter.hexAmountToDenominatedUSDC(presenter.payingAmount)) USDC")
-                        .font(.system(.body, design: .monospaced))
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("\(presenter.payingAmount) \(presenter.payingTokenSymbol)")
+                            .font(.system(.body, design: .monospaced))
+                        Text(presenter.payingDollarValue)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
                     Text("on")
                     Text("\(presenter.networkName)")
                         .font(.system(.body, design: .monospaced))
@@ -238,11 +248,13 @@ struct TransactionCompletedView: View {
                         .foregroundColor(.gray)
                     Spacer()
                     ForEach(presenter.fundingFrom, id: \.chainId) { funding in
-                        Text("\(presenter.hexAmountToDenominatedUSDC(funding.amount)) \(funding.symbol)")
-                            .font(.system(.body, design: .monospaced))
-                        Text("from")
-                        Text("\(presenter.network(for: funding.chainId))")
-                            .font(.system(.body, design: .monospaced))
+                        VStack(alignment: .trailing) {
+                            Text("\(presenter.formatTokenAmount(funding.amount, decimals: funding.decimalsUInt8)) \(funding.symbol)")
+                                .font(.system(.body, design: .monospaced))
+                            Text("from \(presenter.network(for: funding.chainId))")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
             }

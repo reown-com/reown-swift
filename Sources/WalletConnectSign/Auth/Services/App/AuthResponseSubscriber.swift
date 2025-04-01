@@ -199,6 +199,7 @@ class AuthResponseSubscriber {
             controller: peerParticipant,
             namespaces: sessionNamespaces,
             sessionProperties: nil,
+            scopedProperties: nil,
             expiry: Int64(expiry)
         )
 

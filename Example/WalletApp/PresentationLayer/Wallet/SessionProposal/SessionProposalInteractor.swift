@@ -32,6 +32,20 @@ final class SessionProposalInteractor {
         let supportedChains = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
         let supportedAccounts = [Account(blockchain: Blockchain("eip155:1")!, address: ETHSigner.address)!, Account(blockchain: Blockchain("eip155:137")!, address: ETHSigner.address)!]
         */
+
+        // Define scopedProperties according to CAIP-345
+
+        let scopedProperties: [String: String] = [
+            "eip155": """
+            {
+                "walletService": [{
+                    "url": "https://rpc.walletconnect.org/v1/wallet?projectId=\(InputConfig.projectId)&st=wkca&sv=\(EnvironmentInfo.sdkName)",
+                    "methods": ["wallet_getAssets"]
+                }]
+            }
+            """
+        ]
+
         var sessionNamespaces: [String: SessionNamespace]!
 
         do {
@@ -52,7 +66,7 @@ final class SessionProposalInteractor {
             return false
         }
 
-        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties)
+        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
             return false

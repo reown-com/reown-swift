@@ -66,6 +66,23 @@ public struct AppMetadata: Codable, Equatable {
     /// Redirect links which could be manually used on wallet side.
     public let redirect: Redirect?
 
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case description
+        case url
+        case icons
+        case redirect
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.description = try container.decode(String.self, forKey: .description)
+        self.url = try container.decodeIfPresent(String.self, forKey: .url) ?? ""
+        self.icons = try container.decode([String].self, forKey: .icons)
+        self.redirect = try container.decodeIfPresent(Redirect.self, forKey: .redirect)
+    }
+
     /**
      Creates a new metadata object with the specified information.
      

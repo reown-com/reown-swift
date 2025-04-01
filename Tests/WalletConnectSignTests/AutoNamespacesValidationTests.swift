@@ -1042,11 +1042,6 @@ final class AutoNamespacesValidationTests: XCTestCase {
 
 }
 
-
-
-
-
-
 fileprivate extension Session.Proposal {
     static func stub(
         requiredNamespaces: [String: ProposalNamespace] = [:],
@@ -1059,7 +1054,8 @@ fileprivate extension Session.Proposal {
             requiredNamespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
-            proposal: SessionProposal.stub(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
+            scopedProperties: nil,
+            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:])
         )
     }
 }

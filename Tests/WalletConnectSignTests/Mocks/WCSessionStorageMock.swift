@@ -36,7 +36,7 @@ final class WCSessionStorageMock: WCSessionStorage {
     }
 
     func deleteAll() {
-        sessions = [:]
+        sessions.removeAll()
     }
 }
 

@@ -10,6 +10,7 @@ extension WCSession {
         selfPrivateKey: AgreementPrivateKey = AgreementPrivateKey(),
         namespaces: [String: SessionNamespace] = [:],
         sessionProperties: [String: String] = [:],
+        scopedProperties: [String: String]? = nil,
         requiredNamespaces: [String: ProposalNamespace] = [:],
         acknowledged: Bool = true,
         timestamp: Date = Date()
@@ -27,6 +28,7 @@ extension WCSession {
                 peerParticipant: Participant.stub(publicKey: peerKey),
                 namespaces: namespaces,
                 sessionProperties: sessionProperties,
+                scopedProperties: scopedProperties,
                 requiredNamespaces: requiredNamespaces,
                 events: [],
                 accounts: Account.stubSet(),
@@ -56,6 +58,7 @@ extension SessionType.SettleParams {
             controller: Participant.stub(),
             namespaces: SessionNamespace.stubDictionary(),
             sessionProperties: nil,
+            scopedProperties: nil,
             expiry: Int64(Date.distantFuture.timeIntervalSince1970))
     }
 }
