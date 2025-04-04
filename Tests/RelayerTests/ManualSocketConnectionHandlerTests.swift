@@ -31,6 +31,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         )
     }
     
+    
     // MARK: - Connection Tests
     
     func testHandleConnectWithNoSubscriptions() {
