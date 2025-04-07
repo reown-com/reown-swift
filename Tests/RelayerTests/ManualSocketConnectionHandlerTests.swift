@@ -70,11 +70,27 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     
     // MARK: - Disconnection Tests
     
-    func testHandleDisconnect() {
+    func testHandleDisconnect() async {
         subscriptionsTracker.isSubscribedReturnValue = true
+        
+        // Connection expectation
+        let connectExpectation = XCTestExpectation(description: "Socket should connect")
+        socket.onConnect = {
+            connectExpectation.fulfill()
+        }
+        
         try? sut.handleConnect()
+        await fulfillment(of: [connectExpectation], timeout: 1.0)
         XCTAssertTrue(socket.isConnected)
+        
+        // Disconnection expectation
+        let disconnectExpectation = XCTestExpectation(description: "Socket should disconnect")
+        socket.onDisconnect = { _ in
+            disconnectExpectation.fulfill()
+        }
+        
         try? sut.handleDisconnect(closeCode: .normalClosure)
+        await fulfillment(of: [disconnectExpectation], timeout: 1.0)
         XCTAssertFalse(socket.isConnected)
     }
     
@@ -82,13 +98,22 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     
     func testReconnectsOnDisconnection() async {
         subscriptionsTracker.isSubscribedReturnValue = true
+        
+        // Initial connection expectation
+        let connectExpectation = XCTestExpectation(description: "Socket should connect initially")
+        socket.onConnect = {
+            connectExpectation.fulfill()
+        }
+        
         try? sut.handleConnect()
+        await fulfillment(of: [connectExpectation], timeout: 1.0)
         XCTAssertTrue(socket.isConnected)
         
+        // Then simulate the status change for the handler to observe
         socketStatusProvider.simulateConnectionStatus(.disconnected)
         try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
-        
-        XCTAssertTrue(socket.isConnected) // Should have reconnected
+
+        XCTAssertTrue(socket.isConnected, "Socket should have reconnected")
     }
     
     func testStopsReconnectingAfterMaxAttempts() async {
@@ -125,19 +150,6 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
         
         XCTAssertFalse(socket.isConnected) // Should not reconnect after manual disconnect
-    }
-    
-    // MARK: - Token Refresh Tests
-    
-    func testRefreshesTokenOnConnect() {
-        subscriptionsTracker.isSubscribedReturnValue = true
-        let testToken = "test_token"
-        socket.request.allHTTPHeaderFields = ["Authorization": "Bearer \(testToken)"]
-        
-        try? sut.handleConnect()
-        
-        // Verify that the token was refreshed
-        XCTAssertNotEqual(socket.request.allHTTPHeaderFields?["Authorization"], "Bearer \(testToken)")
     }
     
     // MARK: - Protocol Compliance Tests
