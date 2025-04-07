@@ -69,12 +69,13 @@ public struct RelayClientFactory {
         }
 
         let subscriptionsTracker = SubscriptionsTracker(logger: logger)
+        let topicsTracker = TopicsTracker()
 
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
         var socketConnectionHandler: SocketConnectionHandler!
         switch socketConnectionType {
         case .automatic:    socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: subscriptionsTracker, logger: logger, socketStatusProvider: socketStatusProvider, clientIdAuthenticator: socketAuthenticator)
-        case .manual:       socketConnectionHandler = ManualSocketConnectionHandler(socket: socket, logger: logger, subscriptionsTracker: subscriptionsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
+        case .manual:       socketConnectionHandler = ManualSocketConnectionHandler(socket: socket, logger: logger, topicsTracker: topicsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
         }
 
         let dispatcher = Dispatcher(
@@ -89,6 +90,6 @@ public struct RelayClientFactory {
 
         let rpcHistory = RPCHistoryFactory.createForRelay(keyValueStorage: keyValueStorage)
 
-        return RelayClient(dispatcher: dispatcher, logger: logger, rpcHistory: rpcHistory, clientIdStorage: clientIdStorage, subscriptionsTracker: subscriptionsTracker)
+        return RelayClient(dispatcher: dispatcher, logger: logger, rpcHistory: rpcHistory, clientIdStorage: clientIdStorage, subscriptionsTracker: subscriptionsTracker, topicsTracker: topicsTracker)
     }
 }

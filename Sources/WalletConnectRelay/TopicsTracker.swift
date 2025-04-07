@@ -5,7 +5,7 @@ public protocol TopicsTracking {
     func addTopics(_ topics: [String])
     func removeTopics(_ topics: [String])
     func isTrackingAnyTopics() -> Bool
-    func getAllTopics() -> [String] 
+    func getAllTopics() -> [String]
 }
 
 // Concrete implementation of TopicsTracking

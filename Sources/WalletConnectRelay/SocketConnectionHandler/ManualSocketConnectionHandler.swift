@@ -8,7 +8,7 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     // MARK: - Dependencies
     private let socket: WebSocketConnecting
     private let logger: ConsoleLogging
-    private let subscriptionsTracker: SubscriptionsTracking
+    private let topicsTracker: TopicsTracking
     private let clientIdAuthenticator: ClientIdAuthenticating
     private let socketStatusProvider: SocketStatusProviding
     
@@ -23,13 +23,13 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     init(
         socket: WebSocketConnecting,
         logger: ConsoleLogging,
-        subscriptionsTracker: SubscriptionsTracking,
+        topicsTracker: TopicsTracking,
         clientIdAuthenticator: ClientIdAuthenticating,
         socketStatusProvider: SocketStatusProviding
     ) {
         self.socket = socket
         self.logger = logger
-        self.subscriptionsTracker = subscriptionsTracker
+        self.topicsTracker = topicsTracker
         self.clientIdAuthenticator = clientIdAuthenticator
         self.socketStatusProvider = socketStatusProvider
         
@@ -59,7 +59,11 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     
     // MARK: - Connection Handling
     func handleConnect() throws {
-
+        // Only connect if we're tracking at least one topic
+        guard topicsTracker.isTrackingAnyTopics() else {
+            logger.debug("No topics being tracked. Skipping connection.")
+            return
+        }
         
         syncQueue.async { [weak self] in
             guard let self = self else { return }

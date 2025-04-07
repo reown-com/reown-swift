@@ -41,8 +41,9 @@ final class DispatcherTests: XCTestCase {
             logger: logger
         )
         let socketStatusProvider = SocketStatusProvider(socket: webSocket, logger: logger)
+        let topicsTracker = TopicsTrackerMock()
 
-        let socketConnectionHandler = ManualSocketConnectionHandler(socket: webSocket, logger: logger, subscriptionsTracker: subscriptionsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
+        let socketConnectionHandler = ManualSocketConnectionHandler(socket: webSocket, logger: logger, topicsTracker: topicsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
         socketStatusProviderMock = SocketStatusProviderMock()
         sut = Dispatcher(
             socketFactory: webSocketFactory,

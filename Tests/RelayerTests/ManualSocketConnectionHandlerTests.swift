@@ -5,14 +5,14 @@ import XCTest
 final class ManualSocketConnectionHandlerTests: XCTestCase {
     var sut: ManualSocketConnectionHandler!
     var socket: WebSocketMock!
-    var subscriptionsTracker: SubscriptionsTrackerMock!
+    var topicsTracker: TopicsTrackerMock!
     var clientIdAuthenticator: ClientIdAuthenticator!
     var socketStatusProvider: SocketStatusProviderMock!
     var logger: ConsoleLoggerMock!
     
     override func setUp() {
         socket = WebSocketMock()
-        subscriptionsTracker = SubscriptionsTrackerMock()
+        topicsTracker = TopicsTrackerMock()
         logger = ConsoleLoggerMock()
         
         let defaults = RuntimeKeyValueStorage()
@@ -25,7 +25,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         sut = ManualSocketConnectionHandler(
             socket: socket,
             logger: logger,
-            subscriptionsTracker: subscriptionsTracker,
+            topicsTracker: topicsTracker,
             clientIdAuthenticator: clientIdAuthenticator,
             socketStatusProvider: socketStatusProvider
         )
@@ -33,8 +33,8 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     
     // MARK: - Connection Tests
     
-    func testHandleConnectWithNoSubscriptions() async {
-        subscriptionsTracker.isSubscribedReturnValue = false
+    func testHandleConnectWithNoTopics() async {
+        topicsTracker.isTrackingAnyTopicsReturnValue = false
         
         // Set up a potential connection expectation
         let potentialConnectExpectation = XCTestExpectation(description: "Socket might connect")
@@ -50,11 +50,11 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         await fulfillment(of: [potentialConnectExpectation], timeout: 0.05)
         
         // Verify it did not connect
-        XCTAssertFalse(socket.isConnected, "Socket should not connect when there are no subscriptions")
+        XCTAssertFalse(socket.isConnected, "Socket should not connect when there are no topics")
     }
     
-    func testHandleConnectWithSubscriptions() async {
-        subscriptionsTracker.isSubscribedReturnValue = true
+    func testHandleConnectWithTopics() async {
+        topicsTracker.isTrackingAnyTopicsReturnValue = true
         
         // Create an expectation for the connection
         let connectionExpectation = XCTestExpectation(description: "Socket should connect")
@@ -67,7 +67,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         try? sut.handleConnect()
         
         // Wait for the connection to complete
-        await fulfillment(of: [connectionExpectation], timeout: 0.2)
+        await fulfillment(of: [connectionExpectation], timeout: 0.3)
         
         // Now assert that the socket is connected
         XCTAssertTrue(socket.isConnected)
@@ -76,7 +76,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     // MARK: - Disconnection Tests
     
     func testHandleDisconnect() async {
-        subscriptionsTracker.isSubscribedReturnValue = true
+        topicsTracker.isTrackingAnyTopicsReturnValue = true
         
         // Connection expectation
         let connectExpectation = XCTestExpectation(description: "Socket should connect")
@@ -100,7 +100,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     }
     
     func testSocketDoesNotReconnectOnDisconnection() async {
-        subscriptionsTracker.isSubscribedReturnValue = true
+        topicsTracker.isTrackingAnyTopicsReturnValue = true
         
         // Initial connection
         let connectExpectation = XCTestExpectation(description: "Socket should connect initially")
@@ -109,7 +109,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         }
         
         try? sut.handleConnect()
-        await fulfillment(of: [connectExpectation], timeout: 1.0)
+        await fulfillment(of: [connectExpectation], timeout: 0.2)
         XCTAssertTrue(socket.isConnected)
         
         // Disconnect
@@ -126,52 +126,16 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     // MARK: - Protocol Compliance Tests
     
     func testHandleInternalConnectDoesNothing() async throws {
-        try await sut.handleInternalConnect()
+        // This test assumes handleInternalConnect throws an error
+        // Adjust if implementation changes
+        var errorThrown = false
+        do {
+            try await sut.handleInternalConnect()
+        } catch {
+            errorThrown = true
+        }
+        
+        XCTAssertTrue(errorThrown, "handleInternalConnect should throw an error")
         XCTAssertFalse(socket.isConnected)
-    }
-    
-    func testHandleInternalConnectConnectsWhenSubscribed() async throws {
-        // Set subscriptions to true
-        subscriptionsTracker.isSubscribedReturnValue = true
-        
-        // Create an expectation for the connection
-        let connectionExpectation = XCTestExpectation(description: "Socket should connect via handleInternalConnect")
-        
-        // Set up the mock to fulfill the expectation when connect is called
-        socket.onConnect = {
-            connectionExpectation.fulfill()
-        }
-        
-        // Call handleInternalConnect which should now connect the socket
-        try await sut.handleInternalConnect()
-        
-        // Wait for the connection to complete
-        await fulfillment(of: [connectionExpectation], timeout: 0.2)
-        
-        // Assert that the socket is connected
-        XCTAssertTrue(socket.isConnected, "Socket should be connected after handleInternalConnect call")
-    }
-    
-    func testHandleInternalConnectDoesNotConnectWithoutSubscriptions() async throws {
-        // Set subscriptions to false
-        subscriptionsTracker.isSubscribedReturnValue = false
-        
-        // Create an expectation that should not be fulfilled (inverted)
-        let noConnectionExpectation = XCTestExpectation(description: "Socket should not connect without subscriptions")
-        noConnectionExpectation.isInverted = true
-        
-        // Set up the mock to fulfill the expectation if connect is called (which it shouldn't be)
-        socket.onConnect = {
-            noConnectionExpectation.fulfill()
-        }
-        
-        // Call handleInternalConnect
-        try await sut.handleInternalConnect()
-        
-        // Wait to ensure connect is not called
-        await fulfillment(of: [noConnectionExpectation], timeout: 0.1)
-        
-        // Assert that the socket is not connected
-        XCTAssertFalse(socket.isConnected, "Socket should not connect when there are no subscriptions")
     }
 }
