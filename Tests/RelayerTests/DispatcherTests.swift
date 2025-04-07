@@ -34,7 +34,14 @@ final class DispatcherTests: XCTestCase {
             relayHost: "relay.walletconnect.com",
             projectId: "1012db890cf3cfb0c1cdc929add657ba"
         )
-        let socketConnectionHandler = ManualSocketConnectionHandler(socket: webSocket, logger: logger)
+        let subscriptionsTracker = SubscriptionsTracker(logger: logger)
+        let socketAuthenticator = ClientIdAuthenticator(
+            clientIdStorage: clientIdStorage,
+            logger: logger
+        )
+        let socketStatusProvider = SocketStatusProvider(socket: webSocket, logger: logger)
+
+        let socketConnectionHandler = ManualSocketConnectionHandler(socket: webSocket, logger: logger, subscriptionsTracker: subscriptionsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
         socketStatusProviderMock = SocketStatusProviderMock()
         sut = Dispatcher(
             socketFactory: webSocketFactory,
