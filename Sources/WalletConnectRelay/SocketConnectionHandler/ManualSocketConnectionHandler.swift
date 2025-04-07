@@ -109,6 +109,96 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     }
     
     func handleInternalConnect() async throws {
-        try handleConnect()
+        logger.debug("Handling internal connection.")
+        if socket.isConnected {
+            logger.debug("Socket is already connected. Will not start new connection.")
+            return
+        }
+
+        let requestTimeout: TimeInterval = 15.0
+        var isResumed = false
+
+        logger.debug("Starting connection process.")
+        logger.debug("Socket request: \(socket.request.debugDescription)")
+        refreshTokenIfNeeded()
+        socket.connect()
+
+        let connectionStatusPublisher = socketStatusProvider.socketConnectionStatusPublisher
+            .share()
+            .makeConnectable()
+
+        let connection = connectionStatusPublisher.connect()
+
+        defer {
+            logger.debug("Cancelling connection status publisher.")
+            connection.cancel()
+        }
+
+        try await withCheckedThrowingContinuation { [weak self] (continuation: CheckedContinuation<Void, Error>) in
+            guard let self = self else {
+                continuation.resume()
+                return
+            }
+
+            var cancellable: AnyCancellable?
+
+            func cleanupAndRemoveCancellable() {
+                self.logger.debug("Cleaning up any cancellable.")
+                if let c = cancellable {
+                    c.cancel()
+                    self.publishers.remove(c)
+                }
+            }
+
+            func fail(with error: Error) {
+                self.logger.debug("Failing connection with error: \(error)")
+                guard !isResumed else { return }
+                isResumed = true
+                cleanupAndRemoveCancellable()
+                continuation.resume(throwing: error)
+            }
+
+            func succeed() {
+                self.logger.debug("Connection succeeded, finalizing success flow.")
+                guard !isResumed else { return }
+                isResumed = true
+                cleanupAndRemoveCancellable()
+                continuation.resume()
+            }
+
+            self.logger.debug("Setting up subscription to connectionStatusPublisher with timeout \(requestTimeout) seconds.")
+
+            cancellable = connectionStatusPublisher
+                .setFailureType(to: NetworkError.self)
+                .timeout(.seconds(requestTimeout), scheduler: DispatchQueue.global(), customError: {
+                    self.logger.debug("Timeout triggered, returning NetworkError.connectionFailed.")
+                    return NetworkError.connectionFailed
+                })
+                .sink(
+                    receiveCompletion: { completion in
+                        self.logger.debug("Received completion: \(completion)")
+                        if case .failure(let error) = completion {
+                            self.logger.debug("Connection failed with error: \(error).")
+                            fail(with: error)
+                        }
+                    },
+                    receiveValue: { status in
+                        self.logger.debug("Received value (status): \(status)")
+                        switch status {
+                        case .connected:
+                            self.logger.debug("Connection succeeded.")
+                            succeed()
+                        case .disconnected:
+                            self.logger.debug("Disconnection observed during connection.")
+                            // For internal connections, we don't handle disconnections here
+                            // Just wait for a potential reconnection or timeout
+                        }
+                    }
+                )
+
+            if let c = cancellable {
+                self.publishers.insert(c)
+            }
+        }
     }
 }
