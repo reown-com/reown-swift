@@ -55,6 +55,8 @@ public final class RelayClient {
     private let rpcHistory: RPCHistory
     private let logger: ConsoleLogging
     private let subscriptionsTracker: SubscriptionsTracking
+    private let topicsTracker: TopicsTracking
+
 
     private let concurrentQueue = DispatchQueue(label: "com.walletconnect.sdk.relay_client", qos: .utility, attributes: .concurrent)
 
@@ -70,13 +72,15 @@ public final class RelayClient {
         logger: ConsoleLogging,
         rpcHistory: RPCHistory,
         clientIdStorage: ClientIdStoring,
-        subscriptionsTracker: SubscriptionsTracking
+        subscriptionsTracker: SubscriptionsTracking,
+        topicsTracker: TopicsTracking
     ) {
         self.logger = logger
         self.dispatcher = dispatcher
         self.rpcHistory = rpcHistory
         self.clientIdStorage = clientIdStorage
         self.subscriptionsTracker = subscriptionsTracker
+        self.topicsTracker = topicsTracker
         setUpBindings()
         setupConnectionSubscriptions()
     }
@@ -92,7 +96,7 @@ public final class RelayClient {
             .sink { [weak self] status in
                 guard let self = self else { return }
                 guard status == .connected else { return }
-                let topics = self.subscriptionsTracker.getTopics()
+                let topics = self.topicsTracker.getAllTopics()
                 Task(priority: .high) {
                     try await self.batchSubscribe(topics: topics)
                 }
@@ -156,6 +160,7 @@ public final class RelayClient {
     }
 
     public func subscribe(topic: String) async throws {
+        topicsTracker.addTopics([topic])
         logger.debug("[Subscribe] Subscribing to topic: \(topic)")
 
         let rpc = Subscribe(params: .init(topic: topic))
@@ -173,6 +178,8 @@ public final class RelayClient {
     }
 
     public func batchSubscribe(topics: [String]) async throws {
+        topicsTracker.addTopics(topics)
+
         guard !topics.isEmpty else { return }
         logger.debug("[BatchSubscribe] Subscribing to topics: \(topics)")
 
@@ -277,6 +284,7 @@ public final class RelayClient {
                 completion?(error)
             } else {
                 self?.subscriptionsTracker.removeSubscription(for: topic)
+                self?.topicsTracker.removeTopics([topic])
                 completion?(nil)
             }
         }
