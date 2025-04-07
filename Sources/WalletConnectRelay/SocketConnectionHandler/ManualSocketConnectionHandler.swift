@@ -10,10 +10,6 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     private let socketStatusProvider: SocketStatusProviding
     
     // MARK: - Configuration
-    private let defaultTimeout: Int = 60
-    private let maxImmediateAttempts = 3
-    private var reconnectionAttempts = 0
-    private var reconnectionTimer: DispatchSourceTimer?
     var isConnecting = false
     
     // MARK: - Queues
@@ -49,14 +45,8 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
                     case .connected:
                         self.logger.debug("Socket connected.")
                         self.isConnecting = false
-                        self.reconnectionAttempts = 0
-                        self.stopPeriodicReconnectionTimer()
                     case .disconnected:
                         self.logger.debug("Socket disconnected.")
-                        if self.isConnecting {
-                            self.logger.debug("Was in connecting state when disconnected.")
-                            self.handleFailedConnectionAndReconnectIfNeeded()
-                        }
                         self.isConnecting = false
                     }
                 }
@@ -109,71 +99,16 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
         }
     }
     
-    private func handleFailedConnectionAndReconnectIfNeeded() {
-        isConnecting = false
-        if reconnectionAttempts < maxImmediateAttempts {
-            reconnectionAttempts += 1
-            logger.debug("Immediate reconnection attempt \(reconnectionAttempts) of \(maxImmediateAttempts)")
-            connectSocketWithFreshToken()
-        } else {
-            logger.debug("Max immediate reconnection attempts reached. Switching to periodic reconnection.")
-            startPeriodicReconnectionTimerIfNeeded()
-        }
-    }
-    
-    private func startPeriodicReconnectionTimerIfNeeded() {
-        guard reconnectionTimer == nil else {
-            logger.debug("Reconnection timer is already running.")
-            return
-        }
-        
-        logger.debug("Starting periodic reconnection timer.")
-        reconnectionTimer = DispatchSource.makeTimerSource(queue: syncQueue)
-        let initialDelay: DispatchTime = .now() + 5.0 // 5 seconds interval
-        
-        reconnectionTimer?.schedule(deadline: initialDelay, repeating: 5.0)
-        
-        reconnectionTimer?.setEventHandler { [weak self] in
-            guard let self = self else { return }
-            self.logger.debug("Periodic reconnection attempt...")
-            if self.isConnecting {
-                self.logger.debug("Already connecting. Skipping periodic reconnection attempt.")
-                return
-            }
-            self.isConnecting = true
-            self.connectSocketWithFreshToken()
-        }
-        
-        reconnectionTimer?.resume()
-    }
-    
-    private func stopPeriodicReconnectionTimer() {
-        logger.debug("Stopping periodic reconnection timer.")
-        reconnectionTimer?.cancel()
-        reconnectionTimer = nil
-    }
-    
-    private func connectSocketWithFreshToken() {
-        refreshTokenIfNeeded()
-        socket.connect()
-    }
-    
     // MARK: - SocketConnectionHandler Protocol
     func handleDisconnect(closeCode: URLSessionWebSocketTask.CloseCode) throws {
         syncQueue.async { [weak self] in
             guard let self = self else { return }
-            self.stopPeriodicReconnectionTimer()
-            self.reconnectionAttempts = 0
             self.isConnecting = false
             self.socket.disconnect()
         }
     }
     
     func handleInternalConnect() async throws {
-        // No operation - manual mode doesn't support internal connection
-    }
-    
-    func handleDisconnection() async {
-        // No operation - manual mode doesn't support automatic reconnection
+        try handleConnect()
     }
 }

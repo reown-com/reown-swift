@@ -31,7 +31,6 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         )
     }
     
-    
     // MARK: - Connection Tests
     
     func testHandleConnectWithNoSubscriptions() async {
@@ -54,7 +53,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         XCTAssertFalse(socket.isConnected, "Socket should not connect when there are no subscriptions")
     }
     
-    func testHandleConnectWithSubscriptions() {
+    func testHandleConnectWithSubscriptions() async {
         subscriptionsTracker.isSubscribedReturnValue = true
         
         // Create an expectation for the connection
@@ -68,7 +67,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         try? sut.handleConnect()
         
         // Wait for the connection to complete
-        wait(for: [connectionExpectation], timeout: 1.0)
+        await fulfillment(of: [connectionExpectation], timeout: 0.2)
         
         // Now assert that the socket is connected
         XCTAssertTrue(socket.isConnected)
@@ -86,7 +85,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         }
         
         try? sut.handleConnect()
-        await fulfillment(of: [connectExpectation], timeout: 1.0)
+        await fulfillment(of: [connectExpectation], timeout: 0.2)
         XCTAssertTrue(socket.isConnected)
         
         // Disconnection expectation
@@ -100,30 +99,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         XCTAssertFalse(socket.isConnected)
     }
     
-    // MARK: - Reconnection Tests
-    
-    func testReconnectsOnDisconnection() async {
-        subscriptionsTracker.isSubscribedReturnValue = true
-        
-        // Initial connection expectation
-        let connectExpectation = XCTestExpectation(description: "Socket should connect initially")
-        socket.onConnect = {
-            connectExpectation.fulfill()
-        }
-        
-        try? sut.handleConnect()
-        await fulfillment(of: [connectExpectation], timeout: 1.0)
-        XCTAssertTrue(socket.isConnected)
-        
-        // Then simulate the status change for the handler to observe
-        socketStatusProvider.simulateConnectionStatus(.disconnected)
-        try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
-
-        XCTAssertTrue(socket.isConnected, "Socket should have reconnected")
-    }
-
-    
-    func testStopsReconnectingOnManualDisconnect() async {
+    func testSocketDoesNotReconnectOnDisconnection() async {
         subscriptionsTracker.isSubscribedReturnValue = true
         
         // Initial connection
@@ -136,29 +112,15 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         await fulfillment(of: [connectExpectation], timeout: 1.0)
         XCTAssertTrue(socket.isConnected)
         
-        // Trigger automatic reconnection flow
+        // Disconnect
         socket.disconnect()
         socketStatusProvider.simulateConnectionStatus(.disconnected)
         
-        // Wait for the reconnection to happen
+        // Give time for any potential reconnection attempts (which should not happen)
         try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
         
-        // Socket should have reconnected automatically
-        XCTAssertTrue(socket.isConnected, "Socket should have reconnected automatically")
-        
-        // Now manually disconnect
-        try? sut.handleDisconnect(closeCode: .normalClosure)
-        try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
-        XCTAssertFalse(socket.isConnected, "Socket should be disconnected after manual disconnect")
-        
-        // Try to trigger automatic reconnection again
-        socketStatusProvider.simulateConnectionStatus(.disconnected)
-        
-        // Wait to ensure no reconnection happens
-        try? await Task.sleep(nanoseconds: 200_000_000) // Wait 0.2 seconds
-        
-        // Socket should remain disconnected after manual disconnect
-        XCTAssertFalse(socket.isConnected, "Socket should remain disconnected after manual disconnect")
+        // Verify the socket stays disconnected
+        XCTAssertFalse(socket.isConnected, "Socket should remain disconnected because ManualSocketConnectionHandler does not automatically reconnect")
     }
     
     // MARK: - Protocol Compliance Tests
@@ -168,8 +130,48 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         XCTAssertFalse(socket.isConnected)
     }
     
-    func testHandleDisconnectionDoesNothing() async {
-        await sut.handleDisconnection()
-        XCTAssertFalse(socket.isConnected)
+    func testHandleInternalConnectConnectsWhenSubscribed() async throws {
+        // Set subscriptions to true
+        subscriptionsTracker.isSubscribedReturnValue = true
+        
+        // Create an expectation for the connection
+        let connectionExpectation = XCTestExpectation(description: "Socket should connect via handleInternalConnect")
+        
+        // Set up the mock to fulfill the expectation when connect is called
+        socket.onConnect = {
+            connectionExpectation.fulfill()
+        }
+        
+        // Call handleInternalConnect which should now connect the socket
+        try await sut.handleInternalConnect()
+        
+        // Wait for the connection to complete
+        await fulfillment(of: [connectionExpectation], timeout: 0.2)
+        
+        // Assert that the socket is connected
+        XCTAssertTrue(socket.isConnected, "Socket should be connected after handleInternalConnect call")
+    }
+    
+    func testHandleInternalConnectDoesNotConnectWithoutSubscriptions() async throws {
+        // Set subscriptions to false
+        subscriptionsTracker.isSubscribedReturnValue = false
+        
+        // Create an expectation that should not be fulfilled (inverted)
+        let noConnectionExpectation = XCTestExpectation(description: "Socket should not connect without subscriptions")
+        noConnectionExpectation.isInverted = true
+        
+        // Set up the mock to fulfill the expectation if connect is called (which it shouldn't be)
+        socket.onConnect = {
+            noConnectionExpectation.fulfill()
+        }
+        
+        // Call handleInternalConnect
+        try await sut.handleInternalConnect()
+        
+        // Wait to ensure connect is not called
+        await fulfillment(of: [noConnectionExpectation], timeout: 0.1)
+        
+        // Assert that the socket is not connected
+        XCTAssertFalse(socket.isConnected, "Socket should not connect when there are no subscriptions")
     }
 }
