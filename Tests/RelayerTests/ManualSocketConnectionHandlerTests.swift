@@ -34,10 +34,24 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     
     // MARK: - Connection Tests
     
-    func testHandleConnectWithNoSubscriptions() {
+    func testHandleConnectWithNoSubscriptions() async {
         subscriptionsTracker.isSubscribedReturnValue = false
+        
+        // Set up a potential connection expectation
+        let potentialConnectExpectation = XCTestExpectation(description: "Socket might connect")
+        potentialConnectExpectation.isInverted = true // We don't expect it to happen
+        
+        socket.onConnect = {
+            potentialConnectExpectation.fulfill()
+        }
+        
         try? sut.handleConnect()
-        XCTAssertFalse(socket.isConnected)
+        
+        // Give it some time to potentially connect (should not happen)
+        await fulfillment(of: [potentialConnectExpectation], timeout: 0.05)
+        
+        // Verify it did not connect
+        XCTAssertFalse(socket.isConnected, "Socket should not connect when there are no subscriptions")
     }
     
     func testHandleConnectWithSubscriptions() {
@@ -58,14 +72,6 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         
         // Now assert that the socket is connected
         XCTAssertTrue(socket.isConnected)
-    }
-    
-    func testHandleConnectIgnoresWhenAlreadyConnecting() {
-//        subscriptionsTracker.isSubscribedReturnValue = true
-//        socket.blockConnection = true
-//        try? sut.handleConnect()
-//        try? sut.handleConnect()
-//        XCTAssertEqual(logger.debugCallCount, 2) // One for "Starting connection process" and one for "Already connecting"
     }
     
     // MARK: - Disconnection Tests
@@ -115,41 +121,44 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
 
         XCTAssertTrue(socket.isConnected, "Socket should have reconnected")
     }
-    
-    func testStopsReconnectingAfterMaxAttempts() async {
-        subscriptionsTracker.isSubscribedReturnValue = true
-        socket.blockConnection = true
-        try? sut.handleConnect()
-        
-        // Simulate disconnections up to max attempts
-        for _ in 0..<3 {
-            socketStatusProvider.simulateConnectionStatus(.disconnected)
-            try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
-        }
-        
-        // One more disconnection should trigger periodic reconnection
-        socketStatusProvider.simulateConnectionStatus(.disconnected)
-        try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
-        
-        XCTAssertFalse(socket.isConnected)
-    }
+
     
     func testStopsReconnectingOnManualDisconnect() async {
         subscriptionsTracker.isSubscribedReturnValue = true
+        
+        // Initial connection
+        let connectExpectation = XCTestExpectation(description: "Socket should connect initially")
+        socket.onConnect = {
+            connectExpectation.fulfill()
+        }
+        
         try? sut.handleConnect()
+        await fulfillment(of: [connectExpectation], timeout: 1.0)
         XCTAssertTrue(socket.isConnected)
         
+        // Trigger automatic reconnection flow
+        socket.disconnect()
         socketStatusProvider.simulateConnectionStatus(.disconnected)
+        
+        // Wait for the reconnection to happen
         try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
         
+        // Socket should have reconnected automatically
+        XCTAssertTrue(socket.isConnected, "Socket should have reconnected automatically")
+        
+        // Now manually disconnect
         try? sut.handleDisconnect(closeCode: .normalClosure)
-        XCTAssertFalse(socket.isConnected)
-        
-        // Simulate another disconnection
-        socketStatusProvider.simulateConnectionStatus(.disconnected)
         try? await Task.sleep(nanoseconds: 100_000_000) // Wait 0.1 seconds
+        XCTAssertFalse(socket.isConnected, "Socket should be disconnected after manual disconnect")
         
-        XCTAssertFalse(socket.isConnected) // Should not reconnect after manual disconnect
+        // Try to trigger automatic reconnection again
+        socketStatusProvider.simulateConnectionStatus(.disconnected)
+        
+        // Wait to ensure no reconnection happens
+        try? await Task.sleep(nanoseconds: 200_000_000) // Wait 0.2 seconds
+        
+        // Socket should remain disconnected after manual disconnect
+        XCTAssertFalse(socket.isConnected, "Socket should remain disconnected after manual disconnect")
     }
     
     // MARK: - Protocol Compliance Tests

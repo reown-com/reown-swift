@@ -14,7 +14,7 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     private let maxImmediateAttempts = 3
     private var reconnectionAttempts = 0
     private var reconnectionTimer: DispatchSourceTimer?
-    private var isConnecting = false
+    var isConnecting = false
     
     // MARK: - Queues
     private let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.manual_socket_connection.sync", qos: .utility)
