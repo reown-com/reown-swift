@@ -127,8 +127,11 @@ private extension SceneDelegate {
         Networking.configure(
             groupIdentifier: "group.com.walletconnect.sdk",
             projectId: InputConfig.projectId,
-            socketFactory: DefaultSocketFactory()
+            socketFactory: DefaultSocketFactory(),
+            socketConnectionType: .manual
         )
+        
+        try! Networking.instance.connect()
 
         let metadata = AppMetadata(
             name: "Example Wallet",

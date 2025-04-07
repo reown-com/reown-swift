@@ -12,9 +12,11 @@ final class ConfigurationService {
         Networking.configure(
             groupIdentifier: "group.com.walletconnect.sdk",
             projectId: InputConfig.projectId,
-            socketFactory: DefaultSocketFactory()
+            socketFactory: DefaultSocketFactory(),
+            socketConnectionType: .manual
         )
         Networking.instance.setLogging(level: .debug)
+        try! Networking.instance.connect()
 
         let metadata = AppMetadata(
             name: "Example Wallet",
