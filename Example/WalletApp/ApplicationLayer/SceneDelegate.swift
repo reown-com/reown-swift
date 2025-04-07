@@ -131,7 +131,7 @@ private extension SceneDelegate {
             socketConnectionType: .manual
         )
         
-        try! Networking.instance.connect()
+//        try! Networking.instance.connect()
 
         let metadata = AppMetadata(
             name: "Example Wallet",

@@ -16,7 +16,7 @@ final class ConfigurationService {
             socketConnectionType: .manual
         )
         Networking.instance.setLogging(level: .debug)
-        try! Networking.instance.connect()
+//        try! Networking.instance.connect()
 
         let metadata = AppMetadata(
             name: "Example Wallet",
