@@ -6,6 +6,10 @@ import WalletConnectKMS
 import WalletConnectNetworking
 
 public class NetworkingInteractorMock: NetworkInteracting {
+    public func subscribe(topic: String, connectUnconditionaly: Bool) async throws {
+        fatalError("not implemented")
+    }
+    
     public var isSocketConnected: Bool = true
 
 

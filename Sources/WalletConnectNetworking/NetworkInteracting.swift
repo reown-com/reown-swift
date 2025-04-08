@@ -7,6 +7,7 @@ public protocol NetworkInteracting {
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
     var requestPublisher: AnyPublisher<(topic: String, request: RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?, encryptedMessage: String, attestation: String?), Never> { get }
     func subscribe(topic: String) async throws
+    func subscribe(topic: String, connectUnconditionaly: Bool) async throws 
     func unsubscribe(topic: String)
     func batchSubscribe(topics: [String]) async throws
     func batchUnsubscribe(topics: [String]) async throws

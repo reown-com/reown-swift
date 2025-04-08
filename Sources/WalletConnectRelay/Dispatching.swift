@@ -121,7 +121,9 @@ final class Dispatcher: NSObject, Dispatching {
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                     cancellable = self.socketStatusProvider.socketConnectionStatusPublisher
                         .setFailureType(to: Error.self) // Ensure the publisher can throw errors
-                        .first(where: { $0 == .connected })
+                        .first(where: {
+                            $0 == .connected
+                        })
                         .timeout(.seconds(timeoutSeconds), scheduler: DispatchQueue.global(), customError: { NetworkError.connectionFailed })
                         .sink(receiveCompletion: { completionResult in
                             if case .failure(let error) = completionResult {

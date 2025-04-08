@@ -119,7 +119,8 @@ final class DispatcherTests: XCTestCase {
         let connectExpectation = XCTestExpectation(description: "Socket should connect when using connectUnconditionaly = true")
         
         // Set up the mock to fulfill the expectation when connect is called
-        webSocket.onConnect = {
+        webSocket.onConnect = { [weak self] in
+            self?.socketStatusProviderMock.simulateConnectionStatus(.connected)
             connectExpectation.fulfill()
         }
 

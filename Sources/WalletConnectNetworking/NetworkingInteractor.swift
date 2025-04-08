@@ -63,10 +63,14 @@ public class NetworkingInteractor: NetworkInteracting {
     }
 
 
+    public func subscribe(topic: String, connectUnconditionaly: Bool) async throws {
+        try await relayClient.subscribe(topic: topic, connectUnconditionaly: connectUnconditionaly)
+    }
+    
     public func subscribe(topic: String) async throws {
         try await relayClient.subscribe(topic: topic)
     }
-
+    
     public func unsubscribe(topic: String) {
         relayClient.unsubscribe(topic: topic) { [unowned self] error in
             if let error = error {
