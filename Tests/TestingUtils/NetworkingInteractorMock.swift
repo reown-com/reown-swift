@@ -7,8 +7,9 @@ import WalletConnectNetworking
 
 public class NetworkingInteractorMock: NetworkInteracting {
     public func subscribe(topic: String, connectUnconditionaly: Bool) async throws {
-        fatalError("not implemented")
-    }
+        defer { onSubscribeCalled?() }
+        subscriptions.append(topic)
+        didCallSubscribe = true    }
     
     public var isSocketConnected: Bool = true
 
