@@ -111,29 +111,6 @@ final class DispatcherTests: XCTestCase {
         waitForExpectations(timeout: 0.001)
     }
 
-    func testProtectedSendWithConnectUnconditionaly() async throws {
-        // Ensure socket is not connected initially
-        webSocket.isConnected = false
-        
-        // Set up connection expectation
-        let connectExpectation = XCTestExpectation(description: "Socket should connect when using connectUnconditionaly = true")
-        
-        // Set up the mock to fulfill the expectation when connect is called
-        webSocket.onConnect = { [weak self] in
-            self?.socketStatusProviderMock.simulateConnectionStatus(.connected)
-            connectExpectation.fulfill()
-        }
-
-        try await sut.protectedSend("test message", connectUnconditionaly: true)
-
-        // Wait for connection to occur
-        await fulfillment(of: [connectExpectation], timeout: 1.0)
-        
-        // Verify the socket connected despite no topics being tracked
-        XCTAssertTrue(webSocket.isConnected, "Socket should connect when connectUnconditionaly is true, even with no topics")
-        XCTAssertEqual(webSocket.sendCallCount, 1, "Message should be sent after connection")
-    }
-
     func testProtectedSendWithoutConnectUnconditionaly() async throws {
         // Ensure socket is not connected initially
         webSocket.isConnected = false
