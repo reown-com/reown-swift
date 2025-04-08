@@ -32,6 +32,11 @@ class DispatcherMock: Dispatching {
     }
 
     func protectedSend(_ string: String) async throws {
+        try await protectedSend(string, connectUnconditionaly: false)
+    }
+
+    func protectedSend(_ string: String, connectUnconditionaly: Bool) async throws {
+        lastConnectUnconditionaly = connectUnconditionaly
         try await send(string)
     }
 

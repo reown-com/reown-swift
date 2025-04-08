@@ -34,14 +34,13 @@ final class DispatcherTests: XCTestCase {
             relayHost: "relay.walletconnect.com",
             projectId: "1012db890cf3cfb0c1cdc929add657ba"
         )
-        let subscriptionsTracker = SubscriptionsTrackerMock()
-        subscriptionsTracker.isSubscribedReturnValue = true
         let socketAuthenticator = ClientIdAuthenticator(
             clientIdStorage: clientIdStorage,
             logger: logger
         )
         let socketStatusProvider = SocketStatusProvider(socket: webSocket, logger: logger)
         let topicsTracker = TopicsTrackerMock()
+        topicsTracker.isTrackingAnyTopicsReturnValue = true
 
         let socketConnectionHandler = ManualSocketConnectionHandler(socket: webSocket, logger: logger, topicsTracker: topicsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
         socketStatusProviderMock = SocketStatusProviderMock()
@@ -58,9 +57,11 @@ final class DispatcherTests: XCTestCase {
 
     func testSendWhileConnected() async {
         try! sut.connect()
+        webSocket.onConnect = {
+            
+        }
+        try! await Task.sleep(nanoseconds: 10_000_000) // 100ms
         sut.protectedSend("1") {_ in}
-        try! await Task.sleep(nanoseconds: 50_000_000) // 100ms
-
         XCTAssertEqual(webSocket.sendCallCount, 1)
     }
 
