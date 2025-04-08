@@ -112,11 +112,21 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: sessionNamespaces = \(sessionNamespaces)")
 
         print("🧪TEST: Step 3 - Subscribing to wallet.sessionProposalPublisher...")
+        let scopedProperties: [String: String] = [
+            "eip155": """
+            {
+                "walletService": [{
+                    "url": "https://your-wallet-service.com",
+                    "methods": ["wallet_getAssets"]
+                }]
+            }
+            """
+        ]
         wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
             print("🧪TEST: Wallet received a session proposal with id: \(proposal.id). Approving with sessionNamespaces.")
             Task(priority: .high) {
                 do {
-                    _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
+                    _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces, scopedProperties: scopedProperties)
                     print("🧪TEST: Wallet approved session proposal. ID: \(proposal.id)")
                 } catch {
                     XCTFail("🧪TEST: Wallet failed to approve session proposal: \(error)")
@@ -124,28 +134,61 @@ final class SignClientTests: XCTestCase {
             }
         }.store(in: &publishers)
 
+        // Capture session objects to compare scopedProperties
+        var dappSession: Session?
+        var walletSession: Session?
+
         print("🧪TEST: Step 4 - Subscribing to dapp.sessionSettlePublisher...")
         dapp.sessionSettlePublisher.sink { settledSession in
             print("🧪TEST: Dapp's sessionSettlePublisher triggered. Session topic: \(settledSession.topic)")
+            dappSession = settledSession
             dappSettlementExpectation.fulfill()
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Subscribing to wallet.sessionSettlePublisher...")
         wallet.sessionSettlePublisher.sink { settledSession in
             print("🧪TEST: Wallet's sessionSettlePublisher triggered. Session topic: \(settledSession.topic)")
+            walletSession = settledSession
             walletSettlementExpectation.fulfill()
         }.store(in: &publishers)
 
+        // Capture the proposal to verify scopedProperties
+        let proposalExpectation = expectation(description: "Wallet receives session proposal with correct scopedProperties")
+        wallet.sessionProposalPublisher
+            .first()
+            .sink { (proposal, _) in
+                // Verify the proposal contains the correct scopedProperties
+                XCTAssertEqual(proposal.scopedProperties, scopedProperties, "Session proposal should contain the correct scopedProperties")
+                proposalExpectation.fulfill()
+            }
+            .store(in: &publishers)
+
         print("🧪TEST: Step 6 - Dapp connects with required namespaces...")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try! await dapp.connect(
+            requiredNamespaces: requiredNamespaces,
+            sessionProperties: nil,
+            scopedProperties: scopedProperties
+        )
         print("🧪TEST: Dapp.connect(...) returned URI: \(uri)")
 
         print("🧪TEST: Step 7 - Wallet pairing with the URI returned by dapp...")
         try await walletPairingClient.pair(uri: uri)
         print("🧪TEST: Wallet pairing complete.")
 
-        print("🧪TEST: Step 8 - Waiting for session to settle on both dapp and wallet...")
+        print("🧪TEST: Step 8 - Waiting for proposal with scopedProperties...")
+        await fulfillment(of: [proposalExpectation], timeout: InputConfig.defaultTimeout)
+
+        print("🧪TEST: Step 9 - Waiting for session to settle on both dapp and wallet...")
         await fulfillment(of: [dappSettlementExpectation, walletSettlementExpectation], timeout: InputConfig.defaultTimeout)
+        
+        print("🧪TEST: Step 10 - Verifying scopedProperties match between dApp and wallet...")
+        XCTAssertNotNil(dappSession, "Dapp session should not be nil")
+        XCTAssertNotNil(walletSession, "Wallet session should not be nil")
+        
+        // Verify the scopedProperties are present and match the original values
+        XCTAssertEqual(dappSession?.scopedProperties, scopedProperties, "dApp scopedProperties should match the ones used in approve method")
+        XCTAssertEqual(walletSession?.scopedProperties, scopedProperties, "Wallet scopedProperties should match the ones used in approve method")
+        XCTAssertEqual(dappSession?.scopedProperties, walletSession?.scopedProperties, "dApp and wallet scopedProperties should be identical")
 
         print("🧪TEST: Finished testSessionPropose() ✅")
     }
@@ -605,6 +648,7 @@ final class SignClientTests: XCTestCase {
             requiredNamespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
+            scopedProperties: nil,
             proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
         )
 
@@ -689,6 +733,7 @@ final class SignClientTests: XCTestCase {
             requiredNamespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
+            scopedProperties: nil,
             proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
         )
 
@@ -757,6 +802,7 @@ final class SignClientTests: XCTestCase {
             requiredNamespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
+            scopedProperties: nil,
             proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
         )
 
@@ -832,6 +878,7 @@ final class SignClientTests: XCTestCase {
             requiredNamespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
+            scopedProperties: nil,
             proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
         )
 
@@ -902,6 +949,7 @@ final class SignClientTests: XCTestCase {
             requiredNamespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
+            scopedProperties: nil,
             proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
         )
 

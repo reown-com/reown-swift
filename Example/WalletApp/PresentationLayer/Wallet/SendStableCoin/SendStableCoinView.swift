@@ -102,6 +102,19 @@ struct SendStableCoinView: View {
                     Text("\(presenter.usdtBalance) USDT")
                         .font(.system(.body, design: .monospaced))
                 }
+                
+                // USDS (DAI) row
+                HStack {
+                    Image("usdt") // Reusing USDT icon as a placeholder, can be replaced with DAI icon
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                    Text("USDS Stablecoin")
+                        .foregroundColor(.gray)
+                    Spacer()
+                    Text("\(presenter.usdsBalance) USDS")
+                        .font(.system(.body, design: .monospaced))
+                }
             }
             .frame(maxWidth: .infinity)
             .padding()
@@ -114,13 +127,14 @@ struct SendStableCoinView: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Stable coin picker: USDC or USDT
+                // Stable coin picker: USDC, USDT, or USDS
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Coin")
                         .foregroundColor(.gray)
                     Picker("Stablecoin", selection: $presenter.stableCoinChoice) {
                         Text("USDC").tag(StableCoinChoice.usdc)
                         Text("USDT").tag(StableCoinChoice.usdt)
+                        Text("USDS").tag(StableCoinChoice.usds)
                     }
                     .pickerStyle(SegmentedPickerStyle())
                 }
@@ -173,14 +187,17 @@ struct SendStableCoinView: View {
                             isPresented: $showNetworkPicker,
                             titleVisibility: .visible
                         ) {
-                            Button(L2.Arbitrium.rawValue) {
+                            Button(Chain.Arbitrium.rawValue) {
                                 presenter.set(network: .Arbitrium)
                             }
-                            Button(L2.Base.rawValue) {
+                            Button(Chain.Base.rawValue) {
                                 presenter.set(network: .Base)
                             }
-                            Button(L2.Optimism.rawValue) {
+                            Button(Chain.Optimism.rawValue) {
                                 presenter.set(network: .Optimism)
+                            }
+                            Button(Chain.Solana.rawValue) {
+                                presenter.set(network: .Solana)
                             }
                             Button("Cancel", role: .cancel) {}
                         }
@@ -252,7 +269,7 @@ struct SendStableCoinCompletedView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.white)
 
-                Text("You’ve successfully sent your stablecoin transaction.")
+                Text("You've successfully sent your stablecoin transaction.")
                     .font(.body)
                     .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)

@@ -43,12 +43,21 @@ struct WelcomeView: View {
         }
         .ignoresSafeArea(.keyboard)
         .alert("Import account", isPresented: $importAlert) {
-            TextField("Private key", text: $presenter.input)
+            TextField("Ethereum Private Key", text: $presenter.input)
                 .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            
+            TextField("Solana Private Key (optional)", text: $presenter.solanaInput)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            
             Button("OK", action: presenter.onImport)
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) { 
+                presenter.input = .empty
+                presenter.solanaInput = .empty
+            }
         } message: {
-            Text("Please enter account private key")
+            Text("Please enter account private keys")
         }
     }
 

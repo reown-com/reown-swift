@@ -8,6 +8,7 @@ final class WelcomePresenter: ObservableObject {
     private var disposeBag = Set<AnyCancellable>()
 
     @Published var input: String = .empty
+    @Published var solanaInput: String = .empty
 
     init(interactor: WelcomeInteractor, router: WelcomeRouter) {
         defer {
@@ -24,6 +25,13 @@ final class WelcomePresenter: ObservableObject {
     func onImport() {
         guard let account = ImportAccount(input: input)
         else { return input = .empty }
+        
+        // Save Solana private key if provided
+        if !solanaInput.isEmpty {
+            interactor.saveSolanaPrivateKey(solanaInput)
+            solanaInput = .empty
+        }
+        
         importAccount(account)
     }
 
