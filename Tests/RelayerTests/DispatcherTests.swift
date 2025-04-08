@@ -136,22 +136,17 @@ final class DispatcherTests: XCTestCase {
     func testProtectedSendWithoutConnectUnconditionaly() async throws {
         // Ensure socket is not connected initially
         webSocket.isConnected = false
-
         
         // Create an expectation for the connection attempt
         let connectionAttemptExpectation = XCTestExpectation(description: "Connection attempt should be rejected")
         
-        // Send message with connectUnconditionaly = false
-        Task {
-            do {
-                try await sut.protectedSend("test message", connectUnconditionaly: false)
-                XCTFail("protectedSend should throw when connectUnconditionaly is false and no topics are tracked")
-            } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
-                // This is the expected error
-                connectionAttemptExpectation.fulfill()
-            } catch {
-                XCTFail("Expected internalConnectionRejected error, but got: \(error)")
-            }
+        // Send message with connectUnconditionaly = false and expect error
+        do {
+            try await sut.protectedSend("test message", connectUnconditionaly: false)
+            XCTFail("protectedSend should throw when connectUnconditionaly is false and no topics are tracked")
+        } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
+            // This is the expected error
+            connectionAttemptExpectation.fulfill()
         }
         
         // Wait for the expectation to be fulfilled
