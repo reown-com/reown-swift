@@ -16,7 +16,6 @@ final class ConfigurationService {
             socketConnectionType: .manual
         )
         Networking.instance.setLogging(level: .debug)
-//        try! Networking.instance.connect()
 
         let metadata = AppMetadata(
             name: "Example Wallet",
@@ -27,10 +26,10 @@ final class ConfigurationService {
         )
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
-//#if DEBUG
-//
-//        WalletKit.instance.set7702ForLocalInfra(address: importAccount.account.address)
-//#endif
+        WalletKit.instance
+
+        try! Networking.instance.connect()
+
         Notify.configure(
             environment: BuildConfiguration.shared.apnsEnvironment,
             crypto: DefaultCryptoProvider()

@@ -131,7 +131,6 @@ private extension SceneDelegate {
             socketConnectionType: .manual
         )
         
-//        try! Networking.instance.connect()
 
         let metadata = AppMetadata(
             name: "Example Wallet",
@@ -142,6 +141,8 @@ private extension SceneDelegate {
         )
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+        WalletKit.instance
+        try! Networking.instance.connect()
 
     }
 }
