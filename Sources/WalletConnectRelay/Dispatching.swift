@@ -7,7 +7,7 @@ protocol Dispatching {
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
     func protectedSend(_ string: String, connectUnconditionaly: Bool, completion: @escaping (Error?) -> Void)
-    func protectedSend(_ string: String) async throws
+    func protectedSend(_ string: String, connectUnconditionaly: Bool) async throws
     func connect() throws
     func disconnect(closeCode: URLSessionWebSocketTask.CloseCode) throws
 }
@@ -17,6 +17,11 @@ extension Dispatching {
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
         protectedSend(string, connectUnconditionaly: false, completion: completion)
     }
+    
+    func protectedSend(_ string: String) async throws {
+        try await protectedSend(string, connectUnconditionaly: false)
+    }
+
 }
 
 final class Dispatcher: NSObject, Dispatching {
@@ -117,7 +122,7 @@ final class Dispatcher: NSObject, Dispatching {
     }
 
 
-    func protectedSend(_ string: String) async throws {
+    func protectedSend(_ string: String, connectUnconditionaly: Bool) async throws {
         return try await withUnsafeThrowingContinuation { continuation in
             var isResumed = false
             let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.dispatcher.protectedSend")
