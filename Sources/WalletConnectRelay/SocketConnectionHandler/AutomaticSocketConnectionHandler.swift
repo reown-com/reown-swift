@@ -275,7 +275,8 @@ class AutomaticSocketConnectionHandler {
 
 extension AutomaticSocketConnectionHandler: SocketConnectionHandler {
 
-    func handleInternalConnect() async throws {
+    // ignores unconditionaly param
+    func handleInternalConnect(unconditionaly: Bool) async throws {
         logger.debug("Handling internal connection.")
         if socket.isConnected {
             logger.debug("Socket is already connected. Will not start new connection.")

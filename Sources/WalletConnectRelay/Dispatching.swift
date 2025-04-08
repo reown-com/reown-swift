@@ -64,7 +64,7 @@ final class Dispatcher: NSObject, Dispatching {
         }
     }
 
-    func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
+    func protectedSend(_ string: String, connectUnconditionaly: Bool, completion: @escaping (Error?) -> Void) {
         logger.debug("will try to send a socket frame")
         // Check if the socket is already connected and ready to send
         if socket.isConnected {
@@ -93,7 +93,7 @@ final class Dispatcher: NSObject, Dispatching {
                 try Task.checkCancellation()
 
                 // Await the connection handler to establish the connection
-                try await socketConnectionHandler.handleInternalConnect()
+                try await socketConnectionHandler.handleInternalConnect(unconditionaly: <#Bool#>)
 
                 logger.debug("internal connect successful, will try to send a socket frame")
                 // If successful, send the message

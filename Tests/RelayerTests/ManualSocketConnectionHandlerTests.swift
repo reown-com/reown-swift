@@ -125,17 +125,38 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
     
     // MARK: - Protocol Compliance Tests
     
-    func testHandleInternalConnectDoesNothing() async throws {
-        // This test assumes handleInternalConnect throws an error
-        // Adjust if implementation changes
+    func testHandleInternalConnectRejectsSubscriptionEvents() async throws {
+        // Should throw an error when unconditionaly is false (subscription event)
         var errorThrown = false
         do {
-            try await sut.handleInternalConnect()
-        } catch {
+            try await sut.handleInternalConnect(unconditionaly: false)
+        } catch ManualSocketConnectionHandler.Errors.subscriptionConnectionRejected {
+            // Expected specific error
             errorThrown = true
+        } catch {
+            XCTFail("Should throw ManualSocketConnectionHandler.Errors.subscriptionConnectionRejected but threw \(error)")
         }
         
-        XCTAssertTrue(errorThrown, "handleInternalConnect should throw an error")
+        XCTAssertTrue(errorThrown, "handleInternalConnect should throw subscriptionConnectionRejected when unconditionaly is false")
         XCTAssertFalse(socket.isConnected)
+    }
+    
+    func testHandleInternalConnectConnectsForPublishEvents() async throws {
+        // Create an expectation for the connection
+        let connectionExpectation = XCTestExpectation(description: "Socket should connect for publish events")
+        
+        // Set up the mock to fulfill the expectation when connect is called
+        socket.onConnect = {
+            connectionExpectation.fulfill()
+        }
+        
+        // Should connect when unconditionaly is true (publish event)
+        try await sut.handleInternalConnect(unconditionaly: true)
+        
+        // Wait for the connection to complete
+        await fulfillment(of: [connectionExpectation], timeout: 0.3)
+        
+        // Assert that the socket is connected
+        XCTAssertTrue(socket.isConnected, "Socket should connect when unconditionaly is true for publish events")
     }
 }

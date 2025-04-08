@@ -3,7 +3,7 @@ import Combine
 
 class ManualSocketConnectionHandler: SocketConnectionHandler {
     enum Errors: Error {
-        case x
+        case subscriptionConnectionRejected
     }
     // MARK: - Dependencies
     private let socket: WebSocketConnecting
@@ -112,7 +112,22 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
         }
     }
     
-    func handleInternalConnect() async throws {
-        throw Errors.x
+    func handleInternalConnect(unconditionaly: Bool) async throws {
+        if unconditionaly {
+            // Connect regardless of whether we're tracking any topics - handles publish events
+            logger.debug("Starting unconditional internal connection process.")
+            
+            syncQueue.sync {
+                isConnecting = true
+            }
+            
+            refreshTokenIfNeeded()
+            socket.connect()
+
+        } else {
+            // ignores on subscription events
+            logger.debug("Not connecting on internal connect")
+            throw Errors.subscriptionConnectionRejected
+        }
     }
 }
