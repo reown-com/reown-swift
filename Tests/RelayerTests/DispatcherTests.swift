@@ -156,4 +156,62 @@ final class DispatcherTests: XCTestCase {
         XCTAssertFalse(webSocket.isConnected, "Socket should not connect when connectUnconditionaly is false and no topics are tracked")
         XCTAssertEqual(webSocket.sendCallCount, 0, "No message should be sent")
     }
+
+    func testProtectedSendConnectsAndSendsSuccessfullyBeforeTimeout() async throws {
+        // Configure a short timeout for the test
+        sut.connectionTimeoutDuration = 0.2 // 200ms
+        
+        // Ensure socket starts disconnected
+        webSocket.isConnected = false
+
+        let sendExpectation = XCTestExpectation(description: "protectedSend completes successfully")
+
+
+        // Simulate connection success shortly after the call
+        Task {
+            try await Task.sleep(nanoseconds: 10_000_000) // 100ms (before timeout)
+            socketStatusProviderMock.simulateConnectionStatus(.connected)
+        }
+
+        // Call protectedSend (using the async version for cleaner testing)
+        do {
+            try await sut.protectedSend("message-before-timeout", connectUnconditionaly: true)
+            sendExpectation.fulfill()
+        } catch {
+            XCTFail("protectedSend should succeed but failed with error: \(error)")
+        }
+
+        // Wait for expectations
+        await fulfillment(of: [sendExpectation], timeout: 0.5)
+
+        // Verify message was sent
+        XCTAssertEqual(webSocket.sendCallCount, 1, "Message should be sent after successful connection")
+    }
+
+    func testProtectedSendTimesOutAndFails() async throws {
+        // Configure a very short timeout
+        sut.connectionTimeoutDuration = 0.1 // 100ms
+        
+        // Ensure socket starts disconnected
+        webSocket.isConnected = false
+
+        let errorExpectation = XCTestExpectation(description: "protectedSend fails with timeout error")
+
+        // Call protectedSend and expect a timeout error
+        do {
+            try await sut.protectedSend("message-that-will-timeout", connectUnconditionaly: true)
+            XCTFail("protectedSend should have thrown a timeout error")
+        } catch NetworkError.connectionFailed {
+            // Expected error
+            errorExpectation.fulfill()
+        } catch {
+            XCTFail("protectedSend threw an unexpected error: \(error)")
+        }
+
+        // Wait for the expected error
+        await fulfillment(of: [errorExpectation], timeout: 0.5)
+
+        // Verify no message was sent
+        XCTAssertEqual(webSocket.sendCallCount, 0, "No message should be sent after timeout")
+    }
 }

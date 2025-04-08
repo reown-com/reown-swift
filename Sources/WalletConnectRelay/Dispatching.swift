@@ -28,8 +28,10 @@ final class Dispatcher: NSObject, Dispatching {
     var onMessage: ((String) -> Void)?
     var socket: WebSocketConnecting
     var socketConnectionHandler: SocketConnectionHandler
+    
+    /// Timeout duration in seconds for waiting for the socket to connect during protectedSend.
+    var connectionTimeoutDuration: TimeInterval = 30.0
 
-    private let defaultTimeout: Int = 15
     private let relayUrlFactory: RelayUrlFactory
     private let networkMonitor: NetworkMonitoring
     private let logger: ConsoleLogging
@@ -113,7 +115,8 @@ final class Dispatcher: NSObject, Dispatching {
                 // Wait for the socket to connect with a timeout
                 logger.debug("Waiting for socket connection status")
                 
-                let timeoutSeconds = 30.0
+                // Use the configurable timeout duration
+                let timeoutSeconds = self.connectionTimeoutDuration 
                 
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                     cancellable = self.socketStatusProvider.socketConnectionStatusPublisher
