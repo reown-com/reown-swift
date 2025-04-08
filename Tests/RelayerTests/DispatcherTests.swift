@@ -56,12 +56,27 @@ final class DispatcherTests: XCTestCase {
     }
 
     func testSendWhileConnected() async {
-        try! sut.connect()
+        // Create an expectation for the connection
+        let connectExpectation = XCTestExpectation(description: "Socket should connect")
+        
+        // Set up the callback to fulfill the expectation when connected
         webSocket.onConnect = {
-            
+            connectExpectation.fulfill()
         }
-        try! await Task.sleep(nanoseconds: 10_000_000) // 100ms
+        
+        // Initiate connection
+        try! sut.connect()
+        
+        // Wait for connection to complete
+        await fulfillment(of: [connectExpectation], timeout: 0.5)
+        
+        // Verify socket is connected
+        XCTAssertTrue(webSocket.isConnected, "Socket should be connected before sending")
+        
+        // Send the message
         sut.protectedSend("1") {_ in}
+        
+        // Verify the message was sent
         XCTAssertEqual(webSocket.sendCallCount, 1)
     }
 
