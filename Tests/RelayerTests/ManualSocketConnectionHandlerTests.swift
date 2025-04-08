@@ -130,7 +130,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         var errorThrown = false
         do {
             try await sut.handleInternalConnect(unconditionaly: false)
-        } catch ManualSocketConnectionHandler.Errors.subscriptionConnectionRejected {
+        } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
             // Expected specific error
             errorThrown = true
         } catch {

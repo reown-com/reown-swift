@@ -6,10 +6,17 @@ protocol Dispatching {
     var isSocketConnected: Bool { get }
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
-    func protectedSend(_ string: String, completion: @escaping (Error?) -> Void)
+    func protectedSend(_ string: String, connectUnconditionaly: Bool, completion: @escaping (Error?) -> Void)
     func protectedSend(_ string: String) async throws
     func connect() throws
     func disconnect(closeCode: URLSessionWebSocketTask.CloseCode) throws
+}
+
+// Extension to provide default parameter value
+extension Dispatching {
+    func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
+        protectedSend(string, connectUnconditionaly: false, completion: completion)
+    }
 }
 
 final class Dispatcher: NSObject, Dispatching {
@@ -93,7 +100,7 @@ final class Dispatcher: NSObject, Dispatching {
                 try Task.checkCancellation()
 
                 // Await the connection handler to establish the connection
-                try await socketConnectionHandler.handleInternalConnect(unconditionaly: <#Bool#>)
+                try await socketConnectionHandler.handleInternalConnect(unconditionaly: connectUnconditionaly)
 
                 logger.debug("internal connect successful, will try to send a socket frame")
                 // If successful, send the message
@@ -115,7 +122,7 @@ final class Dispatcher: NSObject, Dispatching {
             var isResumed = false
             let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.dispatcher.protectedSend")
 
-            protectedSend(string) { error in
+            protectedSend(string, connectUnconditionaly: false) { error in
                 syncQueue.sync {
                     guard !isResumed else {
                         return

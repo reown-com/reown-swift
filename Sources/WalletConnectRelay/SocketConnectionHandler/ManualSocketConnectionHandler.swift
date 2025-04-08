@@ -3,7 +3,7 @@ import Combine
 
 class ManualSocketConnectionHandler: SocketConnectionHandler {
     enum Errors: Error {
-        case subscriptionConnectionRejected
+        case internalConnectionRejected
     }
     // MARK: - Dependencies
     private let socket: WebSocketConnecting
@@ -127,7 +127,7 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
         } else {
             // ignores on subscription events
             logger.debug("Not connecting on internal connect")
-            throw Errors.subscriptionConnectionRejected
+            throw Errors.internalConnectionRejected
         }
     }
 }
