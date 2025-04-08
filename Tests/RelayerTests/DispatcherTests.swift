@@ -110,4 +110,55 @@ final class DispatcherTests: XCTestCase {
         socketStatusProviderMock.simulateConnectionStatus(.disconnected)
         waitForExpectations(timeout: 0.001)
     }
+
+    func testProtectedSendWithConnectUnconditionaly() async throws {
+        // Ensure socket is not connected initially
+        webSocket.isConnected = false
+        
+        // Set up connection expectation
+        let connectExpectation = XCTestExpectation(description: "Socket should connect when using connectUnconditionaly = true")
+        
+        // Set up the mock to fulfill the expectation when connect is called
+        webSocket.onConnect = {
+            connectExpectation.fulfill()
+        }
+
+        try await sut.protectedSend("test message", connectUnconditionaly: true)
+
+        // Wait for connection to occur
+        await fulfillment(of: [connectExpectation], timeout: 1.0)
+        
+        // Verify the socket connected despite no topics being tracked
+        XCTAssertTrue(webSocket.isConnected, "Socket should connect when connectUnconditionaly is true, even with no topics")
+        XCTAssertEqual(webSocket.sendCallCount, 1, "Message should be sent after connection")
+    }
+
+    func testProtectedSendWithoutConnectUnconditionaly() async throws {
+        // Ensure socket is not connected initially
+        webSocket.isConnected = false
+
+        
+        // Create an expectation for the connection attempt
+        let connectionAttemptExpectation = XCTestExpectation(description: "Connection attempt should be rejected")
+        
+        // Send message with connectUnconditionaly = false
+        Task {
+            do {
+                try await sut.protectedSend("test message", connectUnconditionaly: false)
+                XCTFail("protectedSend should throw when connectUnconditionaly is false and no topics are tracked")
+            } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
+                // This is the expected error
+                connectionAttemptExpectation.fulfill()
+            } catch {
+                XCTFail("Expected internalConnectionRejected error, but got: \(error)")
+            }
+        }
+        
+        // Wait for the expectation to be fulfilled
+        await fulfillment(of: [connectionAttemptExpectation], timeout: 1.0)
+        
+        // Verify socket remains disconnected
+        XCTAssertFalse(webSocket.isConnected, "Socket should not connect when connectUnconditionaly is false and no topics are tracked")
+        XCTAssertEqual(webSocket.sendCallCount, 0, "No message should be sent")
+    }
 }

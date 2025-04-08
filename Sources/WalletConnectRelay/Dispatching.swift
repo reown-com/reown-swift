@@ -127,7 +127,7 @@ final class Dispatcher: NSObject, Dispatching {
             var isResumed = false
             let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.dispatcher.protectedSend")
 
-            protectedSend(string, connectUnconditionaly: false) { error in
+            protectedSend(string, connectUnconditionaly: connectUnconditionaly) { error in
                 syncQueue.sync {
                     guard !isResumed else {
                         return
