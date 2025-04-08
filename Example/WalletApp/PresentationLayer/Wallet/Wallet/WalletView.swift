@@ -89,6 +89,28 @@ struct WalletView: View {
                             Spacer()
 
                             Button {
+                                try? Networking.instance.connect()
+                            } label: {
+                                Image(systemName: "network")
+                                    .resizable()
+                                    .frame(width: 28, height: 28)
+                                    .foregroundColor(.green)
+                            }
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                            .accessibilityIdentifier("connectSocket")
+
+                            Button {
+                                try? Networking.instance.disconnect(closeCode: .normalClosure)
+                            } label: {
+                                Image(systemName: "network.slash")
+                                    .resizable()
+                                    .frame(width: 28, height: 28)
+                                    .foregroundColor(.red)
+                            }
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                            .accessibilityIdentifier("disconnectSocket")
+
+                            Button {
                                 presenter.sendStableCoin()
                             } label: {
                                 Image(systemName: "dollarsign.circle.fill")

@@ -26,9 +26,7 @@ final class ConfigurationService {
         )
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
-        WalletKit.instance
 
-        try! Networking.instance.connect()
 
         Notify.configure(
             environment: BuildConfiguration.shared.apnsEnvironment,
