@@ -118,12 +118,11 @@ final class Dispatcher: NSObject, Dispatching {
                 // Use the configurable timeout duration
                 let timeoutSeconds = self.connectionTimeoutDuration 
                 
-                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                try await withUnsafeThrowingContinuation { (continuation: UnsafeContinuation<Void, Error>) in
                     cancellable = self.socketStatusProvider.socketConnectionStatusPublisher
                         .setFailureType(to: Error.self) // Ensure the publisher can throw errors
-                        .first(where: {
-                            $0 == .connected
-                        })
+                        .filter { $0 == .connected } // Filter for connected status (handles current value too)
+                        .first() // Take the first occurrence
                         .timeout(.seconds(timeoutSeconds), scheduler: DispatchQueue.global(), customError: { NetworkError.connectionFailed })
                         .sink(receiveCompletion: { completionResult in
                             if case .failure(let error) = completionResult {
