@@ -141,22 +141,94 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         XCTAssertFalse(socket.isConnected)
     }
     
-    func testHandleInternalConnectConnectsForPublishEvents() async throws {
-        // Create an expectation for the connection
-        let connectionExpectation = XCTestExpectation(description: "Socket should connect for publish events")
+    // MARK: - InternalConnect Tests
+    
+    func testHandleInternalConnectWithUnconditionalTrue() async throws {
+        // Configure a short timeout for faster testing
+        sut.connectionTimeout = 1.0
         
-        // Set up the mock to fulfill the expectation when connect is called
+        // Set up connection expectation
+        let connectionExpectation = XCTestExpectation(description: "Socket should connect when unconditionaly is true")
+        
+        // Set up the mock to fulfill expectation on connect
         socket.onConnect = {
             connectionExpectation.fulfill()
         }
         
-        // Should connect when unconditionaly is true (publish event)
+        // Call with unconditionaly = true
+        Task {
+            try await sut.handleInternalConnect(unconditionaly: true)
+        }
+        
+        // Wait a brief moment for the connection attempt
+        try await Task.sleep(nanoseconds: 10_000_000) // 10ms delay
+        
+        // Simulate successful connection
+        socketStatusProvider.simulateConnectionStatus(.connected)
+        
+        // Wait for the connection expectation to be fulfilled
+        await fulfillment(of: [connectionExpectation], timeout: 1.5)
+        
+        // Verify socket was connected
+        XCTAssertTrue(socket.isConnected, "Socket should connect when unconditionaly is true")
+    }
+    
+    func testHandleInternalConnectWithUnconditionalFalse() async {
+        // When unconditionaly is false, handleInternalConnect should throw an error
+        var errorThrown = false
+        
+        do {
+            try await sut.handleInternalConnect(unconditionaly: false)
+            XCTFail("handleInternalConnect should throw when unconditionaly is false")
+        } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
+            // This is the expected error
+            errorThrown = true
+        } catch {
+            XCTFail("Unexpected error thrown: \(error)")
+        }
+        
+        XCTAssertTrue(errorThrown, "Expected internalConnectionRejected error to be thrown")
+        XCTAssertFalse(socket.isConnected, "Socket should not be connected")
+    }
+    
+    func testHandleInternalConnectTimeout() async {
+        // Set a very short timeout
+        sut.connectionTimeout = 0.1 // 100ms
+        
+        // Create a socket mock that blocks connection attempts
+        socket.blockConnection = true 
+        
+        // Attempt to connect with unconditionaly = true
+        do {
+            try await sut.handleInternalConnect(unconditionaly: true)
+            XCTFail("handleInternalConnect should timeout and throw")
+        } catch NetworkError.connectionFailed {
+            // This is the expected timeout error
+            XCTAssertFalse(socket.isConnected, "Socket should remain disconnected after timeout")
+        } catch {
+            XCTFail("Unexpected error thrown: \(error)")
+        }
+    }
+    
+    func testHandleInternalConnectAlreadyConnected() async throws {
+        // Set socket to already connected
+        socket.isConnected = true
+        
+        // Call with unconditionaly = true
         try await sut.handleInternalConnect(unconditionaly: true)
         
-        // Wait for the connection to complete
-        await fulfillment(of: [connectionExpectation], timeout: 0.3)
+        // Verify no additional connect attempt was made
+        XCTAssertEqual(socket.connectCallCount, 0, "Socket.connect() should not be called when already connected")
+    }
+    
+    func testHandleInternalConnectAlreadyConnecting() async throws {
+        // Set up the handler to be already in connecting state
+        sut.isConnecting = true
         
-        // Assert that the socket is connected
-        XCTAssertTrue(socket.isConnected, "Socket should connect when unconditionaly is true for publish events")
+        // Call with unconditionaly = true
+        try await sut.handleInternalConnect(unconditionaly: true)
+        
+        // Verify no connect attempt was made
+        XCTAssertEqual(socket.connectCallCount, 0, "Socket.connect() should not be called when already connecting")
     }
 }

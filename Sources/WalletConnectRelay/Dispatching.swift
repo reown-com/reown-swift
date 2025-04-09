@@ -29,8 +29,6 @@ final class Dispatcher: NSObject, Dispatching {
     var socket: WebSocketConnecting
     var socketConnectionHandler: SocketConnectionHandler
     
-    /// Timeout duration in seconds for waiting for the socket to connect during protectedSend.
-    var connectionTimeoutDuration: TimeInterval = 30.0
 
     private let relayUrlFactory: RelayUrlFactory
     private let networkMonitor: NetworkMonitoring
@@ -102,51 +100,22 @@ final class Dispatcher: NSObject, Dispatching {
         logger.debug("Socket is not connected, will try to connect to send a frame")
         // Start the connection process if not already connected
         Task {
-            var cancellable: AnyCancellable? // Keep cancellable in scope
-            defer { cancellable?.cancel() } // Ensure the subscription is cancelled on exit
-
             do {
                 // Check for task cancellation
                 try Task.checkCancellation()
 
                 // Await the connection handler to establish the connection
                 try await socketConnectionHandler.handleInternalConnect(unconditionaly: connectUnconditionaly)
-                
-                // Wait for the socket to connect with a timeout
-                logger.debug("Waiting for socket connection status")
-                
-                // Use the configurable timeout duration
-                let timeoutSeconds = self.connectionTimeoutDuration 
-                
-                try await withUnsafeThrowingContinuation { (continuation: UnsafeContinuation<Void, Error>) in
-                    cancellable = self.socketStatusProvider.socketConnectionStatusPublisher
-                        .setFailureType(to: Error.self) // Ensure the publisher can throw errors
-                        .filter { $0 == .connected } // Filter for connected status (handles current value too)
-                        .first() // Take the first occurrence
-                        .timeout(.seconds(timeoutSeconds), scheduler: DispatchQueue.global(), customError: { NetworkError.connectionFailed })
-                        .sink(receiveCompletion: { completionResult in
-                            if case .failure(let error) = completionResult {
-                                self.logger.debug("Failed to connect within timeout or other error: \(error)")
-                                continuation.resume(throwing: error)
-                            } // Success case handled by receiveValue
-                        }, receiveValue: { _ in
-                            self.logger.debug("Socket connected successfully")
-                            continuation.resume()
-                        })
-                }
-                
-                // If we get here, the connection was successful within the timeout
-                logger.debug("Connection successful, sending socket frame")
+
+                logger.debug("internal connect successful, will try to send a socket frame")
+                // If successful, send the message
                 send(string, completion: completion)
-                
-            } catch NetworkError.connectionFailed {
-                logger.debug("Connection timed out")
-                completion(NetworkError.connectionFailed)
             } catch is CancellationError {
                 logger.debug("Task was cancelled")
                 completion(CancellationError())
             } catch {
-                logger.debug("Failed during connection or sending: \(error)")
+                logger.debug("failed to handle internal connect")
+                // If an error occurs during connection, complete with that error
                 completion(error)
             }
         }

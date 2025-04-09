@@ -15,6 +15,9 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     // MARK: - Configuration
     var isConnecting = false
     
+    /// Timeout duration in seconds for waiting for the socket to connect during handleInternalConnect.
+    var connectionTimeout: TimeInterval = 45.0
+    
     // MARK: - Queues
     private let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.manual_socket_connection.sync", qos: .utility)
     private var publishers = Set<AnyCancellable>()
@@ -113,21 +116,91 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
     }
     
     func handleInternalConnect(unconditionaly: Bool) async throws {
-        if unconditionaly {
-            // Connect regardless of whether we're tracking any topics - handles publish events
-            logger.debug("Starting unconditional internal connection process.")
-            
-            syncQueue.sync {
-                isConnecting = true
-            }
-            
-            refreshTokenIfNeeded()
-            socket.connect()
-
-        } else {
-            // ignores on subscription events
-            logger.debug("Not connecting on internal connect")
+        // Guard to ensure we only connect when unconditionaly = true
+        guard unconditionaly else {
+            logger.debug("Not connecting on internal connect (unconditionaly=false)")
             throw Errors.internalConnectionRejected
+        }
+        
+        // Connect regardless of whether we're tracking any topics - handles publish events
+        logger.debug("Starting unconditional internal connection process.")
+        
+        if socket.isConnected {
+            logger.debug("Socket is already connected. Will not start new connection.")
+            return
+        }
+
+        // Set connecting state on sync queue
+        let shouldStartConnect = syncQueue.sync { [weak self] () -> Bool in
+            guard let self = self else {
+                return false
+            }
+            if !self.isConnecting {
+                logger.debug("Not already connecting. Will set isConnecting = true and proceed.")
+                self.isConnecting = true
+                return true
+            } else {
+                logger.debug("Already connecting. Will not start new connection.")
+                return false
+            }
+        }
+
+        guard shouldStartConnect else {
+            logger.debug("Another connection attempt is already in progress, returning early.")
+            return
+        }
+
+        // Prepare for connection
+        refreshTokenIfNeeded()
+        
+        // Connect the socket
+        logger.debug("Starting socket connection.")
+        socket.connect()
+        
+        // Set up a publisher that we can use to monitor the connection status
+        let connectionStatusPublisher = socketStatusProvider.socketConnectionStatusPublisher
+            .share()
+            .makeConnectable()
+        
+        let connection = connectionStatusPublisher.connect()
+        
+        defer {
+            logger.debug("Cancelling connection status publisher.")
+            connection.cancel()
+            
+            syncQueue.async {
+                self.isConnecting = false
+            }
+        }
+        
+        // Use the configurable timeout
+        let timeout: TimeInterval = self.connectionTimeout
+        
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            var cancellable: AnyCancellable?
+            
+            cancellable = connectionStatusPublisher
+                .setFailureType(to: NetworkError.self)
+                .timeout(.seconds(timeout), scheduler: DispatchQueue.global(), customError: {
+                    self.logger.debug("Connection timeout triggered after \(timeout) seconds.")
+                    return NetworkError.connectionFailed
+                })
+                .sink(
+                    receiveCompletion: { completion in
+                        if case .failure(let error) = completion {
+                            self.logger.debug("Connection failed with error: \(error).")
+                            cancellable?.cancel()
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { status in
+                        if status == .connected {
+                            self.logger.debug("Connection succeeded.")
+                            cancellable?.cancel()
+                            continuation.resume()
+                        }
+                    }
+                )
         }
     }
 }
