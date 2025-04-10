@@ -293,6 +293,10 @@ public final class RelayClient {
     public func getClientId() throws -> String {
         try clientIdStorage.getClientId()
     }
+    
+    public func trackTopics(_ topics: [String]) {
+        topicsTracker.addTopics(topics)
+    }
 
     // FIXME: Parse data to string once before trying to decode -> respond error on fail
     private func handlePayloadMessage(_ payload: String) {

@@ -266,6 +266,10 @@ public class NetworkingInteractor: NetworkInteracting {
         let response = RPCResponse(id: requestId, error: error)
         try await respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
     }
+    
+    public func trackTopics(_ topics: [String]) {
+        relayClient.trackTopics(topics)
+    }
 
     private func manageSubscription(_ topic: String, _ encodedEnvelope: String, _ publishedAt: Date, _ attestation: String?) {
         if let result = serializer.tryDeserializeRequestOrResponse(topic: topic, codingType: .base64Encoded, envelopeString: encodedEnvelope) {

@@ -16,7 +16,8 @@ public protocol NetworkInteracting {
     func respondSuccess(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType) async throws
     func respondError(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod, reason: Reason, envelopeType: Envelope.EnvelopeType) async throws
     func handleHistoryRequest(topic: String, request: RPCRequest)
-        
+    func trackTopics(_ topics: [String]) 
+
     func requestSubscription<Request: Codable>(
         on request: ProtocolMethod
     ) -> AnyPublisher<RequestSubscriptionPayload<Request>, Never>
