@@ -129,7 +129,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         // Should throw an error when unconditionaly is false (subscription event)
         var errorThrown = false
         do {
-            try await sut.handleInternalConnect(unconditionaly: false)
+            try await sut.handleInternalConnect(unconditionally: false)
         } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
             // Expected specific error
             errorThrown = true
@@ -157,7 +157,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         
         // Call with unconditionaly = true
         Task {
-            try await sut.handleInternalConnect(unconditionaly: true)
+            try await sut.handleInternalConnect(unconditionally: true)
         }
         
         // Wait a brief moment for the connection attempt
@@ -178,8 +178,8 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         var errorThrown = false
         
         do {
-            try await sut.handleInternalConnect(unconditionaly: false)
-            XCTFail("handleInternalConnect should throw when unconditionaly is false")
+            try await sut.handleInternalConnect(unconditionally: false)
+            XCTFail("handleInternalConnect should throw when unconditionally is false")
         } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
             // This is the expected error
             errorThrown = true
@@ -200,7 +200,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         
         // Attempt to connect with unconditionaly = true
         do {
-            try await sut.handleInternalConnect(unconditionaly: true)
+            try await sut.handleInternalConnect(unconditionally: true)
             XCTFail("handleInternalConnect should timeout and throw")
         } catch NetworkError.connectionFailed {
             // This is the expected timeout error
@@ -215,7 +215,7 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         socket.isConnected = true
         
         // Call with unconditionaly = true
-        try await sut.handleInternalConnect(unconditionaly: true)
+        try await sut.handleInternalConnect(unconditionally: true)
         
         // Verify no additional connect attempt was made
         XCTAssertEqual(socket.connectCallCount, 0, "Socket.connect() should not be called when already connected")
@@ -225,8 +225,8 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         // Set up the handler to be already in connecting state
         sut.isConnecting = true
         
-        // Call with unconditionaly = true
-        try await sut.handleInternalConnect(unconditionaly: true)
+        // Call with unconditionally = true
+        try await sut.handleInternalConnect(unconditionally: true)
         
         // Verify no connect attempt was made
         XCTAssertEqual(socket.connectCallCount, 0, "Socket.connect() should not be called when already connecting")

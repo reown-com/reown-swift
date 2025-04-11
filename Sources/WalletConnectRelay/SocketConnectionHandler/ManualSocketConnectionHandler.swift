@@ -115,10 +115,10 @@ class ManualSocketConnectionHandler: SocketConnectionHandler {
         }
     }
     
-    func handleInternalConnect(unconditionaly: Bool) async throws {
-        // Guard to ensure we only connect when unconditionaly = true
-        guard unconditionaly else {
-            logger.debug("Not connecting on internal connect (unconditionaly=false)")
+    func handleInternalConnect(unconditionally: Bool) async throws {
+        // Guard to ensure we only connect when unconditionally = true
+        guard unconditionally else {
+            logger.debug("Not connecting on internal connect (unconditionally=false)")
             throw Errors.internalConnectionRejected
         }
         

@@ -4,6 +4,6 @@ protocol SocketConnectionHandler {
     /// handles connection request from the sdk consumes
     func handleConnect() throws
     /// handles connection request from sdk's internal function
-    func handleInternalConnect(unconditionaly: Bool) async throws
+    func handleInternalConnect(unconditionally: Bool) async throws
     func handleDisconnect(closeCode: URLSessionWebSocketTask.CloseCode) throws
 }
