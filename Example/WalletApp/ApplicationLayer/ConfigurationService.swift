@@ -12,8 +12,7 @@ final class ConfigurationService {
         Networking.configure(
             groupIdentifier: "group.com.walletconnect.sdk",
             projectId: InputConfig.projectId,
-            socketFactory: DefaultSocketFactory(),
-            socketConnectionType: .manual
+            socketFactory: DefaultSocketFactory()
         )
         Networking.instance.setLogging(level: .debug)
 

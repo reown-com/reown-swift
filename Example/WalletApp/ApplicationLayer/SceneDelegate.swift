@@ -127,8 +127,7 @@ private extension SceneDelegate {
         Networking.configure(
             groupIdentifier: "group.com.walletconnect.sdk",
             projectId: InputConfig.projectId,
-            socketFactory: DefaultSocketFactory(),
-            socketConnectionType: .manual
+            socketFactory: DefaultSocketFactory()
         )
         
 
