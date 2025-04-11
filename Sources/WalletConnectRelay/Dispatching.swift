@@ -6,8 +6,8 @@ protocol Dispatching {
     var isSocketConnected: Bool { get }
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
-    func protectedSend(_ string: String, connectUnconditionaly: Bool, completion: @escaping (Error?) -> Void)
-    func protectedSend(_ string: String, connectUnconditionaly: Bool) async throws
+    func protectedSend(_ string: String, connectUnconditionally: Bool, completion: @escaping (Error?) -> Void)
+    func protectedSend(_ string: String, connectUnconditionally: Bool) async throws
     func connect() throws
     func disconnect(closeCode: URLSessionWebSocketTask.CloseCode) throws
 }
@@ -15,11 +15,11 @@ protocol Dispatching {
 // Extension to provide default parameter value
 extension Dispatching {
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
-        protectedSend(string, connectUnconditionaly: false, completion: completion)
+        protectedSend(string, connectUnconditionally: false, completion: completion)
     }
     
     func protectedSend(_ string: String) async throws {
-        try await protectedSend(string, connectUnconditionaly: false)
+        try await protectedSend(string, connectUnconditionally: false)
     }
 
 }
@@ -76,7 +76,7 @@ final class Dispatcher: NSObject, Dispatching {
         }
     }
 
-    func protectedSend(_ string: String, connectUnconditionaly: Bool, completion: @escaping (Error?) -> Void) {
+    func protectedSend(_ string: String, connectUnconditionally: Bool, completion: @escaping (Error?) -> Void) {
         logger.debug("will try to send a socket frame")
         // Check if the socket is already connected and ready to send
         if socket.isConnected {
@@ -105,7 +105,7 @@ final class Dispatcher: NSObject, Dispatching {
                 try Task.checkCancellation()
 
                 // Await the connection handler to establish the connection
-                try await socketConnectionHandler.handleInternalConnect(unconditionaly: connectUnconditionaly)
+                try await socketConnectionHandler.handleInternalConnect(unconditionaly: connectUnconditionally)
 
                 logger.debug("internal connect successful, will try to send a socket frame")
                 // If successful, send the message
@@ -122,12 +122,12 @@ final class Dispatcher: NSObject, Dispatching {
     }
 
 
-    func protectedSend(_ string: String, connectUnconditionaly: Bool) async throws {
+    func protectedSend(_ string: String, connectUnconditionally: Bool) async throws {
         return try await withUnsafeThrowingContinuation { continuation in
             var isResumed = false
             let syncQueue = DispatchQueue(label: "com.walletconnect.sdk.dispatcher.protectedSend")
 
-            protectedSend(string, connectUnconditionaly: connectUnconditionaly) { error in
+            protectedSend(string, connectUnconditionally: connectUnconditionally) { error in
                 syncQueue.sync {
                     guard !isResumed else {
                         return

@@ -63,8 +63,8 @@ public class NetworkingInteractor: NetworkInteracting {
     }
 
 
-    public func subscribe(topic: String, connectUnconditionaly: Bool) async throws {
-        try await relayClient.subscribe(topic: topic, connectUnconditionaly: connectUnconditionaly)
+    public func subscribe(topic: String, connectUnconditionally: Bool) async throws {
+        try await relayClient.subscribe(topic: topic, connectUnconditionally: connectUnconditionally)
     }
     
     public func subscribe(topic: String) async throws {

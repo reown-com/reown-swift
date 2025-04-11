@@ -111,7 +111,7 @@ final class DispatcherTests: XCTestCase {
         waitForExpectations(timeout: 0.001)
     }
 
-    func testProtectedSendWithoutConnectUnconditionaly() async throws {
+    func testProtectedSendWithoutConnectUnconditionally() async throws {
         // Ensure socket is not connected initially
         webSocket.isConnected = false
         
@@ -120,7 +120,7 @@ final class DispatcherTests: XCTestCase {
         
         // Send message with connectUnconditionaly = false and expect error
         do {
-            try await sut.protectedSend("test message", connectUnconditionaly: false)
+            try await sut.protectedSend("test message", connectUnconditionally: false)
             XCTFail("protectedSend should throw when connectUnconditionaly is false and no topics are tracked")
         } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
             // This is the expected error
@@ -131,7 +131,7 @@ final class DispatcherTests: XCTestCase {
         await fulfillment(of: [connectionAttemptExpectation], timeout: 1.0)
         
         // Verify socket remains disconnected
-        XCTAssertFalse(webSocket.isConnected, "Socket should not connect when connectUnconditionaly is false and no topics are tracked")
+        XCTAssertFalse(webSocket.isConnected, "Socket should not connect when connectUnconditionally is false and no topics are tracked")
         XCTAssertEqual(webSocket.sendCallCount, 0, "No message should be sent")
     }
 }

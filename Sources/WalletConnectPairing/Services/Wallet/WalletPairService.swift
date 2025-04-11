@@ -56,7 +56,7 @@ actor WalletPairService {
         }
         eventsClient.saveTraceEvent(PairingExecutionTraceEvents.subscribingPairingTopic)
         do {
-            try await networkingInteractor.subscribe(topic: pairing.topic, connectUnconditionaly: true)
+            try await networkingInteractor.subscribe(topic: pairing.topic, connectUnconditionally: true)
         } catch {
             logger.debug("Failed to subscribe to topic: \(pairing.topic)")
             eventsClient.saveTraceEvent(PairingTraceErrorEvents.subscribePairingTopicFailure)

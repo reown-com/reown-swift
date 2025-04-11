@@ -135,7 +135,7 @@ public final class RelayClient {
         
         logger.debug("[Publish] Sending payload on topic: \(topic)")
 
-        try await dispatcher.protectedSend(message, connectUnconditionaly: true)
+        try await dispatcher.protectedSend(message, connectUnconditionally: true)
 
         return try await withUnsafeThrowingContinuation { continuation in
             var cancellable: AnyCancellable?
@@ -159,7 +159,7 @@ public final class RelayClient {
         }
     }
 
-    public func subscribe(topic: String, connectUnconditionaly: Bool = false) async throws {
+    public func subscribe(topic: String, connectUnconditionally: Bool = false) async throws {
         topicsTracker.addTopics([topic])
         logger.debug("[Subscribe] Subscribing to topic: \(topic)")
 
@@ -167,7 +167,7 @@ public final class RelayClient {
         let request = rpc.asRPCRequest()
         let message = try request.asJSONEncodedString()
 
-        try await dispatcher.protectedSend(message, connectUnconditionaly: connectUnconditionaly)
+        try await dispatcher.protectedSend(message, connectUnconditionally: connectUnconditionally)
 
         // Wait for relay's subscription response
         try await waitForSubscriptionResponse(

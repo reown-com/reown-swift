@@ -19,24 +19,24 @@ class DispatcherMock: Dispatching {
     var sent = false
     var lastMessage: String = ""
     var onMessage: ((String) -> Void)?
-    var lastConnectUnconditionaly: Bool?
+    var lastConnectUnconditionally: Bool?
 
-    func protectedSend(_ string: String, connectUnconditionaly: Bool, completion: @escaping (Error?) -> Void) {
-        lastConnectUnconditionaly = connectUnconditionaly
+    func protectedSend(_ string: String, connectUnconditionally: Bool, completion: @escaping (Error?) -> Void) {
+        lastConnectUnconditionally = connectUnconditionally
         send(string, completion: completion)
     }
     
     // Keep the old signature for backward compatibility
     func protectedSend(_ string: String, completion: @escaping (Error?) -> Void) {
-        protectedSend(string, connectUnconditionaly: false, completion: completion)
+        protectedSend(string, connectUnconditionally: false, completion: completion)
     }
 
     func protectedSend(_ string: String) async throws {
-        try await protectedSend(string, connectUnconditionaly: false)
+        try await protectedSend(string, connectUnconditionally: false)
     }
 
-    func protectedSend(_ string: String, connectUnconditionaly: Bool) async throws {
-        lastConnectUnconditionaly = connectUnconditionaly
+    func protectedSend(_ string: String, connectUnconditionally: Bool) async throws {
+        lastConnectUnconditionally = connectUnconditionally
         try await send(string)
     }
 
