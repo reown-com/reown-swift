@@ -1,11 +1,10 @@
 import Foundation
 
-public enum SessionTransportType: Codable {
-    case relay
-    case linkMode
-}
-
 struct WCSession: SequenceObject, Equatable {
+    public enum TransportType: Codable {
+        case relay
+        case linkMode
+    }
     enum Error: Swift.Error {
         case controllerNotSet
         case unsatisfiedUpdateNamespaceRequirement
@@ -17,7 +16,7 @@ struct WCSession: SequenceObject, Equatable {
     let selfParticipant: Participant
     let peerParticipant: Participant
     let controller: AgreementPeer
-    var transportType: SessionTransportType
+    var transportType: TransportType
     var verifyContext: VerifyContext?
 
     private(set) var acknowledged: Bool
@@ -44,7 +43,7 @@ struct WCSession: SequenceObject, Equatable {
          settleParams: SessionType.SettleParams,
          requiredNamespaces: [String: ProposalNamespace],
          acknowledged: Bool,
-         transportType: SessionTransportType,
+         transportType: TransportType,
          verifyContext: VerifyContext?
     ) {
         self.topic = topic
@@ -81,7 +80,7 @@ struct WCSession: SequenceObject, Equatable {
         accounts: Set<Account>,
         acknowledged: Bool,
         expiryTimestamp: Int64,
-        transportType: SessionTransportType,
+        transportType: TransportType,
         verifyContext: VerifyContext
     ) {
         self.topic = topic
@@ -193,8 +192,7 @@ struct WCSession: SequenceObject, Equatable {
             namespaces: namespaces,
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
-            expiryDate: expiryDate,
-            transportType: transportType
+            expiryDate: expiryDate
         )
     }
 }
@@ -222,7 +220,7 @@ extension WCSession {
         self.timestamp = try container.decode(Date.self, forKey: .timestamp)
         self.requiredNamespaces = try container.decode([String: ProposalNamespace].self, forKey: .requiredNamespaces)
         self.pairingTopic = try container.decode(String.self, forKey: .pairingTopic)
-        self.transportType = (try? container.decode(SessionTransportType.self, forKey: .transportType)) ?? .relay
+        self.transportType = (try? container.decode(TransportType.self, forKey: .transportType)) ?? .relay
         self.verifyContext = try? container.decode(VerifyContext.self, forKey: .verifyContext)
     }
 

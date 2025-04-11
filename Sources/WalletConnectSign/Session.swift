@@ -13,7 +13,6 @@ public struct Session: Codable {
     public let sessionProperties: [String: String]?
     public let scopedProperties: [String: String]?
     public let expiryDate: Date
-    public let transportType: SessionTransportType
     public static var defaultTimeToLive: Int64 {
         WCSession.defaultTimeToLive
     }
@@ -26,8 +25,7 @@ public struct Session: Codable {
         namespaces: [String: SessionNamespace],
         sessionProperties: [String: String]?,
         scopedProperties: [String: String]?,
-        expiryDate: Date,
-        transportType: SessionTransportType
+        expiryDate: Date
     ) {
         self.topic = topic
         self.pairingTopic = pairingTopic
@@ -37,24 +35,6 @@ public struct Session: Codable {
         self.sessionProperties = sessionProperties
         self.scopedProperties = scopedProperties
         self.expiryDate = expiryDate
-        self.transportType = transportType
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.topic = try container.decode(String.self, forKey: .topic)
-        self.pairingTopic = try container.decode(String.self, forKey: .pairingTopic)
-        self.peer = try container.decode(AppMetadata.self, forKey: .peer)
-        self.requiredNamespaces = try container.decode([String: ProposalNamespace].self, forKey: .requiredNamespaces)
-        self.namespaces = try container.decode([String: SessionNamespace].self, forKey: .namespaces)
-        self.sessionProperties = try container.decodeIfPresent([String: String].self, forKey: .sessionProperties)
-        self.scopedProperties = try container.decodeIfPresent([String: String].self, forKey: .scopedProperties)
-        self.expiryDate = try container.decode(Date.self, forKey: .expiryDate)
-        self.transportType = (try? container.decode(SessionTransportType.self, forKey: .transportType)) ?? .relay
-    }
-    
-    private enum CodingKeys: String, CodingKey {
-        case topic, pairingTopic, peer, requiredNamespaces, namespaces, sessionProperties, scopedProperties, expiryDate, transportType
     }
 }
 
