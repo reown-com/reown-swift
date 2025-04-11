@@ -153,7 +153,7 @@ class AuthResponseSubscriber {
         }
     }
 
-    private func getTransportTypeUpgradeIfPossible(peerMetadata: AppMetadata, requestId: RPCID) -> WCSession.TransportType {
+    private func getTransportTypeUpgradeIfPossible(peerMetadata: AppMetadata, requestId: RPCID) -> SessionTransportType {
 //        upgrade to link mode only if dapp requested universallink because dapp may not be prepared for handling a response - add this to doc]
 
         if let peerRedirect = peerMetadata.redirect,
@@ -172,7 +172,7 @@ class AuthResponseSubscriber {
         from response: SessionAuthenticateResponseParams,
         selfParticipant: Participant,
         pairingTopic: String,
-        transportType: WCSession.TransportType
+        transportType: SessionTransportType
     ) throws -> Session? {
 
         let selfPublicKey = try AgreementPublicKey(hex: selfParticipant.publicKey)

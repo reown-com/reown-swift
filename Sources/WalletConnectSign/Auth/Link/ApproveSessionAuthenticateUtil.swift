@@ -71,7 +71,7 @@ class ApproveSessionAuthenticateUtil {
         pairingTopic: String,
         request: SessionAuthenticateRequestParams,
         sessionTopic: String,
-        transportType: WCSession.TransportType,
+        transportType: SessionTransportType,
         verifyContext: VerifyContext
     ) throws -> Session? {
 
