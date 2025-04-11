@@ -129,6 +129,7 @@ private extension SceneDelegate {
             projectId: InputConfig.projectId,
             socketFactory: DefaultSocketFactory()
         )
+        
 
         let metadata = AppMetadata(
             name: "Example Wallet",
@@ -139,6 +140,7 @@ private extension SceneDelegate {
         )
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+
 
     }
 }

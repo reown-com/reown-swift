@@ -6,6 +6,15 @@ import WalletConnectKMS
 import WalletConnectNetworking
 
 public class NetworkingInteractorMock: NetworkInteracting {
+    public func trackTopics(_ topics: [String]) {
+        
+    }
+    
+    public func subscribe(topic: String, connectUnconditionally: Bool) async throws {
+        defer { onSubscribeCalled?() }
+        subscriptions.append(topic)
+        didCallSubscribe = true    }
+    
     public var isSocketConnected: Bool = true
 
 

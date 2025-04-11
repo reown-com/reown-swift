@@ -63,10 +63,14 @@ public class NetworkingInteractor: NetworkInteracting {
     }
 
 
+    public func subscribe(topic: String, connectUnconditionally: Bool) async throws {
+        try await relayClient.subscribe(topic: topic, connectUnconditionally: connectUnconditionally)
+    }
+    
     public func subscribe(topic: String) async throws {
         try await relayClient.subscribe(topic: topic)
     }
-
+    
     public func unsubscribe(topic: String) {
         relayClient.unsubscribe(topic: topic) { [unowned self] error in
             if let error = error {
@@ -261,6 +265,10 @@ public class NetworkingInteractor: NetworkInteracting {
         let error = JSONRPCError(code: reason.code, message: reason.message)
         let response = RPCResponse(id: requestId, error: error)
         try await respond(topic: topic, response: response, protocolMethod: protocolMethod, envelopeType: envelopeType, tvfData: nil)
+    }
+    
+    public func trackTopics(_ topics: [String]) {
+        relayClient.trackTopics(topics)
     }
 
     private func manageSubscription(_ topic: String, _ encodedEnvelope: String, _ publishedAt: Date, _ attestation: String?) {

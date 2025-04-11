@@ -89,6 +89,7 @@ final class SessionEngine {
 private extension SessionEngine {
     func subscribeActiveSessions() {
         let topics = sessionStore.getAll().map{$0.topic}
+        networkingInteractor.trackTopics(topics)
         Task(priority: .background) {
             try await networkingInteractor.batchSubscribe(topics: topics)
         }
