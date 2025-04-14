@@ -32,6 +32,7 @@ spec.pod_target_xcconfig = {
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/WalletConnectPush'
     ss.dependency 'reown-swift/WalletConnectVerify'
+    ss.dependency 'reown-swift/WalletConnectUtils'
     end
 
   spec.subspec 'ReownAppKitBackport' do |ss|
@@ -68,6 +69,7 @@ spec.pod_target_xcconfig = {
     ss.dependency 'reown-swift/WalletConnectSigner'
     ss.dependency 'reown-swift/WalletConnectVerify'
     ss.dependency 'reown-swift/Events'
+    ss.dependency 'reown-swift/WalletConnectUtils'
   end
 
   spec.subspec 'WalletConnectVerify' do |ss|
