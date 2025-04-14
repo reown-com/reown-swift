@@ -1,5 +1,5 @@
 import XCTest
-@testable import WalletConnectUtils
+@testable import WalletConnectRelay
 
 final class TVFCollectorTests: XCTestCase {
 
