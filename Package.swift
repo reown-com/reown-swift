@@ -42,7 +42,7 @@ let package = Package(
             targets: ["YttriumWrapper"])
     ],
     dependencies: [
-        .package(url: "https://github.com/reown-com/yttrium", .exact("0.9.0"))
+        .package(url: "https://github.com/reown-com/yttrium", exact: Version(stringLiteral: "3.1.2"))
     ],
     targets: [
         .target(
