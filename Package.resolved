@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/reown-com/yttrium",
       "state" : {
-        "revision" : "f6566a2b028ae60746254298ce1d5ba822ca5388",
-        "version" : "0.9.0"
+        "revision" : "9f81ab8e0fb879a994392d603b7908b2104d1735",
+        "version" : "0.9.4"
       }
     }
   ],
