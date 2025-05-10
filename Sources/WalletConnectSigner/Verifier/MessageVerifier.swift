@@ -1,5 +1,4 @@
 import Foundation
-import YttriumWrapper
 
 public struct MessageVerifier {
 
@@ -88,25 +87,12 @@ public struct MessageVerifier {
         }
 
         // Fallback to 6492 verification
-        print("i was called only once")
-        let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
-        let erc6492Client = Erc6492Client(rpcUrl: rpcUrl)
-        let messageHash = crypto.keccak256(prefixedMessage)
-
-        do {
-            let result = try await erc6492Client.verifySignature(
-                signature: signatureString,
-                address: address,
-                messageHash: messageHash.toHexString()
-            )
-
-            if result == true {
-                return
-            } else {
-                throw Errors.verificationFailed(message: "Signature verification failed.")
-            }
-        } catch {
-            throw error
-        }
+        // let messageHash = crypto.keccak256(prefixedMessage)
+        // erc6492Client.verifySignature(
+        //                signature: signatureString,
+        //                address: address,
+        //                messageHash: messageHash.toHexString()
+        //            )
+        throw Errors.verificationFailed(message: "Signature verification failed.")
     }
 }

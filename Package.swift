@@ -47,12 +47,12 @@ let package = Package(
     targets: [
         .target(
             name: "WalletConnectSign",
-            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events", "YttriumWrapper"],
+            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events"],
             path: "Sources/WalletConnectSign",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "ReownWalletKit",
-            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify", "YttriumWrapper"],
+            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
             path: "Sources/ReownWalletKit",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
@@ -124,8 +124,7 @@ let package = Package(
         .target(
             name: "YttriumWrapper",
             dependencies: [.product(name: "Yttrium", package: "yttrium")],
-            path: "Sources/YttriumWrapper"
-        ),
+            path: "Sources/YttriumWrapper"),
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
@@ -134,7 +133,7 @@ let package = Package(
             dependencies: ["WalletConnectPairing", "TestingUtils"]),
         .testTarget(
             name: "NotifyTests",
-            dependencies: ["WalletConnectNotify", "TestingUtils", "YttriumWrapper"]),
+            dependencies: ["WalletConnectNotify", "TestingUtils"]),
         .testTarget(
             name: "RelayerTests",
             dependencies: ["WalletConnectRelay", "WalletConnectUtils", "TestingUtils"]),
@@ -159,8 +158,6 @@ let package = Package(
             dependencies: ["Commons", "TestingUtils"]),
         .testTarget(
             name: "EventsTests",
-            dependencies: ["Events"]),
+            dependencies: ["Events"])
     ],
-    swiftLanguageVersions: [.v5]
-)
-
+    swiftLanguageVersions: [.v5])
