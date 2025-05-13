@@ -104,6 +104,7 @@ public class WalletKitClient {
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
     private let chainAbstractionClient: ChainAbstractionClient
+    private let walletServiceBuilder: WalletServiceBuilder
 
     private var account: Account?
 
@@ -115,13 +116,15 @@ public class WalletKitClient {
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
         chainAbstractionClient: ChainAbstractionClient,
-        ChainAbstractionNamespace: ChainAbstractionNamespace
+        ChainAbstractionNamespace: ChainAbstractionNamespace,
+        walletServiceBuilder: WalletServiceBuilder
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
         self.chainAbstractionClient = chainAbstractionClient
         self.ChainAbstraction = ChainAbstractionNamespace
+        self.walletServiceBuilder = walletServiceBuilder
     }
     
     /// For a wallet to approve a session proposal.
@@ -287,6 +290,13 @@ public class WalletKitClient {
     @available(*, message: "This method is experimental. Use with caution.")
     public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
+    }
+
+    /// Builds a wallet service JSON structure with the specified methods
+    /// - Parameter methods: The wallet service methods to include
+    /// - Returns: A JSON string representing the wallet service configuration
+    public func buildWalletService(_ methods: [String]) -> String {
+        return walletServiceBuilder.buildWalletService(methods)
     }
 }
 
