@@ -90,13 +90,4 @@ final class WalletServiceBuilderTests: XCTestCase {
         XCTAssertTrue(result.contains("\"wallet_\\\"quoted\\\"_method\""))
         XCTAssertTrue(result.contains("\"walletService\" : ["))
     }
-    
-    // MARK: - Linux Support
-    static var allTests = [
-        ("testBuildWalletServiceWithEmptyMethods", testBuildWalletServiceWithEmptyMethods),
-        ("testBuildWalletServiceWithSingleMethod", testBuildWalletServiceWithSingleMethod),
-        ("testBuildWalletServiceWithMultipleMethods", testBuildWalletServiceWithMultipleMethods),
-        ("testBuildWalletServiceWithSpecialCharactersInMethods", testBuildWalletServiceWithSpecialCharactersInMethods),
-        ("testBuildWalletServiceWithMethodsContainingQuotes", testBuildWalletServiceWithMethodsContainingQuotes)
-    ]
 } 
