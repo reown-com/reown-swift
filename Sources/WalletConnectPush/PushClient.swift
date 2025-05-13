@@ -26,7 +26,7 @@ public class PushClient: PushClientProtocol {
         try await unregisterService.unregister()
     }
 
-#if DEBUG
+#if DEBUG || targetEnvironment(simulator)
     public func register(deviceToken: String) async throws {
         try await registerService.register(deviceToken: deviceToken, alwaysRaw: true)
     }
