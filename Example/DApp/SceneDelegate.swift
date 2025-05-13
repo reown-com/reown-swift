@@ -118,7 +118,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 .init(
                     id: "rn-sample-internal",
                     name: "RN Wallet (internal)",
-                    homepage: "https://walletconnect.com/",
+                    homepage: "https://reown.com/walletkit",
                     imageUrl: "https://avatars.githubusercontent.com/u/37784886?s=200&v=4",
                     order: 1,
                     mobileLink: "rn-web3wallet-internal://",
