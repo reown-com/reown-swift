@@ -121,7 +121,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     homepage: "https://walletconnect.com/",
                     imageUrl: "https://avatars.githubusercontent.com/u/37784886?s=200&v=4",
                     order: 1,
-                    mobileLink: "rn-web3wallet://",
+                    mobileLink: "rn-web3wallet-internal://",
                     linkMode: "https://appkit-lab.reown.com/rn_walletkit_internal"
                 ),
                 .init(
