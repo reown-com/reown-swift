@@ -337,6 +337,7 @@ public class AppKitClient {
                 return false
             }
         }
+        guard CoinbaseWalletSDK.isConfigured else { return false }
         do {
             return try CoinbaseWalletSDK.shared.handleResponse(url)
         } catch {

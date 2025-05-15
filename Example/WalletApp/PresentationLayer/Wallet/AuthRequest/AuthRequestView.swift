@@ -31,6 +31,17 @@ struct AuthRequestView: View {
                         .resizable()
                         .scaledToFit()
                     
+                    if LinkModeTopicsStorage.shared.containsTopic(presenter.request.topic) {
+                        Text("LINK MODE")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 8)
+                            .background(Color.blue)
+                            .cornerRadius(20)
+                            .padding(.vertical, 5)
+                    }
+                    
                     Text(presenter.request.payload.domain)
                         .foregroundColor(.grey8)
                         .font(.system(size: 22, weight: .bold, design: .rounded))

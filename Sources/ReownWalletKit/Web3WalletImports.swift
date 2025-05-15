@@ -4,4 +4,5 @@
 @_exported import WalletConnectVerify
 @_exported import YttriumWrapper
 @_exported import yttriumFFI
+@_exported import WalletConnectUtils
 #endif
