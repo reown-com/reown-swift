@@ -12,7 +12,7 @@ public class WalletServiceBuilder {
     /// - Parameter methods: The wallet service methods to include
     /// - Returns: A JSON string representing the wallet service configuration
     public func buildWalletService(_ methods: [String]) -> String {
-        let url = "https://rpc.walletconnect.org/v1/wallet?projectId=\(projectId)&st=wkca&sv=\(EnvironmentInfo.sdkName)"
+        let url = "https://rpc.walletconnect.org/v1/wallet?projectId=\(projectId)&st=wk&sv=\(EnvironmentInfo.sdkName)"
         
         let walletService: [String: Any] = [
             "walletService": [

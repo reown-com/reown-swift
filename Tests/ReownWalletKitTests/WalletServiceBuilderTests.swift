@@ -35,7 +35,7 @@ final class WalletServiceBuilderTests: XCTestCase {
         
         // Only compare the projectId part, not the entire URL which has SDK version
         XCTAssertTrue(actualUrl.contains("projectId=\(testProjectId)"), "URL should contain correct projectId")
-        XCTAssertTrue(actualUrl.contains("&st=wkca&sv="), "URL should contain correct parameters")
+        XCTAssertTrue(actualUrl.contains("&st=wk&sv="), "URL should contain correct parameters")
         
         // Compare methods array
         let actualMethods = actualService["methods"] as! [String]
@@ -51,7 +51,7 @@ final class WalletServiceBuilderTests: XCTestCase {
         let result = walletServiceBuilder.buildWalletService(methods)
         
         // Assert
-        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wkca&sv=\(EnvironmentInfo.sdkName)"
+        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wk&sv=\(EnvironmentInfo.sdkName)"
         let expected = """
         {
             "walletService": [{
@@ -72,7 +72,7 @@ final class WalletServiceBuilderTests: XCTestCase {
         let result = walletServiceBuilder.buildWalletService(methods)
         
         // Assert
-        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wkca&sv=\(EnvironmentInfo.sdkName)"
+        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wk&sv=\(EnvironmentInfo.sdkName)"
         let expected = """
         {
             "walletService": [{
@@ -93,7 +93,7 @@ final class WalletServiceBuilderTests: XCTestCase {
         let result = walletServiceBuilder.buildWalletService(methods)
         
         // Assert
-        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wkca&sv=\(EnvironmentInfo.sdkName)"
+        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wk&sv=\(EnvironmentInfo.sdkName)"
         let expected = """
         {
             "walletService": [{
@@ -114,7 +114,7 @@ final class WalletServiceBuilderTests: XCTestCase {
         let result = walletServiceBuilder.buildWalletService(methods)
         
         // Assert
-        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wkca&sv=\(EnvironmentInfo.sdkName)"
+        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wk&sv=\(EnvironmentInfo.sdkName)"
         let expected = """
         {
             "walletService": [{
@@ -135,7 +135,7 @@ final class WalletServiceBuilderTests: XCTestCase {
         let result = walletServiceBuilder.buildWalletService(methods)
         
         // Assert
-        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wkca&sv=\(EnvironmentInfo.sdkName)"
+        let expectedUrl = "https://rpc.walletconnect.org/v1/wallet?projectId=\(testProjectId)&st=wk&sv=\(EnvironmentInfo.sdkName)"
         let expected = """
         {
             "walletService": [{
