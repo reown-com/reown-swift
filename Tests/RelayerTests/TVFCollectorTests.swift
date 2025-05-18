@@ -3,8 +3,13 @@ import XCTest
 
 final class TVFCollectorTests: XCTestCase {
 
-    private let tvf = TVFCollector()
+    private var tvf: TVFCollector!
     private let chain = Blockchain("eip155:1")!
+
+    override func setUp() {
+        super.setUp()
+        tvf = TVFCollector()
+    }
 
     // Helper: define sample .response(AnyCodable)
     private func makeResponse(_ value: Any) -> RPCResult {
@@ -197,6 +202,20 @@ final class TVFCollectorTests: XCTestCase {
             rpcResult: rpcResult,
             tag: 1109
         )
+        XCTAssertNil(data)
+    }
+
+    func testInvalidTag_ReturnsNil() {
+        // Execute with an invalid tag
+        let data = tvf.collect(
+            rpcMethod: "eth_sendTransaction",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: nil,
+            tag: 9999 // Invalid tag
+        )
+        
+        // Verify
         XCTAssertNil(data)
     }
 }
