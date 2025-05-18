@@ -192,6 +192,28 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertEqual(data?.txHashes, expectedSignatures)
     }
 
+    func testSessionResponse_TronSignTransaction_ExtractsTxIDCorrectly() {
+        // Arrange
+        let responseData: [String: Any] = [
+            "txID": "66e79c6993f29b02725da54ab146ffb0453ee6a43b4083568ad9585da305374a",
+            "signature": ["7e760cef94bc82a7533bc1e8d4ab88508c6e13224cd50cc8da62d3f4d4e19b99514f..."]
+        ]
+        let rpcResult = makeResponse(responseData)
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "tron_signTransaction",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, ["66e79c6993f29b02725da54ab146ffb0453ee6a43b4083568ad9585da305374a"])
+    }
+
     func testSessionResponse_UnsupportedMethod_ReturnsNil() {
         let rpcParams = AnyCodable([String]())
         let rpcResult = makeResponse("whatever")
