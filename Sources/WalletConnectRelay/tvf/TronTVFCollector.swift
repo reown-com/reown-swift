@@ -73,7 +73,6 @@ class TronTVFCollector: ChainTVFCollector {
            let decoded = try? resultValue.get(TronSignTransactionResult.self) {
             return [decoded.txID]
         }
-        
         return nil
     }
 } 
