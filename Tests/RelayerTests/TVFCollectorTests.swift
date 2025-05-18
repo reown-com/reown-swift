@@ -2,22 +2,22 @@ import XCTest
 @testable import WalletConnectRelay
 
 final class TVFCollectorTests: XCTestCase {
-
+    
     private var tvf: TVFCollector!
     private let chain = Blockchain("eip155:1")!
-
-    override func setUp() {
-        super.setUp()
-        tvf = TVFCollector()
-    }
-
+    
     // Helper: define sample .response(AnyCodable)
     private func makeResponse(_ value: Any) -> RPCResult {
         return .response(AnyCodable(any: value))
     }
-
+    
     private func makeError(code: Int, message: String) -> RPCResult {
         return .error(JSONRPCError(code: code, message: message))
+    }
+    
+    override func setUp() {
+        super.setUp()
+        tvf = TVFCollector()
     }
 
     // MARK: - Session Request (tag = 1108)
@@ -192,13 +192,38 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertEqual(data?.txHashes, expectedSignatures)
     }
 
+    func testSessionRequest_TronSignTransaction_ExtractsContractAddresses() {
+        // Create Tron transaction request with contract address using the model format
+        let txModel = TronMockFactory.createTransaction()
+        let rpcParams = AnyCodable(txModel)
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "tron_signTransaction",
+            rpcParams: rpcParams,
+            chainID: chain,
+            rpcResult: nil,
+            tag: 1108
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.rpcMethods, ["tron_signTransaction"])
+        XCTAssertEqual(data?.chainId?.absoluteString, "eip155:1")
+        XCTAssertEqual(data?.contractAddresses, ["41e9512d8d5b5412d2b9f3a4d5a87ca15c5c51f33"])
+        XCTAssertNil(data?.txHashes)
+    }
+
     func testSessionResponse_TronSignTransaction_ExtractsTxIDCorrectly() {
-        // Arrange
-        let responseData: [String: Any] = [
-            "txID": "66e79c6993f29b02725da54ab146ffb0453ee6a43b4083568ad9585da305374a",
-            "signature": ["7e760cef94bc82a7533bc1e8d4ab88508c6e13224cd50cc8da62d3f4d4e19b99514f..."]
-        ]
-        let rpcResult = makeResponse(responseData)
+        // Create the transaction result with expected txID
+        let expectedTxID = "66e79c6993f29b02725da54ab146ffb0453ee6a43b4083568ad9585da305374a"
+        let resultModel = TronMockFactory.createTransactionResult(txID: expectedTxID)
+        
+        // Create proper nested RPCResult with result field
+        let jsonData = try! JSONEncoder().encode(resultModel)
+        let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
+        let nestedData = ["result": jsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
         
         // Act
         let data = tvf.collect(
@@ -211,7 +236,7 @@ final class TVFCollectorTests: XCTestCase {
         
         // Assert
         XCTAssertNotNil(data)
-        XCTAssertEqual(data?.txHashes, ["66e79c6993f29b02725da54ab146ffb0453ee6a43b4083568ad9585da305374a"])
+        XCTAssertEqual(data?.txHashes, [expectedTxID])
     }
 
     func testSessionResponse_UnsupportedMethod_ReturnsNil() {

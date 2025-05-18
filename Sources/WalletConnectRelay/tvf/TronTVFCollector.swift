@@ -20,9 +20,37 @@ class TronTVFCollector: ChainTVFCollector {
     // MARK: - Implementation
     
     func extractContractAddresses(rpcMethod: String, rpcParams: AnyCodable) -> [String]? {
-        // Tron doesn't extract contract addresses in the current implementation
-        // This could be enhanced in the future to extract contract addresses from transaction data
+        guard rpcMethod == Self.TRON_SIGN_TRANSACTION else {
+            return nil
+        }
+        
+        // Decode as a TronTransaction
+        if let transaction = try? rpcParams.get(TronTransaction.self), 
+           let contractAddresses = extractContractAddressesFromTransaction(transaction) {
+            return contractAddresses
+        }
+        
         return nil
+    }
+    
+    // Helper method to extract contract addresses from a TronTransaction
+    private func extractContractAddressesFromTransaction(_ transaction: TronTransaction) -> [String]? {
+        guard let rawData = transaction.raw_data,
+              let contracts = rawData.contract else {
+            return nil
+        }
+        
+        var contractAddresses = [String]()
+        
+        for contract in contracts {
+            if let parameter = contract.parameter,
+               let value = parameter.value,
+               let contractAddress = value.contract_address {
+                contractAddresses.append(contractAddress)
+            }
+        }
+        
+        return contractAddresses.isEmpty ? nil : contractAddresses
     }
     
     func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
@@ -39,36 +67,13 @@ class TronTVFCollector: ChainTVFCollector {
         // For Tron, we need to extract the txID from the response
         // This is different from EVM chains where the transaction hash is returned directly
         
-        // First, try to extract from the result wrapper that contains the txID
-        do {
-            // Try to extract from result wrapper first (nested format)
-            let result = try anycodable.get([String: AnyCodable].self)
-            if let resultValue = result["result"] {
-                do {
-                    let decoded = try resultValue.get(TronSignTransactionResult.self)
-                    if let txID = decoded.txID {
-                        return [txID]
-                    }
-                } catch {
-                    print("Error decoding nested Tron result: \(error)")
-                    // Continue to try the direct format
-                }
-            }
-            
-            // Fallback: try to decode directly from the response
-            return nil
-        } catch {
-            // If we couldn't parse as dictionary, try direct format
-            do {
-                let decoded = try anycodable.get(TronSignTransactionResult.self)
-                if let txID = decoded.txID {
-                    return [txID]
-                }
-                return nil
-            } catch {
-                print("Error processing Tron transaction: \(error)")
-                return nil
-            }
+        // Extract from result wrapper (nested format)
+        if let result = try? anycodable.get([String: AnyCodable].self),
+           let resultValue = result["result"],
+           let decoded = try? resultValue.get(TronSignTransactionResult.self) {
+            return [decoded.txID]
         }
+        
+        return nil
     }
 } 
