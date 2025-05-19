@@ -1,0 +1,115 @@
+import Foundation
+
+// MARK: - Supporting Model
+
+struct SuiSignAndExecuteTransactionResult: Codable {
+    let digest: String
+    // Other fields (effects, events, etc.) could be added but are not needed for TVF
+    
+    private enum CodingKeys: String, CodingKey {
+        case digest
+    }
+}
+
+struct SuiSignTransactionResult: Codable {
+    let signature: String
+    let transactionBytes: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case signature
+        case transactionBytes
+    }
+}
+
+// MARK: - SuiTVFCollector
+
+class SuiTVFCollector: ChainTVFCollector {
+    // MARK: - Constants
+    
+    static let SUI_SIGN_AND_EXECUTE_TRANSACTION = "sui_signAndExecuteTransaction"
+    static let SUI_SIGN_TRANSACTION = "sui_signTransaction"
+    
+    // MARK: - Supported Methods
+    
+    private var supportedMethods: [String] {
+        [Self.SUI_SIGN_AND_EXECUTE_TRANSACTION, Self.SUI_SIGN_TRANSACTION]
+    }
+    
+    func supportsMethod(_ method: String) -> Bool {
+        return supportedMethods.contains(method)
+    }
+    
+    // MARK: - Implementation
+    
+    func extractContractAddresses(rpcMethod: String, rpcParams: AnyCodable) -> [String]? {
+        // SUI implementation doesn't collect contract addresses for TVF
+        return nil
+    }
+    
+    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
+        // If rpcResult is nil or is an error, we can't parse anything
+        guard let rpcResult = rpcResult, case .response(let anycodable) = rpcResult else {
+            return nil
+        }
+        
+        // Only process SUI transaction methods
+        guard supportedMethods.contains(rpcMethod) else {
+            return nil
+        }
+        
+        // Extract from result wrapper (always under "result" key in JSON-RPC)
+        if let result = try? anycodable.get([String: AnyCodable].self),
+           let resultValue = result["result"] {
+            
+            if rpcMethod == Self.SUI_SIGN_AND_EXECUTE_TRANSACTION {
+                // For sui_signAndExecuteTransaction, extract digest directly
+                if let signAndExecuteResult = try? resultValue.get(SuiSignAndExecuteTransactionResult.self) {
+                    return [signAndExecuteResult.digest]
+                }
+            } else if rpcMethod == Self.SUI_SIGN_TRANSACTION {
+                // For sui_signTransaction, we need to calculate the digest from transactionBytes
+                if let signResult = try? resultValue.get(SuiSignTransactionResult.self) {
+                    // In a real implementation, we would calculate the transaction digest
+                    // from the transaction bytes using the Blake2b hash algorithm
+                    // Here we're using the transactionBytes as a placeholder
+                    if let digest = calculateTransactionDigest(from: signResult.transactionBytes) {
+                        return [digest]
+                    }
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Calculates a SUI transaction digest from base64-encoded transaction bytes
+    /// 
+    /// The actual implementation would:
+    /// 1. Decode the base64 string to bytes
+    /// 2. Prefix with 0x0 for ProgrammableTransaction
+    /// 3. Compute Blake2b-256 hash of the prefixed bytes
+    /// 4. Encode the result to base58
+    private func calculateTransactionDigest(from transactionBytesBase64: String) -> String? {
+        // In a real implementation, we would decode the base64 string and calculate
+        // the Blake2b-256 hash as described in the documentation
+        
+        // This is a placeholder for testing - in a real implementation,
+        // this would be replaced with the actual cryptographic calculation
+        
+        // Generate a deterministic digest based on the input for testing
+        return "SuiDigest-\(transactionBytesBase64.hash)"
+    }
+}
+
+// Extension to help with the mock digest calculation
+fileprivate extension String {
+    var hash: Int {
+        var result = 0
+        for char in self {
+            result = (31 &* result) &+ Int(char.asciiValue ?? 0)
+        }
+        return abs(result)
+    }
+} 

@@ -388,4 +388,26 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data?.txHashes)
         XCTAssertEqual(data?.txHashes?.count, 2)
     }
+
+    func testSessionResponse_SuiSignAndExecuteTransaction_ExtractsDigestCorrectly() {
+        // Create transaction result with expected digest
+        let expectedDigest = "8cZk5Zj1sMZes9jBxrKF3Nv8uZJor3V5XTFmxp3GTxhp"
+        let resultModel = SuiMockFactory.createSignAndExecuteTransactionResult(digest: expectedDigest)
+        
+        // Create proper JSON-RPC format response
+        let rpcResult = RPCResult.response(AnyCodable(any: ["result": resultModel]))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "sui_signAndExecuteTransaction",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [expectedDigest])
+    }
 }
