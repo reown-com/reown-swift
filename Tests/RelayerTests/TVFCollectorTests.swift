@@ -265,4 +265,54 @@ final class TVFCollectorTests: XCTestCase {
         // Verify
         XCTAssertNil(data)
     }
+
+    func testSessionResponse_XRPLSignTransaction_ExtractsHashCorrectly() {
+        // Create the transaction result with expected hash
+        let expectedHash = "73734B611DDA23D3F5F62E20A173B78AB8406AC5015094DA53F53D39B9EDB06C"
+        let resultModel = XRPLMockFactory.createTransactionResult(hash: expectedHash)
+        
+        // Create proper nested RPCResult
+        let jsonData = try! JSONEncoder().encode(resultModel)
+        let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
+        let nestedData = ["result": jsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "xrpl_signTransaction",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [expectedHash])
+    }
+
+    func testSessionResponse_XRPLSignTransactionFor_ExtractsHashCorrectly() {
+        // Create the transaction result with expected hash
+        let expectedHash = "BA2AF0C652F46C97B85C1D17080EEC7422C092B0BD906DCA344B42EF30FA8285"
+        let resultModel = XRPLMockFactory.createTransactionResult(hash: expectedHash)
+        
+        // Create proper nested RPCResult
+        let jsonData = try! JSONEncoder().encode(resultModel)
+        let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
+        let nestedData = ["result": jsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "xrpl_signTransactionFor",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [expectedHash])
+    }
 }
