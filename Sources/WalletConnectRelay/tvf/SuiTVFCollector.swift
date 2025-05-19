@@ -105,14 +105,3 @@ class SuiTVFCollector: ChainTVFCollector {
         return Base58.encode(hashData)
     }
 }
-
-// Extension to help with the mock digest calculation
-fileprivate extension String {
-    var hash: Int {
-        var result = 0
-        for char in self {
-            result = (31 &* result) &+ Int(char.asciiValue ?? 0)
-        }
-        return abs(result)
-    }
-} 
