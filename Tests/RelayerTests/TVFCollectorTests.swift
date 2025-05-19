@@ -394,8 +394,15 @@ final class TVFCollectorTests: XCTestCase {
         let expectedDigest = "8cZk5Zj1sMZes9jBxrKF3Nv8uZJor3V5XTFmxp3GTxhp"
         let resultModel = SuiMockFactory.createSignAndExecuteTransactionResult(digest: expectedDigest)
         
-        // Create proper JSON-RPC format response
-        let rpcResult = RPCResult.response(AnyCodable(any: ["result": resultModel]))
+        // Create proper JSON-RPC format response (Tron-style)
+        // 1. Encode the resultModel to JSON Data
+        let resultModelData = try! JSONEncoder().encode(resultModel)
+        // 2. Convert JSON Data to a [String: Any] dictionary
+        let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
+        // 3. Create the payload dictionary for AnyCodable(any:)
+        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
+        // 4. Wrap this payload using AnyCodable(any:)
+        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
         
         // Act
         let data = tvf.collect(
