@@ -85,21 +85,24 @@ class SuiTVFCollector: ChainTVFCollector {
     // MARK: - Helper Methods
     
     /// Calculates a SUI transaction digest from base64-encoded transaction bytes
-    /// 
-    /// The actual implementation would:
-    /// 1. Decode the base64 string to bytes
-    /// 2. Prefix with 0x0 for ProgrammableTransaction
-    /// 3. Compute Blake2b-256 hash of the prefixed bytes
-    /// 4. Encode the result to base58
     private func calculateTransactionDigest(from transactionBytesBase64: String) -> String? {
-        // In a real implementation, we would decode the base64 string and calculate
-        // the Blake2b-256 hash as described in the documentation
+        // Step 1: Decode base64 to raw bytes
+        guard let txBytes = Data(base64Encoded: transactionBytesBase64) else {
+            return nil
+        }
         
-        // This is a placeholder for testing - in a real implementation,
-        // this would be replaced with the actual cryptographic calculation
+        // Step 2: Prefix with 0x0 for ProgrammableTransaction
+        var prefixedBytes = Data([0x00]) // TransactionKind::ProgrammableTransaction
+        prefixedBytes.append(txBytes)
         
-        // Generate a deterministic digest based on the input for testing
-        return "SuiDigest-\(transactionBytesBase64.hash)"
+        // Step 3: Compute Blake2b-256 hash of the prefixed bytes
+        // Use 32 bytes (256 bits) for the digest length
+        guard let hashData = try? BLAKE2b.hash(data: prefixedBytes, digestLength: 32) else {
+            return nil
+        }
+        
+        // Step 4: Encode the result to base58
+        return Base58.encode(hashData)
     }
 }
 
