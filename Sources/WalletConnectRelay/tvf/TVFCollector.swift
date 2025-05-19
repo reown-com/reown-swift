@@ -30,7 +30,8 @@ public class TVFCollector: TVFCollectorProtocol {
             SolanaTVFCollector(),
             TronTVFCollector(),
             XRPLTVFCollector(),
-            HederaTVFCollector()
+            HederaTVFCollector(),
+            AlgorandTVFCollector()
         ]
     }
 
