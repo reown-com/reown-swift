@@ -371,9 +371,8 @@ final class TVFCollectorTests: XCTestCase {
             "gqNzaWfEQL4gGxM+4AKs/RwVj5EE4iE3ELYyGaKiC9j7nT33Oq0U7YSzEY7YUhA9SnPlFatkHK/OV7Hce+6i1jhOtGBczgijdHhuiqRhcGFyksQEAQIAoXBheaCNZXlwbKR0eXBlo3BheQ=="
         ]
         
-        // Create proper nested RPCResult
-        let nestedData = ["result": signedTxns]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        // Create proper JSON-RPC format response
+        let rpcResult = RPCResult.response(AnyCodable(any: ["result": signedTxns]))
         
         // Act
         let data = tvf.collect(
@@ -388,8 +387,5 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertNotNil(data?.txHashes)
         XCTAssertEqual(data?.txHashes?.count, 2)
-        data?.txHashes?.forEach { txHash in
-            XCTAssertTrue(txHash.starts(with: "ALGO"))
-        }
     }
 }

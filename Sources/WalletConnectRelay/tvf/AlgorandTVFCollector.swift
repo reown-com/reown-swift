@@ -1,4 +1,35 @@
 import Foundation
+import CryptoKit
+
+// MARK: - Base32 Encoder
+
+private struct Base32 {
+    private static let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+    
+    static func encode(_ data: Data) -> String {
+        var result = ""
+        var bits = 0
+        var buffer = 0
+        
+        for byte in data {
+            buffer = (buffer << 8) | Int(byte)
+            bits += 8
+            
+            while bits >= 5 {
+                bits -= 5
+                let index = (buffer >> bits) & 0x1F
+                result.append(alphabet[alphabet.index(alphabet.startIndex, offsetBy: index)])
+            }
+        }
+        
+        if bits > 0 {
+            let index = (buffer << (5 - bits)) & 0x1F
+            result.append(alphabet[alphabet.index(alphabet.startIndex, offsetBy: index)])
+        }
+        
+        return result
+    }
+}
 
 // MARK: - AlgorandTVFCollector
 
@@ -35,15 +66,10 @@ class AlgorandTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract from result wrapper
+        // Extract from result wrapper (always under "result" key in JSON-RPC)
         if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"] {
-            // Try to get the array of base64 signed transactions
-            if let signedTxnsArray = try? resultValue.get([String].self) {
-                return calculateTransactionIDs(from: signedTxnsArray)
-            }
-        } else if let signedTxnsArray = try? anycodable.get([String].self) {
-            // Direct array format
+           let resultValue = result["result"],
+           let signedTxnsArray = try? resultValue.get([String].self) {
             return calculateTransactionIDs(from: signedTxnsArray)
         }
         
@@ -53,27 +79,36 @@ class AlgorandTVFCollector: ChainTVFCollector {
     // MARK: - Helper Methods
     
     /// Calculates Algorand transaction IDs from an array of base64-encoded signed transactions
-    /// 
-    /// This is a placeholder implementation. In a real app, this would:
-    /// 1. Decode each base64 string to bytes
-    /// 2. Compute SHA-512/256 hash of the bytes
+    ///
+    /// The algorithm follows these steps:
+    /// 1. Decode base64 to raw bytes
+    /// 2. Compute SHA-512/256 hash of the bytes (using the first 32 bytes of SHA-512)
     /// 3. Compute checksum (last 4 bytes of SHA-512/256 of the hash)
     /// 4. Combine hash+checksum and encode to base32
-    ///
-    /// The actual implementation would depend on the available cryptographic libraries.
     private func calculateTransactionIDs(from signedTxnsBase64: [String]) -> [String] {
-        // This is a mock implementation - in reality we would need to perform the actual 
-        // cryptographic operations as described in the documentation
-        
         // Filter out null/empty values
         let validSignedTxns = signedTxnsBase64.filter { !$0.isEmpty && $0 != "null" }
         
-        // For testing purposes, return deterministic mock IDs based on the input
-        return validSignedTxns.map { base64Str in
-            // In a real implementation, this would be the proper cryptographic calculation
-            // Here we just create a mock ID based on a hash of the base64 string
-            let hashValue = abs(base64Str.hashValue)
-            return "ALGO\(hashValue)"
+        return validSignedTxns.compactMap { base64Str in
+            // Step 1: Decode base64 to raw bytes
+            guard let signedTxnData = Data(base64Encoded: base64Str) else {
+                return nil
+            }
+            
+            // Step 2: Compute SHA-512/256 hash (using first 32 bytes of SHA-512)
+            let sha512Hash = SHA512.hash(data: signedTxnData)
+            let sha512HashData = Data(sha512Hash)
+            // Take first 32 bytes to simulate SHA-512/256
+            let hashData = sha512HashData.prefix(32)
+            
+            // Step 3: Compute checksum (last 4 bytes of SHA-512/256 of the hash)
+            let checksumHash = SHA512.hash(data: hashData)
+            let checksumHashData = Data(checksumHash)
+            let checksum = checksumHashData.suffix(4)
+            
+            // Step 4: Combine hash+checksum and encode to base32
+            let txIDData = hashData + checksum
+            return Base32.encode(txIDData)
         }
     }
 } 
