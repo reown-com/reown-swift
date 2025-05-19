@@ -29,7 +29,8 @@ public class TVFCollector: TVFCollectorProtocol {
             EVMTVFCollector(),
             SolanaTVFCollector(),
             TronTVFCollector(),
-            XRPLTVFCollector()
+            XRPLTVFCollector(),
+            HederaTVFCollector()
         ]
     }
 

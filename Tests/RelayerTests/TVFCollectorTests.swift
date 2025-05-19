@@ -315,4 +315,54 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes, [expectedHash])
     }
+
+    func testSessionResponse_HederaSignAndExecuteTransaction_ExtractsTransactionIdCorrectly() {
+        // Create the transaction result with expected transaction ID
+        let expectedTransactionId = "0.0.12345678@1689281510.675369303"
+        let resultModel = HederaMockFactory.createTransactionResult(transactionId: expectedTransactionId)
+        
+        // Create proper nested RPCResult
+        let jsonData = try! JSONEncoder().encode(resultModel)
+        let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
+        let nestedData = ["result": jsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "hedera_signAndExecuteTransaction",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [expectedTransactionId])
+    }
+
+    func testSessionResponse_HederaExecuteTransaction_ExtractsTransactionIdCorrectly() {
+        // Create the transaction result with expected transaction ID
+        let expectedTransactionId = "0.0.98765432@1689281510.675369303"
+        let resultModel = HederaMockFactory.createTransactionResult(transactionId: expectedTransactionId)
+        
+        // Create proper nested RPCResult
+        let jsonData = try! JSONEncoder().encode(resultModel)
+        let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
+        let nestedData = ["result": jsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "hedera_executeTransaction",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [expectedTransactionId])
+    }
 }
