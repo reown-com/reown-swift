@@ -28,10 +28,11 @@ public class TVFCollector: TVFCollectorProtocol {
         self.chainCollectors = [
             EVMTVFCollector(),
             SolanaTVFCollector(),
+            AlgorandTVFCollector(),
             TronTVFCollector(),
             XRPLTVFCollector(),
             HederaTVFCollector(),
-            AlgorandTVFCollector(),
+            CosmosTVFCollector(),
             SuiTVFCollector()
         ]
     }
