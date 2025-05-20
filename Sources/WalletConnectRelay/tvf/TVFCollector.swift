@@ -35,6 +35,7 @@ public class TVFCollector: TVFCollectorProtocol {
             CosmosTVFCollector(),
             NearTVFCollector(),
             BitcoinTVFCollector(),
+            StacksTVFCollector(),
             SuiTVFCollector()
         ]
     }

@@ -508,4 +508,30 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes, [expectedTxid])
     }
+
+    // Add test for Stacks transaction hash extraction
+    func testSessionResponse_StacksStxTransfer_ExtractsTxIdCorrectly() {
+        // Create transfer result with expected txId
+        let expectedTxId = "stack_tx_id"
+        let resultModel = StacksMockFactory.createTransferResult(txId: expectedTxId)
+        
+        // Create proper JSON-RPC format response
+        let resultModelData = try! JSONEncoder().encode(resultModel)
+        let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
+        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "stacks_stxTransfer",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [expectedTxId])
+    }
 }
