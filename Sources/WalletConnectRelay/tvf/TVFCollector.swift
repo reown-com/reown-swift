@@ -33,6 +33,7 @@ public class TVFCollector: TVFCollectorProtocol {
             XRPLTVFCollector(),
             HederaTVFCollector(),
             CosmosTVFCollector(),
+            NearTVFCollector(),
             SuiTVFCollector()
         ]
     }

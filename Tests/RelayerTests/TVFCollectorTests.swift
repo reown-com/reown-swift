@@ -417,4 +417,69 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes, [expectedDigest])
     }
+
+    // Add test for NEAR transaction hash extraction
+    func testSessionResponse_NearSignTransaction_ExtractsHashCorrectly() {
+        // Create signed transaction data as array of integers
+        let signedTxData = NearMockFactory.createSignedTransactionData()
+        
+        // Convert UInt8 array to Int array for proper JSON serialization
+        let intArray = signedTxData.map { Int($0) }
+        
+        // Create proper JSON-RPC format response with serialization/deserialization
+        let jsonData = try! JSONSerialization.data(withJSONObject: intArray)
+        let jsonArray = try! JSONSerialization.jsonObject(with: jsonData)
+        let rpcPayloadForAnyCodable: [String: Any] = ["result": jsonArray]
+        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "near_signTransaction",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes?.count, 1)
+        
+        // Check hash format (Base58 encoded)
+        let expectedHash = Base58.encode(Data(signedTxData))
+        XCTAssertEqual(data?.txHashes?.first, expectedHash)
+    }
+    
+    func testSessionResponse_NearSignTransactions_ExtractsHashesCorrectly() {
+        // Create multiple signed transaction data
+        let signedTxDataArray = NearMockFactory.createMultipleSignedTransactionData()
+        
+        // Convert nested UInt8 arrays to Int arrays for proper JSON serialization
+        let intArrays = signedTxDataArray.map { uint8Array in
+            return uint8Array.map { Int($0) }
+        }
+        
+        // Create proper JSON-RPC format response with serialization/deserialization
+        let jsonData = try! JSONSerialization.data(withJSONObject: intArrays)
+        let jsonArrays = try! JSONSerialization.jsonObject(with: jsonData)
+        let rpcPayloadForAnyCodable: [String: Any] = ["result": jsonArrays]
+        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "near_signTransactions",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes?.count, 2)
+        
+        // Check hash formats (Base58 encoded)
+        let expectedHashes = signedTxDataArray.map { Base58.encode(Data($0)) }
+        XCTAssertEqual(data?.txHashes, expectedHashes)
+    }
 }
