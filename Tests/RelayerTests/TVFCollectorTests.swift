@@ -482,4 +482,30 @@ final class TVFCollectorTests: XCTestCase {
         let expectedHashes = signedTxDataArray.map { Base58.encode(Data($0)) }
         XCTAssertEqual(data?.txHashes, expectedHashes)
     }
+
+    // Add test for Bitcoin transaction hash extraction
+    func testSessionResponse_BitcoinSendTransfer_ExtractsTxidCorrectly() {
+        // Create transfer result with expected txid
+        let expectedTxid = "f007551f169722ce74104d6673bd46ce193c624b8550889526d1b93820d725f7"
+        let resultModel = BitcoinMockFactory.createTransferResult(txid: expectedTxid)
+        
+        // Create proper JSON-RPC format response
+        let resultModelData = try! JSONEncoder().encode(resultModel)
+        let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
+        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        
+        // Act
+        let data = tvf.collect(
+            rpcMethod: "sendTransfer",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: rpcResult,
+            tag: 1109
+        )
+        
+        // Assert
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [expectedTxid])
+    }
 }
