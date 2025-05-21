@@ -59,12 +59,15 @@ class CosmosTVFCollector: ChainTVFCollector {
         guard let bodyBytes = Data(base64Encoded: bodyB64),
               let authBytes = Data(base64Encoded: authB64),
               let sigBytes  = Data(base64Encoded: sigBase64) else { return nil }
-        // Assemble TxRaw = bodyBytes || authInfoBytes || signatures (concatenated) as per protobuf order.
-        var raw = Data()
-        raw.append(bodyBytes)
-        raw.append(authBytes)
-        raw.append(sigBytes)
-        let digest = sha256Hex(raw)
+              
+        // Use Protobuf-style encoding for TxRaw
+        // This matches Cosmos SDK's actual transaction encoding format
+        var txRaw = Data()
+        txRaw.append(encodeField(fieldNumber: 1, data: bodyBytes))
+        txRaw.append(encodeField(fieldNumber: 2, data: authBytes))
+        txRaw.append(encodeField(fieldNumber: 3, data: sigBytes))
+        
+        let digest = sha256Hex(txRaw)
         return [digest]
     }
     
@@ -82,6 +85,37 @@ class CosmosTVFCollector: ChainTVFCollector {
         guard let jsonData = try? JSONSerialization.data(withJSONObject: stdTx, options: [.sortedKeys]) else { return nil }
         let digest = sha256Hex(jsonData)
         return [digest]
+    }
+    
+    // Helper functions for Protobuf encoding
+    private func encodeVarint(_ value: Int) -> [UInt8] {
+        var result: [UInt8] = []
+        var val = value
+        repeat {
+            var byte = UInt8(val & 0x7F)
+            val >>= 7
+            if val != 0 {
+                byte |= 0x80
+            }
+            result.append(byte)
+        } while val != 0
+        return result
+    }
+    
+    private func encodeField(fieldNumber: Int, data: Data) -> Data {
+        var result = Data()
+        // Tag: fieldNumber << 3 | wireType (2 for bytes)
+        let tag = fieldNumber << 3 | 2
+        let tagBytes = encodeVarint(tag)
+        result.append(contentsOf: tagBytes)
+        
+        // Length of the data
+        let lengthBytes = encodeVarint(data.count)
+        result.append(contentsOf: lengthBytes)
+        
+        // Data itself
+        result.append(data)
+        return result
     }
     
     private func sha256Hex(_ data: Data) -> String {
