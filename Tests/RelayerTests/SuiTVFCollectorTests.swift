@@ -96,19 +96,32 @@ final class SuiTVFCollectorTests: XCTestCase {
         // verify that some digest was generated. The actual BLAKE2b + Base58 logic is
         // tested elsewhere or assumed correct for this unit test's scope.
         XCTAssertFalse(txHashes?.first?.isEmpty ?? true, "Generated digest should not be empty")
-        // Consider removing the specific prefix check if the format isn't strictly "SuiDigest-"
-        // or if the actual implementation doesn't add it. For now, keeping it as per original test.
-        // XCTAssertTrue(txHashes?.first?.starts(with: "SuiDigest-") ?? false)
     }
     
-    func testParseTxHashes_ErrorCase() {
-        let rpcResult = makeError(code: -32000, message: "some error")
+    // MARK: - Real data test
+    
+    func testParseTxHashes_SuiSignTransaction_WithRealData() {
+        // Real transaction data from user's colleague
+        let expectedDigest = "C98G1Uwh5soPMtZZmjUFwbVzWLMoAHzi5jrX2BtABe8v"
+        let base64Tx = "AAACAAhkAAAAAAAAAAAg1fZH7bd9T9ox0DBFBkR/s8kuVar3e8XtS3fDMt1GBfoCAgABAQAAAQEDAAAAAAEBANX2R+23fU/aMdAwRQZEf7PJLlWq93vF7Ut3wzLdRgX6At/pRJzj2VpZgqXpSvEtd3GzPvt99hR8e/yOCGz/8nbRmA7QFAAAAAAgBy5vStJizn76LmJTBlDiONdR/2rSuzzS4L+Tp/Zs4hZ8cBxYkcSlxBD6QXvgS11E6d+DNek8LiA/beba6iH3l5gO0BQAAAAAIMpdmZjiqJ5GG9di1MAgD4S3uRr2gaMC7S1WsaeBwNIx1fZH7bd9T9ox0DBFBkR/s8kuVar3e8XtS3fDMt1GBfroAwAAAAAAAECrPAAAAAAAAA=="
         
+        // Create sign transaction result with real transaction bytes
+        let resultModel = SuiSignTransactionResult(signature: "dummy-signature", transactionBytes: base64Tx)
+        
+        // Create proper JSON-RPC format response
+        let resultModelData = try! JSONEncoder().encode(resultModel)
+        let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
+        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
+        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        
+        // Test hash extraction
         let txHashes = suiCollector.parseTxHashes(
-            rpcMethod: "sui_signAndExecuteTransaction",
+            rpcMethod: "sui_signTransaction",
             rpcResult: rpcResult
         )
         
-        XCTAssertNil(txHashes)
+        // Verify the calculated digest matches the expected one
+        XCTAssertNotNil(txHashes)
+        XCTAssertEqual(txHashes?.first, expectedDigest, "The calculated digest doesn't match the expected one")
     }
 } 

@@ -91,8 +91,12 @@ class SuiTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Step 2: Prefix with 0x0 for ProgrammableTransaction
-        var prefixedBytes = Data([0x00]) // TransactionKind::ProgrammableTransaction
+        // Step 2: Prefix with "TransactionData::" (required for correct Sui digest calculation)
+        let prefix = "TransactionData::"
+        let prefixData = Data(prefix.utf8)
+        
+        var prefixedBytes = Data()
+        prefixedBytes.append(prefixData)
         prefixedBytes.append(txBytes)
         
         // Step 3: Compute Blake2b-256 hash of the prefixed bytes
