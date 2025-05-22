@@ -22,7 +22,7 @@ final class TVFCollectorTests: XCTestCase {
 
     // MARK: - Session Request (tag = 1108)
 
-    func testSessionRequest_UnknownMethod_ReturnsNil() {
+    func testSessionRequest_UnknownMethod_ReturnsTVFData() {
         let data = tvf.collect(
             rpcMethod: "not_supported",
             rpcParams: AnyCodable([String]()),
@@ -30,7 +30,11 @@ final class TVFCollectorTests: XCTestCase {
             rpcResult: nil,
             tag: 1108
         )
-        XCTAssertNil(data)
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.rpcMethods, ["not_supported"])
+        XCTAssertEqual(data?.chainId?.absoluteString, "eip155:1")
+        XCTAssertNil(data?.contractAddresses)
+        XCTAssertNil(data?.txHashes)
     }
 
     func testSessionRequest_EthSendTransaction_NormalTransaction_NoContractData() {
@@ -237,7 +241,7 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertEqual(data?.txHashes, [expectedTxID])
     }
 
-    func testSessionResponse_UnsupportedMethod_ReturnsNil() {
+    func testSessionResponse_UnsupportedMethod_ReturnsTVFData() {
         let rpcParams = AnyCodable([String]())
         let rpcResult = makeResponse("whatever")
         let data = tvf.collect(
@@ -247,7 +251,11 @@ final class TVFCollectorTests: XCTestCase {
             rpcResult: rpcResult,
             tag: 1109
         )
-        XCTAssertNil(data)
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.rpcMethods, ["someUnsupportedMethod"])
+        XCTAssertEqual(data?.chainId?.absoluteString, "eip155:1")
+        XCTAssertNil(data?.contractAddresses)
+        XCTAssertNil(data?.txHashes)
     }
 
     func testInvalidTag_ReturnsNil() {
