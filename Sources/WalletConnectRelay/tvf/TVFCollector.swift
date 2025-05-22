@@ -51,7 +51,9 @@ public class TVFCollector: TVFCollectorProtocol {
     ///   - rpcResult: An optional `RPCResult` representing `.response(AnyCodable)` or `.error(...)`.
     ///   - tag:       Integer that should map to `.sessionRequest (1108)` or `.sessionResponse (1109)`.
     ///
-    /// - Returns: `TVFData` if successful, otherwise `nil`.
+    /// - Returns: `TVFData` if the tag is valid. When no chain-specific
+    ///   collector supports the method, the returned `TVFData` will contain only
+    ///   the provided method and chain information.
     public func collect(
         rpcMethod: String,
         rpcParams: AnyCodable,
@@ -65,18 +67,16 @@ public class TVFCollector: TVFCollectorProtocol {
             return nil
         }
         
-        // Find a collector that supports this method
-        guard let collector = chainCollectors.first(where: { $0.supportsMethod(rpcMethod) }) else {
-            return nil
-        }
+        // Find a collector that supports this method, if any
+        let collector = chainCollectors.first { $0.supportsMethod(rpcMethod) }
 
         // Extract contract addresses if this is a request
-        let contractAddresses = theTag == .sessionRequest ? 
-            collector.extractContractAddresses(rpcMethod: rpcMethod, rpcParams: rpcParams) : nil
+        let contractAddresses = theTag == .sessionRequest ?
+            collector?.extractContractAddresses(rpcMethod: rpcMethod, rpcParams: rpcParams) : nil
 
         // Parse transaction hashes if this is a response
-        let txHashes = theTag == .sessionResponse ? 
-            collector.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult) : nil
+        let txHashes = theTag == .sessionResponse ?
+            collector?.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult) : nil
 
         return TVFData(
             rpcMethods: [rpcMethod],
