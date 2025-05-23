@@ -358,6 +358,7 @@ public class AppKitClient {
             }
         }
         
+        guard CoinbaseWalletSDK.isConfigured else { return false }
         do {
             let handled = try CoinbaseWalletSDK.shared.handleResponse(url)
             print("Handle Coinbase SDK deeplink with response: \(handled)")

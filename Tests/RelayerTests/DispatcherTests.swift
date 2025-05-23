@@ -34,7 +34,15 @@ final class DispatcherTests: XCTestCase {
             relayHost: "relay.walletconnect.com",
             projectId: "1012db890cf3cfb0c1cdc929add657ba"
         )
-        let socketConnectionHandler = ManualSocketConnectionHandler(socket: webSocket, logger: logger)
+        let socketAuthenticator = ClientIdAuthenticator(
+            clientIdStorage: clientIdStorage,
+            logger: logger
+        )
+        let socketStatusProvider = SocketStatusProvider(socket: webSocket, logger: logger)
+        let topicsTracker = TopicsTrackerMock()
+        topicsTracker.isTrackingAnyTopicsReturnValue = true
+
+        let socketConnectionHandler = ManualSocketConnectionHandler(socket: webSocket, logger: logger, topicsTracker: topicsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
         socketStatusProviderMock = SocketStatusProviderMock()
         sut = Dispatcher(
             socketFactory: webSocketFactory,
@@ -47,9 +55,28 @@ final class DispatcherTests: XCTestCase {
         )
     }
 
-    func testSendWhileConnected() {
+    func testSendWhileConnected() async {
+        // Create an expectation for the connection
+        let connectExpectation = XCTestExpectation(description: "Socket should connect")
+        
+        // Set up the callback to fulfill the expectation when connected
+        webSocket.onConnect = {
+            connectExpectation.fulfill()
+        }
+        
+        // Initiate connection
         try! sut.connect()
+        
+        // Wait for connection to complete
+        await fulfillment(of: [connectExpectation], timeout: 0.5)
+        
+        // Verify socket is connected
+        XCTAssertTrue(webSocket.isConnected, "Socket should be connected before sending")
+        
+        // Send the message
         sut.protectedSend("1") {_ in}
+        
+        // Verify the message was sent
         XCTAssertEqual(webSocket.sendCallCount, 1)
     }
 
@@ -82,5 +109,29 @@ final class DispatcherTests: XCTestCase {
         }.store(in: &publishers)
         socketStatusProviderMock.simulateConnectionStatus(.disconnected)
         waitForExpectations(timeout: 0.001)
+    }
+
+    func testProtectedSendWithoutConnectUnconditionally() async throws {
+        // Ensure socket is not connected initially
+        webSocket.isConnected = false
+        
+        // Create an expectation for the connection attempt
+        let connectionAttemptExpectation = XCTestExpectation(description: "Connection attempt should be rejected")
+        
+        // Send message with connectUnconditionaly = false and expect error
+        do {
+            try await sut.protectedSend("test message", connectUnconditionally: false)
+            XCTFail("protectedSend should throw when connectUnconditionaly is false and no topics are tracked")
+        } catch ManualSocketConnectionHandler.Errors.internalConnectionRejected {
+            // This is the expected error
+            connectionAttemptExpectation.fulfill()
+        }
+        
+        // Wait for the expectation to be fulfilled
+        await fulfillment(of: [connectionAttemptExpectation], timeout: 1.0)
+        
+        // Verify socket remains disconnected
+        XCTAssertFalse(webSocket.isConnected, "Socket should not connect when connectUnconditionally is false and no topics are tracked")
+        XCTAssertEqual(webSocket.sendCallCount, 0, "No message should be sent")
     }
 }

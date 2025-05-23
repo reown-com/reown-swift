@@ -23,24 +23,34 @@ class WebSocketMock: WebSocketConnecting {
     var onConnect: (() -> Void)?
     var onDisconnect: ((Error?) -> Void)?
     var sendCallCount: Int = 0
-    var isConnected: Bool = false
+    var connectCallCount: Int = 0
+    
+    // Make isConnected writable with private backing store
+    private var _isConnected: Bool = false
+    var isConnected: Bool {
+        get { return _isConnected }
+        set { _isConnected = newValue }
+    }
+    
     var blockConnection = false
 
     func connect() {
+        connectCallCount += 1
         guard !blockConnection else {
             return
         }
-        isConnected = true
+        _isConnected = true
         onConnect?()
     }
 
     func disconnect() {
-        isConnected = false
+        _isConnected = false
         onDisconnect?(nil)
     }
 
     func write(string: String, completion: (() -> Void)?) {
-        sendCallCount+=1
+        sendCallCount += 1
+        completion?()
     }
 }
 #endif

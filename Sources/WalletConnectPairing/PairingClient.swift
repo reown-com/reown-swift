@@ -74,6 +74,7 @@ public class PairingClient: PairingRegisterer, PairingInteracting, PairingClient
             .getAll()
             .filter{!$0.requestReceived}
             .map{$0.topic}
+        networkingInteractor.trackTopics(topics)
         Task(priority: .background) {
             try await networkingInteractor.batchSubscribe(topics: topics)
         }
