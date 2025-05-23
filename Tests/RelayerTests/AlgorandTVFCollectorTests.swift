@@ -48,4 +48,22 @@ final class AlgorandTVFCollectorTests: XCTestCase {
         // Verify format of the transaction IDs (actual values will depend on hash result)
         XCTAssertFalse(txHashes?.isEmpty ?? true)
     }
-} 
+
+    func testParseTxHashes_KnownSignedTransaction_ReturnsExpectedTxId() {
+        // This base64 signed transaction is taken from integration tests and
+        // its txID was calculated using the Algorand SDK implementation.
+        let signedTxn = "gqNzaWfEQMBaLA4PHwgxIYW8i/fbbi8akgqg5gU5OdQu2JQGG+wFjU+D9+SAUQvU/8gKPKxTQJsj/z1xl1Fs3yB40KfbQAijdHhuiKRhcGFyksQEAQIAoXBheaCNZXlwa6R0eXBlo3BheQ=="
+
+        // Wrap transaction in JSON-RPC style response
+        let nestedData = ["result": [signedTxn]]
+        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+
+        let txHashes = algorandCollector.parseTxHashes(
+            rpcMethod: "algo_signTxn",
+            rpcResult: rpcResult
+        )
+
+        let expectedTxID = "RODKDC3A3TWN3D6QYA5SWN53SKKM4O24JU2X4LYDFURFM7IEP3TA"
+        XCTAssertEqual(txHashes, [expectedTxID])
+    }
+}
