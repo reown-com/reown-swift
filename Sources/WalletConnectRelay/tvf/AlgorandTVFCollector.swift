@@ -81,34 +81,33 @@ class AlgorandTVFCollector: ChainTVFCollector {
     /// Calculates Algorand transaction IDs from an array of base64-encoded signed transactions
     ///
     /// The algorithm follows these steps:
-    /// 1. Decode base64 to raw bytes
-    /// 2. Compute SHA-512/256 hash of the bytes (using the first 32 bytes of SHA-512)
-    /// 3. Compute checksum (last 4 bytes of SHA-512/256 of the hash)
-    /// 4. Combine hash+checksum and encode to base32
+    /// 1. Decode each base64 string to raw bytes
+    /// 2. Extract the canonical transaction bytes from the MessagePack payload
+    /// 3. Prefix the canonical bytes with "TX" and compute the SHA-512/256 digest
+    /// 4. Base32-encode the resulting 32-byte digest
     private func calculateTransactionIDs(from signedTxnsBase64: [String]) -> [String] {
-        // Filter out null/empty values
+        // Filter out null or empty values
         let validSignedTxns = signedTxnsBase64.filter { !$0.isEmpty && $0 != "null" }
-        
+
         return validSignedTxns.compactMap { base64Str in
-            // Step 1: Decode base64 to raw bytes
+            // Step 1: decode base64
             guard let signedTxnData = Data(base64Encoded: base64Str) else {
                 return nil
             }
-            
-            // Step 2: Compute SHA-512/256 hash (using first 32 bytes of SHA-512)
-            let sha512Hash = SHA512.hash(data: signedTxnData)
-            let sha512HashData = Data(sha512Hash)
-            // Take first 32 bytes to simulate SHA-512/256
-            let hashData = sha512HashData.prefix(32)
-            
-            // Step 3: Compute checksum (last 4 bytes of SHA-512/256 of the hash)
-            let checksumHash = SHA512.hash(data: hashData)
-            let checksumHashData = Data(checksumHash)
-            let checksum = checksumHashData.suffix(4)
-            
-            // Step 4: Combine hash+checksum and encode to base32
-            let txIDData = hashData + checksum
-            return Base32.encode(txIDData)
+
+            // Step 2: extract canonical txn bytes
+            guard let canonicalTxn = MessagePackExtractor.extractCanonicalTransaction(from: signedTxnData) else {
+                return nil
+            }
+
+            // Step 3: prefix with "TX" and compute SHA-512/256 digest
+            var prefixed = Data("TX".utf8)
+            prefixed.append(canonicalTxn)
+            let digestFull = SHA512.hash(data: prefixed)
+            let digest = Data(digestFull).prefix(32)
+
+            // Step 4: encode to Base32
+            return Base32.encode(digest)
         }
     }
-} 
+}

@@ -10,7 +10,7 @@ public class ChainAbstractionNamespace {
 
     @available(*, message: "This method is experimental. Use with caution.")
     public func prepare(chainId: String, from: FfiAddress, call: Call, accounts: [String], localCurrency: Currency) async throws -> PrepareDetailedResponse {
-        return try await chainAbstractionClient.prepareDetailed(chainId: chainId, from: from, call: call, accounts: accounts, localCurrency: localCurrency)
+        return try await chainAbstractionClient.prepareDetailed(chainId: chainId, from: from, call: call, accounts: accounts, localCurrency: localCurrency, useLifi: false)
     }
 
     @available(*, message: "This method is experimental. Use with caution.")
