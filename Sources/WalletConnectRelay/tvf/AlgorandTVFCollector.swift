@@ -57,58 +57,73 @@ class AlgorandTVFCollector: ChainTVFCollector {
     
     func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
         // If rpcResult is nil or is an error, we can't parse anything
-        guard let rpcResult = rpcResult, case .response(let anycodable) = rpcResult else {
+        guard let result = rpcResult,
+              case let .response(response) = result,
+              let responseValue = response.value as? [String: [String]] else { // Updated to handle nested structure
+            return nil
+        }
+
+        // Extract the array of signed transactions
+        guard let signedTxnsBase64 = responseValue["result"] else {
             return nil
         }
         
-        // Only process Algorand transaction methods
-        guard rpcMethod == Self.ALGORAND_SIGN_TXN else {
-            return nil
-        }
-        
-        // Extract from result wrapper (always under "result" key in JSON-RPC)
-        if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"],
-           let signedTxnsArray = try? resultValue.get([String].self) {
-            return calculateTransactionIDs(from: signedTxnsArray)
-        }
-        
-        return nil
+        // Calculate transaction IDs
+        return calculateTransactionIDs(from: signedTxnsBase64)
     }
     
-    // MARK: - Helper Methods
-    
-    /// Calculates Algorand transaction IDs from an array of base64-encoded signed transactions
-    ///
-    /// The algorithm follows these steps:
-    /// 1. Decode base64 to raw bytes
-    /// 2. Compute SHA-512/256 hash of the bytes (using the first 32 bytes of SHA-512)
-    /// 3. Compute checksum (last 4 bytes of SHA-512/256 of the hash)
-    /// 4. Combine hash+checksum and encode to base32
+
     private func calculateTransactionIDs(from signedTxnsBase64: [String]) -> [String] {
-        // Filter out null/empty values
-        let validSignedTxns = signedTxnsBase64.filter { !$0.isEmpty && $0 != "null" }
-        
-        return validSignedTxns.compactMap { base64Str in
-            // Step 1: Decode base64 to raw bytes
-            guard let signedTxnData = Data(base64Encoded: base64Str) else {
+        return signedTxnsBase64.compactMap { signedTxnBase64 -> String? in
+            // Step 1: Decode the base64-encoded signed transaction
+            guard let signedTxnBytes = Data(base64Encoded: signedTxnBase64) else {
                 return nil
             }
             
-            // Step 2: Compute SHA-512/256 hash (using first 32 bytes of SHA-512)
-            let sha512Hash = SHA512.hash(data: signedTxnData)
-            let sha512HashData = Data(sha512Hash)
-            // Take first 32 bytes to simulate SHA-512/256
-            let hashData = sha512HashData.prefix(32)
+            // Step 2: Parse the MessagePack to extract the "txn" field
+            guard let canonicalTxnBytes = extractCanonicalTransaction(signedTxnBytes) else {
+                return nil
+            }
             
-            // Step 3: Compute checksum (last 4 bytes of SHA-512/256 of the hash)
-            let checksumHash = SHA512.hash(data: hashData)
-            let checksumHashData = Data(checksumHash)
-            let checksum = checksumHashData.suffix(4)
+            // Step 3: Prefix with "TX"
+            let prefix = "TX".data(using: .ascii)!
+            let prefixedBytes = prefix + canonicalTxnBytes
             
-            // Step 4: Combine hash+checksum and encode to base32
-            let txIDData = hashData + checksum
-            return Base32.encode(txIDData)
+            // Step 4: Compute SHA-512/256 hash
+            let digest = SHA512.hash(data: prefixedBytes) // Use SHA512 directly
+            let hash = Data(digest.prefix(32)) // SHA-512/256 means taking the first 256 bits (32 bytes) of SHA512
+            
+            // Step 5: Convert to Base32
+            return Base32.encode(hash)
+        }
+    }
+
+    private func extractCanonicalTransaction(_ signedTxnBytes: Data) -> Data? {
+        do {
+            // The signed transaction should be a map
+            guard let unpackedValue = try signedTxnBytes.unpack() else {
+                print("Failed to unpack signed transaction")
+                return nil
+            }
+            
+            guard let signedTxnMap = unpackedValue as? [String: Any?] else {
+                print("Signed transaction is not a map of [String: Any?]")
+                return nil
+            }
+            
+            // Extract the "txn" field
+            guard let txnValue = signedTxnMap["txn"] else {
+                print("No 'txn' field found in signed transaction")
+                return nil
+            }
+            
+            // Re-encode just the txn part as MessagePack
+            var packedTxnData = Data()
+            try packedTxnData.pack(txnValue)
+            return packedTxnData
+        } catch {
+            print("Failed to parse signed transaction MessagePack: \(error)")
+            return nil
         }
     }
 } 
