@@ -249,8 +249,8 @@
         "repositoryURL": "https://github.com/MobileWalletProtocol/wallet-mobile-sdk",
         "state": {
           "branch": null,
-          "revision": "4aa89e682f8d7ab1515d85d0797f0d25306bb56a",
-          "version": "1.0.5"
+          "revision": "4293df51d3500b8e876ca4bf0d7548adf097569a",
+          "version": "1.1.2"
         }
       },
       {
