@@ -35,44 +35,21 @@ class AlgorandTVFCollector: ChainTVFCollector {
         }
         
         // Get the underlying value from AnyCodable
-        var underlyingValue: Any
+        let underlyingValue: Any
         if let anyCodable = response.value as? AnyCodable {
             underlyingValue = anyCodable.value
         } else {
             underlyingValue = response.value
         }
         
-        // Try different possible structures
-        var signedTxnsBase64: [String]?
-        
-        // Option 1: Direct array
-        if let directArray = underlyingValue as? [String] {
-            signedTxnsBase64 = directArray
-        }
-        // Option 2: Nested with "result" key
-        else if let responseDict = underlyingValue as? [String: [String]],
-                let resultArray = responseDict["result"] {
-            signedTxnsBase64 = resultArray
-        }
-        // Option 3: Any other nested structure
-        else if let responseDict = underlyingValue as? [String: Any] {
-            if let resultArray = responseDict["result"] as? [String] {
-                signedTxnsBase64 = resultArray
-            }
-        }
-        // Option 4: Try with AnyHashable keys
-        else if let responseDict = underlyingValue as? [AnyHashable: Any] {
-            if let resultArray = responseDict["result"] as? [String] {
-                signedTxnsBase64 = resultArray
-            }
-        }
-        
-        guard let finalSignedTxnsBase64 = signedTxnsBase64 else {
+        // Extract the "result" field from JSON-RPC response structure
+        guard let responseDict = underlyingValue as? [String: Any],
+              let signedTxnsBase64 = responseDict["result"] as? [String] else {
             return nil
         }
         
         // Calculate transaction IDs
-        return calculateTransactionIDs(from: finalSignedTxnsBase64)
+        return calculateTransactionIDs(from: signedTxnsBase64)
     }
     
 
