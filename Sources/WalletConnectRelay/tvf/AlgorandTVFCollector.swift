@@ -1,36 +1,6 @@
 import Foundation
 import CryptoKit
 
-// MARK: - Base32 Encoder
-
-private struct Base32 {
-    private static let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-    
-    static func encode(_ data: Data) -> String {
-        var result = ""
-        var bits = 0
-        var buffer = 0
-        
-        for byte in data {
-            buffer = (buffer << 8) | Int(byte)
-            bits += 8
-            
-            while bits >= 5 {
-                bits -= 5
-                let index = (buffer >> bits) & 0x1F
-                result.append(alphabet[alphabet.index(alphabet.startIndex, offsetBy: index)])
-            }
-        }
-        
-        if bits > 0 {
-            let index = (buffer << (5 - bits)) & 0x1F
-            result.append(alphabet[alphabet.index(alphabet.startIndex, offsetBy: index)])
-        }
-        
-        return result
-    }
-}
-
 // MARK: - AlgorandTVFCollector
 
 class AlgorandTVFCollector: ChainTVFCollector {
@@ -56,125 +26,85 @@ class AlgorandTVFCollector: ChainTVFCollector {
     }
     
     func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
-        // If rpcResult is nil or is an error, we can't parse anything
-        print("🔍 parseTxHashes called with method: \(rpcMethod)")
-        print("🔍 rpcResult: \(String(describing: rpcResult))")
-        
         guard let result = rpcResult else {
-            print("❌ rpcResult is nil")
             return nil
         }
         
         guard case let .response(response) = result else {
-            print("❌ rpcResult is not a response, it's: \(result)")
             return nil
         }
-        
-        print("🔍 response.value type: \(type(of: response.value))")
-        print("🔍 response.value: \(response.value)")
         
         // Get the underlying value from AnyCodable
         var underlyingValue: Any
         if let anyCodable = response.value as? AnyCodable {
             underlyingValue = anyCodable.value
-            print("🔍 Successfully cast to AnyCodable, underlyingValue type: \(type(of: underlyingValue))")
         } else {
             underlyingValue = response.value
-            print("🔍 Using response.value directly as underlyingValue type: \(type(of: underlyingValue))")
         }
-        print("🔍 underlyingValue: \(underlyingValue)")
         
         // Try different possible structures
         var signedTxnsBase64: [String]?
         
         // Option 1: Direct array
         if let directArray = underlyingValue as? [String] {
-            print("✅ Found direct array of strings")
             signedTxnsBase64 = directArray
         }
         // Option 2: Nested with "result" key
         else if let responseDict = underlyingValue as? [String: [String]],
                 let resultArray = responseDict["result"] {
-            print("✅ Found nested structure with 'result' key")
             signedTxnsBase64 = resultArray
         }
         // Option 3: Any other nested structure
         else if let responseDict = underlyingValue as? [String: Any] {
-            print("🔍 Found dictionary, keys: \(responseDict.keys)")
             if let resultArray = responseDict["result"] as? [String] {
-                print("✅ Found 'result' key with string array")
                 signedTxnsBase64 = resultArray
             }
         }
         // Option 4: Try with AnyHashable keys
         else if let responseDict = underlyingValue as? [AnyHashable: Any] {
-            print("🔍 Found dictionary with AnyHashable keys: \(responseDict.keys)")
             if let resultArray = responseDict["result"] as? [String] {
-                print("✅ Found 'result' key with string array (AnyHashable)")
                 signedTxnsBase64 = resultArray
             }
         }
         
         guard let finalSignedTxnsBase64 = signedTxnsBase64 else {
-            print("❌ Could not extract signed transactions array from response")
             return nil
         }
         
-        print("🔍 Extracted signedTxnsBase64 count: \(finalSignedTxnsBase64.count)")
-        for (index, txn) in finalSignedTxnsBase64.enumerated() {
-            print("🔍 Transaction \(index): \(txn.prefix(50))...")
-        }
-        
         // Calculate transaction IDs
-        let result_hashes = calculateTransactionIDs(from: finalSignedTxnsBase64)
-        print("🔍 calculateTransactionIDs returned: \(result_hashes)")
-        return result_hashes
+        return calculateTransactionIDs(from: finalSignedTxnsBase64)
     }
     
 
     private func calculateTransactionIDs(from signedTxnsBase64: [String]) -> [String] {
-        print("🔍 calculateTransactionIDs called with \(signedTxnsBase64.count) transactions")
-        
-        let results = signedTxnsBase64.compactMap { signedTxnBase64 -> String? in
-            print("🔍 Processing transaction: \(signedTxnBase64.prefix(50))...")
-            
+        let results = signedTxnsBase64.enumerated().compactMap { (index, signedTxnBase64) -> String? in
             // Step 1: Decode the base64-encoded signed transaction
             guard let signedTxnBytes = Data(base64Encoded: signedTxnBase64) else {
-                print("❌ Failed to decode base64: \(signedTxnBase64.prefix(50))...")
                 return nil
             }
-            print("✅ Successfully decoded base64 to \(signedTxnBytes.count) bytes")
             
             // Step 2: Parse the MessagePack to extract the "txn" field
             guard let canonicalTxnBytes = extractCanonicalTransaction(signedTxnBytes) else {
-                print("❌ Failed to extract canonical transaction")
                 return nil
             }
-            print("✅ Extracted canonical transaction: \(canonicalTxnBytes.count) bytes")
             
             // Step 3: Prefix with "TX"
             let prefix = "TX".data(using: .ascii)!
             let prefixedBytes = prefix + canonicalTxnBytes
-            print("🔍 Prefixed bytes length: \(prefixedBytes.count)")
             
             // Step 4: Compute SHA-512/256 hash
-            let digest = SHA512.hash(data: prefixedBytes)
-            let hash = Data(digest.prefix(32)) // SHA-512/256 means taking the first 256 bits (32 bytes) of SHA512
-            print("🔍 SHA512/256 hash: \(hash.map { String(format: "%02x", $0) }.joined())")
+            let hash = SHA512_256.hash(data: prefixedBytes)
             
             // Step 5: Convert to Base32
-            let base32Result = Base32.encode(hash)
-            print("✅ Base32 result: \(base32Result)")
+            let base32Result = Base32Encoder.encode(hash)
+            
             return base32Result
         }
         
-        print("🔍 Final results: \(results)")
         return results
     }
 
     private func extractCanonicalTransaction(_ signedTxnBytes: Data) -> Data? {
-        print("Attempting to extract canonical transaction from: \(signedTxnBytes.base64EncodedString())")
-        
         // Manual MessagePack parsing to extract "txn" field without converting to Swift types
         return extractTxnFieldManually(from: signedTxnBytes)
     }
@@ -204,42 +134,35 @@ class AlgorandTVFCollector: ChainTVFCollector {
             mapSize = Int(data[index]) << 24 | Int(data[index + 1]) << 16 | Int(data[index + 2]) << 8 | Int(data[index + 3])
             index += 4
         } else {
-            print("❌ Expected map, got: 0x\(String(format: "%02x", firstByte))")
             return nil
         }
-        
-        print("🔍 Map has \(mapSize) entries")
         
         // Look for the "txn" key
         for _ in 0..<mapSize {
             // Read the key
             guard let (keyData, keyEndIndex) = readMessagePackValue(from: data, startIndex: index) else {
-                print("❌ Failed to read key")
                 return nil
             }
             index = keyEndIndex
             
             // Check if this key is "txn"
-            if let keyString = parseStringFromMessagePack(keyData), keyString == "txn" {
-                print("✅ Found 'txn' key")
-                // Read and return the value
-                guard let (valueData, _) = readMessagePackValue(from: data, startIndex: index) else {
-                    print("❌ Failed to read 'txn' value")
-                    return nil
+            if let keyString = parseStringFromMessagePack(keyData) {
+                if keyString == "txn" {
+                    // Read and return the value
+                    guard let (valueData, _) = readMessagePackValue(from: data, startIndex: index) else {
+                        return nil
+                    }
+                    return valueData
                 }
-                print("✅ Extracted 'txn' value: \(valueData.count) bytes")
-                return valueData
-            } else {
-                // Skip the value for this key
-                guard let (_, valueEndIndex) = readMessagePackValue(from: data, startIndex: index) else {
-                    print("❌ Failed to skip value")
-                    return nil
-                }
-                index = valueEndIndex
             }
+            
+            // Skip the value for this key
+            guard let (_, valueEndIndex) = readMessagePackValue(from: data, startIndex: index) else {
+                return nil
+            }
+            index = valueEndIndex
         }
         
-        print("❌ 'txn' key not found in map")
         return nil
     }
     
@@ -416,7 +339,6 @@ class AlgorandTVFCollector: ChainTVFCollector {
             }
             
         default:
-            print("❌ Unsupported MessagePack type: 0x\(String(format: "%02x", startByte))")
             return nil
         }
         

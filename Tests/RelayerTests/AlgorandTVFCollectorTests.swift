@@ -25,14 +25,13 @@ final class AlgorandTVFCollectorTests: XCTestCase {
     // MARK: - Transaction Hash Parsing Tests
     
     func testParseTxHashes_AlgoSignTxn() {
-        // Create mock base64 signed transactions
-        let signedTxns = [
-            "gqNzaWfEQMBaLA4PHwgxIYW8i/fbbi8akgqg5gU5OdQu2JQGG+wFjU+D9+SAUQvU/8gKPKxTQJsj/z1xl1Fs3yB40KfbQAijdHhuiKRhcGFyksQEAQIAoXBheaCNZXlwa6R0eXBlo3BheQ==",
-            "gqNzaWfEQL4gGxM+4AKs/RwVj5EE4iE3ELYyGaKiC9j7nT33Oq0U7YSzEY7YUhA9SnPlFatkHK/OV7Hce+6i1jhOtGBczgijdHhuiqRhcGFyksQEAQIAoXBheaCNZXlwbKR0eXBlo3BheQ=="
+        // Test with real working data instead of mock data
+        let signedTxnsBase64 = [
+            "gqNzaWfEQNGPgbxS9pTu0sTikT3cJVO48WFltc8MM8meFR+aAnGwOo3FO+0nFkAludT0jNqHRM6E65gW6k/m92sHVCxVnQWjdHhuiaNhbXTOAAehIKNmZWXNA+iiZnbOAv0CO6NnZW6sbWFpbm5ldC12MS4womdoxCDAYcTY/B293tLXYEvkVo4/bQQZh6w3veS2ILWrOSSK36Jsds4C/QYjo3JjdsQgeqRNTBEXudHx2kO9Btq289aRzj5DlNUw0jwX9KEnaZqjc25kxCDH1s5tvgARbjtHceUG07Sj5IDfqzn7Zwx0P+XuvCYMz6R0eXBlo3BheQ=="
         ]
         
         // Create proper nested RPCResult with JSON-RPC format
-        let nestedData = ["result": signedTxns]
+        let nestedData = ["result": signedTxnsBase64]
         let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
         
         // Test hash extraction
@@ -43,10 +42,8 @@ final class AlgorandTVFCollectorTests: XCTestCase {
         
         // Verify we got transaction IDs
         XCTAssertNotNil(txHashes)
-        XCTAssertEqual(txHashes?.count, 2)
-        
-        // Verify format of the transaction IDs (actual values will depend on hash result)
-        XCTAssertFalse(txHashes?.isEmpty ?? true)
+        XCTAssertEqual(txHashes?.count, 1)
+        XCTAssertEqual(txHashes?.first, "OM5JS3AE4HVAT5ZMCIMY32HPD6KJAQVPFS2LL2ZW2R5JKUKZFVNA")
     }
     
     func testCollectTxHashes_AlgoSignTxn_RealData() {
