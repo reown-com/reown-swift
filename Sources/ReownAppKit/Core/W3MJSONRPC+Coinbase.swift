@@ -34,7 +34,8 @@ extension W3MJSONRPC {
                 maxFeePerGas: maxFeePerGas,
                 maxPriorityFeePerGas: maxPriorityFeePerGas,
                 gasLimit: gasLimit,
-                chainId: chainId
+                chainId: chainId,
+                actionSource: nil
             )
         case let .wallet_switchEthereumChain(chainId):
             return .wallet_switchEthereumChain(chainId: chainId)
