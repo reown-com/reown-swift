@@ -285,6 +285,7 @@ struct AuthRequestView: View {
                 .cornerRadius(20)
         }
         .shadow(color: .white.opacity(0.25), radius: 8, y: 2)
+        .accessibilityIdentifier("signOneButton")
     }
 
     // Adjusted layout to include the signOneButton
