@@ -29,7 +29,7 @@ struct WalletEngine {
         instance.staticTexts["Swift Dapp"]
     }
 
-    // Proposal
+    // AuthRequest (Session Authentication) buttons
 
     var approveButton: XCUIElement {
         instance.buttons["Approve"]
@@ -37,6 +37,24 @@ struct WalletEngine {
 
     var rejectButton: XCUIElement {
         instance.buttons["Reject"]
+    }
+
+    var signOneButton: XCUIElement {
+        instance.buttons["Sign One"]
+    }
+
+    var declineButton: XCUIElement {
+        instance.buttons["Decline"]
+    }
+
+    // SessionRequest (personal_sign, etc.) buttons
+    
+    var allowButton: XCUIElement {
+        instance.buttons["Allow"]
+    }
+
+    var sessionRequestDeclineButton: XCUIElement {
+        instance.buttons["Decline"]
     }
 
     // SessionDetails
