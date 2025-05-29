@@ -20,7 +20,7 @@ final class WelcomePresenter: ObservableObject {
     }
     
     func onGetStarted() {
-        // Generate a new Sui account when creating a new account
+        // Generate new Sui account when creating a new account
         interactor.generateSuiAccount()
         importAccount(ImportAccount.new())
     }
@@ -29,16 +29,18 @@ final class WelcomePresenter: ObservableObject {
         guard let account = ImportAccount(input: input)
         else { return input = .empty }
         
-        // Save Solana private key if provided
+        // Save Solana private key only if provided
         if !solanaInput.isEmpty {
             interactor.saveSolanaPrivateKey(solanaInput)
             solanaInput = .empty
         }
         
-        // Save Sui private key if provided
+        // Save Sui private key if provided, otherwise generate a new one
         if !suiInput.isEmpty {
             interactor.saveSuiPrivateKey(suiInput)
             suiInput = .empty
+        } else {
+            interactor.generateSuiAccount()
         }
         
         importAccount(account)

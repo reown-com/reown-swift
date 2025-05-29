@@ -45,7 +45,6 @@ class SolanaAccountStorage {
         return Account(blockchain: chainId, address: address)!
     }
 
-    
     /// Creates a Solana account from a private key
     func createAccount(from privateKey: String) throws -> SolanaSwift.Account {
         let secretKey = Data(SolanaSwift.Base58.decode(privateKey))
