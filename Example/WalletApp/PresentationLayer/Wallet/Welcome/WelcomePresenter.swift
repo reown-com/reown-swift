@@ -9,6 +9,7 @@ final class WelcomePresenter: ObservableObject {
 
     @Published var input: String = .empty
     @Published var solanaInput: String = .empty
+    @Published var suiInput: String = .empty
 
     init(interactor: WelcomeInteractor, router: WelcomeRouter) {
         defer {
@@ -19,6 +20,8 @@ final class WelcomePresenter: ObservableObject {
     }
     
     func onGetStarted() {
+        // Generate a new Sui account when creating a new account
+        interactor.generateSuiAccount()
         importAccount(ImportAccount.new())
     }
 
@@ -30,6 +33,12 @@ final class WelcomePresenter: ObservableObject {
         if !solanaInput.isEmpty {
             interactor.saveSolanaPrivateKey(solanaInput)
             solanaInput = .empty
+        }
+        
+        // Save Sui private key if provided
+        if !suiInput.isEmpty {
+            interactor.saveSuiPrivateKey(suiInput)
+            suiInput = .empty
         }
         
         importAccount(account)

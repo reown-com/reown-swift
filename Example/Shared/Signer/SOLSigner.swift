@@ -31,7 +31,7 @@ struct SOLSigner {
 private struct SolSignTransaction: Codable {
     let instructions: [TransactionInstruction]
     let recentBlockhash: String
-    let feePayer: PublicKey
+    let feePayer: SolanaSwift.PublicKey
 
     var transaction: Transaction {
         return Transaction(

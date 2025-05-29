@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
 		446A306B2DE8375E0024781A /* SolanaAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */; };
+		446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306C2DE8405A0024781A /* SuiAccountStorage.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
 		8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */; };
@@ -339,6 +340,7 @@
 /* Begin PBXFileReference section */
 		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
 		446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolanaAccountStorage.swift; sourceTree = "<group>"; };
+		446A306C2DE8405A0024781A /* SuiAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiAccountStorage.swift; sourceTree = "<group>"; };
 		764E1D5426F8DAC800A1FB15 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		764E1D5526F8DADE00A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
 		764E1D5626F8DB6000A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
@@ -1175,6 +1177,7 @@
 				A578796F2A4EDC6B00F8D10B /* Views */,
 				C55D348E295DFA750004314A /* WelcomeModule.swift */,
 				C55D348F295DFA750004314A /* WelcomePresenter.swift */,
+				446A306C2DE8405A0024781A /* SuiAccountStorage.swift */,
 				C55D3490295DFA750004314A /* WelcomeRouter.swift */,
 				C55D3491295DFA750004314A /* WelcomeInteractor.swift */,
 				446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */,
@@ -2016,6 +2019,7 @@
 				C58099352A543CD000AB58F5 /* BlinkAnimation.swift in Sources */,
 				C56EE245293F566D004840D1 /* WalletPresenter.swift in Sources */,
 				C56EE240293F566D004840D1 /* ScanQRView.swift in Sources */,
+				446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */,
 				A51606FB2A2F47BD00CACB92 /* DefaultBIP44Provider.swift in Sources */,
 				C56EE250293F566D004840D1 /* ScanTargetView.swift in Sources */,
 				C56EE28F293F5757004840D1 /* MigrationConfigurator.swift in Sources */,
