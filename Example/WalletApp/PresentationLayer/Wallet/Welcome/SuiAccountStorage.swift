@@ -85,27 +85,3 @@ class SuiAccountStorage {
         return address
     }
 }
-
-// MARK: - Sui Methods (to be implemented or imported)
-// These methods should be implemented elsewhere or imported from a Sui framework
-
-/// Generates a new Sui keypair
-func suiGenerateKeypair() -> SuiKeyPair {
-    // This should be implemented to generate a Sui keypair
-    // For now, returning a placeholder
-    return "placeholder_keypair"
-}
-
-/// Extracts the public key from a Sui keypair
-func suiGetPublicKey(keypair: SuiKeyPair) -> PublicKey {
-    // This should be implemented to extract public key from keypair
-    // For now, returning a placeholder
-    return "placeholder_public_key"
-}
-
-/// Gets the Sui address from a public key
-func suiGetAddress(publicKey: PublicKey) -> String {
-    // This should be implemented to generate address from public key
-    // For now, returning a placeholder
-    return "placeholder_address"
-} 
