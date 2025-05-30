@@ -36,16 +36,51 @@ class NearTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract from result wrapper (always under "result" key in JSON-RPC)
-        if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"] {
+        // The anycodable.value might be nested AnyCodable, so we need to extract the actual dictionary
+        var actualValue: Any = anycodable.value
+        
+        // If the value is another AnyCodable, extract its value
+        if let nestedAnyCodable = anycodable.value as? AnyCodable {
+            actualValue = nestedAnyCodable.value
+        }
+        
+        // Try to parse as dictionary with "result" key
+        if let resultDict = actualValue as? [String: Any],
+           let resultValue = resultDict["result"] {
             
-            if rpcMethod == Self.NEAR_SIGN_TRANSACTION {
-                // For near_signTransaction, the result is a single Uint8Array
-                return extractTransactionHash(from: resultValue)
-            } else if rpcMethod == Self.NEAR_SIGN_TRANSACTIONS {
-                // For near_signTransactions, the result is an array of Uint8Array
-                return extractTransactionHashes(from: resultValue)
+            // Check if resultValue is already an AnyCodable or a raw value
+            let resultAnyCodable: AnyCodable
+            if let existingAnyCodable = resultValue as? AnyCodable {
+                resultAnyCodable = existingAnyCodable
+            } else {
+                resultAnyCodable = AnyCodable(any: resultValue)
+            }
+            
+            return processSingleResult(rpcMethod: rpcMethod, resultValue: resultAnyCodable)
+        }
+        
+        // Fallback: Try to process the anycodable directly
+        let directResult = processSingleResult(rpcMethod: rpcMethod, resultValue: anycodable)
+        if directResult != nil {
+            return directResult
+        }
+        
+        return nil
+    }
+    
+    private func processSingleResult(rpcMethod: String, resultValue: AnyCodable) -> [String]? {
+        if rpcMethod == Self.NEAR_SIGN_TRANSACTION {
+            if let txData = extractTransactionData(from: resultValue) {
+                let hash = calculateTransactionHash(from: txData)
+                return [hash]
+            }
+        } else if rpcMethod == Self.NEAR_SIGN_TRANSACTIONS {
+            if let txArray = try? resultValue.get([AnyCodable].self) {
+                let hashes = txArray.compactMap { txElement -> String? in
+                    guard let txData = extractTransactionData(from: txElement) else { return nil }
+                    return calculateTransactionHash(from: txData)
+                }
+                return hashes.isEmpty ? nil : hashes
             }
         }
         
@@ -54,89 +89,86 @@ class NearTVFCollector: ChainTVFCollector {
     
     // MARK: - Helper Methods
     
-    /// Extracts transaction hash from a single signed transaction data
-    private func extractTransactionHash(from resultValue: AnyCodable) -> [String]? {
-        // Try to extract the binary data from various representations
-        if let uint8ArrayData = extractUint8ArrayData(from: resultValue) {
-            // In NEAR, the transaction hash is the base58-encoded representation of the signed transaction
-            let hash = Base58.encode(uint8ArrayData)
-            return [hash]
-        }
-        return nil
-    }
-    
-    /// Extracts transaction hashes from multiple signed transaction data
-    private func extractTransactionHashes(from resultValue: AnyCodable) -> [String]? {
-        if let array = try? resultValue.get([AnyCodable].self) {
-            var hashes = [String]()
-            for item in array {
-                if let uint8ArrayData = extractUint8ArrayData(from: item) {
-                    let hash = Base58.encode(uint8ArrayData)
-                    hashes.append(hash)
+    /// Extracts transaction data from either a UInt8 array or a Buffer-like object
+    private func extractTransactionData(from element: AnyCodable) -> Data? {
+        // First, let's check if element.value is a raw dictionary (from our parsing above)
+        if let rawDict = element.value as? [String: Any] {
+            // Check if it's a Buffer object with data field
+            if let dataArray = rawDict["data"] as? [Any] {
+                // Convert the array to UInt8 array
+                let uint8Array = dataArray.compactMap { item -> UInt8? in
+                    if let intValue = item as? Int {
+                        return UInt8(intValue & 0xFF)
+                    } else if let doubleValue = item as? Double {
+                        return UInt8(Int(doubleValue) & 0xFF)
+                    }
+                    return nil
+                }
+                
+                if uint8Array.count == dataArray.count {
+                    return Data(uint8Array)
                 }
             }
-            return hashes.isEmpty ? nil : hashes
+            
+            // Check if it's a JSON bytes array object (keys are string indices)
+            // This handles the format: {"0": 16, "1": 0, "2": 0, ...}
+            let sortedKeys = rawDict.keys.compactMap { Int($0) }.sorted()
+            if !sortedKeys.isEmpty && sortedKeys.first == 0 && sortedKeys.count == rawDict.count {
+                let uint8Array = sortedKeys.compactMap { index -> UInt8? in
+                    guard let value = rawDict[String(index)] else { return nil }
+                    if let intValue = value as? Int {
+                        return UInt8(intValue & 0xFF)
+                    } else if let doubleValue = value as? Double {
+                        return UInt8(Int(doubleValue) & 0xFF)
+                    }
+                    return nil
+                }
+                
+                if uint8Array.count == rawDict.count {
+                    return Data(uint8Array)
+                }
+            }
         }
+        
+        // Check if element.value is another AnyCodable (nested case)
+        if let nestedAnyCodable = element.value as? AnyCodable {
+            return extractTransactionData(from: nestedAnyCodable)
+        }
+        
+        // Try to decode as array of integers first (UInt8 array)
+        if let intArray = try? element.get([Int].self) {
+            let uint8Array = intArray.map { UInt8($0 & 0xFF) }
+            return Data(uint8Array)
+        }
+        
+        // Try to decode as array of UInt8 directly
+        if let uint8Array = try? element.get([UInt8].self) {
+            return Data(uint8Array)
+        }
+        
+        // Try to decode as Buffer object with data field using AnyCodable.get
+        if let bufferObj = try? element.get([String: AnyCodable].self),
+           let dataField = bufferObj["data"] {
+            
+            // Try as [Int] first
+            if let intArray = try? dataField.get([Int].self) {
+                let uint8Array = intArray.map { UInt8($0 & 0xFF) }
+                return Data(uint8Array)
+            }
+            
+            // Try as [UInt8] second
+            if let uint8Array = try? dataField.get([UInt8].self) {
+                return Data(uint8Array)
+            }
+        }
+        
         return nil
     }
     
-    /// Helper method to extract Uint8Array data from different representations
-    private func extractUint8ArrayData(from anyCodable: AnyCodable) -> Data? {
-        // Case 1: Directly as Data
-        if let data = try? anyCodable.get(Data.self) {
-            return data
-        }
-        
-        // Case 2: As Array of integers (typical JS Uint8Array representation)
-        if let intArray = try? anyCodable.get([Int].self) {
-            let bytes = intArray.map { UInt8($0) }
-            return Data(bytes)
-        }
-        
-        // Case 3: As Dictionary with numeric keys (another common JS serialization)
-        if let dict = try? anyCodable.get([String: AnyCodable].self) {
-            var bytes = [UInt8]()
-            var index = 0
-            while let value = dict[String(index)], 
-                  let intValue = try? value.get(Int.self),
-                  intValue >= 0 && intValue <= 255 {
-                bytes.append(UInt8(intValue))
-                index += 1
-            }
-            return bytes.isEmpty ? nil : Data(bytes)
-        }
-        
-        // Case 4: As base64 or hex string
-        if let base64String = try? anyCodable.get(String.self) {
-            if let data = Data(base64Encoded: base64String) {
-                return data
-            }
-            
-            if base64String.hasPrefix("0x"), 
-               let data = Data(hexString: String(base64String.dropFirst(2))) {
-                return data
-            }
-        }
-        
-        return nil
-    }
-}
-
-// MARK: - Helper extension for hex conversion
-fileprivate extension Data {
-    init?(hexString: String) {
-        let len = hexString.count / 2
-        var data = Data(capacity: len)
-        for i in 0..<len {
-            let j = hexString.index(hexString.startIndex, offsetBy: i * 2)
-            let k = hexString.index(j, offsetBy: 2)
-            let bytes = hexString[j..<k]
-            if var num = UInt8(bytes, radix: 16) {
-                data.append(&num, count: 1)
-            } else {
-                return nil
-            }
-        }
-        self = data
+    /// Calculates the NEAR transaction hash from signed transaction data
+    /// According to NEAR docs: hash = base58(sha256(signedTransactionBytes))
+    private func calculateTransactionHash(from txData: Data) -> String {
+        let hash = txData.sha256()
+        return Base58.encode(hash)
     }
 } 
