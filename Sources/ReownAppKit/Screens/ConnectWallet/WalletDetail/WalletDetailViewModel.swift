@@ -143,9 +143,39 @@ class WalletDetailViewModel: ObservableObject {
     private func navigateToWallet(wallet: Wallet, preferBrowser: Bool) {
         do {
             let link = preferBrowser ? wallet.webappLink : wallet.mobileLink
+            
+            if preferBrowser {
+                // For browser navigation, use the documentation format:
+                // {YOUR_WALLET_URL}/wc?requestId={requestId}&sessionTopic={session.Topic}
+                // This format is used when there's an active session request
+                if let webappLink = wallet.webappLink,
+                   let requestId = store.siweRequestId,
+                   let sessionTopic = store.session?.topic {
+                    
+                    var plainAppUrl = webappLink
+                    if plainAppUrl.hasSuffix("/") {
+                        plainAppUrl = String(plainAppUrl.dropLast())
+                    }
+                    
+                    let urlString = "\(plainAppUrl)/wc?requestId=\(requestId.string)&sessionTopic=\(sessionTopic)"
+                    
+                    if let url = urlString.toURL() {
+                        router.openURL(url) { success in
+                            if !success {
+                                self.store.toast = .init(style: .error, message: DeeplinkErrors.failedToOpen.localizedDescription)
+                            }
+                        }
+                        return
+                    }
+                }
+            }
+            
+            // Fallback to original implementation for mobile or when required session data is missing
             if let url = link?.toURL() {
                 router.openURL(url) { success in
-                    self.store.toast = .init(style: .error, message: DeeplinkErrors.failedToOpen.localizedDescription)
+                    if !success {
+                        self.store.toast = .init(style: .error, message: DeeplinkErrors.failedToOpen.localizedDescription)
+                    }
                 }
             } else {
                 throw DeeplinkErrors.noWalletLinkFound

@@ -282,7 +282,7 @@ class Web3ModalViewModel: ObservableObject {
                         guard let self = self else { return }
                         self.store.SIWEFallbackState = false
                         guard let topic = self.store.session?.topic else { return }
-                        Task {try await AppKit.instance.disconnect(topic: topic)}
+                   //     Task {try await AppKit.instance.disconnect(topic: topic)}
                     }
                 }
             }
