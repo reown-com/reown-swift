@@ -157,7 +157,7 @@ class WalletDetailViewModel: ObservableObject {
                         plainAppUrl = String(plainAppUrl.dropLast())
                     }
                     
-                    let urlString = "\(plainAppUrl)/wc?requestId=\(requestId.string)&sessionTopic=\(sessionTopic)"
+                    let urlString = "\(plainAppUrl)?requestId=\(requestId.string)&sessionTopic=\(sessionTopic)"
                     
                     if let url = urlString.toURL() {
                         router.openURL(url) { success in
