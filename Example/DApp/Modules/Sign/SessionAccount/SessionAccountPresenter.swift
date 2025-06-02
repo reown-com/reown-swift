@@ -131,12 +131,7 @@ extension SessionAccountPresenter {
                 }
             } else {
                 // Custom scheme URL - use simple format without extra parameters
-                if !plainAppUrl.contains("://") {
-                    plainAppUrl = plainAppUrl.replacingOccurrences(of: "/", with: "").replacingOccurrences(of: ":", with: "")
-                    plainAppUrl = "\(plainAppUrl)://"
-                }
-                
-                if let url = URL(string: plainAppUrl) {
+                if let url = URL(string: redirectUrl) {
                     UIApplication.shared.open(url)
                     return
                 }
