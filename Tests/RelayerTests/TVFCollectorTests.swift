@@ -453,8 +453,8 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes?.count, 1)
         
-        // Check hash format (Base58 encoded)
-        let expectedHash = Base58.encode(Data(signedTxData))
+        // Check hash format (Base58 encoded SHA256 hash)
+        let expectedHash = Base58.encode(Data(signedTxData).sha256())
         XCTAssertEqual(data?.txHashes?.first, expectedHash)
     }
     
@@ -486,8 +486,8 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.txHashes?.count, 2)
         
-        // Check hash formats (Base58 encoded)
-        let expectedHashes = signedTxDataArray.map { Base58.encode(Data($0)) }
+        // Check hash formats (Base58 encoded SHA256 hashes)
+        let expectedHashes = signedTxDataArray.map { Base58.encode(Data($0).sha256()) }
         XCTAssertEqual(data?.txHashes, expectedHashes)
     }
 
