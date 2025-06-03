@@ -20,7 +20,7 @@ class CosmosTVFCollector: ChainTVFCollector {
     // No contract addresses for Cosmos
     func extractContractAddresses(rpcMethod: String, rpcParams: AnyCodable) -> [String]? { nil }
     
-    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
+    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?, rpcParams: AnyCodable?) -> [String]? {
         guard let rpcResult = rpcResult, case .response(let anycodable) = rpcResult else { return nil }
         guard supportedMethods.contains(rpcMethod) else { return nil }
         // cosmos_sendTransaction returns raw hash string

@@ -25,7 +25,7 @@ class AlgorandTVFCollector: ChainTVFCollector {
         return nil
     }
     
-    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
+    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?, rpcParams: AnyCodable?) -> [String]? {
         guard let result = rpcResult else {
             return nil
         }

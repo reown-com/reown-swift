@@ -52,7 +52,7 @@ class PolkadotTVFCollector: ChainTVFCollector {
         return nil
     }
     
-    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
+    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?, rpcParams: AnyCodable?) -> [String]? {
         // If rpcResult is nil or is an error, we can't parse anything
         guard let rpcResult = rpcResult, case .response(let anycodable) = rpcResult else {
             return nil
@@ -63,8 +63,19 @@ class PolkadotTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract the signature response and request params to calculate hash
-        guard let calculatedHash = calculatePolkadotHash(from: anycodable) else {
+        // Try to extract signature response from result
+        guard let signatureResponse = try? anycodable.get(PolkadotSignatureResponse.self) else {
+            return nil
+        }
+        
+        // Try to extract request params - this is now available!
+        guard let rpcParams = rpcParams,
+              let requestParams = try? rpcParams.get(PolkadotRequestParams.self) else {
+            return nil
+        }
+        
+        // Calculate the hash using both signature response and request params
+        guard let calculatedHash = calculatePolkadotHash(signatureResponse: signatureResponse, requestParams: requestParams) else {
             return nil
         }
         
@@ -72,24 +83,6 @@ class PolkadotTVFCollector: ChainTVFCollector {
     }
     
     // MARK: - Hash Calculation
-    
-    private func calculatePolkadotHash(from response: AnyCodable) -> String? {
-        // The response should contain both the signature response and the original request params
-        // Try to extract from result wrapper (always under "result" key in JSON-RPC)
-        if let result = try? response.get([String: AnyCodable].self),
-           let resultValue = result["result"] {
-            
-            // Try to decode the signature response
-            if let signatureResponse = try? resultValue.get(PolkadotSignatureResponse.self) {
-                // We need the original request params to reconstruct the signed extrinsic
-                // This should be stored in the request context, but for now we'll return nil
-                // as we need both signature and original payload
-                return nil
-            }
-        }
-        
-        return nil
-    }
     
     /// Calculates Polkadot transaction hash from signature response and request params
     private func calculatePolkadotHash(signatureResponse: PolkadotSignatureResponse, requestParams: PolkadotRequestParams) -> String? {

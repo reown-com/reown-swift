@@ -106,5 +106,13 @@ public struct TVFData {
 protocol ChainTVFCollector {
     func supportsMethod(_ method: String) -> Bool
     func extractContractAddresses(rpcMethod: String, rpcParams: AnyCodable) -> [String]?
-    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]?
+    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?, rpcParams: AnyCodable?) -> [String]?
+}
+
+// MARK: - ChainTVFCollector Extension
+
+extension ChainTVFCollector {
+    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
+        return parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult, rpcParams: nil)
+    }
 } 

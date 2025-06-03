@@ -54,4 +54,4 @@ final class BitcoinTVFCollectorTests: XCTestCase {
         // Verify we got the expected transaction hash
         XCTAssertEqual(txHashes, [expectedTxid])
     }
-} 
+}

@@ -53,7 +53,7 @@ class TronTVFCollector: ChainTVFCollector {
         return contractAddresses.isEmpty ? nil : contractAddresses
     }
     
-    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?) -> [String]? {
+    func parseTxHashes(rpcMethod: String, rpcResult: RPCResult?, rpcParams: AnyCodable?) -> [String]? {
         // If rpcResult is nil or is an error, we can't parse anything
         guard let rpcResult = rpcResult, case .response(let anycodable) = rpcResult else {
             return nil

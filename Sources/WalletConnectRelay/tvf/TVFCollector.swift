@@ -36,7 +36,8 @@ public class TVFCollector: TVFCollectorProtocol {
             NearTVFCollector(),
             BitcoinTVFCollector(),
             StacksTVFCollector(),
-            SuiTVFCollector()
+            SuiTVFCollector(),
+            PolkadotTVFCollector()
         ]
     }
 
@@ -76,7 +77,7 @@ public class TVFCollector: TVFCollectorProtocol {
 
         // Parse transaction hashes if this is a response
         let txHashes = theTag == .sessionResponse ?
-            collector?.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult) : nil
+        collector?.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult, rpcParams: rpcParams) : nil
 
         return TVFData(
             rpcMethods: [rpcMethod],
