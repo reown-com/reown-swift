@@ -6,11 +6,10 @@ import CryptoKit
 class CosmosTVFCollector: ChainTVFCollector {
     // MARK: Constants
     static let COSMOS_SIGN_DIRECT = "cosmos_signDirect"
-    static let COSMOS_SIGN_AMINO  = "cosmos_signAmino"
     static let COSMOS_SEND_TRANSACTION = "cosmos_sendTransaction"
     
     private var supportedMethods: [String] {
-        [Self.COSMOS_SIGN_DIRECT, Self.COSMOS_SIGN_AMINO, Self.COSMOS_SEND_TRANSACTION]
+        [Self.COSMOS_SIGN_DIRECT, Self.COSMOS_SEND_TRANSACTION]
     }
     
     func supportsMethod(_ method: String) -> Bool {
@@ -30,18 +29,16 @@ class CosmosTVFCollector: ChainTVFCollector {
             }
             return nil
         }
-        // For signDirect / signAmino we expect { result: { ... } }
+        // For signDirect we expect { result: { ... } }
         guard let wrapper = try? anycodable.get([String: AnyCodable].self),
               let resultAny = wrapper["result"],
               let result = try? resultAny.get([String: AnyCodable].self) else { return nil }
-        switch rpcMethod {
-        case Self.COSMOS_SIGN_DIRECT:
+        
+        if rpcMethod == Self.COSMOS_SIGN_DIRECT {
             return handleSignDirect(result)
-        case Self.COSMOS_SIGN_AMINO:
-            return handleSignAmino(result)
-        default:
-            return nil
         }
+        
+        return nil
     }
     
     // MARK: - Private helpers
@@ -68,22 +65,6 @@ class CosmosTVFCollector: ChainTVFCollector {
         txRaw.append(encodeField(fieldNumber: 3, data: sigBytes))
         
         let digest = sha256Hex(txRaw)
-        return [digest]
-    }
-    
-    private func handleSignAmino(_ result: [String: AnyCodable]) -> [String]? {
-        guard let signatureAny = result["signature"],
-              let signature = try? signatureAny.get([String: AnyCodable].self),
-              let signedDocAny = result["signed"],
-              let signedDoc = try? signedDocAny.get([String: AnyCodable].self) else { return nil }
-        // Build StdTx dict
-        var stdTx = [String: Any]()
-        stdTx["msg"] = (signedDoc["msgs"]?.value) ?? []
-        stdTx["fee"] = signedDoc["fee"]?.value ?? [:]
-        stdTx["signatures"] = [signature.mapValues { $0.value }]
-        stdTx["memo"] = signedDoc["memo"]?.value ?? ""
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: stdTx, options: [.sortedKeys]) else { return nil }
-        let digest = sha256Hex(jsonData)
         return [digest]
     }
     

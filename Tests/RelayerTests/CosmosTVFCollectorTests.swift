@@ -15,13 +15,6 @@ enum CosmosMock {
             ]
         ]
     }
-    
-    static func signAminoResult(signedDoc: [String: Any], signature: [String: Any]) -> [String: Any] {
-        return [
-            "signature": signature,
-            "signed": signedDoc
-        ]
-    }
 }
 
 final class CosmosTVFCollectorTests: XCTestCase {
@@ -30,22 +23,6 @@ final class CosmosTVFCollectorTests: XCTestCase {
     private func sha256Hex(_ data: Data) -> String {
         let digest = SHA256.hash(data: data)
         return digest.map{String(format: "%02X", $0)}.joined()
-    }
-    
-    func testParseTxHashes_SignAmino() {
-        let signature: [String: Any] = ["signature": "AAAA"]
-        let signedDoc: [String: Any] = [
-            "memo": "",
-            "msgs": [],
-            "fee": [:]
-        ]
-        let resultObj = CosmosMock.signAminoResult(signedDoc: signedDoc, signature: signature)
-        let stdTx = ["msg":[],"fee":[:],"signatures":[signature],"memo":""] as [String:Any]
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: stdTx, options: [.sortedKeys]) else { XCTFail(); return }
-        let expected = sha256Hex(jsonData)
-        let rpcResult = RPCResult.response(AnyCodable(any: ["result": resultObj]))
-        let hashes = collector.parseTxHashes(rpcMethod: "cosmos_signAmino", rpcResult: rpcResult)
-        XCTAssertEqual(hashes, [expected])
     }
     
     func testParseTxHashes_CosmosSignDirect_WithRealData() {
