@@ -51,7 +51,7 @@ class SolanaTVFCollector: ChainTVFCollector {
                             let signature = try SolanaSignatureExtractor.extractSignature(from: transaction)
                             txHashes.append(signature)
                         } catch {
-                            print("Error extracting signature from transaction: \(error)")
+//                            print("Error extracting signature from transaction: \(error)")
                         }
                     }
                     return txHashes.isEmpty ? nil : txHashes
@@ -62,7 +62,6 @@ class SolanaTVFCollector: ChainTVFCollector {
                 return nil
             }
         } catch {
-            print("Error processing \(rpcMethod): \(error)")
             return nil
         }
     }

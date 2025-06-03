@@ -38,7 +38,7 @@ class EVMTVFCollector: ChainTVFCollector {
                 }
             }
         } catch {
-            print("Failed to parse EthSendTransaction: \(error)")
+          //  print("Failed to parse EthSendTransaction: \(error)")
         }
         return nil
     }

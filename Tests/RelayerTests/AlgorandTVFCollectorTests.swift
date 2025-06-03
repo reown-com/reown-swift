@@ -64,7 +64,6 @@ final class AlgorandTVFCollectorTests: XCTestCase {
         XCTAssertNotNil(result)
         // https://explorer.perawallet.app/tx/OM5JS3AE4HVAT5ZMCIMY32HPD6KJAQVPFS2LL2ZW2R5JKUKZFVNA/
         let expectedTxId = "OM5JS3AE4HVAT5ZMCIMY32HPD6KJAQVPFS2LL2ZW2R5JKUKZFVNA"
-        print("Algorand transaction ID: \(result?.first ?? "N/A")")
         XCTAssertEqual(expectedTxId, result?.first)
     }
 } 
