@@ -62,7 +62,7 @@ actor PushRegisterService {
         await httpClient.updateHost(host: "echo.walletconnect.org")
     }
 
-#if DEBUG
+#if DEBUG || targetEnvironment(simulator)
     public func register(deviceToken: String, alwaysRaw: Bool) async throws {
         let pushAuthToken = try pushAuthenticator.createAuthToken()
         let clientId = try clientIdStorage.getClientId()
