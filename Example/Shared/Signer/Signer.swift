@@ -51,7 +51,6 @@ final class Signer {
             return account
         }
 
-        add sui sign tx
         if let paramsArray = try? request.params.get([AnyCodable].self) {
             if request.method == "personal_sign" || request.method == "eth_signTypedData" {
                 // Typically 2nd param for those
