@@ -1,4 +1,3 @@
-
 import Foundation
 import WalletConnectSign
 import ReownWalletKit
@@ -30,6 +29,22 @@ final class Signer {
 
     /// Main entry point that decides which signer to call.
     static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
+
+        // Check if this is a Sui method first
+        if request.method.starts(with: "sui_") {
+            let requestedAddress = try await getRequestedAddress(request)
+            let suiAccountStorage = SuiAccountStorage()
+            
+            // Check if the requested address matches our Sui account
+            if let suiAddress = suiAccountStorage.getAddress(),
+               requestedAddress.lowercased() == suiAddress.lowercased() {
+                let suiSigner = SuiSigner()
+                return try await suiSigner.sign(request: request)
+            }
+            
+            throw Errors.accountForRequestNotFound
+        }
+
         let requestedAddress = try await getRequestedAddress(request)
 
         // If EOA address is requested
@@ -43,8 +58,21 @@ final class Signer {
         throw Errors.accountForRequestNotFound
     }
 
-    // The logic for finding a requested address stays the same
+    // The logic for finding a requested address needs to be updated for Sui methods
     private static func getRequestedAddress(_ request: Request) async throws -> String {
+        // Handle Sui methods
+        if request.method.starts(with: "sui_") {
+            // For Sui methods, we need to get the account from the request context
+            // Since Sui methods don't typically include the account in params,
+            // we'll get it from the SuiAccountStorage
+            let suiAccountStorage = SuiAccountStorage()
+            if let suiAddress = suiAccountStorage.getAddress() {
+                return suiAddress
+            }
+            throw Errors.cantFindRequestedAddress
+        }
+        
+        // Handle EIP155 methods
         if let paramsArray = try? request.params.get([AnyCodable].self),
            let firstParam = paramsArray.first?.value as? [String: Any],
            let account = firstParam["from"] as? String {

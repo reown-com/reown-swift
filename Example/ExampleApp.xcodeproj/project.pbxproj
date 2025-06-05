@@ -10,6 +10,7 @@
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
 		446A306B2DE8375E0024781A /* SolanaAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */; };
 		446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306C2DE8405A0024781A /* SuiAccountStorage.swift */; };
+		44D89A112DF183C800056A7B /* SuiSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A102DF183C800056A7B /* SuiSigner.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
 		8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */; };
@@ -341,6 +342,7 @@
 		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
 		446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolanaAccountStorage.swift; sourceTree = "<group>"; };
 		446A306C2DE8405A0024781A /* SuiAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiAccountStorage.swift; sourceTree = "<group>"; };
+		44D89A102DF183C800056A7B /* SuiSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiSigner.swift; sourceTree = "<group>"; };
 		764E1D5426F8DAC800A1FB15 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		764E1D5526F8DADE00A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
 		764E1D5626F8DB6000A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
@@ -1017,6 +1019,7 @@
 			children = (
 				84F568C1279582D200D0A289 /* Signer.swift */,
 				848BD1DD2D34DF8F007C2AEF /* EOASigner.swift */,
+				44D89A102DF183C800056A7B /* SuiSigner.swift */,
 				A57E71A5291CF76400325797 /* ETHSigner.swift */,
 				A57E71A7291CF8A500325797 /* SOLSigner.swift */,
 			);
@@ -2084,6 +2087,7 @@
 				C55D349B2965BC2F0004314A /* TagsView.swift in Sources */,
 				446A306B2DE8375E0024781A /* SolanaAccountStorage.swift in Sources */,
 				84B8154E2991099000FAD54E /* BuildConfiguration.swift in Sources */,
+				44D89A112DF183C800056A7B /* SuiSigner.swift in Sources */,
 				C56EE289293F5757004840D1 /* Application.swift in Sources */,
 				C56EE273293F56D7004840D1 /* UIColor.swift in Sources */,
 				84B73D2E2D916B4500EC1793 /* Chain.swift in Sources */,
