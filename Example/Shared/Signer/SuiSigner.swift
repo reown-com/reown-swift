@@ -1,6 +1,20 @@
 import Foundation
 import ReownWalletKit
 
+// MARK: - Sui Request Parameter Models
+
+struct SuiSignPersonalMessageParams: Codable {
+    let address: String
+    let message: String
+}
+
+struct SuiSignTransactionParams: Codable {
+    let address: String
+    let transaction: String // base64 encoded transaction
+}
+
+// MARK: - SuiSigner
+
 final class SuiSigner {
     enum Errors: LocalizedError {
         case suiAccountNotFound
@@ -63,13 +77,9 @@ final class SuiSigner {
     }
     
     private func signPersonalMessage(request: Request, keypair: SuiKeyPair) async throws -> AnyCodable {
-        let params = try parseParams(from: request)
+        let params = try parsePersonalMessageParams(from: request)
         
-        guard let message = params["message"] as? String else {
-            throw Errors.invalidRequestParameters
-        }
-        
-        guard let messageData = message.data(using: .utf8) else {
+        guard let messageData = params.message.data(using: .utf8) else {
             throw Errors.invalidMessageData
         }
         
@@ -87,18 +97,14 @@ final class SuiSigner {
             throw Errors.clientNotInitialized
         }
         
-        let params = try parseParams(from: request)
+        let params = try parseTransactionParams(from: request)
         
-        guard let transaction = params["transaction"] as? String else {
-            throw Errors.invalidRequestParameters
-        }
-        
-        guard let transactionData = Data(base64Encoded: transaction) else {
+        guard let transactionData = Data(base64Encoded: params.transaction) else {
             throw Errors.invalidTransactionData
         }
         
-        let chainId = request.chainId.absoluteString
-
+        let chainId = request.chainId.absoluteString 
+        
         do {
             let result = try await client.signTransaction(
                 chainId: chainId,
@@ -121,13 +127,9 @@ final class SuiSigner {
             throw Errors.clientNotInitialized
         }
         
-        let params = try parseParams(from: request)
+        let params = try parseTransactionParams(from: request)
         
-        guard let transaction = params["transaction"] as? String else {
-            throw Errors.invalidRequestParameters
-        }
-        
-        guard let transactionData = Data(base64Encoded: transaction) else {
+        guard let transactionData = Data(base64Encoded: params.transaction) else {
             throw Errors.invalidTransactionData
         }
         
@@ -147,11 +149,21 @@ final class SuiSigner {
         }
     }
     
-    private func parseParams(from request: Request) throws -> [String: Any] {
-        guard let paramsArray = try? request.params.get([AnyCodable].self),
-              let firstParam = paramsArray.first?.value as? [String: Any] else {
+    // MARK: - Parameter Parsing Methods
+    
+    private func parsePersonalMessageParams(from request: Request) throws -> SuiSignPersonalMessageParams {
+        do {
+            return try request.params.get(SuiSignPersonalMessageParams.self)
+        } catch {
             throw Errors.invalidRequestParameters
         }
-        return firstParam
+    }
+    
+    private func parseTransactionParams(from request: Request) throws -> SuiSignTransactionParams {
+        do {
+            return try request.params.get(SuiSignTransactionParams.self)
+        } catch {
+            throw Errors.invalidRequestParameters
+        }
     }
 } 
