@@ -22,6 +22,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
             return
         }
+        
+        // Extract topic from URL
+        if let topic = extractTopicFromURL(url.absoluteString) {
+            LinkModeTopicsStorage.shared.addTopic(topic)
+        }
+        
         do {
             try WalletKit.instance.dispatchEnvelope(url.absoluteString)
         } catch {
@@ -58,6 +64,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             // Try to handle link mode in case where WalletConnectURI initialization fails
             if let url = connectionOptions.userActivities.first?.webpageURL {
                 configurators.configure() // Ensure configurators are set up before dispatching
+                
+                // Extract topic from URL
+                if let topic = extractTopicFromURL(url.absoluteString) {
+                    LinkModeTopicsStorage.shared.addTopic(topic)
+                }
+                
                 do {
                     try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                 } catch {
@@ -87,6 +99,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                       let queryItems = components.queryItems,
                       queryItems.contains(where: { $0.name == "wc_ev" }) else {
                     return
+                }
+
+                // Extract topic from URL
+                if let topic = extractTopicFromURL(url.absoluteString) {
+                    LinkModeTopicsStorage.shared.addTopic(topic)
                 }
 
                 do {
@@ -142,5 +159,18 @@ private extension SceneDelegate {
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
 
+    }
+
+    // Helper method to extract topic from URL
+    private func extractTopicFromURL(_ urlString: String) -> String? {
+        guard let url = URL(string: urlString),
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems,
+              // Check that wc_ev is present in query parameters
+              queryItems.contains(where: { $0.name == "wc_ev" }) else {
+            return nil
+        }
+        
+        return queryItems.first(where: { $0.name == "topic" })?.value
     }
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
 		8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */; };
@@ -335,6 +336,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
 		764E1D5426F8DAC800A1FB15 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		764E1D5526F8DADE00A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
 		764E1D5626F8DB6000A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
@@ -1330,6 +1332,7 @@
 				C56EE280293F5757004840D1 /* Application.swift */,
 				C56EE27F293F5757004840D1 /* AppDelegate.swift */,
 				C56EE281293F5757004840D1 /* SceneDelegate.swift */,
+				440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */,
 				84DB38F22983CDAE00BFEE37 /* PushRegisterer.swift */,
 				A51811972A52E21A00A52B15 /* ConfigurationService.swift */,
 				8487A9472A83AD680003D5AF /* LoggingService.swift */,
@@ -2121,6 +2124,7 @@
 				84B73D2B2D9161F900EC1793 /* SendEthereumPresenter.swift in Sources */,
 				84B73D2C2D9161F900EC1793 /* SendEthereumView.swift in Sources */,
 				84AEF0192D3DD9C0006E43E5 /* SendStableCoinModule.swift in Sources */,
+				440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */,
 				C5FFEA762ADD8956007282A2 /* BrowserModule.swift in Sources */,
 				C56EE2A3293F6BAF004840D1 /* UIPasteboardWrapper.swift in Sources */,
 				C5B2F6F629705293000DBA0E /* SessionRequestModule.swift in Sources */,

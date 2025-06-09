@@ -572,5 +572,6 @@ public final class SignClient: SignClientProtocol {
             self?.socketConnectionStatusPublisherSubject.send(status)
         }.store(in: &publishers)
     }
+    
 }
 
