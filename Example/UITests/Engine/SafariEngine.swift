@@ -22,7 +22,11 @@ struct SafariEngine {
     }
     
     var swiftSampleWalletButton: XCUIElement {
-        instance.buttons["Swift sample wallet"]
+        instance.buttons["Swift Sample Wallet"]
+    }
+    
+    var signMessageButton: XCUIElement {
+        instance.buttons["sign message"]
     }
     
     // iOS deeplink dialog elements - targeting the specific native dialog
@@ -41,7 +45,11 @@ struct SafariEngine {
     }
     
     var swiftSampleWalletLink: XCUIElement {
-        instance.links["Swift sample wallet"]
+        instance.links["Swift Sample Wallet"]
+    }
+    
+    var signMessageLink: XCUIElement {
+        instance.links["sign message"]
     }
     
     // Web content elements (if needed)
@@ -63,10 +71,28 @@ struct SafariEngine {
         instance.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'swift'")).firstMatch
     }
     
-    // Helper method to navigate to AppKit URL
+    var anySignMessageButton: XCUIElement {
+        instance.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'sign'")).firstMatch
+    }
+    
+    // Helper method to navigate to AppKit URL with clean approach
     func navigateToAppKit() {
+        // Tap the address bar to focus it
         addressBar.waitTap()
-        addressBar.typeText("https://appkit-lab.reown.com/library/wagmi/")
+        
+        // Wait for the address bar to be ready
+        Thread.sleep(forTimeInterval: 0.5)
+        
+        // Completely clear the text field by setting it to empty
+        // This is more reliable than trying to select and replace
+        if let currentValue = addressBar.value as? String, !currentValue.isEmpty {
+            // Clear using the XCUIElement clearAndEnterText approach
+            addressBar.clearAndEnterText("https://appkit-lab.reown.com/library/wagmi/")
+        } else {
+            // If empty, just type the URL
+            addressBar.typeText("https://appkit-lab.reown.com/library/wagmi/")
+        }
+        
         goButton.waitTap()
     }
     
@@ -123,5 +149,45 @@ struct SafariEngine {
         }
         
         return false
+    }
+    
+    // Helper method to scroll down and find sign message button
+    func scrollDownToFindSignMessageButton() {
+        // First try to find the button without scrolling
+        if signMessageButton.waitForAppearence(timeout: 2) || signMessageLink.waitForAppearence(timeout: 1) {
+            return
+        }
+        
+        // If not found, scroll down more extensively to find it
+        let webView = instance.webViews.firstMatch
+        if webView.exists {
+            // Try scrolling more times with longer waits
+            for i in 0..<8 {
+                print("Scrolling attempt \(i + 1) to find sign message button")
+                webView.swipeUp() // Scroll down
+                
+                // Wait longer for content to load after each scroll
+                Thread.sleep(forTimeInterval: 1.0)
+                
+                // Check for the button after each scroll
+                if signMessageButton.waitForAppearence(timeout: 2) || signMessageLink.waitForAppearence(timeout: 1) || anySignMessageButton.waitForAppearence(timeout: 1) {
+                    print("Found sign message button after \(i + 1) scroll attempts")
+                    return
+                }
+                
+                // Also try smaller scrolls occasionally
+                if i % 2 == 1 {
+                    webView.swipeUp()
+                    Thread.sleep(forTimeInterval: 0.5)
+                }
+            }
+            
+            // If still not found, try one more aggressive scroll to bottom
+            print("Trying final scroll to bottom of page")
+            let coordinate = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+            let bottomCoordinate = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+            coordinate.press(forDuration: 0.1, thenDragTo: bottomCoordinate)
+            Thread.sleep(forTimeInterval: 2.0)
+        }
     }
 }

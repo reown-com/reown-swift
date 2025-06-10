@@ -71,6 +71,16 @@ struct WalletEngine {
         instance.alerts.element.staticTexts["Received ping response"]
     }
 
+    // Sign message completion elements
+    var requestSignedText: XCUIElement {
+        instance.staticTexts["request is signed"]
+    }
+
+    // Alternative ways to detect successful sign message
+    var requestSignedLabel: XCUIElement {
+        instance.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'signed'")).firstMatch
+    }
+
     func swipeDismiss() {
         instance.swipeDown(velocity: .fast)
     }
