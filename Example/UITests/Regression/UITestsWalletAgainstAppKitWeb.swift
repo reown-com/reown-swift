@@ -11,9 +11,8 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
     }
 
     //Test Case 2.1: Connecting Sample Wallet to AppKit/React App in Mobile Browser and Approving Session Proposal
-    //Test Case 2.3: Accept Sign Message in Sample Wallet
-    /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser, approving session proposal, and accepting sign message
-    /// - TU009
+    /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser and approving session proposal
+    /// - TU009a
     func testConnectWalletToAppKitWebAndApproveSession() {
         // Step 1: Open browser to AppKit URL with clean state
         engine.routing.activate(app: .safari)
@@ -54,37 +53,58 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         // Step 10: Dialog dismisses and connection is established
         engine.routing.wait(for: 2)
         
-        // Step 11: Go back to Safari
+        // Step 11: Go back to Safari and verify connection
         engine.routing.activate(app: .safari)
-        engine.routing.wait(for: 1)
+        engine.routing.wait(for: 2)
         
-        // Step 12: Scroll down to find "sign message" button
+        // Verify "connected" status appears
+        XCTAssertTrue(engine.safari.connectedStatus.waitExists(), "Connected status should appear on the page")
+        
+        // Test passes - connection established successfully
+        XCTAssertTrue(true, "Test completed - wallet successfully connected to AppKit web app")
+    }
+
+    //Test Case 2.3: Accept Sign Message in Sample Wallet
+    /// Test signing a message in Sample Wallet via AppKit/React App in Mobile Browser
+    /// - TU009b
+    func testSignMessageInConnectedWalletViaAppKitWeb() {
+        // Step 1: Open browser to AppKit URL with clean state
+        engine.routing.activate(app: .safari)
+        engine.routing.wait(for: 2)
+        
+        // Navigate to AppKit lab URL
+        engine.safari.navigateToAppKit()
+        
+        // Wait for page to load
+        engine.routing.wait(for: 3)
+        
+        // Step 2: Scroll down to find "sign message" button (more aggressive scrolling)
         engine.safari.scrollDownToFindSignMessageButton()
         
-        // Step 13: Press "sign message" button
+        // Step 3: Press "sign message" button
         XCTAssertTrue(engine.safari.signMessageButton.waitExists(), "Sign message button should exist on the page")
         engine.safari.signMessageButton.waitTap()
         
-        // Step 14: Native popup for deeplink appears again
+        // Step 4: Native popup for deeplink appears
         engine.routing.wait(for: 1)
         
-        // Step 15: Press "Open" to open in WalletApp
+        // Step 5: Press "Open" to open in WalletApp
         XCTAssertTrue(engine.safari.tapOpenInNativeDialog(), "Should be able to find and tap the native Open button for sign message")
         
-        // Step 16: Wallet opens
+        // Step 6: Wallet opens
         engine.routing.wait(for: 2)
         engine.routing.activate(app: .wallet)
         
-        // Step 17: Press "Allow" button in wallet for sign message request
+        // Step 7: Press "Allow" button in wallet for sign message request
         engine.routing.wait(for: 1)
         XCTAssertTrue(engine.wallet.allowButton.waitExists(), "Allow button should exist for sign message request")
         engine.wallet.allowButton.waitTap()
         
-        // Step 18: A view appears with "request is signed" - that's our test expectation
+        // Step 8: A view appears with "request is signed" - that's our test expectation
         engine.routing.wait(for: 2)
         XCTAssertTrue(engine.wallet.requestSignedText.waitExists(), "Request is signed text should appear")
         
         // Test passes - verify the sign message was successful
-        XCTAssertTrue(true, "Test completed - wallet connected to AppKit web app and sign message request was successful")
+        XCTAssertTrue(true, "Test completed - sign message request was successful")
     }
 } 

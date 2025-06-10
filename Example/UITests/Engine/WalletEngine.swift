@@ -73,7 +73,7 @@ struct WalletEngine {
 
     // Sign message completion elements
     var requestSignedText: XCUIElement {
-        instance.staticTexts["request is signed"]
+        instance.staticTexts["Request is signed"]
     }
 
     // Alternative ways to detect successful sign message

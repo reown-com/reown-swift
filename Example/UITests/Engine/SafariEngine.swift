@@ -26,7 +26,7 @@ struct SafariEngine {
     }
     
     var signMessageButton: XCUIElement {
-        instance.buttons["sign message"]
+        instance.buttons["Sign Message"]
     }
     
     // iOS deeplink dialog elements - targeting the specific native dialog
@@ -49,7 +49,7 @@ struct SafariEngine {
     }
     
     var signMessageLink: XCUIElement {
-        instance.links["sign message"]
+        instance.links["Sign Message"]
     }
     
     // Web content elements (if needed)
@@ -72,7 +72,7 @@ struct SafariEngine {
     }
     
     var anySignMessageButton: XCUIElement {
-        instance.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'sign'")).firstMatch
+        instance.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'sign message'")).firstMatch
     }
     
     // Helper method to navigate to AppKit URL with clean approach
@@ -158,36 +158,48 @@ struct SafariEngine {
             return
         }
         
-        // If not found, scroll down more extensively to find it
+        // If not found, scroll down much more aggressively to find it
         let webView = instance.webViews.firstMatch
         if webView.exists {
-            // Try scrolling more times with longer waits
-            for i in 0..<8 {
+            print("Starting aggressive scrolling to find Sign Message button")
+            
+            // Try many more scroll attempts with different techniques
+            for i in 0..<15 {
                 print("Scrolling attempt \(i + 1) to find sign message button")
-                webView.swipeUp() // Scroll down
+                
+                // Use different scrolling techniques
+                if i < 8 {
+                    // Regular swipe up
+                    webView.swipeUp()
+                } else if i < 12 {
+                    // More aggressive swipe with longer drag
+                    let startCoord = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+                    let endCoord = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+                    startCoord.press(forDuration: 0.1, thenDragTo: endCoord)
+                } else {
+                    // Very aggressive scroll - drag from bottom to very top
+                    let startCoord = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95))
+                    let endCoord = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.05))
+                    startCoord.press(forDuration: 0.2, thenDragTo: endCoord)
+                }
                 
                 // Wait longer for content to load after each scroll
-                Thread.sleep(forTimeInterval: 1.0)
+                Thread.sleep(forTimeInterval: 1.5)
                 
-                // Check for the button after each scroll
+                // Check for the button after each scroll with all possible selectors
                 if signMessageButton.waitForAppearence(timeout: 2) || signMessageLink.waitForAppearence(timeout: 1) || anySignMessageButton.waitForAppearence(timeout: 1) {
-                    print("Found sign message button after \(i + 1) scroll attempts")
+                    print("Found Sign Message button after \(i + 1) scroll attempts")
                     return
                 }
                 
-                // Also try smaller scrolls occasionally
-                if i % 2 == 1 {
+                // Every few attempts, do an extra small scroll
+                if i % 3 == 2 {
                     webView.swipeUp()
                     Thread.sleep(forTimeInterval: 0.5)
                 }
             }
             
-            // If still not found, try one more aggressive scroll to bottom
-            print("Trying final scroll to bottom of page")
-            let coordinate = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
-            let bottomCoordinate = webView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
-            coordinate.press(forDuration: 0.1, thenDragTo: bottomCoordinate)
-            Thread.sleep(forTimeInterval: 2.0)
+            print("Could not find Sign Message button after extensive scrolling")
         }
     }
 }
