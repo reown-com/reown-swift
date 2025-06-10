@@ -62,6 +62,10 @@ struct SafariEngine {
         instance.staticTexts["connected"]
     }
     
+    var signingFailedStatus: XCUIElement {
+        instance.staticTexts["Signing Failed"]
+    }
+    
     // Generic web elements (use when specific selectors don't work)
     var anyConnectButton: XCUIElement {
         instance.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'connect'")).firstMatch

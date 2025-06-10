@@ -107,4 +107,52 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         // Test passes - verify the sign message was successful
         XCTAssertTrue(true, "Test completed - sign message request was successful")
     }
+
+    //Test Case 2.4: Reject Sign Message in Sample Wallet
+    /// Test rejecting a sign message in Sample Wallet via AppKit/React App in Mobile Browser
+    /// - TU009c
+    func testRejectSignMessageInConnectedWalletViaAppKitWeb() {
+        // Step 1: Open browser to AppKit URL with clean state
+        engine.routing.activate(app: .safari)
+        engine.routing.wait(for: 2)
+        
+        // Navigate to AppKit lab URL
+        engine.safari.navigateToAppKit()
+        
+        // Wait for page to load
+        engine.routing.wait(for: 3)
+        
+        // Step 2: Scroll down to find "sign message" button (more aggressive scrolling)
+        engine.safari.scrollDownToFindSignMessageButton()
+        
+        // Step 3: Press "sign message" button
+        XCTAssertTrue(engine.safari.signMessageButton.waitExists(), "Sign message button should exist on the page")
+        engine.safari.signMessageButton.waitTap()
+        
+        // Step 4: Native popup for deeplink appears
+        engine.routing.wait(for: 1)
+        
+        // Step 5: Press "Open" to open in WalletApp
+        XCTAssertTrue(engine.safari.tapOpenInNativeDialog(), "Should be able to find and tap the native Open button for sign message")
+        
+        // Step 6: Wallet opens
+        engine.routing.wait(for: 2)
+        engine.routing.activate(app: .wallet)
+        
+        // Step 7: Press "Decline" button in wallet to reject sign message request
+        engine.routing.wait(for: 1)
+        XCTAssertTrue(engine.wallet.sessionRequestDeclineButton.waitExists(), "Decline button should exist for sign message request")
+        engine.wallet.sessionRequestDeclineButton.waitTap()
+        
+        // Step 8: Go back to Safari to check for failure message
+        engine.routing.wait(for: 2)
+        engine.routing.activate(app: .safari)
+        engine.routing.wait(for: 2)
+        
+        // Step 9: Verify "Signing Failed" status appears
+        XCTAssertTrue(engine.safari.signingFailedStatus.waitExists(), "Signing Failed status should appear on the page")
+        
+        // Test passes - verify the sign message rejection was handled correctly
+        XCTAssertTrue(true, "Test completed - sign message request was correctly rejected")
+    }
 } 
