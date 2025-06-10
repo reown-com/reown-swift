@@ -29,6 +29,10 @@ struct SafariEngine {
         instance.buttons["Sign Message"]
     }
     
+    var disconnectButton: XCUIElement {
+        instance.buttons["Disconnect"]
+    }
+    
     // iOS deeplink dialog elements - targeting the specific native dialog
     var openInWalletAppButton: XCUIElement {
         // First try to find the Open button in the SFDialogView (native iOS dialog)
