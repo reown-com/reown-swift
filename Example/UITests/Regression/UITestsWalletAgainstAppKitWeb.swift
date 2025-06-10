@@ -64,6 +64,57 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         XCTAssertTrue(true, "Test completed - wallet successfully connected to AppKit web app")
     }
 
+    //Test Case 2.2: Connecting Sample Wallet to AppKit/React App in Mobile Browser and Rejecting Session Proposal
+    /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser and rejecting session proposal
+    /// - TU009d
+    func testConnectWalletToAppKitWebAndRejectSession() {
+        // Step 1: Open browser to AppKit URL with clean state
+        engine.routing.activate(app: .safari)
+        engine.routing.wait(for: 2)
+        
+        // Navigate to AppKit lab URL
+        engine.safari.navigateToAppKit()
+        
+        // Wait for page to load
+        engine.routing.wait(for: 3)
+        
+        // Step 2: Press "Connect Wallet" button
+        XCTAssertTrue(engine.safari.tapConnectWallet(), "Should be able to find and tap Connect Wallet button")
+        
+        // Step 3: AppKit opens - wait for wallet options to appear
+        engine.routing.wait(for: 2)
+        
+        // Step 4: Press "Swift sample wallet"
+        XCTAssertTrue(engine.safari.tapSwiftWallet(), "Should be able to find and tap Swift sample wallet button")
+        
+        // Step 5: iOS native screen for opening deeplinks appears
+        engine.routing.wait(for: 1)
+        
+        // Step 6: Press "Open" to open in WalletApp (using helper method to target the correct button)
+        XCTAssertTrue(engine.safari.tapOpenInNativeDialog(), "Should be able to find and tap the native Open button")
+        
+        // Step 7: Swift wallet opens
+        engine.routing.wait(for: 2)
+        engine.routing.activate(app: .wallet)
+        
+        // Step 8: Session proposal dialog appears
+        engine.routing.wait(for: 1)
+        
+        // Step 9: Press "Decline" to reject the session proposal
+        XCTAssertTrue(engine.wallet.rejectButton.waitExists(), "Reject button should exist in session proposal")
+        engine.wallet.rejectButton.waitTap()
+        
+        // Step 10: Dialog dismisses - verify the Allow and Decline buttons no longer exist
+        engine.routing.wait(for: 2)
+        
+        // Verify that the session proposal dialog has disappeared by checking buttons don't exist
+        XCTAssertFalse(engine.wallet.allowButton.waitForAppearence(timeout: 1), "Allow button should no longer exist after rejection")
+        XCTAssertFalse(engine.wallet.rejectButton.waitForAppearence(timeout: 1), "Reject button should no longer exist after rejection")
+        
+        // Test passes - session proposal was successfully rejected and dialog dismissed
+        XCTAssertTrue(true, "Test completed - session proposal was successfully rejected and dialog dismissed")
+    }
+
     //Test Case 2.3: Accept Sign Message in Sample Wallet
     /// Test signing a message in Sample Wallet via AppKit/React App in Mobile Browser
     /// - TU009b
