@@ -15,30 +15,24 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: ./.github/actions/build
+    - uses: actions/cache@v3
       with:
-        project-id: ${{ secrets.PROJECT_ID }}
-        cache-key: ui-tests-${{ github.run_id }}
+        path: |
+          **/SourcePackagesCache
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+
+    - name: Build and Run UI Tests
+      shell: bash
+      run: |
+        # Build everything first
+        make build_all PROJECT_ID=${{ secrets.PROJECT_ID }}
+        
+        # Then run UI tests
+        make ui_tests PROJECT_ID=${{ secrets.PROJECT_ID }}
 
     - name: List available simulators
       shell: bash
       run: xcrun simctl list devices available
-
-    - name: Run All UI Tests
-      shell: bash
-      run: |
-        xcodebuild test \
-          -project "Example/ExampleApp.xcodeproj" \
-          -scheme "UITests" \
-          -destination "platform=iOS Simulator,name=iPhone 15 Pro,OS=17.0" \
-          -derivedDataPath DerivedDataCache \
-          -resultBundlePath test_results/UITests.xcresult \
-          -enableCodeCoverage NO \
-          -skip-testing:UITests/UITestsWalletAgainstAppKitWeb \
-          -allowProvisioningUpdates \
-          CODE_SIGNING_REQUIRED=NO \
-          CODE_SIGNING_ALLOWED=NO \
-          PROJECT_ID=${{ secrets.PROJECT_ID }}
 
     - name: Parse test results
       if: always()
