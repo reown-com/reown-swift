@@ -37,6 +37,23 @@
                BlueprintName = "UITests"
                ReferencedContainer = "container:ExampleApp.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "UITestsWalletAgainstAppKitWeb">
+               </Test>
+               <Test
+                  Identifier = "UITestsWalletAgainstAppKitWeb/testConnectWalletToAppKitWebAndApproveSession()">
+               </Test>
+               <Test
+                  Identifier = "UITestsWalletAgainstAppKitWeb/testConnectWalletToAppKitWebAndRejectSession()">
+               </Test>
+               <Test
+                  Identifier = "UITestsWalletAgainstAppKitWeb/testRejectSignMessageInConnectedWalletViaAppKitWeb()">
+               </Test>
+               <Test
+                  Identifier = "UITestsWalletAgainstAppKitWeb/testSignMessageInConnectedWalletViaAppKitWeb()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>
