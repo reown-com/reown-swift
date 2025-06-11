@@ -13,6 +13,10 @@ struct WalletEngine {
         instance.buttons["Paste URI"]
     }
 
+    var createNewAccountButton: XCUIElement {
+        instance.buttons["Create new account"]
+    }
+
     var alert: XCUIElement {
         instance.alerts["Paste URI"]
     }

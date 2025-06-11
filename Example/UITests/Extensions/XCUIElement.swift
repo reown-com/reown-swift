@@ -8,8 +8,8 @@ extension XCUIElement {
         return waitForExistence(timeout: timeout)
     }
 
-    func waitTap() {
-        waitForAppearence()
+    func waitTap(timeout: TimeInterval = 5) {
+        waitForAppearence(timeout: timeout)
         tap()
     }
 
