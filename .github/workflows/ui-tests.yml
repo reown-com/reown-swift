@@ -35,6 +35,9 @@ jobs:
           -resultBundlePath test_results/UITests.xcresult \
           -enableCodeCoverage NO \
           -skip-testing:UITests/UITestsWalletAgainstAppKitWeb \
+          -allowProvisioningUpdates \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO \
           PROJECT_ID=${{ secrets.PROJECT_ID }}
 
     - name: Parse test results
