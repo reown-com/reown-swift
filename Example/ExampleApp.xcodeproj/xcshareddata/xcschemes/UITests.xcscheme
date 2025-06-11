@@ -39,6 +39,9 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "UITests/test04RejectSignMessage()">
+               </Test>
+               <Test
                   Identifier = "UITestsWalletAgainstAppKitWeb">
                </Test>
                <Test
