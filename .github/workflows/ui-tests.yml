@@ -1,0 +1,82 @@
+name: UI Tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  ui-tests:
+    runs-on: macos-latest-xlarge
+    timeout-minutes: 45
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: ./.github/actions/build
+      with:
+        project-id: ${{ secrets.PROJECT_ID }}
+        cache-key: ui-tests-${{ github.run_id }}
+
+    - name: List available simulators
+      shell: bash
+      run: xcrun simctl list devices available
+
+    - name: Run All UI Tests
+      shell: bash
+      run: |
+        xcodebuild test \
+          -scheme "UITests" \
+          -destination "platform=iOS Simulator,name=iPhone 15 Pro,OS=17.0" \
+          -derivedDataPath DerivedDataCache \
+          -resultBundlePath test_results/UITests.xcresult \
+          -enableCodeCoverage NO \
+          -skip-testing:UITests/UITestsWalletAgainstAppKitWeb \
+          PROJECT_ID=${{ secrets.PROJECT_ID }}
+
+    - name: Parse test results
+      if: always()
+      shell: bash
+      run: |
+        if [ -d "test_results" ]; then
+          # Convert xcresult to junit if possible
+          find test_results -name "*.xcresult" -exec echo "Found test result: {}" \;
+          
+          # Try to extract test results summary
+          for result in test_results/*.xcresult; do
+            if [ -d "$result" ]; then
+              echo "=== Test Results Summary for $(basename "$result") ==="
+              xcrun xcresulttool get --format json --path "$result" | \
+                jq -r '.issues.testFailureSummaries[]?.message // "No test failures found"' 2>/dev/null || \
+                echo "Could not parse test results"
+            fi
+          done
+        fi
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ui-test-results-${{ github.run_id }}
+        path: |
+          test_results/
+          DerivedDataCache/Logs/
+        if-no-files-found: warn
+
+    - name: Upload simulator logs
+      if: failure()
+      shell: bash
+      run: |
+        # Collect simulator logs if tests failed
+        mkdir -p simulator_logs
+        find ~/Library/Logs/CoreSimulator -name "*.log" -newer /tmp -exec cp {} simulator_logs/ \; 2>/dev/null || true
+        
+    - name: Upload simulator logs artifact
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: simulator-logs-${{ github.run_id }}
+        path: simulator_logs/
+        if-no-files-found: ignore 
