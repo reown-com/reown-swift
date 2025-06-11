@@ -88,8 +88,10 @@ struct SafariEngine {
         // Tap the address bar to focus it
         addressBar.waitTap()
         
-        // Wait for the address bar to be ready
-        Thread.sleep(forTimeInterval: 0.5)
+        // Wait for the address bar to be ready - wait for it to be focused instead of fixed delay
+        if !addressBar.waitForExistence(timeout: 0.5) {
+            print("Address bar did not become ready within 0.5 seconds")
+        }
         
         // Completely clear the text field by setting it to empty
         // This is more reliable than trying to select and replace
@@ -191,8 +193,10 @@ struct SafariEngine {
                     startCoord.press(forDuration: 0.2, thenDragTo: endCoord)
                 }
                 
-                // Wait longer for content to load after each scroll
-                Thread.sleep(forTimeInterval: 1.5)
+                // Wait for content to stabilize after scroll instead of fixed delay
+                if !webView.waitForExistence(timeout: 1.5) {
+                    print("WebView did not stabilize within 1.5 seconds after scroll")
+                }
                 
                 // Check for the button after each scroll with all possible selectors
                 if signMessageButton.waitForAppearence(timeout: 2) || signMessageLink.waitForAppearence(timeout: 1) || anySignMessageButton.waitForAppearence(timeout: 1) {
@@ -203,7 +207,10 @@ struct SafariEngine {
                 // Every few attempts, do an extra small scroll
                 if i % 3 == 2 {
                     webView.swipeUp()
-                    Thread.sleep(forTimeInterval: 0.5)
+                    // Wait for scroll to complete instead of fixed delay
+                    if !webView.waitForExistence(timeout: 0.5) {
+                        print("WebView did not stabilize after extra scroll")
+                    }
                 }
             }
             
@@ -237,7 +244,10 @@ struct SafariEngine {
         if webView.exists {
             print("Scrolling down to find Disconnect button")
             webView.swipeUp() // Scroll down
-            Thread.sleep(forTimeInterval: 1.0)
+            // Wait for scroll to complete and content to stabilize
+            if !webView.waitForExistence(timeout: 1.0) {
+                print("WebView did not stabilize within 1.0 seconds after scroll")
+            }
             
             // Try again after scrolling
             if disconnectButton.waitForAppearence(timeout: 2) {
