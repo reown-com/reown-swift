@@ -210,4 +210,60 @@ struct SafariEngine {
             print("Could not find Sign Message button after extensive scrolling")
         }
     }
+    
+    // Helper method to handle disconnect with scrolling and fallback
+    func handleDisconnectOrConnect() -> Bool {
+        // First try to find disconnect button without scrolling
+        if disconnectButton.waitForAppearence(timeout: 2) {
+            // If multiple disconnect buttons exist, try to tap the first one that's visible
+            let disconnectButtons = instance.buttons.matching(NSPredicate(format: "label == 'Disconnect'"))
+            if disconnectButtons.count > 1 {
+                // Try to find the one that's actually visible and tappable
+                for i in 0..<disconnectButtons.count {
+                    let button = disconnectButtons.element(boundBy: i)
+                    if button.isHittable {
+                        button.waitTap()
+                        return true
+                    }
+                }
+            } else {
+                disconnectButton.waitTap()
+                return true
+            }
+        }
+        
+        // If disconnect not found, scroll down to look for it
+        let webView = instance.webViews.firstMatch
+        if webView.exists {
+            print("Scrolling down to find Disconnect button")
+            webView.swipeUp() // Scroll down
+            Thread.sleep(forTimeInterval: 1.0)
+            
+            // Try again after scrolling
+            if disconnectButton.waitForAppearence(timeout: 2) {
+                let disconnectButtons = instance.buttons.matching(NSPredicate(format: "label == 'Disconnect'"))
+                if disconnectButtons.count > 1 {
+                    for i in 0..<disconnectButtons.count {
+                        let button = disconnectButtons.element(boundBy: i)
+                        if button.isHittable {
+                            button.waitTap()
+                            return true
+                        }
+                    }
+                } else {
+                    disconnectButton.waitTap()
+                    return true
+                }
+            }
+        }
+        
+        // If still not found, check if connect button is there (meaning we're already disconnected)
+        if connectWalletButton.waitForAppearence(timeout: 2) || connectWalletLink.waitForAppearence(timeout: 1) || anyConnectButton.waitForAppearence(timeout: 1) {
+            print("Found connect button - wallet appears to be already disconnected")
+            return true
+        }
+        
+        print("Could not find disconnect or connect button")
+        return false
+    }
 }

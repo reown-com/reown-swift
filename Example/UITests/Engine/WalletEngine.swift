@@ -36,7 +36,7 @@ struct WalletEngine {
     }
 
     var rejectButton: XCUIElement {
-        instance.buttons["Reject"]
+        instance.buttons["Decline"]
     }
 
     var signOneButton: XCUIElement {

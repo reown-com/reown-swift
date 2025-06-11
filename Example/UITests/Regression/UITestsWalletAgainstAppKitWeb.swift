@@ -24,10 +24,8 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         engine.routing.wait(for: 3)
         
         // Check if there's an existing connection and disconnect if needed
-        if engine.safari.disconnectButton.waitForAppearence(timeout: 2) {
-            engine.safari.disconnectButton.waitTap()
-            engine.routing.wait(for: 2)
-        }
+        engine.safari.handleDisconnectOrConnect()
+        engine.routing.wait(for: 2)
         
         // Step 2: Press "Connect Wallet" button
         XCTAssertTrue(engine.safari.tapConnectWallet(), "Should be able to find and tap Connect Wallet button")
@@ -52,7 +50,7 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         engine.routing.wait(for: 1)
         
         // Step 9: Press "Decline" to reject the session proposal
-        XCTAssertTrue(engine.wallet.rejectButton.waitExists(), "Reject button should exist in session proposal")
+        XCTAssertTrue(engine.wallet.rejectButton.waitExists(), "Decline button should exist in session proposal")
         engine.wallet.rejectButton.waitTap()
         
         // Step 10: Dialog dismisses - verify the Allow and Decline buttons no longer exist
