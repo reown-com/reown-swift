@@ -123,7 +123,9 @@ extension SessionAccountPresenter {
                 if plainAppUrl.hasSuffix("/") {
                     plainAppUrl = String(plainAppUrl.dropLast())
                 }
-                let urlString = "\(plainAppUrl)/wc?requestId=\(requstId.string)&sessionTopic=\(topic)"
+                // Only add /wc if it's not already there
+                let wcPath = plainAppUrl.hasSuffix("/wc") ? "" : "/wc"
+                let urlString = "\(plainAppUrl)\(wcPath)?requestId=\(requstId.string)&sessionTopic=\(topic)"
                 
                 if let url = URL(string: urlString) {
                     UIApplication.shared.open(url)
