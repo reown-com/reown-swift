@@ -148,6 +148,8 @@ public struct SignClientFactory {
         let authenticateTransportTypeSwitcher = AuthenticateTransportTypeSwitcher(linkAuthRequester: linkAuthRequester, pairingClient: pairingClient, logger: logger, appRequestService: appRequestService, appProposeService: appProposerService)
         
         let linkAppProposeService = LinkAppProposeService(metadata: metadata, linkEnvelopesDispatcher: linkEnvelopesDispatcher, kms: kms, logger: logger)
+        
+        let linkModeSessionProposalSubscriber = LinkModeSessionProposalSubscriber(logger: logger, kms: kms, envelopesDispatcher: linkEnvelopesDispatcher, verifyClient: verifyClient, verifyContextStore: verifyContextStore)
 
         let client = SignClient(
             logger: logger,
@@ -184,7 +186,8 @@ public struct SignClientFactory {
             linkSessionRequestResponseSubscriber: linkSessionRequestResponseSubscriber,
             authenticateTransportTypeSwitcher: authenticateTransportTypeSwitcher,
             messageVerifier: signatureVerifier,
-            linkAppProposeService: linkAppProposeService
+            linkAppProposeService: linkAppProposeService,
+            linkModeSessionProposalSubscriber: linkModeSessionProposalSubscriber
         )
         return client
     }

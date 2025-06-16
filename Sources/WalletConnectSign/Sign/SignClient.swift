@@ -193,6 +193,7 @@ public final class SignClient: SignClientProtocol {
     private let sessionResponderDispatcher: SessionResponderDispatcher
     private let linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber
     private let messageVerifier: MessageVerifier
+    private let linkModeSessionProposalSubscriber: LinkModeSessionProposalSubscriber
 
     private var publishers = Set<AnyCancellable>()
 
@@ -232,7 +233,8 @@ public final class SignClient: SignClientProtocol {
          linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber,
          authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher,
          messageVerifier: MessageVerifier,
-         linkAppProposeService: LinkAppProposeService
+         linkAppProposeService: LinkAppProposeService,
+         linkModeSessionProposalSubscriber: LinkModeSessionProposalSubscriber
     ) {
         self.logger = logger
         self.networkingClient = networkingClient
@@ -269,6 +271,7 @@ public final class SignClient: SignClientProtocol {
         self.authenticateTransportTypeSwitcher = authenticateTransportTypeSwitcher
         self.messageVerifier = messageVerifier
         self.linkAppProposeService = linkAppProposeService
+        self.linkModeSessionProposalSubscriber = linkModeSessionProposalSubscriber
 
         setUpConnectionObserving()
         setUpEnginesCallbacks()
@@ -543,6 +546,9 @@ public final class SignClient: SignClientProtocol {
 
     private func setUpEnginesCallbacks() {
         approveEngine.onSessionProposal = { [unowned self] (proposal, context) in
+            sessionProposalPublisherSubject.send((proposal, context))
+        }
+        linkModeSessionProposalSubscriber.onSessionProposal = { [unowned self] (proposal, context) in
             sessionProposalPublisherSubject.send((proposal, context))
         }
         approveEngine.onSessionRejected = { [unowned self] proposal, reason in
