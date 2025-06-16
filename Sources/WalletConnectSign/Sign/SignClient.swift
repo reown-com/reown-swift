@@ -308,6 +308,27 @@ public final class SignClient: SignClientProtocol {
         return try await authenticateTransportTypeSwitcher.authenticate(params, walletUniversalLink: walletUniversalLink)
     }
 
+    let linkAppProposeService: LinkAppProposeService!
+#if DEBUG
+    public func connectLinkMode(
+        requiredNamespaces: [String: ProposalNamespace],
+        optionalNamespaces: [String: ProposalNamespace]? = nil,
+        sessionProperties: [String: String]? = nil,
+        scopedProperties: [String: String]? = nil,
+        walletUniversalLink: String
+    ) async throws -> WalletConnectURI? {
+        logger.debug("Connecting Application")
+        
+        try await linkAppProposeService.propose(
+            namespaces: requiredNamespaces,
+            optionalNamespaces: optionalNamespaces,
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
+            walletUniversalLink: walletUniversalLink
+        )
+        return nil
+    }
+#endif
 
     #if DEBUG
     @discardableResult public func authenticateLinkMode(
