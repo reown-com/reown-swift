@@ -19,62 +19,9 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         UITestsWalletAgainstAppKitWeb.testExecutionOrder += 1
     }
 
-    //Test Case 2.1: Connecting Sample Wallet to AppKit/React App in Mobile Browser and Approving Session Proposal
-    /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser and approving session proposal
-    func test01ConnectWalletToAppKitWebAndApproveSession() {
-        // Step 1: Open browser to AppKit URL with clean state
-        engine.routing.activate(app: .safari)
-        engine.routing.wait(for: 2)
-        
-        // Navigate to AppKit lab URL
-        engine.safari.navigateToAppKit()
-        
-        // Wait for page to load
-        engine.routing.wait(for: 3)
-        
-        // Step 2: Press "Connect Wallet" button
-        XCTAssertTrue(engine.safari.tapConnectWallet(), "Should be able to find and tap Connect Wallet button")
-        
-        // Step 3: AppKit opens - wait for wallet options to appear
-        engine.routing.wait(for: 2)
-        
-        // Step 4: Press "Swift sample wallet"
-        XCTAssertTrue(engine.safari.tapSwiftWallet(), "Should be able to find and tap Swift sample wallet button")
-        
-        // Step 5: iOS native screen for opening deeplinks appears
-        engine.routing.wait(for: 1)
-        
-        // Step 6: Press "Open" to open in WalletApp (using helper method to target the correct button)
-        XCTAssertTrue(engine.safari.tapOpenInNativeDialog(), "Should be able to find and tap the native Open button")
-        
-        // Step 7: Swift wallet opens
-        engine.routing.wait(for: 2)
-        engine.routing.activate(app: .wallet)
-        
-        // Step 8: Session proposal dialog appears
-        engine.routing.wait(for: 1)
-        
-        // Step 9: Press "Allow" to approve the session proposal (the button is "Allow", not "Approve")
-        XCTAssertTrue(engine.wallet.allowButton.waitExists(), "Allow button should exist in session proposal")
-        engine.wallet.allowButton.waitTap()
-        
-        // Step 10: Dialog dismisses and connection is established
-        engine.routing.wait(for: 2)
-        
-        // Step 11: Go back to Safari and verify connection
-        engine.routing.activate(app: .safari)
-        engine.routing.wait(for: 2)
-        
-        // Verify "connected" status appears
-        XCTAssertTrue(engine.safari.connectedStatus.waitExists(), "Connected status should appear on the page")
-        
-        // Test passes - connection established successfully
-        XCTAssertTrue(true, "Test completed - wallet successfully connected to AppKit web app")
-    }
-
     //Test Case 2.2: Connecting Sample Wallet to AppKit/React App in Mobile Browser and Rejecting Session Proposal
     /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser and rejecting session proposal
-    func test02ConnectWalletToAppKitWebAndRejectSession() {
+    func test01ConnectWalletToAppKitWebAndRejectSession() {
         // Step 1: Open browser to AppKit URL with clean state
         engine.routing.activate(app: .safari)
         engine.routing.wait(for: 2)
@@ -124,6 +71,59 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         
         // Test passes - session proposal was successfully rejected and dialog dismissed
         XCTAssertTrue(true, "Test completed - session proposal was successfully rejected and dialog dismissed")
+    }
+
+    //Test Case 2.1: Connecting Sample Wallet to AppKit/React App in Mobile Browser and Approving Session Proposal
+    /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser and approving session proposal
+    func test02ConnectWalletToAppKitWebAndApproveSession() {
+        // Step 1: Open browser to AppKit URL with clean state
+        engine.routing.activate(app: .safari)
+        engine.routing.wait(for: 2)
+        
+        // Navigate to AppKit lab URL
+        engine.safari.navigateToAppKit()
+        
+        // Wait for page to load
+        engine.routing.wait(for: 3)
+        
+        // Step 2: Press "Connect Wallet" button
+        XCTAssertTrue(engine.safari.tapConnectWallet(), "Should be able to find and tap Connect Wallet button")
+        
+        // Step 3: AppKit opens - wait for wallet options to appear
+        engine.routing.wait(for: 2)
+        
+        // Step 4: Press "Swift sample wallet"
+        XCTAssertTrue(engine.safari.tapSwiftWallet(), "Should be able to find and tap Swift sample wallet button")
+        
+        // Step 5: iOS native screen for opening deeplinks appears
+        engine.routing.wait(for: 1)
+        
+        // Step 6: Press "Open" to open in WalletApp (using helper method to target the correct button)
+        XCTAssertTrue(engine.safari.tapOpenInNativeDialog(), "Should be able to find and tap the native Open button")
+        
+        // Step 7: Swift wallet opens
+        engine.routing.wait(for: 2)
+        engine.routing.activate(app: .wallet)
+        
+        // Step 8: Session proposal dialog appears
+        engine.routing.wait(for: 1)
+        
+        // Step 9: Press "Allow" to approve the session proposal (the button is "Allow", not "Approve")
+        XCTAssertTrue(engine.wallet.allowButton.waitExists(), "Allow button should exist in session proposal")
+        engine.wallet.allowButton.waitTap()
+        
+        // Step 10: Dialog dismisses and connection is established
+        engine.routing.wait(for: 2)
+        
+        // Step 11: Go back to Safari and verify connection
+        engine.routing.activate(app: .safari)
+        engine.routing.wait(for: 2)
+        
+        // Verify "connected" status appears
+        XCTAssertTrue(engine.safari.connectedStatus.waitExists(), "Connected status should appear on the page")
+        
+        // Test passes - connection established successfully
+        XCTAssertTrue(true, "Test completed - wallet successfully connected to AppKit web app")
     }
 
     //Test Case 2.3: Accept Sign Message in Sample Wallet
