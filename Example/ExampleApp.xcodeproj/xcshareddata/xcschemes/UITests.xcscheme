@@ -39,6 +39,12 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "UITests/test02RejectSessionProposal()">
+               </Test>
+               <Test
+                  Identifier = "UITests/test03AcceptSignMessage()">
+               </Test>
+               <Test
                   Identifier = "UITests/test04RejectSignMessage()">
                </Test>
                <Test

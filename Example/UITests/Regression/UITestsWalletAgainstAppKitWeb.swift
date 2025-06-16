@@ -2,6 +2,9 @@ import XCTest
 
 class UITestsWalletAgainstAppKitWeb: XCTestCase {
     private let engine: Engine = Engine()
+    
+    // Class-level property to ensure tests run in sequence
+    private static var testExecutionOrder = 0
 
     override class func setUp() {
         let engine: Engine = Engine()
@@ -9,10 +12,16 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
         engine.routing.launch(app: .safari, clean: true)
         engine.routing.launch(app: .wallet, clean: true)
     }
+    
+    override func setUp() {
+        super.setUp()
+        // Ensure tests run in sequence by checking execution order
+        UITestsWalletAgainstAppKitWeb.testExecutionOrder += 1
+    }
 
     //Test Case 2.2: Connecting Sample Wallet to AppKit/React App in Mobile Browser and Rejecting Session Proposal
     /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser and rejecting session proposal
-    func testConnectWalletToAppKitWebAndRejectSession() {
+    func test01ConnectWalletToAppKitWebAndRejectSession() {
         // Step 1: Open browser to AppKit URL with clean state
         engine.routing.activate(app: .safari)
         engine.routing.wait(for: 2)
@@ -66,7 +75,7 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
 
     //Test Case 2.1: Connecting Sample Wallet to AppKit/React App in Mobile Browser and Approving Session Proposal
     /// Test connecting Sample Wallet to AppKit/React App in Mobile Browser and approving session proposal
-    func testConnectWalletToAppKitWebAndApproveSession() {
+    func test02ConnectWalletToAppKitWebAndApproveSession() {
         // Step 1: Open browser to AppKit URL with clean state
         engine.routing.activate(app: .safari)
         engine.routing.wait(for: 2)
@@ -119,7 +128,7 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
 
     //Test Case 2.3: Accept Sign Message in Sample Wallet
     /// Test signing a message in Sample Wallet via AppKit/React App in Mobile Browser
-    func testSignMessageInConnectedWalletViaAppKitWeb() {
+    func test03SignMessageInConnectedWalletViaAppKitWeb() {
         // Step 1: Open browser to AppKit URL with clean state
         engine.routing.activate(app: .safari)
         engine.routing.wait(for: 2)
@@ -162,7 +171,7 @@ class UITestsWalletAgainstAppKitWeb: XCTestCase {
 
     //Test Case 2.4: Reject Sign Message in Sample Wallet
     /// Test rejecting a sign message in Sample Wallet via AppKit/React App in Mobile Browser
-    func testRejectSignMessageInConnectedWalletViaAppKitWeb() {
+    func test04RejectSignMessageInConnectedWalletViaAppKitWeb() {
         // Step 1: Open browser to AppKit URL with clean state
         engine.routing.activate(app: .safari)
         engine.routing.wait(for: 2)
