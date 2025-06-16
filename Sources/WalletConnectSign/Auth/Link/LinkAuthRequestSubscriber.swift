@@ -62,4 +62,57 @@ class LinkAuthRequestSubscriber {
 
 }
 
+class LinkModeSessionProposalSubscriber {
+    private let logger: ConsoleLogging
+    private let kms: KeyManagementServiceProtocol
+    private var publishers = [AnyCancellable]()
+    private let envelopesDispatcher: LinkEnvelopesDispatcher
+    private let verifyClient: VerifyClientProtocol
+    private let verifyContextStore: CodableStore<VerifyContext>
+    
+
+    var onSessionProposal: ((Session.Proposal, VerifyContext?) -> Void)?
+
+    init(
+        logger: ConsoleLogging,
+        kms: KeyManagementServiceProtocol,
+        envelopesDispatcher: LinkEnvelopesDispatcher,
+        verifyClient: VerifyClientProtocol,
+        verifyContextStore: CodableStore<VerifyContext>
+    ) {
+        self.logger = logger
+        self.kms = kms
+        self.envelopesDispatcher = envelopesDispatcher
+        self.verifyClient = verifyClient
+        self.verifyContextStore = verifyContextStore
+    
+
+        subscribeForSessionProposal()
+    }
+
+    private func subscribeForSessionProposal() {
+        envelopesDispatcher
+            .requestSubscription(on: SessionProposeProtocolMethod.responseApprove().method)
+            .sink { [unowned self] (payload: RequestSubscriptionPayload<SessionType.ProposeParams>) in
+
+
+                let proposal = payload.request.publicRepresentation(pairingTopic: payload.topic)
+                let metadata = payload.request.proposer.metadata
+
+                guard let redirect = metadata.redirect,
+                      let universalLink = redirect.universal else {
+                    logger.warn("redirect property not present")
+                    return
+                }
+
+                let verifyContext = verifyClient.createVerifyContextForLinkMode(
+                    redirectUniversalLink: universalLink,
+                    domain: metadata.url
+                )
+
+                onSessionProposal?(proposal, verifyContext)
+            }.store(in: &publishers)
+    }
+}
+
 
