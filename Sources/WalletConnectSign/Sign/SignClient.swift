@@ -231,7 +231,8 @@ public final class SignClient: SignClientProtocol {
          sessionResponderDispatcher: SessionResponderDispatcher,
          linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber,
          authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher,
-         messageVerifier: MessageVerifier
+         messageVerifier: MessageVerifier,
+         linkAppProposeService: LinkAppProposeService
     ) {
         self.logger = logger
         self.networkingClient = networkingClient
@@ -267,6 +268,7 @@ public final class SignClient: SignClientProtocol {
         self.linkSessionRequestResponseSubscriber = linkSessionRequestResponseSubscriber
         self.authenticateTransportTypeSwitcher = authenticateTransportTypeSwitcher
         self.messageVerifier = messageVerifier
+        self.linkAppProposeService = linkAppProposeService
 
         setUpConnectionObserving()
         setUpEnginesCallbacks()
@@ -308,7 +310,7 @@ public final class SignClient: SignClientProtocol {
         return try await authenticateTransportTypeSwitcher.authenticate(params, walletUniversalLink: walletUniversalLink)
     }
 
-    let linkAppProposeService: LinkAppProposeService!
+    let linkAppProposeService: LinkAppProposeService
 #if DEBUG
     public func connectLinkMode(
         requiredNamespaces: [String: ProposalNamespace],
@@ -316,17 +318,16 @@ public final class SignClient: SignClientProtocol {
         sessionProperties: [String: String]? = nil,
         scopedProperties: [String: String]? = nil,
         walletUniversalLink: String
-    ) async throws -> WalletConnectURI? {
+    ) async throws -> String {
         logger.debug("Connecting Application")
         
-        try await linkAppProposeService.propose(
+        return try await linkAppProposeService.propose(
             namespaces: requiredNamespaces,
             optionalNamespaces: optionalNamespaces,
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
             walletUniversalLink: walletUniversalLink
         )
-        return nil
     }
 #endif
 
