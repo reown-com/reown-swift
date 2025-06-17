@@ -17,6 +17,8 @@ struct SettingsView: View {
                     row(title: "CAIP-10", subtitle: viewModel.account)
                     row(title: "Smart Account Safe", subtitle: viewModel.smartAccountSafe)
                     row(title: "Private key", subtitle: viewModel.privateKey)
+                    row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
+                    row(title: "Stacks Address", subtitle: viewModel.stacksAddress)
 
                     HStack {
                         Text("Chain Abstraction")

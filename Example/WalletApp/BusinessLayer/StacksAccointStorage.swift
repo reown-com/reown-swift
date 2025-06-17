@@ -11,7 +11,7 @@ class StacksAccountStorage {
     
     func getAddress() throws -> String? {
         guard let wallet = getWallet() else { return nil }
-        return try stacksGetAddress(wallet: wallet, version: "1")
+        return try stacksGetAddress(wallet: wallet, version: "mainnet-p2pkh")
     }
     
     func getCaip10Account() throws -> ReownWalletKit.Account? {

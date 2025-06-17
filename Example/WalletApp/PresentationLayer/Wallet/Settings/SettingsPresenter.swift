@@ -9,6 +9,7 @@ final class SettingsPresenter: ObservableObject {
     private let importAccount: ImportAccount
     private let router: SettingsRouter
     private let accountStorage: AccountStorage
+    private let stacksAccountStorage: StacksAccountStorage
     private var disposeBag = Set<AnyCancellable>()
     @Published var smartAccountSafe: String = "Loading..."
 
@@ -18,6 +19,7 @@ final class SettingsPresenter: ObservableObject {
         self.router = router
         self.accountStorage = accountStorage
         self.importAccount = importAccount
+        self.stacksAccountStorage = StacksAccountStorage()
     }
 
     func enableChainAbstraction(_ enable: Bool) {
@@ -32,6 +34,18 @@ final class SettingsPresenter: ObservableObject {
     var privateKey: String {
         guard let importAccount = accountStorage.importAccount else { return .empty }
         return importAccount.privateKey
+    }
+    
+    var stacksMnemonic: String {
+        return stacksAccountStorage.getWallet() ?? .empty
+    }
+    
+    var stacksAddress: String {
+        do {
+            return try stacksAccountStorage.getAddress() ?? .empty
+        } catch {
+            return .empty
+        }
     }
 
     var clientId: String {

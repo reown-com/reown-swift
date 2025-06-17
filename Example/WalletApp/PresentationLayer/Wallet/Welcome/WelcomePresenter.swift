@@ -9,6 +9,7 @@ final class WelcomePresenter: ObservableObject {
 
     @Published var input: String = .empty
     @Published var solanaInput: String = .empty
+    @Published var stacksInput: String = .empty
 
     init(interactor: WelcomeInteractor, router: WelcomeRouter) {
         defer {
@@ -19,6 +20,10 @@ final class WelcomePresenter: ObservableObject {
     }
     
     func onGetStarted() {
+        // Generate and save Stacks wallet
+        if let stacksWallet = interactor.generateAndSaveStacksWallet() {
+            stacksInput = stacksWallet
+        }
         importAccount(ImportAccount.new())
     }
 
@@ -30,6 +35,12 @@ final class WelcomePresenter: ObservableObject {
         if !solanaInput.isEmpty {
             interactor.saveSolanaPrivateKey(solanaInput)
             solanaInput = .empty
+        }
+        
+        // Save Stacks mnemonic if provided
+        if !stacksInput.isEmpty {
+            interactor.saveStacksWallet(stacksInput)
+            stacksInput = .empty
         }
         
         importAccount(account)
