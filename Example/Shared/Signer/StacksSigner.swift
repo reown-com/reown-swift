@@ -43,6 +43,7 @@ final class StacksSigner {
     }
     
     private let stacksAccountStorage = StacksAccountStorage()
+    private let stacksClient: StacksClient!
     
     func sign(request: Request) async throws -> AnyCodable {
         guard let wallet = stacksAccountStorage.getWallet() else {
@@ -62,13 +63,10 @@ final class StacksSigner {
     private func handleStxTransfer(request: Request, wallet: String) async throws -> AnyCodable {
         let params = try parseStxTransferParams(from: request)
         
+        //fix params.amount Cannot convert value of type 'String' to expected argument type 'UInt64'
+        let request = TransferStxRequest(amount: params.amount, recipient: params.recipient, memo: params.memo ?? "")
         do {
-            let result = try stacksSignAndSendTransaction(
-                wallet: wallet,
-                recipient: params.recipient,
-                amount: params.amount,
-                memo: params.memo
-            )
+            let result = try stacksClient.transferStx(wallet: wallet, network: "stacks:1", request: request)
             
             let response = [
                 "txId": result.txId,
@@ -84,13 +82,14 @@ final class StacksSigner {
         let params = try parseSignMessageParams(from: request)
         
         do {
-            let result = try stacksSignMessage(
+            let signature = try stacksSignMessage(
                 wallet: wallet,
                 message: params.message
             )
             
+            
             let response = [
-                "signature": result.signature,
+                "signature": signature,
                 "publicKey": result.publicKey
             ]
             return AnyCodable(response)
