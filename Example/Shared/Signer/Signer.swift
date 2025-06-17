@@ -1,4 +1,3 @@
-
 import Foundation
 import WalletConnectSign
 import ReownWalletKit
@@ -30,9 +29,24 @@ final class Signer {
 
     /// Main entry point that decides which signer to call.
     static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
-        let requestedAddress = try await getRequestedAddress(request)
+        // Check if this is a Stacks method first
+        if request.method.starts(with: "stacks_") {
+            let requestedAddress = try await getRequestedAddress(request)
+            let stacksAccountStorage = StacksAccountStorage()
+
+            // Check if the requested address matches our Stacks account
+            if let stacksAddress = try stacksAccountStorage.getAddress(),
+               requestedAddress.lowercased() == stacksAddress.lowercased() {
+                let stacksSigner = StacksSigner()
+                return try await stacksSigner.sign(request: request)
+            }
+
+            throw Errors.accountForRequestNotFound
+        }
 
         // If EOA address is requested
+        let requestedAddress = try await getRequestedAddress(request)
+
         if requestedAddress.lowercased() == importAccount.account.address.lowercased() {
             // EOA route
             let eoaSigner = EOASigner()
