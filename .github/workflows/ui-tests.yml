@@ -1,0 +1,95 @@
+name: UI Tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  ui-tests:
+    runs-on: macos-latest-xlarge
+    timeout-minutes: 45
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download pre-built artifacts from main
+      id: download-artifact
+      uses: dawidd6/action-download-artifact@v2
+      with:
+          name: main-derivedData
+          workflow: build_artifacts.yml
+          repo: 'reown-com/reown-swift'
+          if_no_artifact_found: warn
+
+    - name: Untar DerivedDataCache
+      shell: bash
+      run: test -f products.tar && tar xPpf products.tar || echo "No artifacts to untar"
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          **/SourcePackagesCache
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+
+    - name: Build everything (if no artifacts found)
+      if: steps.download-artifact.outputs.found_artifact != 'true'
+      shell: bash
+      run: |
+        echo "No pre-built artifacts found, building from scratch..."
+        make build_all PROJECT_ID=${{ secrets.PROJECT_ID }}
+
+    - name: Run UI Tests
+      shell: bash
+      run: make ui_tests PROJECT_ID=${{ secrets.PROJECT_ID }}
+
+    - name: List available simulators
+      shell: bash
+      run: xcrun simctl list devices available
+
+    - name: Parse test results
+      if: always()
+      shell: bash
+      run: |
+        if [ -d "test_results" ]; then
+          # Convert xcresult to junit if possible
+          find test_results -name "*.xcresult" -exec echo "Found test result: {}" \;
+          
+          # Try to extract test results summary
+          for result in test_results/*.xcresult; do
+            if [ -d "$result" ]; then
+              echo "=== Test Results Summary for $(basename "$result") ==="
+              xcrun xcresulttool get --format json --path "$result" | \
+                jq -r '.issues.testFailureSummaries[]?.message // "No test failures found"' 2>/dev/null || \
+                echo "Could not parse test results"
+            fi
+          done
+        fi
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ui-test-results-${{ github.run_id }}
+        path: |
+          test_results/
+          DerivedDataCache/Logs/
+        if-no-files-found: warn
+
+    - name: Upload simulator logs
+      if: failure()
+      shell: bash
+      run: |
+        # Collect simulator logs if tests failed
+        mkdir -p simulator_logs
+        find ~/Library/Logs/CoreSimulator -name "*.log" -newer /tmp -exec cp {} simulator_logs/ \; 2>/dev/null || true
+        
+    - name: Upload simulator logs artifact
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: simulator-logs-${{ github.run_id }}
+        path: simulator_logs/
+        if-no-files-found: ignore 

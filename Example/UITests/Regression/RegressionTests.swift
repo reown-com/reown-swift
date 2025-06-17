@@ -2,11 +2,20 @@ import XCTest
 
 class UITests: XCTestCase {
     private let engine: Engine = Engine()
+    
+    // Class-level property to ensure tests run in sequence
+    private static var testExecutionOrder = 0
 
     override class func setUp() {
         let engine: Engine = Engine()
-        engine.routing.launch(app: .dapp, clean: true)
         engine.routing.launch(app: .wallet, clean: true)
+        engine.routing.launch(app: .dapp, clean: true)
+    }
+    
+    override func setUp() {
+        super.setUp()
+        // Ensure tests run in sequence by checking execution order
+        UITests.testExecutionOrder += 1
     }
 
     /// Helper method to disconnect if already connected
@@ -23,9 +32,19 @@ class UITests: XCTestCase {
 
     /// Test 1-Click Auth with Link Mode cross-app flow
     /// - TU005
-    func testOneClickAuthWithLinkMode() {
+    func test01OneClickAuthWithLinkMode() {
         // Setup: Disconnect if already connected
         disconnectIfNeeded()
+        
+        // Step 0: Setup wallet with new account first
+        engine.routing.activate(app: .wallet)
+        engine.routing.wait(for: 2)
+        
+        // Press "Create new account" button if it exists (wallet setup)
+        if engine.wallet.createNewAccountButton.waitForAppearence(timeout: 2) {
+            engine.wallet.createNewAccountButton.waitTap()
+            engine.routing.wait(for: 2)
+        }
         
         // Step 1: Open dapp
         engine.routing.activate(app: .dapp)
@@ -38,7 +57,9 @@ class UITests: XCTestCase {
         
         // Step 3: The button action will open walletApp (but in test environment we need to manually activate)
         engine.routing.wait(for: 1)
-        engine.routing.activate(app: .wallet)
+        if engine.dapp.connectOneClickAuthButton.waitForAppearence(timeout: 2) {
+            engine.dapp.connectOneClickAuthButton.waitTap()
+        }
         
         // Step 4: Wait for modal screen to appear in walletApp (may take up to 1s)
         engine.routing.wait(for: 1)
@@ -60,7 +81,7 @@ class UITests: XCTestCase {
 
     /// Test Case 1.2: Connecting Sample Wallet to Native Sample Dapp and Rejecting Session Proposal
     /// - TU006
-    func testRejectSessionProposal() {
+    func test02RejectSessionProposal() {
         // Setup: Disconnect if already connected
         disconnectIfNeeded()
         
@@ -72,11 +93,7 @@ class UITests: XCTestCase {
         
         // Step 2: Press "1-Click Auth with Link Mode" button
         engine.dapp.oneClickAuthWithLinkModeButton.waitTap()
-        
-        // Step 3: The button action will open walletApp
-        engine.routing.wait(for: 1)
-        engine.routing.activate(app: .wallet)
-        
+
         // Step 4: Wait for modal screen to appear in walletApp (0.5s)
         engine.routing.wait(for: 0.5)
         
@@ -95,7 +112,7 @@ class UITests: XCTestCase {
 
     /// Test Case 1.3: Accept Sign Message in Sample Wallet
     /// - TU007
-    func testAcceptSignMessage() {
+    func test03AcceptSignMessage() {
         // Setup: Disconnect if already connected
         disconnectIfNeeded()
         
@@ -103,8 +120,7 @@ class UITests: XCTestCase {
         engine.routing.activate(app: .dapp)
         engine.routing.wait(for: 2)
         engine.dapp.oneClickAuthWithLinkModeButton.waitTap()
-        engine.routing.wait(for: 1)
-        engine.routing.activate(app: .wallet)
+
         engine.routing.wait(for: 1)
         XCTAssertTrue(engine.wallet.signOneButton.waitExists(), "Sign One button should exist in wallet")
         engine.wallet.signOneButton.waitTap()
@@ -146,7 +162,7 @@ class UITests: XCTestCase {
 
     /// Test Case 1.4: Reject Sign Message in Sample Wallet
     /// - TU008
-    func testRejectSignMessage() {
+    func test04RejectSignMessage() {
         // Setup: Disconnect if already connected
         disconnectIfNeeded()
         
@@ -154,8 +170,7 @@ class UITests: XCTestCase {
         engine.routing.activate(app: .dapp)
         engine.routing.wait(for: 2)
         engine.dapp.oneClickAuthWithLinkModeButton.waitTap()
-        engine.routing.wait(for: 1)
-        engine.routing.activate(app: .wallet)
+
         engine.routing.wait(for: 1)
         XCTAssertTrue(engine.wallet.signOneButton.waitExists(), "Sign One button should exist in wallet")
         engine.wallet.signOneButton.waitTap()

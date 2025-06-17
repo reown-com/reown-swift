@@ -17,19 +17,13 @@ public struct MessageVerifier {
         }
     }
 
-    private let eip191Verifier: EIP191Verifier
-    private let eip1271Verifier: EIP1271Verifier
     private let crypto: CryptoProvider
     private let projectId: String
 
     init(
-        eip191Verifier: EIP191Verifier,
-        eip1271Verifier: EIP1271Verifier,
         crypto: CryptoProvider,
         projectId: String
     ) {
-        self.eip191Verifier = eip191Verifier
-        self.eip1271Verifier = eip1271Verifier
         self.crypto = crypto
         self.projectId = projectId
     }
@@ -71,24 +65,8 @@ public struct MessageVerifier {
         guard let messageData = message.data(using: .utf8) else {
             throw Errors.utf8EncodingFailed
         }
-
-        let signatureData = Data(hex: signatureString)
         let prefixedMessage = messageData.prefixed
 
-        // Try eip191 verification first for better performance
-        do {
-            try await eip191Verifier.verify(
-                signature: signatureData,
-                message: prefixedMessage,
-                address: address
-            )
-            return  // If 191 verification succeeds, we’re done
-        } catch {
-            // If eip191 verification fails, we’ll attempt 6492 verification
-        }
-
-        // Fallback to 6492 verification
-        print("i was called only once")
         let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
         let erc6492Client = Erc6492Client(rpcUrl: rpcUrl)
         let messageHash = crypto.keccak256(prefixedMessage)
