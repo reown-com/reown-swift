@@ -25,6 +25,7 @@ final class StacksSigner {
         case invalidTransactionData
         case invalidMessageData
         case signingFailed(String)
+        case invalidAmountFormat
         
         var errorDescription: String? {
             switch self {
@@ -38,12 +39,25 @@ final class StacksSigner {
                 return "Invalid message data format"
             case .signingFailed(let message):
                 return "Stacks signing failed: \(message)"
+            case .invalidAmountFormat:
+                return "Invalid amount format. Amount must be a valid number."
             }
         }
     }
     
     private let stacksAccountStorage = StacksAccountStorage()
-    private let stacksClient: StacksClient!
+    private let stacksClient: StacksClient
+    
+    init() {
+        let pulseMetadata = PulseMetadata(
+            url: nil,
+            bundleId: Bundle.main.bundleIdentifier ?? "",
+            sdkVersion: "reown-swift-\(EnvironmentInfo.sdkName)",
+            sdkPlatform: "mobile"
+        )
+        
+        self.stacksClient = StacksClient(projectId: InputConfig.projectId, pulseMetadata: pulseMetadata)
+    }
     
     func sign(request: Request) async throws -> AnyCodable {
         guard let wallet = stacksAccountStorage.getWallet() else {
@@ -63,10 +77,23 @@ final class StacksSigner {
     private func handleStxTransfer(request: Request, wallet: String) async throws -> AnyCodable {
         let params = try parseStxTransferParams(from: request)
         
-        //fix params.amount Cannot convert value of type 'String' to expected argument type 'UInt64'
-        let request = TransferStxRequest(amount: params.amount, recipient: params.recipient, memo: params.memo ?? "")
+        // Convert amount string to UInt64
+        guard let amount = UInt64(params.amount) else {
+            throw Errors.invalidAmountFormat
+        }
+        
+        let transferRequest = TransferStxRequest(
+            amount: amount,
+            recipient: params.recipient,
+            memo: params.memo ?? ""
+        )
+        
         do {
-            let result = try stacksClient.transferStx(wallet: wallet, network: "stacks:1", request: request)
+            let result = try stacksClient.transferStx(
+                wallet: wallet,
+                network: "stacks:1",
+                request: transferRequest
+            )
             
             let response = [
                 "txId": result.txId,
@@ -86,7 +113,6 @@ final class StacksSigner {
                 wallet: wallet,
                 message: params.message
             )
-            
             
             let response = [
                 "signature": signature,
