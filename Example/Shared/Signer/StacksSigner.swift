@@ -5,16 +5,15 @@ import WalletConnectSign
 // MARK: - Stacks Request Parameter Models
 
 struct StacksStxTransferParams: Codable {
-    let recipient: String // Stacks c32-encoded address of the recipient
-    let amount: String // Amount of STX to transfer (BigInt constructor compatible)
-    let memo: String? // Optional memo for the transaction (defaults to an empty string)
+    let sender: String // The stacks address of sender
+    let recipient: String // The STX address of the recipient
+    let amount: String // Amount of STX tokens to transfer in microstacks
+    let memo: String? // Optional memo string to be included with the transfer transaction
 }
 
 struct StacksSignMessageParams: Codable {
-    let message: String // Arbitrary message for signing
-    let messageType: String // Type of message for signing: 'utf8' for basic string or 'structured' for structured data
-    let network: String // Network for signing: 'mainnet', 'testnet' (default), 'signet', 'sbtcDevenv' or 'devnet'
-    let domain: String? // Domain tuple per SIP-018 (for structured messages only)
+    let address: String // The stacks address of sender
+    let message: String // Utf-8 string representing the message to be signed by the wallet
 }
 
 // MARK: - StacksSigner
@@ -28,6 +27,7 @@ final class StacksSigner {
         case signingFailed(String)
         case invalidAmountFormat
         case invalidNetwork
+        case senderMismatch
         
         var errorDescription: String? {
             switch self {
@@ -45,6 +45,8 @@ final class StacksSigner {
                 return "Invalid amount format. Amount must be a valid number."
             case .invalidNetwork:
                 return "Invalid network. Must be one of: mainnet, testnet, signet, sbtcDevenv, devnet"
+            case .senderMismatch:
+                return "Sender address does not match the wallet address"
             }
         }
     }
@@ -81,6 +83,12 @@ final class StacksSigner {
     private func handleStxTransfer(request: Request, wallet: String) async throws -> AnyCodable {
         let params = try parseStxTransferParams(from: request)
         
+        // Verify sender matches our wallet address
+        if let ourAddress = try stacksAccountStorage.getAddress(),
+           params.sender.lowercased() != ourAddress.lowercased() {
+            throw Errors.senderMismatch
+        }
+        
         // Convert amount string to UInt64
         guard let amount = UInt64(params.amount) else {
             throw Errors.invalidAmountFormat
@@ -112,10 +120,10 @@ final class StacksSigner {
     private func handleSignMessage(request: Request, wallet: String) async throws -> AnyCodable {
         let params = try parseSignMessageParams(from: request)
         
-        // Validate network
-        let validNetworks = ["mainnet", "testnet", "signet", "sbtcDevenv", "devnet"]
-        guard validNetworks.contains(params.network) else {
-            throw Errors.invalidNetwork
+        // Verify address matches our wallet address
+        if let ourAddress = try stacksAccountStorage.getAddress(),
+           params.address.lowercased() != ourAddress.lowercased() {
+            throw Errors.senderMismatch
         }
         
         do {
@@ -125,9 +133,7 @@ final class StacksSigner {
             )
             
             let response = [
-                "signature": signature,
-                "message": params.message,
-                "address": try stacksAccountStorage.getAddress() ?? ""
+                "signature": signature
             ]
             return AnyCodable(response)
         } catch {

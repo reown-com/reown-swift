@@ -30,7 +30,7 @@ final class Signer {
     /// Main entry point that decides which signer to call.
     static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
         // Check if this is a Stacks method first
-        if request.method.starts(with: "stacks_") {
+        if request.method.starts(with: "stx_") {
             let requestedAddress = try await getRequestedAddress(request)
             let stacksAccountStorage = StacksAccountStorage()
 
@@ -59,6 +59,18 @@ final class Signer {
 
     // The logic for finding a requested address stays the same
     private static func getRequestedAddress(_ request: Request) async throws -> String {
+        // Handle Stacks methods
+        if request.method.starts(with: "stx_") {
+            // For Stacks methods, we need to get the account from the request context
+            // Since Stacks methods don't typically include the account in params,
+            // we'll get it from the StacksAccountStorage
+            let stacksAccountStorage = StacksAccountStorage()
+            if let stacksAddress = try stacksAccountStorage.getAddress() {
+                return stacksAddress
+            }
+            throw Errors.cantFindRequestedAddress
+        }
+
         if let paramsArray = try? request.params.get([AnyCodable].self),
            let firstParam = paramsArray.first?.value as? [String: Any],
            let account = firstParam["from"] as? String {
