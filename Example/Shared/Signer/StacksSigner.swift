@@ -103,7 +103,7 @@ final class StacksSigner {
         do {
             let result = try await stacksClient.transferStx(
                 wallet: wallet,
-                network: "stacks:1",
+                network: StacksAccountStorage.chainId.absoluteString,
                 request: transferRequest
             )
             
