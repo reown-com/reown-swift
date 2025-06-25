@@ -3,13 +3,8 @@ import Foundation
 // MARK: - Supporting Model
 
 struct StacksTransferResult: Codable {
-    let txId: String
-    let txRaw: String
-    
-    private enum CodingKeys: String, CodingKey {
-        case txId
-        case txRaw
-    }
+    let txid: String
+    let transaction: String
 }
 
 // MARK: - StacksTVFCollector
@@ -17,7 +12,7 @@ struct StacksTransferResult: Codable {
 class StacksTVFCollector: ChainTVFCollector {
     // MARK: - Constants
     
-    static let STACKS_STX_TRANSFER = "stacks_stxTransfer"
+    static let STACKS_STX_TRANSFER = "stx_transferStx"
     
     // MARK: - Supported Methods
     
@@ -53,7 +48,7 @@ class StacksTVFCollector: ChainTVFCollector {
             
             // Try to decode as StacksTransferResult
             if let transferResult = try? resultValue.get(StacksTransferResult.self) {
-                return [transferResult.txId]
+                return [transferResult.txid]
             }
         }
         
