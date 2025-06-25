@@ -83,8 +83,8 @@ final class StacksSigner {
     private func handleStxTransfer(request: Request, wallet: String) async throws -> AnyCodable {
         let params = try parseStxTransferParams(from: request)
         
-        // Verify sender matches our wallet address
-        if let ourAddress = try stacksAccountStorage.getAddress(),
+        // Verify sender matches our wallet address for the specific chain
+        if let ourAddress = try stacksAccountStorage.getAddress(for: request.chainId),
            params.sender.lowercased() != ourAddress.lowercased() {
             throw Errors.senderMismatch
         }
@@ -120,8 +120,8 @@ final class StacksSigner {
     private func handleSignMessage(request: Request, wallet: String) async throws -> AnyCodable {
         let params = try parseSignMessageParams(from: request)
         
-        // Verify address matches our wallet address
-        if let ourAddress = try stacksAccountStorage.getAddress(),
+        // Verify address matches our wallet address for the specific chain
+        if let ourAddress = try stacksAccountStorage.getAddress(for: request.chainId),
            params.address.lowercased() != ourAddress.lowercased() {
             throw Errors.senderMismatch
         }

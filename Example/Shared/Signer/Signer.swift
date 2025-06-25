@@ -34,8 +34,8 @@ final class Signer {
             let requestedAddress = try await getRequestedAddress(request)
             let stacksAccountStorage = StacksAccountStorage()
 
-            // Check if the requested address matches our Stacks account
-            if let stacksAddress = try stacksAccountStorage.getAddress(),
+            // Check if the requested address matches our Stacks account for the specific chain
+            if let stacksAddress = try stacksAccountStorage.getAddress(for: request.chainId),
                requestedAddress.lowercased() == stacksAddress.lowercased() {
                 let stacksSigner = StacksSigner()
                 return try await stacksSigner.sign(request: request)
@@ -63,9 +63,9 @@ final class Signer {
         if request.method.starts(with: "stx_") {
             // For Stacks methods, we need to get the account from the request context
             // Since Stacks methods don't typically include the account in params,
-            // we'll get it from the StacksAccountStorage
+            // we'll get it from the StacksAccountStorage for the specific chain
             let stacksAccountStorage = StacksAccountStorage()
-            if let stacksAddress = try stacksAccountStorage.getAddress() {
+            if let stacksAddress = try stacksAccountStorage.getAddress(for: request.chainId) {
                 return stacksAddress
             }
             throw Errors.cantFindRequestedAddress

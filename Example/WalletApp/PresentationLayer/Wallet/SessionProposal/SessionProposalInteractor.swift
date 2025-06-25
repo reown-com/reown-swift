@@ -39,8 +39,15 @@ final class SessionProposalInteractor {
             supportedAccounts = eip155Accounts
             
             // Add Stacks accounts if available
-            if let stacksAccount = try stacksAccountStorage.getCaip10Account(), !supportedStacksChains.isEmpty {
-                let stacksAccounts = Array(supportedStacksChains).map { Account(blockchain: $0, address: stacksAccount.address)! }
+            if !supportedStacksChains.isEmpty {
+                var stacksAccounts: [Account] = []
+                
+                for chain in supportedStacksChains {
+                    if let stacksAccount = try stacksAccountStorage.getCaip10Account(for: chain) {
+                        stacksAccounts.append(stacksAccount)
+                    }
+                }
+                
                 supportedAccounts.append(contentsOf: stacksAccounts)
             }
 //        }

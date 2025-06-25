@@ -40,9 +40,17 @@ final class SettingsPresenter: ObservableObject {
         return stacksAccountStorage.getWallet() ?? .empty
     }
     
-    var stacksAddress: String {
+    var stacksMainnetAddress: String {
         do {
-            return try stacksAccountStorage.getAddress() ?? .empty
+            return try stacksAccountStorage.getMainnetAddress() ?? .empty
+        } catch {
+            return .empty
+        }
+    }
+    
+    var stacksTestnetAddress: String {
+        do {
+            return try stacksAccountStorage.getTestnetAddress() ?? .empty
         } catch {
             return .empty
         }
