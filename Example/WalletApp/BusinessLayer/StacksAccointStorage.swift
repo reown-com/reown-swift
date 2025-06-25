@@ -38,6 +38,16 @@ class StacksAccountStorage {
         return try stacksGetAddress(wallet: wallet, version: "testnet-p2pkh")
     }
     
+    func getMainnetP2shAddress() throws -> String? {
+        guard let wallet = getWallet() else { return nil }
+        return try stacksGetAddress(wallet: wallet, version: "mainnet-p2sh")
+    }
+    
+    func getTestnetP2shAddress() throws -> String? {
+        guard let wallet = getWallet() else { return nil }
+        return try stacksGetAddress(wallet: wallet, version: "testnet-p2sh")
+    }
+    
     func getAddress(for chainId: Blockchain) throws -> String? {
         switch chainId.absoluteString {
         case "stacks:1":

@@ -18,8 +18,10 @@ struct SettingsView: View {
                     row(title: "Smart Account Safe", subtitle: viewModel.smartAccountSafe)
                     row(title: "Private key", subtitle: viewModel.privateKey)
                     row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
-                    row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
-                    row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
+                    row(title: "Stacks Mainnet P2PKH Address", subtitle: viewModel.stacksMainnetAddress)
+                    row(title: "Stacks Testnet P2PKH Address", subtitle: viewModel.stacksTestnetAddress)
+                    row(title: "Stacks Mainnet P2SH Address", subtitle: viewModel.stacksMainnetP2shAddress)
+                    row(title: "Stacks Testnet P2SH Address", subtitle: viewModel.stacksTestnetP2shAddress)
 
                     HStack {
                         Text("Chain Abstraction")

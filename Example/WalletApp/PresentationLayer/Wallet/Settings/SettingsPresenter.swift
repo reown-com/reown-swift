@@ -55,6 +55,22 @@ final class SettingsPresenter: ObservableObject {
             return .empty
         }
     }
+    
+    var stacksMainnetP2shAddress: String {
+        do {
+            return try stacksAccountStorage.getMainnetP2shAddress() ?? .empty
+        } catch {
+            return .empty
+        }
+    }
+    
+    var stacksTestnetP2shAddress: String {
+        do {
+            return try stacksAccountStorage.getTestnetP2shAddress() ?? .empty
+        } catch {
+            return .empty
+        }
+    }
 
     var clientId: String {
         guard let clientId = try? Networking.interactor.getClientId() else { return .empty }
