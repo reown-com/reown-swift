@@ -13,6 +13,10 @@ struct WalletEngine {
         instance.buttons["Paste URI"]
     }
 
+    var createNewAccountButton: XCUIElement {
+        instance.buttons["Create new account"]
+    }
+
     var alert: XCUIElement {
         instance.alerts["Paste URI"]
     }
@@ -36,7 +40,7 @@ struct WalletEngine {
     }
 
     var rejectButton: XCUIElement {
-        instance.buttons["Reject"]
+        instance.buttons["Decline"]
     }
 
     var signOneButton: XCUIElement {
@@ -69,6 +73,16 @@ struct WalletEngine {
 
     var pingAlert: XCUIElement {
         instance.alerts.element.staticTexts["Received ping response"]
+    }
+
+    // Sign message completion elements
+    var requestSignedText: XCUIElement {
+        instance.staticTexts["Request is signed"]
+    }
+
+    // Alternative ways to detect successful sign message
+    var requestSignedLabel: XCUIElement {
+        instance.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'signed'")).firstMatch
     }
 
     func swipeDismiss() {

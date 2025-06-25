@@ -47,7 +47,7 @@ echo_ui_tests:
 	echo "EchoUITests disabled"
 
 ui_tests:
-	echo "UI Tests disabled"
+	./run_tests.sh --scheme UITests --project Example/ExampleApp.xcodeproj
 
 unit_tests:
 	./run_tests.sh --scheme WalletConnect-Package

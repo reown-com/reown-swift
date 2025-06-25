@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
+		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
 		8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */; };
@@ -337,6 +338,7 @@
 
 /* Begin PBXFileReference section */
 		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
+		44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsWalletAgainstAppKitWeb.swift; sourceTree = "<group>"; };
 		764E1D5426F8DAC800A1FB15 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		764E1D5526F8DADE00A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
 		764E1D5626F8DB6000A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
@@ -1131,6 +1133,7 @@
 		A5E22D252840D08B00E36487 /* Regression */ = {
 			isa = PBXGroup;
 			children = (
+				44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */,
 				A5A4FC762840C12C00BBEC1E /* RegressionTests.swift */,
 			);
 			path = Regression;
@@ -1955,6 +1958,7 @@
 				A5E22D202840C8C700E36487 /* DAppEngine.swift in Sources */,
 				A5E22D1E2840C8BF00E36487 /* RoutingEngine.swift in Sources */,
 				A5E22D222840C8D300E36487 /* WalletEngine.swift in Sources */,
+				44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */,
 				A5E22D1C2840C85D00E36487 /* App.swift in Sources */,
 				A5A4FC772840C12C00BBEC1E /* RegressionTests.swift in Sources */,
 				A5E22D242840C8DB00E36487 /* SafariEngine.swift in Sources */,

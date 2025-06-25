@@ -16,6 +16,10 @@ struct DAppEngine {
     var oneClickAuthWithLinkModeButton: XCUIElement {
         instance.buttons["1-Click Auth with Link Mode"]
     }
+    
+    var connectOneClickAuthButton: XCUIElement {
+        instance.buttons["Connect Sample Wallet"]
+    }
 
     // Accounts screen
 
