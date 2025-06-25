@@ -5,10 +5,10 @@ import XCTest
 
 public class StacksMockFactory {
     static func createTransferResult(
-        txId: String = "stack_tx_id",
-        txRaw: String = "raw_tx_hex"
+        txid: String = "stack_tx_id",
+        transaction: String = "raw_tx_hex"
     ) -> StacksTransferResult {
-        return StacksTransferResult(txId: txId, txRaw: txRaw)
+        return StacksTransferResult(txid: txid, transaction: transaction)
     }
 }
 
@@ -28,17 +28,17 @@ final class StacksTVFCollectorTests: XCTestCase {
     // MARK: - Method Support Tests
     
     func testSupportsMethod() {
-        XCTAssertTrue(stacksCollector.supportsMethod("stacks_stxTransfer"))
+        XCTAssertTrue(stacksCollector.supportsMethod("stx_transferStx"))
         XCTAssertFalse(stacksCollector.supportsMethod("eth_sendTransaction"))
         XCTAssertFalse(stacksCollector.supportsMethod("unknown_method"))
     }
     
     // MARK: - Transaction Hash Parsing Tests
     
-    func testParseTxHashes_StacksStxTransfer() {
-        // Create transfer result with expected txId
-        let expectedTxId = "stack_tx_id"
-        let resultModel = StacksMockFactory.createTransferResult(txId: expectedTxId)
+    func testParseTxHashes_StxTransferStx() {
+        // Create transfer result with expected txid
+        let expectedTxid = "stack_tx_id"
+        let resultModel = StacksMockFactory.createTransferResult(txid: expectedTxid)
         
         // Create proper JSON-RPC format response (using serialization/deserialization for JSON compatibility)
         let resultModelData = try! JSONEncoder().encode(resultModel)
@@ -48,11 +48,11 @@ final class StacksTVFCollectorTests: XCTestCase {
         
         // Test hash extraction
         let txHashes = stacksCollector.parseTxHashes(
-            rpcMethod: "stacks_stxTransfer",
+            rpcMethod: "stx_transferStx",
             rpcResult: rpcResult
         )
         
         // Verify we got the expected transaction hash
-        XCTAssertEqual(txHashes, [expectedTxId])
+        XCTAssertEqual(txHashes, [expectedTxid])
     }
 } 

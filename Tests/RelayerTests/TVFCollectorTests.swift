@@ -521,7 +521,7 @@ final class TVFCollectorTests: XCTestCase {
     func testSessionResponse_StacksStxTransfer_ExtractsTxIdCorrectly() {
         // Create transfer result with expected txId
         let expectedTxId = "stack_tx_id"
-        let resultModel = StacksMockFactory.createTransferResult(txId: expectedTxId)
+        let resultModel = StacksMockFactory.createTransferResult(txid: expectedTxId)
         
         // Create proper JSON-RPC format response
         let resultModelData = try! JSONEncoder().encode(resultModel)
@@ -531,7 +531,7 @@ final class TVFCollectorTests: XCTestCase {
         
         // Act
         let data = tvf.collect(
-            rpcMethod: "stacks_stxTransfer",
+            rpcMethod: "stx_transferStx",
             rpcParams: AnyCodable([String]()),
             chainID: chain,
             rpcResult: rpcResult,
