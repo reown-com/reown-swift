@@ -45,8 +45,7 @@ final class SignPresenter: ObservableObject {
     func connectWalletWithW3M() {
         Task {
             AppKit.set(sessionParams: .init(
-                requiredNamespaces: Proposal.requiredNamespaces,
-                optionalNamespaces: Proposal.optionalNamespaces
+                namespaces: Proposal.namespaces
             ))
         }
         AppKit.present(from: nil)
@@ -58,8 +57,7 @@ final class SignPresenter: ObservableObject {
             do {
                 ActivityIndicatorManager.shared.start()
                 walletConnectUri = try await Sign.instance.connect(
-                    requiredNamespaces: Proposal.requiredNamespaces,
-                    optionalNamespaces: Proposal.optionalNamespaces
+                    namespaces: Proposal.namespaces
                 )
                 ActivityIndicatorManager.shared.stop()
                 router.presentNewPairing(walletConnectUri: walletConnectUri!)
