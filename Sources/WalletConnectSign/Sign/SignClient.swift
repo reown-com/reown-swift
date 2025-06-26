@@ -277,8 +277,37 @@ public final class SignClient: SignClientProtocol {
     /// For a dApp to propose a session to a wallet.
     /// Function will create pairing and propose session.
     /// - Parameters:
-    ///   - requiredNamespaces: required namespaces for a session
+    ///   - optionalNamespaces: optional namespaces for a session
+    ///   - sessionProperties: session properties
+    ///   - scopedProperties: scoped properties
     /// - Returns: Pairing URI that should be shared with responder out of bound. Common way is to present it as a QR code.
+    public func connect(
+        optionalNamespaces: [String: ProposalNamespace]? = nil,
+        sessionProperties: [String: String]? = nil,
+        scopedProperties: [String: String]? = nil
+    ) async throws -> WalletConnectURI {
+        logger.debug("Connecting Application")
+        let pairingURI = try await pairingClient.create()
+        try await appProposeService.propose(
+            pairingTopic: pairingURI.topic,
+            namespaces: [:], // Empty required namespaces
+            optionalNamespaces: optionalNamespaces,
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
+            relay: RelayProtocolOptions(protocol: "irn", data: nil)
+        )
+        return pairingURI
+    }
+
+    /// For a dApp to propose a session to a wallet.
+    /// Function will create pairing and propose session.
+    /// - Parameters:
+    ///   - requiredNamespaces: required namespaces for a session (deprecated - will be moved to optional namespaces)
+    ///   - optionalNamespaces: optional namespaces for a session
+    ///   - sessionProperties: session properties
+    ///   - scopedProperties: scoped properties
+    /// - Returns: Pairing URI that should be shared with responder out of bound. Common way is to present it as a QR code.
+    @available(*, deprecated, message: "requiredNamespaces parameter is deprecated. All namespaces will be treated as optional to improve connection compatibility. Use connect(optionalNamespaces:sessionProperties:scopedProperties:) instead.")
     public func connect(
         requiredNamespaces: [String: ProposalNamespace],
         optionalNamespaces: [String: ProposalNamespace]? = nil,
