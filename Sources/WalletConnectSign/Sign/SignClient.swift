@@ -282,7 +282,7 @@ public final class SignClient: SignClientProtocol {
     ///   - scopedProperties: scoped properties
     /// - Returns: Pairing URI that should be shared with responder out of bound. Common way is to present it as a QR code.
     public func connect(
-        optionalNamespaces: [String: ProposalNamespace]? = nil,
+        namespaces: [String: ProposalNamespace],
         sessionProperties: [String: String]? = nil,
         scopedProperties: [String: String]? = nil
     ) async throws -> WalletConnectURI {
@@ -291,7 +291,7 @@ public final class SignClient: SignClientProtocol {
         try await appProposeService.propose(
             pairingTopic: pairingURI.topic,
             namespaces: [:], // Empty required namespaces
-            optionalNamespaces: optionalNamespaces,
+            optionalNamespaces: namespaces,
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
             relay: RelayProtocolOptions(protocol: "irn", data: nil)

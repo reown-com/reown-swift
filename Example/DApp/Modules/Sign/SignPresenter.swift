@@ -58,7 +58,6 @@ final class SignPresenter: ObservableObject {
             do {
                 ActivityIndicatorManager.shared.start()
                 walletConnectUri = try await Sign.instance.connect(
-                    requiredNamespaces: Proposal.requiredNamespaces,
                     optionalNamespaces: Proposal.optionalNamespaces
                 )
                 ActivityIndicatorManager.shared.stop()
