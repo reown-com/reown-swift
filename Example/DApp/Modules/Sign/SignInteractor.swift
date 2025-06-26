@@ -3,7 +3,7 @@ import Foundation
 import WalletConnectSign
 
 enum Proposal {
-    static let optionalNamespaces: [String: ProposalNamespace] = [
+    static let namespaces: [String: ProposalNamespace] = [
         "solana": ProposalNamespace(
             chains: [
                 Blockchain("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")!
