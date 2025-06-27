@@ -9,15 +9,18 @@ final class SettingsPresenter: ObservableObject {
     private let importAccount: ImportAccount
     private let router: SettingsRouter
     private let accountStorage: AccountStorage
+    private let solanaAccountStorage: SolanaAccountStorage
+    private let suiAccountStorage: SuiAccountStorage
     private var disposeBag = Set<AnyCancellable>()
-    @Published var smartAccountSafe: String = "Loading..."
 
-    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount) {
+    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), suiAccountStorage: SuiAccountStorage = SuiAccountStorage()) {
         defer { setupInitialState() }
         self.interactor = interactor
         self.router = router
         self.accountStorage = accountStorage
         self.importAccount = importAccount
+        self.solanaAccountStorage = solanaAccountStorage
+        self.suiAccountStorage = suiAccountStorage
     }
 
     func enableChainAbstraction(_ enable: Bool) {
@@ -32,6 +35,22 @@ final class SettingsPresenter: ObservableObject {
     var privateKey: String {
         guard let importAccount = accountStorage.importAccount else { return .empty }
         return importAccount.privateKey
+    }
+
+    var solanaAddress: String {
+        return solanaAccountStorage.getAddress() ?? "No Solana account"
+    }
+
+    var solanaPrivateKey: String {
+        return solanaAccountStorage.getPrivateKey() ?? "No Solana private key"
+    }
+
+    var suiAddress: String {
+        return suiAccountStorage.getAddress() ?? "No Sui account"
+    }
+
+    var suiPrivateKey: String {
+        return suiAccountStorage.getPrivateKey() ?? "No Sui private key"
     }
 
     var clientId: String {

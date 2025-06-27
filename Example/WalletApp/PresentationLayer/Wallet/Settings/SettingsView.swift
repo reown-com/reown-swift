@@ -15,8 +15,15 @@ struct SettingsView: View {
                 Group {
                     header(title: "Account")
                     row(title: "CAIP-10", subtitle: viewModel.account)
-                    row(title: "Smart Account Safe", subtitle: viewModel.smartAccountSafe)
                     row(title: "Private key", subtitle: viewModel.privateKey)
+                    
+                    header(title: "Solana")
+                    row(title: "Solana Address", subtitle: viewModel.solanaAddress)
+                    row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
+                    
+                    header(title: "Sui")
+                    row(title: "Sui Address", subtitle: viewModel.suiAddress)
+                    row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
 
                     HStack {
                         Text("Chain Abstraction")
