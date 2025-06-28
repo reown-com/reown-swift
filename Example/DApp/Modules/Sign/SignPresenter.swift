@@ -117,6 +117,25 @@ final class SignPresenter: ObservableObject {
     }
 
     @MainActor
+    func connectWalletWithSessionProposeLinkMode() {
+        Task {
+            do {
+                ActivityIndicatorManager.shared.start()
+                let _ = try await Sign.instance.connectLinkMode(
+                    requiredNamespaces: Proposal.requiredNamespaces,
+                    optionalNamespaces: Proposal.optionalNamespaces,
+                    walletUniversalLink: "https://lab.web3modal.com/wallet"
+                )
+                ActivityIndicatorManager.shared.stop()
+//                router.presentNewPairing(walletConnectUri: walletConnectUri!)
+            } catch {
+                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                ActivityIndicatorManager.shared.stop()
+            }
+        }
+    }
+
+    @MainActor
     func openConfiguration() {
         router.openConfig()
     }
