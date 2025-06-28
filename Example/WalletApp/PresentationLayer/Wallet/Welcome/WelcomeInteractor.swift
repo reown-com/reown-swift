@@ -2,10 +2,12 @@ final class WelcomeInteractor {
 
     private let accountStorage: AccountStorage
     private let solanaAccountStorage: SolanaAccountStorage
+    private let stacksAccountStorage: StacksAccountStorage
     
-    init(accountStorage: AccountStorage, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage()) {
+    init(accountStorage: AccountStorage, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), stacksAccountStorage: StacksAccountStorage = StacksAccountStorage()) {
         self.accountStorage = accountStorage
         self.solanaAccountStorage = solanaAccountStorage
+        self.stacksAccountStorage = stacksAccountStorage
     }
 
     func save(importAccount: ImportAccount) {
@@ -14,6 +16,14 @@ final class WelcomeInteractor {
     
     func saveSolanaPrivateKey(_ privateKey: String) {
         solanaAccountStorage.savePrivateKey(privateKey)
+    }
+    
+    func saveStacksWallet(_ wallet: String) {
+        stacksAccountStorage.saveWallet(wallet: wallet)
+    }
+    
+    func generateAndSaveStacksWallet() -> String? {
+        return stacksAccountStorage.generateAndSaveWallet()
     }
 }
 
