@@ -94,7 +94,9 @@ final class StacksSigner {
             throw Errors.invalidAmountFormat
         }
         
+        
         let transferRequest = TransferStxRequest(
+            sender: params.sender,
             amount: amount,
             recipient: params.recipient,
             memo: params.memo ?? ""
