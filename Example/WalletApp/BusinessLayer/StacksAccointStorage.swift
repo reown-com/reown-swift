@@ -21,11 +21,8 @@ class StacksAccountStorage {
     /*:
      
      "mainnet-p2pkh" => Version::MainnetP2PKH,
-     "mainnet-p2sh" => Version::MainnetP2SH,
      "testnet-p2pkh" => Version::TestnetP2PKH,
-     "testnet-p2sh" => Version::TestnetP2SH,
      
-     p2sh must be used for sign message in message body
      faucet: https://platform.hiro.so/faucet
      */
     func getMainnetAddress() throws -> String? {
@@ -36,16 +33,6 @@ class StacksAccountStorage {
     func getTestnetAddress() throws -> String? {
         guard let wallet = getWallet() else { return nil }
         return try stacksGetAddress(wallet: wallet, version: "testnet-p2pkh")
-    }
-    
-    func getMainnetP2shAddress() throws -> String? {
-        guard let wallet = getWallet() else { return nil }
-        return try stacksGetAddress(wallet: wallet, version: "mainnet-p2sh")
-    }
-    
-    func getTestnetP2shAddress() throws -> String? {
-        guard let wallet = getWallet() else { return nil }
-        return try stacksGetAddress(wallet: wallet, version: "testnet-p2sh")
     }
     
     func getAddress(for chainId: Blockchain) throws -> String? {

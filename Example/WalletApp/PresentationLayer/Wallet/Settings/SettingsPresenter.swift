@@ -42,33 +42,17 @@ final class SettingsPresenter: ObservableObject {
     
     var stacksMainnetAddress: String {
         do {
-            return try stacksAccountStorage.getMainnetAddress() ?? .empty
+            return try stacksAccountStorage.getMainnetAddress() ?? "No Stacks mainnet address"
         } catch {
-            return .empty
+            return "Error getting Stacks mainnet address"
         }
     }
     
     var stacksTestnetAddress: String {
         do {
-            return try stacksAccountStorage.getTestnetAddress() ?? .empty
+            return try stacksAccountStorage.getTestnetAddress() ?? "No Stacks testnet address"
         } catch {
-            return .empty
-        }
-    }
-    
-    var stacksMainnetP2shAddress: String {
-        do {
-            return try stacksAccountStorage.getMainnetP2shAddress() ?? .empty
-        } catch {
-            return .empty
-        }
-    }
-    
-    var stacksTestnetP2shAddress: String {
-        do {
-            return try stacksAccountStorage.getTestnetP2shAddress() ?? .empty
-        } catch {
-            return .empty
+            return "Error getting Stacks testnet address"
         }
     }
 
