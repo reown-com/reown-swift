@@ -190,6 +190,9 @@ let package = Package(
         ),
         yttriumTarget,
         .testTarget(
+            name: "ReownWalletKitTests",
+            dependencies: ["ReownWalletKit"]),
+        .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
         .testTarget(
