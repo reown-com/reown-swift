@@ -9,9 +9,20 @@ final class SessionProposalInteractor {
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
         let supportedEvents = Set(proposal.requiredNamespaces.flatMap { $0.value.events } + (proposal.optionalNamespaces?.flatMap { $0.value.events } ?? []))
         
+        let stacksAccountStorage = StacksAccountStorage()
+        
+        // Handle EIP155 chains
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedChains = supportedRequiredChains + supportedOptionalChains
+        var supportedEIP155Chains = supportedRequiredChains + supportedOptionalChains
+        
+        // Handle Stacks chains
+        let supportedRequiredStacksChains = proposal.requiredNamespaces["stacks"]?.chains ?? []
+        let supportedOptionalStacksChains = proposal.optionalNamespaces?["stacks"]?.chains ?? []
+        let supportedStacksChains = supportedRequiredStacksChains + supportedOptionalStacksChains
+        
+        // Combine all supported chains
+        var supportedChains = supportedEIP155Chains + supportedStacksChains
 
         var supportedAccounts: [Account]
         var sessionProperties = [String: String]()
@@ -23,7 +34,22 @@ final class SessionProposalInteractor {
 //            supportedAccounts = smartAccountAddresses.map { Account(blockchain: sepolia, address: $0)! }
 //            sessionProperties = getSessionProperties(addresses: smartAccountAddresses)
 //        } else {
-            supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: EOAAccount.address)! }
+            // Add EIP155 accounts
+            let eip155Accounts = Array(supportedEIP155Chains).map { Account(blockchain: $0, address: EOAAccount.address)! }
+            supportedAccounts = eip155Accounts
+            
+            // Add Stacks accounts if available
+            if !supportedStacksChains.isEmpty {
+                var stacksAccounts: [Account] = []
+                
+                for chain in supportedStacksChains {
+                    if let stacksAccount = try stacksAccountStorage.getCaip10Account(for: chain) {
+                        stacksAccounts.append(stacksAccount)
+                    }
+                }
+                
+                supportedAccounts.append(contentsOf: stacksAccounts)
+            }
 //        }
 
         /* Use only supported values for production. I.e:
@@ -34,7 +60,6 @@ final class SessionProposalInteractor {
         */
 
         // Define scopedProperties according to CAIP-345
-
         let scopedProperties: [String: String] = [
             "eip155": """
             {
