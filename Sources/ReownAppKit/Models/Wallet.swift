@@ -1,6 +1,7 @@
 import Foundation
+import UIKit
 
-public struct Wallet: Codable, Identifiable {
+public struct Wallet: Codable, Identifiable, Sendable {
     public let id: String
     public let name: String
     public let homepage: String
@@ -21,6 +22,32 @@ public struct Wallet: Codable, Identifiable {
     }
     var customDidSelect: Bool = false
     var alternativeConnectionMethod: (() -> Void)? = nil
+    
+    @MainActor
+    public var image: UIImage? {
+        Store.shared.walletImages[id]
+    }
+    
+    public enum LogoSize: String, Sendable, Hashable {
+        case sm
+        case md
+        // 'lg' exists but is always mapped to md in the API responses
+        
+        public var size: Int {
+            switch self {
+            case .sm: return 60
+            case .md: return 120
+            }
+        }
+    }
+    
+    public func logoImageUrl(_ size: LogoSize = .md) -> String? {
+        if let imageId {
+            return "https://explorer-api.walletconnect.com/v3/logo/\(size.rawValue)/\(imageId)?projectId=\(AppKit.config.projectId)"
+        } else {
+            return imageUrl
+        }
+    }
     
     enum CodingKeys: String, CodingKey {
         case id

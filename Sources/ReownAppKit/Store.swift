@@ -40,10 +40,10 @@ public class Store: ObservableObject {
     @Published public var session: Session?
     @Published public var uri: WalletConnectURI?
     
-    @Published var wallets: Set<Wallet> = []
-    @Published var featuredWallets: [Wallet] = []
-    @Published var searchedWallets: [Wallet] = []
-    @Published var customWallets: [Wallet] = []
+    @Published public var wallets: Set<Wallet> = []
+    @Published public var featuredWallets: [Wallet] = []
+    @Published public var searchedWallets: [Wallet] = []
+    @Published public var customWallets: [Wallet] = []
     
     var totalNumberOfWallets: Int = 0
     var currentPage: Int = 0
@@ -67,6 +67,60 @@ public class Store: ObservableObject {
     @Published var chainImages: [String: UIImage] = [:]
     
     @Published var toast: Toast? = nil
+    
+    public var cancellables: Set<AnyCancellable> = []
+}
+
+extension Store {
+    public var sortedWalletsPublisher: AnyPublisher<[Wallet], Never> {
+        Publishers
+            .CombineLatest3($customWallets, $featuredWallets, $wallets)
+            .compactMap { [weak self] _ in self?.sortedWallets }
+            .eraseToAnyPublisher()
+    }
+    
+    public var sortedWallets: [Wallet] {
+        /// CustomWallets must be added first to preserve their data and not get overwritten.
+        /// Then, FeaturedWallets are added to the set.
+        /// Finally, RecentWallets are added to the set, and if there are any duplicates, the lastTimeUsed property is updated.
+        let unsortedWallets = Set(customWallets).union(featuredWallets).union(recentWallets).map { featuredWallet in
+            
+            var featuredWallet = featuredWallet
+            if let recent = recentWallets.first(where: { $0.id == featuredWallet.id }) {
+                featuredWallet.lastTimeUsed = recent.lastTimeUsed
+            }
+            
+            if featuredWallet.isInstalled, !installedWalletIds.contains(featuredWallet.id) {
+                installedWalletIds.append(featuredWallet.id)
+            }
+            
+            return featuredWallet
+        }
+        
+        let recommended = AppKit.config.recommendedWalletIds
+        let installed = installedWalletIds
+        let distantPast = Date.distantPast
+        
+        return Array(unsortedWallets
+            .sorted(by: { $0.order < $1.order } )
+            .sorted(by: {
+                if installed.contains($0.id) && installed.contains($1.id) {
+                    return installed.firstIndex(of: $0.id)! < installed.firstIndex(of: $1.id)!
+                } else {
+                    return installed.contains($0.id) && !installed.contains($1.id)
+                }
+            } )
+            .sorted(by: {
+                if recommended.contains($0.id) && recommended.contains($1.id) {
+                    return recommended.firstIndex(of: $0.id)! < recommended.firstIndex(of: $1.id)!
+                } else {
+                    return recommended.contains($0.id) && !recommended.contains($1.id)
+                }
+            } )
+            .sorted(by: { $0.lastTimeUsed ?? distantPast > $1.lastTimeUsed ?? distantPast } )
+            .sorted(by: { $0.id == DesktopWallet_walletId && $1.id != DesktopWallet_walletId } )
+        )
+    }
 }
 
 public struct W3MAccount: Codable {

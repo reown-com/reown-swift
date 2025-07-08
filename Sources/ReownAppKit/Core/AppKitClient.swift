@@ -131,7 +131,7 @@ public class AppKitClient {
     /// - Parameters:
     ///   - topic: pairing topic
     public func connect(walletUniversalLink: String?) async throws -> WalletConnectURI? {
-        logger.debug("Connecting Application")
+        logger.debug("Connecting Application \(walletUniversalLink ?? "")")
         do {
             if let authParams = AppKit.config.authRequestParams {
                 return try await signClient.authenticate(authParams, walletUniversalLink: walletUniversalLink)

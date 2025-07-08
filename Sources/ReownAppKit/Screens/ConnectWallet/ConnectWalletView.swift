@@ -10,50 +10,7 @@ struct ConnectWalletView: View {
 
     let displayWCConnection = false
     
-    var wallets: [Wallet] {
-        let recentWallets = store.recentWallets
-        /// CustomWallets must be added first to preserve their data and not get overwritten.
-        /// Then, FeaturedWallets are added to the set.
-        /// Finally, RecentWallets are added to the set, and if there are any duplicates, the lastTimeUsed property is updated.
-        let unsortedWallets = Set(store.customWallets).union(store.featuredWallets).union(recentWallets).map { featuredWallet in
-            
-            var featuredWallet = featuredWallet
-            if let recent = recentWallets.first(where: { $0.id == featuredWallet.id }) {
-                featuredWallet.lastTimeUsed = recent.lastTimeUsed
-            }
-            
-            if featuredWallet.isInstalled, !store.installedWalletIds.contains(featuredWallet.id) {
-                store.installedWalletIds.append(featuredWallet.id)
-            }
-            
-            return featuredWallet
-        }
-        
-        let recommended = AppKit.config.recommendedWalletIds
-        let installed = store.installedWalletIds
-        let distantPast = Date.distantPast
-        
-        return Array(unsortedWallets
-            .sorted(by: { $0.order < $1.order } )
-            .sorted(by: {
-                if installed.contains($0.id) && installed.contains($1.id) {
-                    return installed.firstIndex(of: $0.id)! < installed.firstIndex(of: $1.id)!
-                } else {
-                    return installed.contains($0.id) && !installed.contains($1.id)
-                }
-            } )
-            .sorted(by: {
-                if recommended.contains($0.id) && recommended.contains($1.id) {
-                    return recommended.firstIndex(of: $0.id)! < recommended.firstIndex(of: $1.id)!
-                } else {
-                    return recommended.contains($0.id) && !recommended.contains($1.id)
-                }
-            } )
-            .sorted(by: { $0.lastTimeUsed ?? distantPast > $1.lastTimeUsed ?? distantPast } )
-            .sorted(by: { $0.id == DesktopWallet_walletId && $1.id != DesktopWallet_walletId } )
-            .prefix(5)
-        )
-    }
+    var wallets: [Wallet] { Array(store.sortedWallets.prefix(5)) }
     
     var body: some View {
         VStack {

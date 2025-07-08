@@ -232,7 +232,7 @@ public class AppKit {
             homepage: "https://www.coinbase.com/wallet/",
             imageId: "a5ebc364-8f91-4200-fcc6-be81310a0000",
             order: 4,
-            mobileLink: nil,
+            mobileLink: "cbwallet://",
             linkMode: nil,
             desktopLink: nil,
             webappLink: nil,
