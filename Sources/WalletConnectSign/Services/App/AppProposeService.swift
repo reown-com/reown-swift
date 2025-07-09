@@ -27,13 +27,19 @@ final class AppProposeService {
         relay: RelayProtocolOptions
     ) async throws {
         logger.debug("Propose Session on topic: \(pairingTopic)")
-        try Namespace.validate(namespaces)
-        if let optionalNamespaces {
-            try Namespace.validate(optionalNamespaces)
-        }
+        
+        // Move required namespaces to optional namespaces to avoid connection problems
+        let mergedOptionalNamespaces = NamespaceMerger.mergeRequiredIntoOptional(
+            requiredNamespaces: namespaces,
+            optionalNamespaces: optionalNamespaces
+        )
+        
+        // Validate the merged optional namespaces
+        try Namespace.validate(mergedOptionalNamespaces)
         if let sessionProperties {
             try SessionProperties.validate(sessionProperties)
         }
+        
         let protocolMethod = SessionProposeProtocolMethod.responseApprove()
         let publicKey = try! kms.createX25519KeyPair()
         let proposer = Participant(
@@ -43,8 +49,8 @@ final class AppProposeService {
         let proposal = SessionProposal(
             relays: [relay],
             proposer: proposer,
-            requiredNamespaces: namespaces,
-            optionalNamespaces: optionalNamespaces ?? [:],
+            requiredNamespaces: [:], // Empty required namespaces as per the solution
+            optionalNamespaces: mergedOptionalNamespaces,
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties
         )
