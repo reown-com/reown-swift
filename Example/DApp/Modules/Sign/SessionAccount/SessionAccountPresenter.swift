@@ -100,6 +100,9 @@ extension SessionAccountPresenter {
             return AnyCodable(["0x4d7920656d61696c206973206a6f686e40646f652e636f6d202d2031363533333933373535313531", account])
         } else if method == "eth_signTypedData" {
             return AnyCodable([account, Stub.eth_signTypedData])
+        } else if method == "wallet_sendCalls" {
+            let sendCallsRequest = WalletSendCallsRequest.stub(from: account, chainId: "0xaa36a7")
+            return AnyCodable([sendCallsRequest])
         }
         throw Errors.notImplemented
     }
@@ -157,6 +160,42 @@ extension SessionAccountPresenter.Errors: LocalizedError {
     }
 }
 
+// MARK: - Wallet Send Calls Structs
+private struct WalletSendCallsRequest: Codable {
+    let version: String
+    let from: String
+    let chainId: String
+    let atomicRequired: Bool
+    let calls: [WalletCall]
+    
+    static func stub(from: String, chainId: String) -> WalletSendCallsRequest {
+        let calls = [
+            WalletCall(to: "0x54f1C1965B355e1AB9ec3465616136be35bb5Ff7", value: "0x0"),
+            WalletCall(to: "0x2D48e6f5Ae053e4E918d2be53570961D880905F2", value: "0x0")
+        ]
+        
+        return WalletSendCallsRequest(
+            version: "2.0.0",
+            from: from,
+            chainId: chainId,
+            atomicRequired: true,
+            calls: calls
+        )
+    }
+}
+
+private struct WalletCall: Codable {
+    let to: String
+    let value: String
+    let data: String?
+    
+    init(to: String, value: String, data: String? = nil) {
+        self.to = to
+        self.value = value
+        self.data = data
+    }
+}
+
 // MARK: - Transaction Stub
 private enum Stub {
     struct Transaction: Codable {
@@ -164,8 +203,8 @@ private enum Stub {
         let gasPrice, value, nonce: String
     }
     
-    static let tx = [Transaction(from: "0x9b2055d370f73ec7d8a03e965129118dc8f5bf83",
-                                to: "0x9b2055d370f73ec7d8a03e965129118dc8f5bf83",
+    static let tx = [Transaction(from: "0x9b2055d370f73ec7d8a03e5129118dc8f5bf83",
+                                to: "0x9b2055d370f73ec7d8a03e5129118dc8f5bf83",
                                 data: "0x",
                                 gasLimit: "0x5208",
                                 gasPrice: "0x013e3d2ed4",
@@ -174,13 +213,14 @@ private enum Stub {
 
     static func tx(from: String) -> [Transaction] {
         return [Transaction(from: from,
-                            to: "0x9b2055d370f73ec7d8a03e965129118dc8f5bf83",
+                            to: "0x9b2055d370f73ec7d8a03e5129118dc8f5bf83",
                             data: "0x",
                             gasLimit: "0x5208",
                             gasPrice: "0x013e3d2ed4",
                             value: "0x186A0",
                             nonce: "0x09")]
     }
+    
     static let eth_signTypedData = """
 {
 "types": {

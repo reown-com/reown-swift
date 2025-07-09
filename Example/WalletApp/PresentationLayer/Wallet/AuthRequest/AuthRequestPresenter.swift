@@ -127,7 +127,7 @@ final class AuthRequestPresenter: ObservableObject {
     private func createAuthObjectForChain(chain: Blockchain) throws -> AuthObject {
         let account = Account(blockchain: chain, address: importAccount.account.address)!
 
-        let supportedAuthPayload = try WalletKit.instance.buildAuthPayload(payload: request.payload, supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!, Blockchain("eip155:69")!], supportedMethods: ["personal_sign", "eth_sendTransaction"])
+        let supportedAuthPayload = try WalletKit.instance.buildAuthPayload(payload: request.payload, supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!, Blockchain("eip155:69")!], supportedMethods: ["personal_sign", "eth_sendTransaction", "wallet_sendCalls", "wallet_getCallsStatus"])
 
         let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: supportedAuthPayload, account: account)
 

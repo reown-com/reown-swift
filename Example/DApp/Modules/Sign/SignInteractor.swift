@@ -21,7 +21,9 @@ enum Proposal {
             methods: [
                 "eth_sendTransaction",
                 "personal_sign",
-                "eth_signTypedData"
+                "eth_signTypedData",
+                "wallet_sendCalls",
+                "wallet_getCallsStatus"
             ], events: []
         )
     ]
