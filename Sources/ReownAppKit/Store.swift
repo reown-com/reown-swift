@@ -50,7 +50,6 @@ public class Store: ObservableObject {
     var totalPages: Int = .max
     var walletImages: [String: UIImage] = [:]
     var installedWalletIds: [String] = []
-    var queryableWalletSchemes: [String] = []
     var siweRequestId: RPCID? = nil
     var siweMessage: String? = nil
 
