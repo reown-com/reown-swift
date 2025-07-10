@@ -356,12 +356,12 @@ public final class RelayClient {
         }
     }
     
-    public func proposeSession(pairingTopic: String, sessionProposal: String, attestation: String) async throws {
+    public func proposeSession(pairingTopic: String, sessionProposal: String) async throws {
         
-        let request = Publish(params: .init(topic: topic, message: payload, ttl: ttl, prompt: prompt, tag: tag, correlationId: coorelationId, tvfData: tvfData)).asRPCRequest()
+        let request = ProposeSession(params: .init(pairingTopic: pairingTopic, sessionProposal: sessionProposal)).asRPCRequest()
         let message = try request.asJSONEncodedString()
         
-        try await dispatcher.protectedSend(message, connectUnconditionally: connectUnconditionally)
+        try await dispatcher.protectedSend(message, connectUnconditionally: true)
 
     }
 }
