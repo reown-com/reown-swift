@@ -246,7 +246,7 @@ struct SessionAccountView: View {
                     
                     switch response.result {
                     case  .response(let response):
-                        Text(try! response.get(String.self).description)
+                        Text(response.description)
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                             .padding(.vertical, 12)
