@@ -237,6 +237,9 @@ final class W3MAPIInteractor: ObservableObject {
     func fetchWalletImages(for wallets: [Wallet]) async throws {
         var walletImages: [String: UIImage] = [:]
         
+        // Make a copy to avoid a race condition with concurrentMap
+        let existingImages = self.store.walletImages
+        
         try await wallets.concurrentMap { wallet in
             
             // Build URL
@@ -250,7 +253,7 @@ final class W3MAPIInteractor: ObservableObject {
             // Check whether we have some url and not fetched already
             guard
                 let imageUrl,
-                !self.store.walletImages.contains(where: { key, _ in key == wallet.id })
+                !existingImages.contains(where: { key, _ in key == wallet.id })
             else {
                 return ("", UIImage?.none)
             }
