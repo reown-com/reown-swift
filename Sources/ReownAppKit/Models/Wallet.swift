@@ -1,6 +1,16 @@
 import Foundation
 import UIKit
 
+public struct WalletMetadata {
+    let id: String
+    let scheme: String
+    
+    func isInstalled() -> Bool {
+        guard let nativeUrl = URL(string: scheme) else { return false }
+        return UIApplication.shared.canOpenURL(nativeUrl)
+    }
+}
+
 public struct Wallet: Codable, Identifiable, Sendable {
     public let id: String
     public let name: String

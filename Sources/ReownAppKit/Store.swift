@@ -44,12 +44,13 @@ public class Store: ObservableObject {
     @Published public var featuredWallets: [Wallet] = []
     @Published public var searchedWallets: [Wallet] = []
     @Published public var customWallets: [Wallet] = []
-    
+    @Published public var installedWalletIds: [String] = []
+
     var totalNumberOfWallets: Int = 0
     var currentPage: Int = 0
     var totalPages: Int = .max
     var walletImages: [String: UIImage] = [:]
-    var installedWalletIds: [String] = []
+    var walletMetdata: [WalletMetadata] = []
     var siweRequestId: RPCID? = nil
     var siweMessage: String? = nil
 
@@ -73,7 +74,7 @@ public class Store: ObservableObject {
 extension Store {
     public var sortedWalletsPublisher: AnyPublisher<[Wallet], Never> {
         Publishers
-            .CombineLatest3($customWallets, $featuredWallets, $wallets)
+            .CombineLatest4($customWallets, $featuredWallets, $wallets, $installedWalletIds)
             .compactMap { [weak self] _ in self?.sortedWallets }
             .eraseToAnyPublisher()
     }

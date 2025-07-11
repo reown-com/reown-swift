@@ -1,4 +1,5 @@
 import UIKit
+import Combine
 
 final class W3MAPIInteractor: ObservableObject {
     @Published var isLoading: Bool = false
@@ -7,8 +8,10 @@ final class W3MAPIInteractor: ObservableObject {
     private let uiApplicationWrapper: UIApplicationWrapper
     
     private let entriesPerPage: Int = 40
+    private var cancellables = Set<AnyCancellable>()
     
     var totalEntries: Int = 0
+    
         
     init(
         store: Store = .shared,
@@ -16,6 +19,15 @@ final class W3MAPIInteractor: ObservableObject {
     ) {
         self.store = store
         self.uiApplicationWrapper = uiApplicationWrapper
+        
+        NotificationCenter.default
+            .publisher(for: UIApplication.didBecomeActiveNotification)
+            .sink { [weak self] _ in
+                Task {
+                    try? await self?.detectInstalledWallets()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func fetchWallets(search: String = "") async throws {
@@ -122,20 +134,32 @@ final class W3MAPIInteractor: ObservableObject {
         }
 
         // Detect which wallets are installed
-        var installedSchemes: [String] = []
-        let installedWallets: [String?] = try await response.data.concurrentMap { walletMetadata in
-            guard
-                let nativeUrl = URL(string: walletMetadata.ios_schema),
-                await UIApplication.shared.canOpenURL(nativeUrl)
-            else {
-                return nil
+        let data: [WalletMetadata] = response.data.map { .init(id: $0.id, scheme: $0.ios_schema) }
+        store.walletMetdata = data
+        try await detectInstalledWallets()
+    }
+    
+    func detectInstalledWallets() async throws {
+        do {
+            // Make copy to avoid race in concurrentMap
+            var data = store.walletMetdata
+            
+            // Custom wallets
+            for (index, customWallet) in store.customWallets.enumerated() {
+                let metadata = WalletMetadata(id: customWallet.id, scheme: customWallet.mobileLink ?? "")
+                store.customWallets[index].isInstalled = metadata.isInstalled()
+                data.append(metadata)
             }
             
-            installedSchemes.append(walletMetadata.ios_schema)
-            return walletMetadata.id
+            let installedWallets: [String?] = try await data.concurrentMap { walletMetadata in
+                guard walletMetadata.isInstalled() else { return nil }
+                return walletMetadata.id
+            }
+            store.installedWalletIds = installedWallets.compactMap { $0 }
+        } catch {
+            print("Error detecting installed wallets: \(error.localizedDescription)")
+            throw error
         }
-            
-        store.installedWalletIds = installedWallets.compactMap { $0 }
     }
     
     func fetchFeaturedWallets() async throws {
