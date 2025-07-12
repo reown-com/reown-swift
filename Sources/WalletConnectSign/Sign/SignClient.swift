@@ -193,6 +193,7 @@ public final class SignClient: SignClientProtocol {
     private let sessionResponderDispatcher: SessionResponderDispatcher
     private let linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber
     private let messageVerifier: MessageVerifier
+    private let linkModeSessionProposalSubscriber: LinkModeSessionProposalSubscriber
 
     private var publishers = Set<AnyCancellable>()
 
@@ -231,7 +232,9 @@ public final class SignClient: SignClientProtocol {
          sessionResponderDispatcher: SessionResponderDispatcher,
          linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber,
          authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher,
-         messageVerifier: MessageVerifier
+         messageVerifier: MessageVerifier,
+         linkAppProposeService: LinkAppProposeService,
+         linkModeSessionProposalSubscriber: LinkModeSessionProposalSubscriber
     ) {
         self.logger = logger
         self.networkingClient = networkingClient
@@ -267,6 +270,8 @@ public final class SignClient: SignClientProtocol {
         self.linkSessionRequestResponseSubscriber = linkSessionRequestResponseSubscriber
         self.authenticateTransportTypeSwitcher = authenticateTransportTypeSwitcher
         self.messageVerifier = messageVerifier
+        self.linkAppProposeService = linkAppProposeService
+        self.linkModeSessionProposalSubscriber = linkModeSessionProposalSubscriber
 
         setUpConnectionObserving()
         setUpEnginesCallbacks()
@@ -337,6 +342,26 @@ public final class SignClient: SignClientProtocol {
         return try await authenticateTransportTypeSwitcher.authenticate(params, walletUniversalLink: walletUniversalLink)
     }
 
+    let linkAppProposeService: LinkAppProposeService
+#if DEBUG
+    public func connectLinkMode(
+        requiredNamespaces: [String: ProposalNamespace],
+        optionalNamespaces: [String: ProposalNamespace]? = nil,
+        sessionProperties: [String: String]? = nil,
+        scopedProperties: [String: String]? = nil,
+        walletUniversalLink: String
+    ) async throws -> String {
+        logger.debug("Connecting Application")
+        
+        return try await linkAppProposeService.propose(
+            namespaces: requiredNamespaces,
+            optionalNamespaces: optionalNamespaces,
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
+            walletUniversalLink: walletUniversalLink
+        )
+    }
+#endif
 
     #if DEBUG
     @discardableResult public func authenticateLinkMode(
@@ -550,6 +575,9 @@ public final class SignClient: SignClientProtocol {
 
     private func setUpEnginesCallbacks() {
         approveEngine.onSessionProposal = { [unowned self] (proposal, context) in
+            sessionProposalPublisherSubject.send((proposal, context))
+        }
+        linkModeSessionProposalSubscriber.onSessionProposal = { [unowned self] (proposal, context) in
             sessionProposalPublisherSubject.send((proposal, context))
         }
         approveEngine.onSessionRejected = { [unowned self] proposal, reason in
