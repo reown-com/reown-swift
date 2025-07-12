@@ -1,0 +1,28 @@
+dependencies: [
+  .package(
+    name: "AppKit",
+    url: "https://github.com/reown-com/reown-swift",
+    .upToNextMajor(from: "1.0.0")
+  ),
+],
+.targets: [
+  .target(
+    name: "MyTargetName",
+    dependencies: [
+      .product(name: "AppKit", package: "AppKit"),
+    ]
+  )
+]
+```  [oai_citation:1‡Reown Docs](https://docs.reown.com/appkit/upgrade/wcm?utm_source=chatgpt.com)
+
+---
+
+### 📦 CocoaPods (soon deprecated)
+
+1. Run `pod repo update`  
+2. Ensure you have a `Podfile` (`pod init`)  
+3. Add this line to it:
+   ```ruby
+   pod 'reown-swift/ReownAppKit',
+       :git => 'https://github.com/reown-com/reown-swift.git',
+       :tag => '1.0.4'
