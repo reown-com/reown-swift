@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
+		446A306B2DE8375E0024781A /* SolanaAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */; };
+		446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306C2DE8405A0024781A /* SuiAccountStorage.swift */; };
+		44D89A112DF183C800056A7B /* SuiSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A102DF183C800056A7B /* SuiSigner.swift */; };
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
@@ -338,6 +341,9 @@
 
 /* Begin PBXFileReference section */
 		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
+		446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolanaAccountStorage.swift; sourceTree = "<group>"; };
+		446A306C2DE8405A0024781A /* SuiAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiAccountStorage.swift; sourceTree = "<group>"; };
+		44D89A102DF183C800056A7B /* SuiSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiSigner.swift; sourceTree = "<group>"; };
 		44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsWalletAgainstAppKitWeb.swift; sourceTree = "<group>"; };
 		764E1D5426F8DAC800A1FB15 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		764E1D5526F8DADE00A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
@@ -1015,6 +1021,7 @@
 			children = (
 				84F568C1279582D200D0A289 /* Signer.swift */,
 				848BD1DD2D34DF8F007C2AEF /* EOASigner.swift */,
+				44D89A102DF183C800056A7B /* SuiSigner.swift */,
 				A57E71A5291CF76400325797 /* ETHSigner.swift */,
 				A57E71A7291CF8A500325797 /* SOLSigner.swift */,
 			);
@@ -1176,8 +1183,10 @@
 				A578796F2A4EDC6B00F8D10B /* Views */,
 				C55D348E295DFA750004314A /* WelcomeModule.swift */,
 				C55D348F295DFA750004314A /* WelcomePresenter.swift */,
+				446A306C2DE8405A0024781A /* SuiAccountStorage.swift */,
 				C55D3490295DFA750004314A /* WelcomeRouter.swift */,
 				C55D3491295DFA750004314A /* WelcomeInteractor.swift */,
+				446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */,
 				C55D3492295DFA750004314A /* WelcomeView.swift */,
 			);
 			path = Welcome;
@@ -2017,6 +2026,7 @@
 				C58099352A543CD000AB58F5 /* BlinkAnimation.swift in Sources */,
 				C56EE245293F566D004840D1 /* WalletPresenter.swift in Sources */,
 				C56EE240293F566D004840D1 /* ScanQRView.swift in Sources */,
+				446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */,
 				A51606FB2A2F47BD00CACB92 /* DefaultBIP44Provider.swift in Sources */,
 				C56EE250293F566D004840D1 /* ScanTargetView.swift in Sources */,
 				C56EE28F293F5757004840D1 /* MigrationConfigurator.swift in Sources */,
@@ -2079,7 +2089,9 @@
 				C56EE248293F566D004840D1 /* ScanQR.swift in Sources */,
 				847BD1EB298A87AB00076C90 /* SubscriptionsViewModel.swift in Sources */,
 				C55D349B2965BC2F0004314A /* TagsView.swift in Sources */,
+				446A306B2DE8375E0024781A /* SolanaAccountStorage.swift in Sources */,
 				84B8154E2991099000FAD54E /* BuildConfiguration.swift in Sources */,
+				44D89A112DF183C800056A7B /* SuiSigner.swift in Sources */,
 				C56EE289293F5757004840D1 /* Application.swift in Sources */,
 				C56EE273293F56D7004840D1 /* UIColor.swift in Sources */,
 				84B73D2E2D916B4500EC1793 /* Chain.swift in Sources */,
