@@ -1,0 +1,5 @@
+"devDependencies": {
+  "typescript": "^5.2.2",
+  "@types/react": "^18.0.27",
+  "@types/node": "^20.4.2"
+}
