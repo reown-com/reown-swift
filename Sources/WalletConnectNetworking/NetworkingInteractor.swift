@@ -250,8 +250,15 @@ public class NetworkingInteractor: NetworkInteracting {
         try await relayClient.proposeSession(pairingTopic: topic, sessionProposal: message)
     }
     
-    public func approveSession(sessionTopic: String, pairingTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest) {
+    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest) async throws {
         
+        //set rpc history
+        
+        let serialisedSessionProposalResponse = try serializer.serialize(topic: pairingTopic, encodable: sessionProposalResponse, envelopeType: .type0)
+        
+        let serialisedSessionSettlementRequest = try serializer.serialize(topic: sessionTopic, encodable: sessionSettleRequest, envelopeType: .type0)
+        
+        try await relayClient.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: serialisedSessionProposalResponse, sessionSettlementRequest: serialisedSessionSettlementRequest)
     }
     
     public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {

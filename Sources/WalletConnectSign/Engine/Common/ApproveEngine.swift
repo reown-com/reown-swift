@@ -145,7 +145,7 @@ final class ApproveEngine {
         let settleRequest = RPCRequest(method: SessionSettleProtocolMethod().method, params: settleParams)
         
         
-        try await networkingInteractor.approveSession(sessionTopic: sessionTopic, pairingTopic: pairingTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest)
+        try await networkingInteractor.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest)
         
         
         let session = createSession(topic: sessionTopic, proposal: proposal, pairingTopic: pairingTopic, settleParams: settleParams)
