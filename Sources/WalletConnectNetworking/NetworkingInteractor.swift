@@ -244,10 +244,14 @@ public class NetworkingInteractor: NetworkInteracting {
         }
     }
     
-    public func proposeSession(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod) async throws {
+    public func proposeSession(_ request: RPCRequest, topic: String) async throws {
         try rpcHistory.set(request, forTopic: topic, emmitedBy: .local, transportType: .relay)
         let message = try serializer.serialize(topic: topic, encodable: request, envelopeType: .type0)
         try await relayClient.proposeSession(pairingTopic: topic, sessionProposal: message)
+    }
+    
+    public func approveSession(sessionTopic: String, pairingTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest) {
+        
     }
     
     public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {

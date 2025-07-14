@@ -17,7 +17,8 @@ public protocol NetworkInteracting {
     func respondError(topic: String, requestId: RPCID, protocolMethod: ProtocolMethod, reason: Reason, envelopeType: Envelope.EnvelopeType) async throws
     func handleHistoryRequest(topic: String, request: RPCRequest)
     func trackTopics(_ topics: [String])
-    func proposeSession(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod) async throws 
+    func proposeSession(_ request: RPCRequest, topic: String) async throws
+    func approveSession(sessionTopic: String, pairingTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest) async throws 
 
     func requestSubscription<Request: Codable>(
         on request: ProtocolMethod
