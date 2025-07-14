@@ -158,6 +158,12 @@ public final class RelayClient {
                 })
         }
     }
+    
+    public func proposeSession(pairingTopic: String, sessionProposal: String) async throws {
+        let request = ProposeSession(params: .init(pairingTopic: pairingTopic, sessionProposal: sessionProposal)).asRPCRequest()
+        let message = try request.asJSONEncodedString()
+        try await dispatcher.protectedSend(message, connectUnconditionally: true)
+    }
 
     public func subscribe(topic: String, connectUnconditionally: Bool = false) async throws {
         topicsTracker.addTopics([topic])
@@ -354,14 +360,5 @@ public final class RelayClient {
                 }
             }
         }
-    }
-    
-    public func proposeSession(pairingTopic: String, sessionProposal: String) async throws {
-        
-        let request = ProposeSession(params: .init(pairingTopic: pairingTopic, sessionProposal: sessionProposal)).asRPCRequest()
-        let message = try request.asJSONEncodedString()
-        
-        try await dispatcher.protectedSend(message, connectUnconditionally: true)
-
     }
 }
