@@ -164,6 +164,12 @@ public final class RelayClient {
         let message = try request.asJSONEncodedString()
         try await dispatcher.protectedSend(message, connectUnconditionally: true)
     }
+    
+    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: String, sessionSettlementRequest: String) async throws {
+        let request = ApproveSession(params: .init(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: sessionProposalResponse, sessionSettlementRequest: sessionSettlementRequest)).asRPCRequest()
+        let message = try request.asJSONEncodedString()
+        try await dispatcher.protectedSend(message, connectUnconditionally: true)
+    }
 
     public func subscribe(topic: String, connectUnconditionally: Bool = false) async throws {
         topicsTracker.addTopics([topic])
