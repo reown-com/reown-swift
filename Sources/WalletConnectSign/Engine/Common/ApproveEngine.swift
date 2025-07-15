@@ -144,22 +144,19 @@ final class ApproveEngine {
         
         let settleRequest = RPCRequest(method: SessionSettleProtocolMethod().method, params: settleParams)
         
-        
-        try await networkingInteractor.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest)
-        
+        do {
+            try await networkingInteractor.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest)
+        } catch {
+            eventsClient.saveTraceEvent(ApproveSessionTraceErrorEvents.approveSessionFailure)
+            throw error
+        }
         
         let session = createSession(topic: sessionTopic, proposal: proposal, pairingTopic: pairingTopic, settleParams: settleParams)
         
-        eventsClient.saveTraceEvent(SessionApproveExecutionTraceEvents.sessionSettleSuccess)
-        logger.debug("Session settle request has been successfully processed")
-        
         sessionStore.setSession(session)
-        
-//        Task {
-//            networkingInteractor.unsubscribe(topic: pairingTopic)
-//        }
+
         onSessionSettle?(session.publicRepresentation())
-        eventsClient.saveTraceEvent(SessionApproveExecutionTraceEvents.sessionSettleSuccess)
+        eventsClient.saveTraceEvent(SessionApproveExecutionTraceEvents.approvSessionSuccess)
         logger.debug("wc_sessionApprove have been sent")
         
         proposalPayloadsStore.delete(forKey: proposerPubKey)
