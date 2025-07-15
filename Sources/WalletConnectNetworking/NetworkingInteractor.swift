@@ -221,7 +221,7 @@ public class NetworkingInteractor: NetworkInteracting {
     public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {
         try rpcHistory.set(request, forTopic: topic, emmitedBy: .local, transportType: .relay)
 
-        let coorelationId = request.id
+        let correlationId = request.id
 
         do {
             let message = try serializer.serialize(topic: topic, encodable: request, envelopeType: envelopeType)
@@ -234,7 +234,7 @@ public class NetworkingInteractor: NetworkInteracting {
                 prompt: protocolMethod.requestConfig.prompt,
                 ttl: protocolMethod.requestConfig.ttl,
                 tvfData: tvfData,
-                coorelationId: coorelationId
+                coorelationId: correlationId
             )
         } catch {
             if let id = request.id {
@@ -245,22 +245,24 @@ public class NetworkingInteractor: NetworkInteracting {
     }
     
     public func proposeSession(_ request: RPCRequest, topic: String) async throws {
+        let correlationId = request.id
         try rpcHistory.set(request, forTopic: topic, emmitedBy: .local, transportType: .relay)
         let message = try serializer.serialize(topic: topic, encodable: request, envelopeType: .type0)
-        try await relayClient.proposeSession(pairingTopic: topic, sessionProposal: message)
+        try await relayClient.proposeSession(pairingTopic: topic, sessionProposal: message, correlationId: correlationId)
     }
     
     public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest) async throws {
         
+        let correlationId = sessionProposalResponse.id
+
         try rpcHistory.validate(sessionProposalResponse)
         try rpcHistory.set(sessionSettleRequest, forTopic: sessionTopic, emmitedBy: .local, transportType: .relay)
-
         
         let serialisedSessionProposalResponse = try serializer.serialize(topic: pairingTopic, encodable: sessionProposalResponse, envelopeType: .type0)
         
         let serialisedSessionSettlementRequest = try serializer.serialize(topic: sessionTopic, encodable: sessionSettleRequest, envelopeType: .type0)
         
-        try await relayClient.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: serialisedSessionProposalResponse, sessionSettlementRequest: serialisedSessionSettlementRequest)
+        try await relayClient.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: serialisedSessionProposalResponse, sessionSettlementRequest: serialisedSessionSettlementRequest, correlationId: correlationId)
         
         try rpcHistory.resolve(sessionProposalResponse)
 

@@ -6,12 +6,14 @@ public struct ApproveSession: RelayRPC {
         let sessionTopic: String
         let sessionProposalResponse: String
         let sessionSettlementRequest: String
+        let correlationId: RPCID?
         
-        init(pairingTopic: String, sessionTopic: String, sessionProposalResponse: String, sessionSettlementRequest: String) {
+        init(pairingTopic: String, sessionTopic: String, sessionProposalResponse: String, sessionSettlementRequest: String, correlationId: RPCID?) {
             self.pairingTopic = pairingTopic
             self.sessionTopic = sessionTopic
             self.sessionProposalResponse = sessionProposalResponse
             self.sessionSettlementRequest = sessionSettlementRequest
+            self.correlationId = correlationId
         }
     }
     

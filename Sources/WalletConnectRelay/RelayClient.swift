@@ -159,14 +159,14 @@ public final class RelayClient {
         }
     }
     
-    public func proposeSession(pairingTopic: String, sessionProposal: String) async throws {
-        let request = ProposeSession(params: .init(pairingTopic: pairingTopic, sessionProposal: sessionProposal)).asRPCRequest()
+    public func proposeSession(pairingTopic: String, sessionProposal: String, correlationId: RPCID?) async throws {
+        let request = ProposeSession(params: .init(pairingTopic: pairingTopic, sessionProposal: sessionProposal, correlationId: correlationId)).asRPCRequest()
         let message = try request.asJSONEncodedString()
         try await dispatcher.protectedSend(message, connectUnconditionally: true)
     }
     
-    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: String, sessionSettlementRequest: String) async throws {
-        let request = ApproveSession(params: .init(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: sessionProposalResponse, sessionSettlementRequest: sessionSettlementRequest)).asRPCRequest()
+    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: String, sessionSettlementRequest: String, correlationId: RPCID?) async throws {
+        let request = ApproveSession(params: .init(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: sessionProposalResponse, sessionSettlementRequest: sessionSettlementRequest, correlationId: correlationId)).asRPCRequest()
         let message = try request.asJSONEncodedString()
         try await dispatcher.protectedSend(message, connectUnconditionally: true)
     }
