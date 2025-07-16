@@ -140,7 +140,7 @@ final class ApproveEngine {
         let result = SessionType.ProposeResponse(relay: relay, responderPublicKey: selfPublicKey.hexRepresentation)
         let response = RPCResponse(id: payload.id, result: result)
         
-        let settleParams = try createSettleParams(sessionTopic: sessionTopic, proposal: proposal, namespaces: sessionNamespaces)
+        let settleParams = try createSettleParams(sessionTopic: sessionTopic, proposal: proposal, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties)
         
         let settleRequest = RPCRequest(method: SessionSettleProtocolMethod().method, params: settleParams)
         
@@ -193,7 +193,7 @@ final class ApproveEngine {
         kms.deleteSymmetricKey(for: pairingTopic)
     }
     
-    func createSettleParams(sessionTopic: String, proposal: SessionProposal, namespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil) throws -> SessionType.SettleParams {
+    func createSettleParams(sessionTopic: String, proposal: SessionProposal, namespaces: [String: SessionNamespace], sessionProperties: [String: String]?, scopedProperties: [String: String]?) throws -> SessionType.SettleParams {
         
         guard let agreementKeys = kms.getAgreementSecret(for: sessionTopic) else {
             throw Errors.agreementMissingOrInvalid
