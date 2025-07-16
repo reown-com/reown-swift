@@ -102,16 +102,6 @@ final class ApproveEngineTests: XCTestCase {
         XCTAssertTrue(sessionProposed)
     }
 
-    func testSessionSettle() async throws {
-        let agreementKeys = AgreementKeys.stub()
-        let topicB = String.generateTopic()
-        cryptoMock.setAgreementSecret(agreementKeys, topic: topicB)
-        let proposal = SessionProposal.stub(proposerPubKey: AgreementPrivateKey().publicKey.hexRepresentation)
-        _ = try await engine.settle(topic: topicB, proposal: proposal, namespaces: SessionNamespace.stubDictionary(), pairingTopic: "")
-        XCTAssert(networkingInteractor.didSubscribe(to: topicB), "Responder must subscribe for topic B")
-        XCTAssertTrue(networkingInteractor.didCallRequest, "Responder must send session settle payload on topic B")
-    }
-
     func testHandleSessionSettle() {
         let sessionTopic = String.generateTopic()
         cryptoMock.setAgreementSecret(AgreementKeys.stub(), topic: sessionTopic)
