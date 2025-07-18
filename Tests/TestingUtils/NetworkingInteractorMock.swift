@@ -6,6 +6,14 @@ import WalletConnectKMS
 import WalletConnectNetworking
 
 public class NetworkingInteractorMock: NetworkInteracting {
+    public func proposeSession(_ request: JSONRPC.RPCRequest, topic: String) async throws {
+        subscriptions.append(topic)
+    }
+    
+    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: JSONRPC.RPCResponse, sessionSettleRequest: JSONRPC.RPCRequest) async throws {
+        subscriptions.append(sessionTopic)
+    }
+    
     public func trackTopics(_ topics: [String]) {
         
     }

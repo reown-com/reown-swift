@@ -4,7 +4,6 @@ import Foundation
 struct Unsubscribe: RelayRPC {
 
     struct Params: Codable {
-        let id: String
         let topic: String
     }
 

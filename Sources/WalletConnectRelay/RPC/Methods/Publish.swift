@@ -36,4 +36,3 @@ public struct Publish: RelayRPC {
         "irn_publish"
     }
 }
-
