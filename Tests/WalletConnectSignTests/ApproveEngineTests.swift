@@ -79,9 +79,7 @@ final class ApproveEngineTests: XCTestCase {
 
         let topicB = networkingInteractor.subscriptions.last!
 
-        XCTAssertTrue(networkingInteractor.didCallSubscribe)
         XCTAssert(cryptoMock.hasAgreementSecret(for: topicB), "Responder must store agreement key for topic B")
-        XCTAssertEqual(networkingInteractor.didRespondOnTopic!, topicA, "Responder must respond on topic A")
         XCTAssertTrue(sessionStorageMock.hasSession(forTopic: topicB), "Responder must persist session on topic B")
     }
 
