@@ -285,12 +285,8 @@ public final class RelayClient {
     }
 
     public func unsubscribe(topic: String, completion: ((Error?) -> Void)?) {
-        guard let subscriptionId = subscriptionsTracker.getSubscription(for: topic) else {
-            completion?(Errors.subscriptionIdNotFound)
-            return
-        }
         logger.debug("Unsubscribing from topic: \(topic)")
-        let rpc = Unsubscribe(params: .init(id: subscriptionId, topic: topic))
+        let rpc = Unsubscribe(params: .init(topic: topic))
         let request = rpc.asRPCRequest()
         let message = try! request.asJSONEncodedString()
         rpcHistory.deleteAll(forTopic: topic)
