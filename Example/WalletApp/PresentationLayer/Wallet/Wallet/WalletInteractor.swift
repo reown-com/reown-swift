@@ -13,7 +13,10 @@ final class WalletInteractor {
     }
     
     func pair(uri: WalletConnectURI) async throws {
-        try await WalletKit.instance.pair(uri: uri)
+//        try await WalletKit.instance.pair(uri: uri)
+        let proposal = try await WalletKitRust.instance.pair(uri: uri.absoluteString)
+        print(proposal)
+        print(proposal)
     }
     
     func disconnectSession(session: Session) async throws {
