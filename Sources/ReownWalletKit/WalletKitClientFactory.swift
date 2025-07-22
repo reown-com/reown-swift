@@ -3,7 +3,7 @@ import YttriumWrapper
 
 struct WalletKitClientFactory {
     static func create(
-        signClient: SignClientProtocol,
+        signClient: WalletConnectSign.SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
         config: WalletKit.Config,

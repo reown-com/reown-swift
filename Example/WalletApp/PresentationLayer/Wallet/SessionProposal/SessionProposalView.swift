@@ -165,7 +165,7 @@ struct SessionProposalView: View {
         .edgesIgnoringSafeArea(.all)
     }
 
-    private func sessionProposalView(namespaces: ProposalNamespace) -> some View {
+    private func sessionProposalView(namespaces: WalletConnectSign.ProposalNamespace) -> some View {
         VStack {
             VStack(alignment: .leading) {
                 TagsView(items: Array(namespaces.chains ?? [])) {

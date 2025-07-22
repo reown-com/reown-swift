@@ -100,7 +100,7 @@ public class WalletKitClient {
     }
 
     // MARK: - Private Properties
-    private let signClient: SignClientProtocol
+    private let signClient: WalletConnectSign.SignClientProtocol
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
     private let chainAbstractionClient: ChainAbstractionClient
@@ -111,7 +111,7 @@ public class WalletKitClient {
     public let ChainAbstraction: ChainAbstractionNamespace
 
     init(
-        signClient: SignClientProtocol,
+        signClient: WalletConnectSign.SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
         chainAbstractionClient: ChainAbstractionClient,
@@ -298,4 +298,5 @@ extension WalletKitClient {
     }
 }
 #endif
+
 
