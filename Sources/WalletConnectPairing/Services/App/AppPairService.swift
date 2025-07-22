@@ -13,7 +13,6 @@ actor AppPairService {
 
     func create(supportedMethods: [String]?) async throws -> WalletConnectURI {
         let topic = String.generateTopic()
-//        try await networkingInteractor.subscribe(topic: topic)
         let symKey = try! kms.createSymmetricKey(topic)
 
         let relay = RelayProtocolOptions(protocol: "irn", data: nil)
