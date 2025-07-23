@@ -52,8 +52,8 @@ extension MainPresenter {
 
         WalletKitRust.instance.sessionProposalPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [unowned self] proposal in
-                router.present(proposal: proposal, importAccount: importAccount, context: session.context)
+            .sink { [unowned self] proposalWithContext in
+                router.present(proposal: proposalWithContext.proposal, importAccount: importAccount, context: proposalWithContext.context)
             }
             .store(in: &disposeBag)
 
