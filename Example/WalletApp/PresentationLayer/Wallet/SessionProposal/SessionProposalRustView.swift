@@ -33,8 +33,8 @@ struct SessionProposalRustView: View {
                         .scaledToFit()
                     
                     HStack {
-                        // TODO: Replace with actual proposer name from SessionProposalFfi
-                        Text("Rust dApp")
+                        // TODO: Replace with actual proposer name from SessionProposalFfi when available
+                        Text("dApp")
                             .foregroundColor(.grey8)
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                     }
@@ -45,40 +45,59 @@ struct SessionProposalRustView: View {
                         .foregroundColor(.grey8)
                         .font(.system(size: 22, weight: .medium, design: .rounded))
                     
-                    HStack {
-                        VStack(alignment: .leading, spacing: 5) {
-                            // TODO: Add actual namespace and chain information from SessionProposalFfi
-                            Text("Rust-based Session Proposal")
-                                .foregroundColor(.grey8)
-                                .font(.system(size: 17, weight: .medium, design: .rounded))
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
+                    if case .valid = presenter.validationStatus {
+                        HStack {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.blue)
                             
-                            Text("This is a session proposal from the Rust client")
-                                .foregroundColor(.grey50)
-                                .font(.system(size: 13, weight: .medium, design: .rounded))
-                                .multilineTextAlignment(.center)
+                            Text("Rust Client")
+                                .foregroundColor(.grey8)
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
                                 .lineSpacing(4)
                         }
-                        Spacer()
+                        .padding(.top, 8)
+                    } else {
+                        Text("Rust Client")
+                            .foregroundColor(.grey8)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(4)
+                            .padding(.top, 8)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.top, 10)
                     
-                    // Placeholder for namespaces - TODO: implement actual namespace parsing
+                    switch presenter.validationStatus {
+                    case .unknown:
+                        verifyBadgeView(imageName: "exclamationmark.circle.fill", title: "Cannot verify", color: .orange)
+                        
+                    case .invalid:
+                        verifyBadgeView(imageName: "exclamationmark.triangle.fill", title: "Invalid domain", color: .red)
+                        
+                    case .scam:
+                        verifyBadgeView(imageName: "exclamationmark.shield.fill", title: "Security risk", color: .red)
+                        
+                    default:
+                        EmptyView()
+                    }
+                    
+                    Divider()
+                        .padding(.top, 12)
+                        .padding(.horizontal, -18)
+                    
+                    // Display actual namespaces from SessionProposalFfi
                     ScrollView {
-                        Text("Session Details".uppercased())
+                        Text("Requested namespaces".uppercased())
                             .foregroundColor(.grey50)
                             .font(.system(size: 12, weight: .semibold, design: .rounded))
                             .multilineTextAlignment(.center)
                             .lineSpacing(4)
                             .padding(.vertical, 12)
                         
-                        Text("Details will be populated once SessionProposalFfi structure is known")
-                            .foregroundColor(.grey70)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .multilineTextAlignment(.center)
-                            .padding()
+                        ForEach(presenter.sessionProposal.requestedNamespaces.keys.sorted(), id: \.self) { chain in
+                            if let namespaces = presenter.sessionProposal.requestedNamespaces[chain] {
+                                sessionProposalView(namespaces: namespaces)
+                            }
+                        }
                     }
                     .frame(height: 150)
                     .cornerRadius(20)
@@ -130,6 +149,101 @@ struct SessionProposalRustView: View {
             ConnectedSheetView(title: "Connected")
         }
         .edgesIgnoringSafeArea(.all)
+    }
+
+    private func sessionProposalView(namespaces: YttriumWrapper.ProposalNamespace) -> some View {
+        VStack {
+            VStack(alignment: .leading) {
+                TagsView(items: namespaces.chains) {
+                    Text($0.uppercased())
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundColor(.whiteBackground)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.grey70)
+                        .cornerRadius(28, corners: .allCorners)
+                }
+                .padding(.horizontal, 15)
+                .padding(.top, 9)
+                
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Methods")
+                            .foregroundColor(.grey50)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 10)
+                    
+                    TagsView(items: namespaces.methods) {
+                        Text($0)
+                            .foregroundColor(.cyanBackround)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.cyanBackround.opacity(0.2))
+                            .cornerRadius(10, corners: .allCorners)
+                    }
+                    .padding(10)
+                }
+                .background(Color.whiteBackground)
+                .cornerRadius(20, corners: .allCorners)
+                .padding(.horizontal, 5)
+                
+                if !namespaces.events.isEmpty {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Events")
+                                .foregroundColor(.grey50)
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.top, 10)
+                        
+                        TagsView(items: namespaces.events) {
+                            Text($0)
+                                .foregroundColor(.cyanBackround)
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.cyanBackround.opacity(0.2))
+                                .cornerRadius(10, corners: .allCorners)
+                        }
+                        .padding(10)
+                    }
+                    .background(Color.whiteBackground)
+                    .cornerRadius(20, corners: .allCorners)
+                    .padding(.horizontal, 5)
+                    .padding(.bottom, 5)
+                } else {
+                    Spacer(minLength: 5)
+                }
+            }
+            .background(.thinMaterial)
+            .cornerRadius(25, corners: .allCorners)
+        }
+        .padding(.bottom, 15)
+    }
+    
+    private func verifyBadgeView(imageName: String, title: String, color: Color) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: imageName)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundColor(color)
+            
+            Text(title)
+                .foregroundColor(color)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+            
+        }
+        .padding(5)
+        .background(color.opacity(0.15))
+        .cornerRadius(10)
+        .padding(.top, 8)
     }
 
     private func verifyDescriptionView(imageName: String, title: String, description: String, color: Color) -> some View {
