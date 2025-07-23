@@ -162,7 +162,7 @@ private extension SceneDelegate {
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
-        WalletKitRust.configure(relayUrl: "relay.walletconnect.org", projectId: InputConfig.projectId, clientId: "123")
+        WalletKitRust.configure(projectId: InputConfig.projectId)
 
     }
 

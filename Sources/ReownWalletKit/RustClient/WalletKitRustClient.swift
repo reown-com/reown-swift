@@ -35,9 +35,7 @@ public class WalletKitRustClient {
 struct WalletKitRustClientFactory {
     static func create(config: WalletKitRust.Config) -> WalletKitRustClient {
         let yttriumClient = YttriumWrapper.SignClient(
-            relayUrl: config.relayUrl,
-            projectId: config.projectId,
-            clientId: config.clientId
+            projectId: config.projectId
         )
         
         return WalletKitRustClient(yttriumClient: yttriumClient)
@@ -57,9 +55,7 @@ public class WalletKitRust {
     private static var config: Config?
     
     struct Config {
-        let relayUrl: String
         let projectId: String
-        let clientId: String
     }
     
     private init() { }
@@ -70,14 +66,10 @@ public class WalletKitRust {
     ///   - projectId: The project ID for the wallet connect
     ///   - clientId: The client ID for identification
     static public func configure(
-        relayUrl: String,
-        projectId: String,
-        clientId: String
+        projectId: String
     ) {
         WalletKitRust.config = WalletKitRust.Config(
-            relayUrl: relayUrl,
-            projectId: projectId,
-            clientId: clientId
+            projectId: projectId
         )
     }
 }
