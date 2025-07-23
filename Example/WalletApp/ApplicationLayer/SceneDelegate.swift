@@ -89,7 +89,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         do {
             let uri = try WalletConnectURI(urlContext: context)
             Task {
-                let proposal = try await WalletKitRust.instance.pair(uri: url.absoluteString)
+                let proposal = try await WalletKitRust.instance.pair(uri: uri.absoluteString)
+                
+                WalletKitRust.instance.
                 print(proposal)
                 print(proposal)
 

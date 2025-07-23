@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 import WalletConnectUtils
 import ReownWalletKit
+import YttriumWrapper
 
 struct Tx: Codable {
     let data: String
@@ -48,6 +49,13 @@ extension MainPresenter {
     private func setupInitialState() {
         configurationService.configure(importAccount: importAccount)
         pushRegisterer.registerForPushNotifications()
+
+        WalletKitRust.instance.sessionProposalPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] proposal in
+                router.present(proposal: proposal, importAccount: importAccount, context: session.context)
+            }
+            .store(in: &disposeBag)
 
         interactor.sessionProposalPublisher
             .receive(on: DispatchQueue.main)

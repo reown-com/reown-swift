@@ -13,13 +13,13 @@ public class WalletKitRustClient {
     /// Publisher that sends session proposal
     ///
     /// event is emited on responder client only
-    public var sessionProposalPublisher: AnyPublisher<(proposal: Session.Proposal, context: VerifyContext?), Never> {
+    public var sessionProposalPublisher: AnyPublisher<(proposal: SessionProposalFfi, context: VerifyContext?), Never> {
         sessionProposalPublisherSubject.eraseToAnyPublisher()
     }
     
     // MARK: - Private Properties
     private let yttriumClient: YttriumWrapper.SignClient
-    private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: Session.Proposal, context: VerifyContext?), Never>()
+    private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: SessionProposalFfi, context: VerifyContext?), Never>()
     
     init(yttriumClient: YttriumWrapper.SignClient) {
         self.yttriumClient = yttriumClient
@@ -28,7 +28,13 @@ public class WalletKitRustClient {
     /// For wallet to receive a session proposal from a dApp
     /// Responder should call this function in order to accept peer's pairing and be able to subscribe for future session proposals.
     public func pair(uri: String) async throws -> SessionProposalFfi {
-        return try await yttriumClient.pair(uri: uri)
+        let proposal = try await yttriumClient.pair(uri: uri)
+        sessionProposalPublisherSubject.send((proposal: proposal, context: nil))
+        return proposal
+    }
+    
+    public func approve(_ proposal: SessionProposalFfi) async throws -> ApprovedSessionFfi {
+        return try await yttriumClient.approve(pairing: proposal)
     }
 }
 
