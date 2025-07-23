@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
+		44713A852E30EFE000E3027A /* SessionProposalRustModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A812E30EFE000E3027A /* SessionProposalRustModule.swift */; };
+		44713A862E30EFE000E3027A /* SessionProposalRustRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A832E30EFE000E3027A /* SessionProposalRustRouter.swift */; };
+		44713A872E30EFE000E3027A /* SessionProposalRustView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A842E30EFE000E3027A /* SessionProposalRustView.swift */; };
+		44713A882E30EFE000E3027A /* SessionProposalRustPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A822E30EFE000E3027A /* SessionProposalRustPresenter.swift */; };
+		44713A892E30EFE000E3027A /* SessionProposalRustInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A802E30EFE000E3027A /* SessionProposalRustInteractor.swift */; };
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
@@ -338,6 +343,11 @@
 
 /* Begin PBXFileReference section */
 		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
+		44713A802E30EFE000E3027A /* SessionProposalRustInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProposalRustInteractor.swift; sourceTree = "<group>"; };
+		44713A812E30EFE000E3027A /* SessionProposalRustModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProposalRustModule.swift; sourceTree = "<group>"; };
+		44713A822E30EFE000E3027A /* SessionProposalRustPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProposalRustPresenter.swift; sourceTree = "<group>"; };
+		44713A832E30EFE000E3027A /* SessionProposalRustRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProposalRustRouter.swift; sourceTree = "<group>"; };
+		44713A842E30EFE000E3027A /* SessionProposalRustView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProposalRustView.swift; sourceTree = "<group>"; };
 		44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsWalletAgainstAppKitWeb.swift; sourceTree = "<group>"; };
 		764E1D5426F8DAC800A1FB15 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		764E1D5526F8DADE00A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
@@ -1189,6 +1199,11 @@
 				C55D34A92965FB750004314A /* SessionProposalModule.swift */,
 				C55D34AA2965FB750004314A /* SessionProposalPresenter.swift */,
 				C55D34AB2965FB750004314A /* SessionProposalRouter.swift */,
+				44713A802E30EFE000E3027A /* SessionProposalRustInteractor.swift */,
+				44713A812E30EFE000E3027A /* SessionProposalRustModule.swift */,
+				44713A822E30EFE000E3027A /* SessionProposalRustPresenter.swift */,
+				44713A832E30EFE000E3027A /* SessionProposalRustRouter.swift */,
+				44713A842E30EFE000E3027A /* SessionProposalRustView.swift */,
 				C55D34AC2965FB750004314A /* SessionProposalInteractor.swift */,
 				C55D34AD2965FB750004314A /* SessionProposalView.swift */,
 			);
@@ -2123,6 +2138,11 @@
 				C5F32A2C2954814200A6476E /* ConnectionDetailsModule.swift in Sources */,
 				C56EE249293F566D004840D1 /* ScanInteractor.swift in Sources */,
 				C56EE28A293F5757004840D1 /* AppDelegate.swift in Sources */,
+				44713A852E30EFE000E3027A /* SessionProposalRustModule.swift in Sources */,
+				44713A862E30EFE000E3027A /* SessionProposalRustRouter.swift in Sources */,
+				44713A872E30EFE000E3027A /* SessionProposalRustView.swift in Sources */,
+				44713A882E30EFE000E3027A /* SessionProposalRustPresenter.swift in Sources */,
+				44713A892E30EFE000E3027A /* SessionProposalRustInteractor.swift in Sources */,
 				84B73D292D9161F900EC1793 /* SendEthereumRouter.swift in Sources */,
 				84B73D2A2D9161F900EC1793 /* SendEthereumModule.swift in Sources */,
 				84B73D2B2D9161F900EC1793 /* SendEthereumPresenter.swift in Sources */,
