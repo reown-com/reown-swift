@@ -153,6 +153,9 @@ class Web3ModalViewModel: ObservableObject {
         store.connectedWith = .wc
         store.account = .init(from: session)
         store.session = session
+        
+        // Set this session as the primary session
+        AppKit.primarySessionTopic = session.topic
 
         if
             let blockchain = session.accounts.first?.blockchain,

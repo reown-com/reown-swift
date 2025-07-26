@@ -267,9 +267,21 @@ public class AppKitClient {
     }
 
     /// Query sessions
-    /// - Returns: All sessions
+    /// - Returns: All sessions with primary session first
     public func getSessions() -> [Session] {
-        signClient.getSessions()
+        let allSessions = signClient.getSessions()
+        
+        // Sort sessions with primary session first
+        guard let primaryTopic = AppKit.primarySessionTopic else {
+            return allSessions
+        }
+        
+        return allSessions.sorted { lhs, rhs in
+            if lhs.topic == primaryTopic { return true }
+            if rhs.topic == primaryTopic { return false }
+            // Secondary sort by timestamp to maintain consistent order
+            return lhs.expiryDate < rhs.expiryDate
+        }
     }
     
     /// Query pairings

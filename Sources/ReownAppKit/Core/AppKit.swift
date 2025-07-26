@@ -19,6 +19,12 @@ import UIKit
 /// AppKit.instance.getSessions()
 /// ```
 public class AppKit {
+    /// Primary session topic for wallet connection
+    public static var primarySessionTopic: String? {
+        get { UserDefaults.standard.string(forKey: "appkit.primarySessionTopic") }
+        set { UserDefaults.standard.set(newValue, forKey: "appkit.primarySessionTopic") }
+    }
+    
     /// AppKit client instance
     public static var instance: AppKitClient = {
         guard let config = AppKit.config else {
@@ -34,7 +40,12 @@ public class AppKit {
         
         let store = Store.shared
         
-        if let session = client.getSessions().first {
+        // Try to find primary session first, then fall back to first session
+        let session = primarySessionTopic != nil 
+            ? client.getSessions().first(where: { $0.topic == primarySessionTopic })
+            : client.getSessions().first
+        
+        if let session = session {
             store.session = session
             store.connectedWith = .wc
             store.account = .init(from: session)
