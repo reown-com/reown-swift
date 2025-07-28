@@ -5,17 +5,20 @@ final class AppProposeService {
     private let networkingInteractor: NetworkInteracting
     private let kms: KeyManagementServiceProtocol
     private let logger: ConsoleLogging
+    private let iatProvader: IATProvider
 
     init(
         metadata: AppMetadata,
         networkingInteractor: NetworkInteracting,
         kms: KeyManagementServiceProtocol,
-        logger: ConsoleLogging
+        logger: ConsoleLogging,
+        iatProvader: IATProvider
     ) {
         self.metadata = metadata
         self.networkingInteractor = networkingInteractor
         self.kms = kms
         self.logger = logger
+        self.iatProvader = iatProvader
     }
 
     func propose(
@@ -24,7 +27,8 @@ final class AppProposeService {
         optionalNamespaces: [String: ProposalNamespace]? = nil,
         sessionProperties: [String: String]? = nil,
         scopedProperties: [String: String]? = nil,
-        relay: RelayProtocolOptions
+        relay: RelayProtocolOptions,
+        authentication: [AuthRequestParams]?
     ) async throws {
         logger.debug("Propose Session on topic: \(pairingTopic)")
         
@@ -46,13 +50,19 @@ final class AppProposeService {
             publicKey: publicKey.hexRepresentation,
             metadata: metadata)
         
+//        for each AuthRequestParams build AuthPayload
+        let authPayload = AuthPayload(requestParams: params, iat: iatProvader.iat)
+
+        let requests = ProposalRequests(authentication: <#T##[AuthPayload]#>)
+        
         let proposal = SessionProposal(
             relays: [relay],
             proposer: proposer,
             requiredNamespaces: [:], // Empty required namespaces as per the solution
             optionalNamespaces: mergedOptionalNamespaces,
             sessionProperties: sessionProperties,
-            scopedProperties: scopedProperties
+            scopedProperties: scopedProperties,
+            requests: <#T##ProposalRequests?#>
         )
         
         

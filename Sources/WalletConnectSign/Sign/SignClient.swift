@@ -285,7 +285,7 @@ public final class SignClient: SignClientProtocol {
         namespaces: [String: ProposalNamespace],
         sessionProperties: [String: String]? = nil,
         scopedProperties: [String: String]? = nil,
-        authentication: AuthRequestParams?
+        authentication: [AuthRequestParams]?
 //        walletPay: WalletPayParams // todo later
     ) async throws -> WalletConnectURI {
         logger.debug("Connecting Application")
@@ -296,7 +296,8 @@ public final class SignClient: SignClientProtocol {
             optionalNamespaces: namespaces,
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
-            relay: RelayProtocolOptions(protocol: "irn", data: nil)
+            relay: RelayProtocolOptions(protocol: "irn", data: nil),
+            authentication: authentication
         )
         return pairingURI
     }

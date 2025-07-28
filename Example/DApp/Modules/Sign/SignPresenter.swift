@@ -57,7 +57,8 @@ final class SignPresenter: ObservableObject {
             do {
                 ActivityIndicatorManager.shared.start()
                 walletConnectUri = try await Sign.instance.connect(
-                    namespaces: Proposal.namespaces
+                    namespaces: Proposal.namespaces,
+                    authentication: [.stub()]
                 )
                 ActivityIndicatorManager.shared.stop()
                 router.presentNewPairing(walletConnectUri: walletConnectUri!)
