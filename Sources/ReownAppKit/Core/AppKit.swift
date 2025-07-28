@@ -152,6 +152,10 @@ public class AppKit {
         AppKit.config.sessionParams = sessionParams
     }
     
+    public static func set(authRequestParams: AuthRequestParams) {
+        AppKit.config.authRequestParams = authRequestParams
+    }
+    
     private static func configureCoinbaseIfNeeded(
         store: Store,
         metadata: AppMetadata,
