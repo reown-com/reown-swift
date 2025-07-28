@@ -50,10 +50,12 @@ final class AppProposeService {
             publicKey: publicKey.hexRepresentation,
             metadata: metadata)
         
-//        for each AuthRequestParams build AuthPayload
-        let authPayload = AuthPayload(requestParams: params, iat: iatProvader.iat)
-
-        let requests = ProposalRequests(authentication: <#T##[AuthPayload]#>)
+        // Build AuthPayload objects from AuthRequestParams if authentication is provided
+        let authPayloads: [AuthPayload]? = authentication?.map { params in
+            AuthPayload(requestParams: params, iat: iatProvader.iat)
+        }
+        
+        let requests = authPayloads != nil ? ProposalRequests(authentication: authPayloads!) : nil
         
         let proposal = SessionProposal(
             relays: [relay],
@@ -62,7 +64,7 @@ final class AppProposeService {
             optionalNamespaces: mergedOptionalNamespaces,
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
-            requests: <#T##ProposalRequests?#>
+            requests: requests
         )
         
         
