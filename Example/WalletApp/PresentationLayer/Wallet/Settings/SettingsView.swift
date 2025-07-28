@@ -5,7 +5,6 @@ import ReownAppKitUI
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
     @State private var copyAlert: Bool = false
-    @State private var isChainAbstractionEnabled: Bool = WalletKitEnabler.shared.isChainAbstractionEnabled
 
     var body: some View {
         ScrollView {
@@ -15,25 +14,7 @@ struct SettingsView: View {
                 Group {
                     header(title: "Account")
                     row(title: "CAIP-10", subtitle: viewModel.account)
-                    row(title: "Smart Account Safe", subtitle: viewModel.smartAccountSafe)
                     row(title: "Private key", subtitle: viewModel.privateKey)
-
-                    HStack {
-                        Text("Chain Abstraction")
-                            .foregroundColor(.Foreground100)
-                            .font(.paragraph700)
-
-                        Spacer()
-
-                        Toggle("", isOn: $isChainAbstractionEnabled)
-                            .onChange(of: isChainAbstractionEnabled) { newValue in
-                                viewModel.enableChainAbstraction(newValue)
-                            }
-                            .labelsHidden()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 16)
-                    .background(Color.Foreground100.opacity(0.05).cornerRadius(12))
                 }
                 .padding(.horizontal, 20)
 
