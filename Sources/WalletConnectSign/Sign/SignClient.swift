@@ -284,7 +284,9 @@ public final class SignClient: SignClientProtocol {
     public func connect(
         namespaces: [String: ProposalNamespace],
         sessionProperties: [String: String]? = nil,
-        scopedProperties: [String: String]? = nil
+        scopedProperties: [String: String]? = nil,
+        authentication: AuthRequestParams?
+//        walletPay: WalletPayParams // todo later
     ) async throws -> WalletConnectURI {
         logger.debug("Connecting Application")
         let pairingURI = try await pairingClient.create()

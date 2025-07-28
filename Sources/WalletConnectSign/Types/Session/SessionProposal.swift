@@ -1,5 +1,8 @@
 import Foundation
 
+public struct ProposalRequests: Codable, Equatable {
+    let authentication: [AuthPayload]
+}
 struct SessionProposal: Codable, Equatable {
     
     let relays: [RelayProtocolOptions]
@@ -9,6 +12,7 @@ struct SessionProposal: Codable, Equatable {
     let sessionProperties: [String: String]?
     let scopedProperties: [String: String]?
     let expiryTimestamp: UInt64?
+    let requests: ProposalRequests?
 
     static let proposalTtl: TimeInterval = 300 // 5 minutes
 
@@ -17,7 +21,8 @@ struct SessionProposal: Codable, Equatable {
                   requiredNamespaces: [String : ProposalNamespace],
                   optionalNamespaces: [String : ProposalNamespace]? = nil,
                   sessionProperties: [String : String]? = nil,
-                  scopedProperties: [String : String]? = nil) {
+                  scopedProperties: [String : String]? = nil,
+                  requests: ProposalRequests? = nil) {
         self.relays = relays
         self.proposer = proposer
         self.requiredNamespaces = requiredNamespaces
@@ -25,6 +30,7 @@ struct SessionProposal: Codable, Equatable {
         self.sessionProperties = sessionProperties
         self.scopedProperties = scopedProperties
         self.expiryTimestamp = UInt64(Date().timeIntervalSince1970 + Self.proposalTtl)
+        self.requests = requests
     }
 
     func publicRepresentation(pairingTopic: String) -> Session.Proposal {
@@ -36,7 +42,8 @@ struct SessionProposal: Codable, Equatable {
             optionalNamespaces: optionalNamespaces ?? [:],
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
-            proposal: self
+            proposal: self,
+            requests: requests
         )
     }
 
