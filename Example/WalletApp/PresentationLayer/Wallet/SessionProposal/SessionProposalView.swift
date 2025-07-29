@@ -83,112 +83,124 @@ struct SessionProposalView: View {
                         .padding(.top, 12)
                         .padding(.horizontal, -18)
                     
-                    ScrollView {
-                        Text("Required namespaces".uppercased())
-                            .foregroundColor(.grey50)
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(4)
-                            .padding(.vertical, 12)
-                        
-                        ForEach(presenter.sessionProposal.requiredNamespaces.keys.sorted(), id: \.self) { chain in
-                            if let namespaces = presenter.sessionProposal.requiredNamespaces[chain] {
-                                sessionProposalView(namespaces: namespaces)
-                            }
-                        }
-                        
-                        if let optionalNamespaces = presenter.sessionProposal.optionalNamespaces {
-                            if !optionalNamespaces.isEmpty {
-                                Text("Optional namespaces".uppercased())
-                                    .foregroundColor(.grey50)
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .multilineTextAlignment(.center)
-                                    .lineSpacing(4)
-                                    .padding(.vertical, 12)
-                            }
-
-                            ForEach(optionalNamespaces.keys.sorted(), id: \.self) { chain in
-                                if let namespaces = optionalNamespaces[chain] {
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            Text("Required namespaces".uppercased())
+                                .foregroundColor(.grey50)
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(4)
+                                .padding(.vertical, 12)
+                            
+                            ForEach(presenter.sessionProposal.requiredNamespaces.keys.sorted(), id: \.self) { chain in
+                                if let namespaces = presenter.sessionProposal.requiredNamespaces[chain] {
                                     sessionProposalView(namespaces: namespaces)
                                 }
                             }
-                        }
-                        
-                        // Authentication Messages Section
-                        if !presenter.authMessages.isEmpty {
-                            VStack(spacing: 0) {
-                                Button(action: {
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        isAuthMessagesExpanded.toggle()
-                                    }
-                                }) {
-                                    HStack {
-                                        Text("Authentication requests".uppercased())
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                                        
-                                        Spacer()
-                                        
-                                        Image(systemName: isAuthMessagesExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 16, weight: .semibold))
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
-                                    .background(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [.blue.opacity(0.8), .purple.opacity(0.6)]),
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .cornerRadius(12)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                    )
+                            
+                            if let optionalNamespaces = presenter.sessionProposal.optionalNamespaces {
+                                if !optionalNamespaces.isEmpty {
+                                    Text("Optional namespaces".uppercased())
+                                        .foregroundColor(.grey50)
+                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                        .multilineTextAlignment(.center)
+                                        .lineSpacing(4)
+                                        .padding(.vertical, 12)
                                 }
-                                .padding(.horizontal, 8)
-                                .padding(.bottom, 8)
-                                
-                                if isAuthMessagesExpanded {
-                                    ForEach(Array(presenter.authMessages.enumerated()), id: \.offset) { index, message in
-                                        authMessageView(title: message.0, content: message.1)
+
+                                ForEach(optionalNamespaces.keys.sorted(), id: \.self) { chain in
+                                    if let namespaces = optionalNamespaces[chain] {
+                                        sessionProposalView(namespaces: namespaces)
                                     }
                                 }
                             }
+                            
+                            // Authentication Messages Section
+                            if !presenter.authMessages.isEmpty {
+                                VStack(spacing: 0) {
+                                    Button(action: {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            isAuthMessagesExpanded.toggle()
+                                        }
+                                        
+                                        // Scroll to authentication messages when expanded
+                                        if isAuthMessagesExpanded {
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                                withAnimation(.easeInOut(duration: 0.5)) {
+                                                    proxy.scrollTo("authMessages", anchor: .top)
+                                                }
+                                            }
+                                        }
+                                    }) {
+                                        HStack {
+                                            Text("Authentication requests".uppercased())
+                                                .foregroundColor(.white)
+                                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: isAuthMessagesExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                                                .foregroundColor(.white)
+                                                .font(.system(size: 16, weight: .semibold))
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 14)
+                                        .background(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [.blue.opacity(0.8), .purple.opacity(0.6)]),
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                        )
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.bottom, 8)
+                                    
+                                    if isAuthMessagesExpanded {
+                                        ForEach(Array(presenter.authMessages.enumerated()), id: \.offset) { index, message in
+                                            authMessageView(title: message.0, content: message.1)
+                                        }
+                                    }
+                                }
+                                .id("authMessages")
+                            }
                         }
-                    }
-                    .frame(minHeight: 250, maxHeight: 400)
-                    .cornerRadius(20)
-                    .padding(.vertical, 12)
-                    
-                    switch presenter.validationStatus {
-                    case .invalid:
-                        verifyDescriptionView(imageName: "exclamationmark.triangle.fill", title: "Invalid domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .red)
+                        .frame(minHeight: 250, maxHeight: 400)
+                        .cornerRadius(20)
+                        .padding(.vertical, 12)
                         
-                    case .unknown:
-                        verifyDescriptionView(imageName: "exclamationmark.circle.fill", title: "Unknown domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .orange)
-                        
-                    case .scam:
-                        verifyDescriptionView(imageName: "exclamationmark.shield.fill", title: "Security risk", description: "This website is flagged as unsafe by multiple security providers. Leave immediately to protect your assets.", color: .red)
-                        
-                    default:
-                        EmptyView()
-                    }
-                    
-                    if case .scam = presenter.validationStatus {
-                        VStack(spacing: 20) {
-                            declineButton()
-                            allowButton()
+                        switch presenter.validationStatus {
+                        case .invalid:
+                            verifyDescriptionView(imageName: "exclamationmark.triangle.fill", title: "Invalid domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .red)
+                            
+                        case .unknown:
+                            verifyDescriptionView(imageName: "exclamationmark.circle.fill", title: "Unknown domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .orange)
+                            
+                        case .scam:
+                            verifyDescriptionView(imageName: "exclamationmark.shield.fill", title: "Security risk", description: "This website is flagged as unsafe by multiple security providers. Leave immediately to protect your assets.", color: .red)
+                            
+                        default:
+                            EmptyView()
                         }
-                        .padding(.top, 25)
-                    } else {
-                        HStack {
-                            declineButton()
-                            allowButton()
+                        
+                        if case .scam = presenter.validationStatus {
+                            VStack(spacing: 20) {
+                                declineButton()
+                                allowButton()
+                            }
+                            .padding(.top, 25)
+                        } else {
+                            HStack {
+                                declineButton()
+                                allowButton()
+                            }
+                            .padding(.top, 25)
                         }
-                        .padding(.top, 25)
                     }
                 }
                 .padding(20)
