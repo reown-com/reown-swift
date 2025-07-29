@@ -11,7 +11,6 @@
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
-		8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */; };
 		8421447B2C80A2B8004FF494 /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447A2C80A2B8004FF494 /* ReownAppKit */; };
 		8421447D2C80A544004FF494 /* ReownAppKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447C2C80A544004FF494 /* ReownAppKitUI */; };
 		8421447F2C81863A004FF494 /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447E2C81863A004FF494 /* ReownWalletKit */; };
@@ -344,7 +343,6 @@
 		764E1D5626F8DB6000A1FB15 /* WalletConnectSwiftV2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WalletConnectSwiftV2; path = ..; sourceTree = "<group>"; };
 		767DC83428997F8E00080FA9 /* EthSendTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EthSendTransaction.swift; sourceTree = "<group>"; };
 		840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletKitEnabler.swift; sourceTree = "<group>"; };
 		84310D04298BC980000C15B6 /* MainInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainInteractor.swift; sourceTree = "<group>"; };
 		8439CB88293F658E00F2F2E2 /* PushMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushMessage.swift; sourceTree = "<group>"; };
 		8445118F2C8B689D00A6A86C /* AppKitLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppKitLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1083,7 +1081,6 @@
 			isa = PBXGroup;
 			children = (
 				A5D610CC2AB3592F00C20083 /* ListingsSertice */,
-				8406AEDB2CCFB424007B758A /* WalletKitEnabler.swift */,
 			);
 			path = BusinessLayer;
 			sourceTree = "<group>";
@@ -2030,7 +2027,6 @@
 				847BD1D92989492500076C90 /* MainPresenter.swift in Sources */,
 				C5FFEA842ADDAD6D007282A2 /* SafariViewController.swift in Sources */,
 				C55D3497295DFA750004314A /* WelcomeView.swift in Sources */,
-				8406AEDC2CCFB424007B758A /* WalletKitEnabler.swift in Sources */,
 				84B73CAF2D833E6000EC1793 /* SolanaBalancesProvider.swift in Sources */,
 				84B73D302D918B0F00EC1793 /* EthBalanceProvider.swift in Sources */,
 				A57879722A4F225E00F8D10B /* ImportAccount.swift in Sources */,
