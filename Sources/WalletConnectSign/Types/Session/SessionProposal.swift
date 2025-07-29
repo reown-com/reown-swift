@@ -1,11 +1,15 @@
 import Foundation
 
 public struct ProposalRequests: Codable, Equatable {
-    public let authentication: [AuthObject]
+    public let authentication: [AuthPayload]
 }
 
 public struct ProposalRequestsResponses: Codable, Equatable {
-    public let authentication: [AuthPayload]
+    public let authentication: [AuthObject]?
+    
+    public init(authentication: [AuthObject]?) {
+        self.authentication = authentication
+    }
 }
 
 struct SessionProposal: Codable, Equatable {

@@ -64,7 +64,17 @@ final class SessionProposalPresenter: ObservableObject {
     func onApprove() async throws {
         do {
             ActivityIndicatorManager.shared.start()
-            let showConnected = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account)
+            
+            // Build authentication responses if there are authentication requests
+            var proposalRequestsResponses: ProposalRequestsResponses? = nil
+            if sessionProposal.requests?.authentication != nil {
+                let authObjects = try buildAuthObjects()
+                if !authObjects.isEmpty {
+                    proposalRequestsResponses = ProposalRequestsResponses(authentication: authObjects)
+                }
+            }
+            
+            let showConnected = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, proposalRequestsResponses: proposalRequestsResponses)
             showConnected ? showConnectedSheet.toggle() : router.dismiss()
             ActivityIndicatorManager.shared.stop()
         } catch {
