@@ -28,7 +28,7 @@ spec.pod_target_xcconfig = {
 
   spec.subspec 'WalletKit' do |ss|
     ss.source_files = 'Sources/ReownWalletKit/**/*.{h,m,swift}'
-    ss.dependency 'YttriumWrapper', '0.9.7'
+    ss.dependency 'YttriumWrapper', '0.9.35'
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/WalletConnectPush'
     ss.dependency 'reown-swift/WalletConnectVerify'
@@ -80,7 +80,7 @@ spec.pod_target_xcconfig = {
   spec.subspec 'WalletConnectSigner' do |ss|
     ss.source_files = 'Sources/WalletConnectSigner/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectNetworking'
-    ss.dependency 'YttriumWrapper', '0.9.7'
+    ss.dependency 'YttriumWrapper', '0.9.35'
   end
 
   spec.subspec 'WalletConnectIdentity' do |ss|
