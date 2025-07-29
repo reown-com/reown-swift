@@ -1,8 +1,13 @@
 import Foundation
 
 public struct ProposalRequests: Codable, Equatable {
+    public let authentication: [AuthObject]
+}
+
+public struct ProposalRequestsResponses: Codable, Equatable {
     public let authentication: [AuthPayload]
 }
+
 struct SessionProposal: Codable, Equatable {
     
     let relays: [RelayProtocolOptions]
