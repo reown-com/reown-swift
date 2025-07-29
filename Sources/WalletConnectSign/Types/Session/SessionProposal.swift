@@ -1,7 +1,7 @@
 import Foundation
 
 public struct ProposalRequests: Codable, Equatable {
-    let authentication: [AuthPayload]
+    public let authentication: [AuthPayload]
 }
 struct SessionProposal: Codable, Equatable {
     

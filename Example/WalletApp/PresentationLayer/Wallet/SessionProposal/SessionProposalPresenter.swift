@@ -2,8 +2,13 @@ import UIKit
 import Combine
 
 import ReownWalletKit
+import ReownRouter
 
 final class SessionProposalPresenter: ObservableObject {
+    enum Errors: LocalizedError {
+        case noCommonChains
+    }
+    
     private let interactor: SessionProposalInteractor
     private let router: SessionProposalRouter
 
@@ -16,13 +21,35 @@ final class SessionProposalPresenter: ObservableObject {
     @Published var showConnectedSheet = false
     
     private var disposeBag = Set<AnyCancellable>()
+    private let messageSigner: MessageSigner
+
+    var authMessages: [(String, String)] {
+        guard let authRequests = sessionProposal.requests?.authentication else { return [] }
+        return buildFormattedMessages(authRequests: authRequests, account: importAccount.account)
+    }
+
+    func buildFormattedMessages(authRequests: [AuthPayload], account: Account) -> [(String, String)] {
+        return authRequests.enumerated().compactMap { index, authPayload in
+            getCommonAndRequestedChainsIntersection(authPayload: authPayload).enumerated().compactMap { chainIndex, chain in
+                guard let chainAccount = Account(blockchain: chain, address: account.address) else {
+                    return nil
+                }
+                guard let formattedMessage = try? WalletKit.instance.formatAuthMessage(payload: authPayload, account: chainAccount) else {
+                    return nil
+                }
+                let messagePrefix = "Auth \(index + 1) - Message \(chainIndex + 1):"
+                return (messagePrefix, formattedMessage)
+            }
+        }.flatMap { $0 }
+    }
 
     init(
         interactor: SessionProposalInteractor,
         router: SessionProposalRouter,
         importAccount: ImportAccount,
         proposal: Session.Proposal,
-        context: VerifyContext?
+        context: VerifyContext?,
+        messageSigner: MessageSigner
     ) {
         defer { setupInitialState() }
         self.interactor = interactor
@@ -30,6 +57,7 @@ final class SessionProposalPresenter: ObservableObject {
         self.sessionProposal = proposal
         self.importAccount = importAccount
         self.validationStatus = context?.validation
+        self.messageSigner = messageSigner
     }
     
     @MainActor
@@ -66,6 +94,40 @@ final class SessionProposalPresenter: ObservableObject {
 
     func dismiss() {
         router.dismiss()
+    }
+
+    private func createAuthObjectForChain(chain: Blockchain, authPayload: AuthPayload) throws -> AuthObject {
+        let account = Account(blockchain: chain, address: importAccount.account.address)!
+
+        let supportedAuthPayload = try WalletKit.instance.buildAuthPayload(payload: authPayload, supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!, Blockchain("eip155:69")!], supportedMethods: ["personal_sign", "eth_sendTransaction"])
+
+        let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: supportedAuthPayload, account: account)
+
+        let signature = try messageSigner.sign(message: SIWEmessages, privateKey: Data(hex: importAccount.privateKey), type: .eip191)
+
+        let auth = try WalletKit.instance.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: account)
+
+        return auth
+    }
+
+    private func buildAuthObjects() throws -> [AuthObject] {
+        guard let authRequests = sessionProposal.requests?.authentication else { return [] }
+        
+        var auths = [AuthObject]()
+        
+        try authRequests.forEach { authPayload in
+            try getCommonAndRequestedChainsIntersection(authPayload: authPayload).forEach { chain in
+                let auth = try createAuthObjectForChain(chain: chain, authPayload: authPayload)
+                auths.append(auth)
+            }
+        }
+        return auths
+    }
+
+    func getCommonAndRequestedChainsIntersection(authPayload: AuthPayload) -> Set<Blockchain> {
+        let requestedChains: Set<Blockchain> = Set(authPayload.chains.compactMap { Blockchain($0) })
+        let supportedChains: Set<Blockchain> = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
+        return requestedChains.intersection(supportedChains)
     }
 }
 

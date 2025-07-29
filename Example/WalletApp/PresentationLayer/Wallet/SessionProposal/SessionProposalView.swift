@@ -112,6 +112,20 @@ struct SessionProposalView: View {
                                 }
                             }
                         }
+                        
+                        // Authentication Messages Section
+                        if !presenter.authMessages.isEmpty {
+                            Text("Authentication requests".uppercased())
+                                .foregroundColor(.grey50)
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(4)
+                                .padding(.vertical, 12)
+                            
+                            ForEach(Array(presenter.authMessages.enumerated()), id: \.offset) { index, message in
+                                authMessageView(title: message.0, content: message.1)
+                            }
+                        }
                     }
                     .frame(height: 150)
                     .cornerRadius(20)
@@ -241,6 +255,30 @@ struct SessionProposalView: View {
             .cornerRadius(25, corners: .allCorners)
         }
         .padding(.bottom, 15)
+    }
+    
+    private func authMessageView(title: String, content: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .foregroundColor(.grey50)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+            
+            Text(content)
+                .foregroundColor(.grey8)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.whiteBackground)
+                .cornerRadius(12)
+                .lineLimit(nil)
+                .multilineTextAlignment(.leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 5)
+        .padding(.bottom, 10)
+        .background(.thinMaterial)
+        .cornerRadius(20)
+        .padding(.bottom, 10)
     }
     
     private func verifyBadgeView(imageName: String, title: String, color: Color) -> some View {
