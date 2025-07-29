@@ -15,7 +15,7 @@ jobs:
   set-user-agent:
     runs-on: macos-latest-xlarge
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
 

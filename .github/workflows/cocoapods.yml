@@ -6,14 +6,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  set-user-agent:
+  cocoapods-release:
     runs-on: macos-latest-xlarge
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
           token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
 
       - name: Publish to CocoaPods trunk
         env:
