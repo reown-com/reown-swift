@@ -5,6 +5,7 @@ struct SessionProposalView: View {
     @EnvironmentObject var presenter: SessionProposalPresenter
     
     @State var text = ""
+    @State private var isAuthMessagesExpanded = false
     
     var body: some View {
         ZStack {
@@ -115,19 +116,50 @@ struct SessionProposalView: View {
                         
                         // Authentication Messages Section
                         if !presenter.authMessages.isEmpty {
-                            Text("Authentication requests".uppercased())
-                                .foregroundColor(.grey50)
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
-                                .padding(.vertical, 12)
-                            
-                            ForEach(Array(presenter.authMessages.enumerated()), id: \.offset) { index, message in
-                                authMessageView(title: message.0, content: message.1)
+                            VStack(spacing: 0) {
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        isAuthMessagesExpanded.toggle()
+                                    }
+                                }) {
+                                    HStack {
+                                        Text("Authentication requests".uppercased())
+                                            .foregroundColor(.white)
+                                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: isAuthMessagesExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                                            .foregroundColor(.white)
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [.blue.opacity(0.8), .purple.opacity(0.6)]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                    )
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.bottom, 8)
+                                
+                                if isAuthMessagesExpanded {
+                                    ForEach(Array(presenter.authMessages.enumerated()), id: \.offset) { index, message in
+                                        authMessageView(title: message.0, content: message.1)
+                                    }
+                                }
                             }
                         }
                     }
-                    .frame(height: 150)
+                    .frame(minHeight: 250, maxHeight: 400)
                     .cornerRadius(20)
                     .padding(.vertical, 12)
                     
@@ -261,24 +293,28 @@ struct SessionProposalView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .foregroundColor(.grey50)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
             
-            Text(content)
-                .foregroundColor(.grey8)
-                .font(.system(size: 12, weight: .medium, design: .rounded))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.whiteBackground)
-                .cornerRadius(12)
-                .lineLimit(nil)
-                .multilineTextAlignment(.leading)
+            ScrollView {
+                Text(content)
+                    .foregroundColor(.grey8)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(nil)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxHeight: 100)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Color.whiteBackground)
+            .cornerRadius(10)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 5)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background(.thinMaterial)
-        .cornerRadius(20)
-        .padding(.bottom, 10)
+        .cornerRadius(15)
+        .padding(.horizontal, 5)
+        .padding(.bottom, 8)
     }
     
     private func verifyBadgeView(imageName: String, title: String, color: Color) -> some View {
