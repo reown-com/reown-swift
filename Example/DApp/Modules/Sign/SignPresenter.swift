@@ -169,11 +169,18 @@ extension SignPresenter {
                     Task {
                         var verifiedCount = 0
                         var verificationErrors: [String] = []
+                        var verifiedChains: [String] = []
                         
                         for (index, authObject) in authResponses.enumerated() {
                             do {
                                 try await Sign.instance.recoverAndVerifySignature(authObject: authObject)
                                 verifiedCount += 1
+                                
+                                // Extract chain from the issuer (did:pkh:chainId:address)
+                                if let account = try? DIDPKH(did: authObject.p.iss).account {
+                                    verifiedChains.append(account.blockchainIdentifier)
+                                }
+                                
                                 print("DApp: Verified auth response \(index + 1) from: \(authObject.p.iss)")
                             } catch {
                                 let errorMsg = "Auth \(index + 1) failed: \(error.localizedDescription)"
@@ -182,16 +189,18 @@ extension SignPresenter {
                             }
                         }
                         
-                        // Display verification results
+                        // Display verification results with chain information
                         let totalCount = authResponses.count
+                        let chainsText = verifiedChains.isEmpty ? "" : " on chains: \(verifiedChains.joined(separator: ", "))"
+                        
                         if verifiedCount == totalCount {
-                            AlertPresenter.present(message: "✅ Verified \(verifiedCount) of \(totalCount) signatures on chains", type: .success)
+                            AlertPresenter.present(message: "✅ Verified \(verifiedCount) of \(totalCount) signatures\(chainsText)", type: .success)
                         } else {
                             let errorDetails = verificationErrors.joined(separator: "\n")
-                            AlertPresenter.present(message: "⚠️ Verified only \(verifiedCount) of \(totalCount) signatures\n\(errorDetails)", type: .warning)
+                            AlertPresenter.present(message: "⚠️ Verified only \(verifiedCount) of \(totalCount) signatures\(chainsText)\n\(errorDetails)", type: .warning)
                         }
                         
-                        print("DApp: Verification complete - \(verifiedCount)/\(totalCount) signatures verified")
+                        print("DApp: Verification complete - \(verifiedCount)/\(totalCount) signatures verified on chains: \(verifiedChains.joined(separator: ", "))")
                     }
                 } else {
                     print("DApp: Session settled without authentication responses")
