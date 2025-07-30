@@ -194,7 +194,7 @@ extension SignPresenter {
                         let chainsText = verifiedChains.isEmpty ? "" : " on chains: \(verifiedChains.joined(separator: ", "))"
                         
                         if verifiedCount == totalCount {
-                            AlertPresenter.present(message: "✅ Verified \(verifiedCount) of \(totalCount) signatures\(chainsText)", type: .success)
+                            AlertPresenter.present(message: "Verified \(verifiedCount) of \(totalCount) signatures\(chainsText)", type: .success)
                         } else {
                             let errorDetails = verificationErrors.joined(separator: "\n")
                             AlertPresenter.present(message: "⚠️ Verified only \(verifiedCount) of \(totalCount) signatures\(chainsText)\n\(errorDetails)", type: .warning)
