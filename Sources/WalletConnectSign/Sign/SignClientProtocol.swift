@@ -8,6 +8,7 @@ public protocol SignClientProtocol {
     var sessionsPublisher: AnyPublisher<[Session], Never> { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
     var sessionSettlePublisher: AnyPublisher<Session, Never> { get }
+    var sessionSettleWithResponsesPublisher: AnyPublisher<(session: Session, responses: ProposalRequestsResponses?), Never> { get }
     var sessionDeletePublisher: AnyPublisher<(String, Reason), Never> { get }
     var sessionResponsePublisher: AnyPublisher<Response, Never> { get }
     var sessionRejectionPublisher: AnyPublisher<(Session.Proposal, Reason), Never> { get }

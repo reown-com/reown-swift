@@ -40,6 +40,13 @@ public final class SignClient: SignClientProtocol {
         sessionSettlePublisherSubject.eraseToAnyPublisher()
     }
 
+    /// Publisher that sends session with proposal responses when one is settled
+    ///
+    /// Event is emited on dApp client when a session is established and includes any proposal request responses from the wallet.
+    public var sessionSettleWithResponsesPublisher: AnyPublisher<(session: Session, responses: ProposalRequestsResponses?), Never> {
+        sessionSettleWithResponsesPublisherSubject.eraseToAnyPublisher()
+    }
+
     /// Publisher that sends deleted session topic
     ///
     /// Event can be emited on any type of the client.
@@ -171,6 +178,7 @@ public final class SignClient: SignClientProtocol {
     private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: Session.Proposal, context: VerifyContext?), Never>()
     private let socketConnectionStatusPublisherSubject = PassthroughSubject<SocketConnectionStatus, Never>()
     private let sessionSettlePublisherSubject = PassthroughSubject<Session, Never>()
+    private let sessionSettleWithResponsesPublisherSubject = PassthroughSubject<(session: Session, responses: ProposalRequestsResponses?), Never>()
     private let sessionDeletePublisherSubject = PassthroughSubject<(String, Reason), Never>()
     private let sessionResponsePublisherSubject = PassthroughSubject<Response, Never>()
     private let sessionRejectionPublisherSubject = PassthroughSubject<(Session.Proposal, Reason), Never>()
@@ -560,6 +568,9 @@ public final class SignClient: SignClientProtocol {
         }
         approveEngine.onSessionSettle = { [unowned self] settledSession in
             sessionSettlePublisherSubject.send(settledSession)
+        }
+        approveEngine.onSessionSettleWithResponses = { [unowned self] settledSession, responses in
+            sessionSettleWithResponsesPublisherSubject.send((session: settledSession, responses: responses))
         }
         sessionEngine.onSessionDelete = { [unowned self] topic, reason in
             sessionDeletePublisherSubject.send((topic, reason))

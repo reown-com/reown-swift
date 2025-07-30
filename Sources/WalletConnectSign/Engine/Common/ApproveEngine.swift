@@ -16,6 +16,7 @@ final class ApproveEngine {
     var onSessionProposal: ((Session.Proposal, VerifyContext?) -> Void)?
     var onSessionRejected: ((Session.Proposal, Reason) -> Void)?
     var onSessionSettle: ((Session) -> Void)?
+    var onSessionSettleWithResponses: ((Session, ProposalRequestsResponses?) -> Void)?
 
     private let networkingInteractor: NetworkInteracting
     private let pairingStore: WCPairingStorage
@@ -473,6 +474,7 @@ private extension ApproveEngine {
             try await networkingInteractor.respondSuccess(topic: payload.topic, requestId: payload.id, protocolMethod: protocolMethod)
         }
         onSessionSettle?(session.publicRepresentation())
+        onSessionSettleWithResponses?(session.publicRepresentation(), params.proposalRequestsResponses)
     }
     
     func resolveNetworkConnectionStatus() async -> NetworkConnectionStatus {
