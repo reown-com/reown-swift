@@ -84,6 +84,23 @@ final class SignPresenter: ObservableObject {
     }
 
     @MainActor
+    func connectWalletWithWalletPay() {
+        Task {
+            do {
+                ActivityIndicatorManager.shared.start()
+                walletConnectUri = try await Sign.instance.connect(
+                    namespaces: Proposal.namespaces,
+                    walletPay: .stub()
+                )
+                ActivityIndicatorManager.shared.stop()
+                router.presentNewPairing(walletConnectUri: walletConnectUri!)
+            } catch {
+                ActivityIndicatorManager.shared.stop()
+            }
+        }
+    }
+
+    @MainActor
     func connectWalletWithSessionAuthenticateSIWEOnly() {
         Task {
             do {
@@ -305,6 +322,34 @@ extension AuthRequestParams {
             requestId: requestId,
             resources: resources,
             methods: methods
+        )
+    }
+}
+
+// MARK: - WalletPay request stub
+extension WalletPayParams {
+    static func stub(
+        version: String = "1.0",
+        orderId: String? = "order_12345_test",
+        expiry: UInt64 = UInt64(Date().timeIntervalSince1970) + 3600 // 1 hour from now
+    ) -> WalletPayParams {
+        let usdcPayment = PaymentOption(
+            asset: "USDC",
+            amount: "0x1BC16D674EC80000", // 2 USDC in hex
+            recipient: "0x742d35Cc6634C0532925a3b8D400e4e7c61B1234"
+        )
+        
+        let usdtPayment = PaymentOption(
+            asset: "USDT",
+            amount: "0x1BC16D674EC80000", // 2 USDT in hex (same value as USDC)
+            recipient: "0x742d35Cc6634C0532925a3b8D400e4e7c61B1234"
+        )
+        
+        return WalletPayParams(
+            version: version,
+            orderId: orderId,
+            acceptedPayments: [usdcPayment, usdtPayment],
+            expiry: expiry
         )
     }
 }

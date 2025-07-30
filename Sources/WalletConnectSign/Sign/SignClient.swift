@@ -308,7 +308,8 @@ public final class SignClient: SignClientProtocol {
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
             relay: RelayProtocolOptions(protocol: "irn", data: nil),
-            authentication: authentication
+            authentication: authentication,
+            walletPay: walletPay
         )
         return pairingURI
     }
