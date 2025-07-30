@@ -34,6 +34,7 @@ public protocol SignClientProtocol {
     func getSessions() -> [Session]
     func formatAuthMessage(payload: AuthPayload, account: Account) throws -> String
     func buildAuthPayload(payload: AuthPayload, supportedEVMChains: [Blockchain], supportedMethods: [String]) throws -> AuthPayload 
+    func recoverAndVerifySignature(authObject: AuthObject) async throws
     func dispatchEnvelope(_ envelope: String) throws
     func cleanup() async throws
     

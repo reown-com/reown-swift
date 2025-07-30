@@ -108,6 +108,12 @@ public struct SignClientFactory {
         let signatureVerifier = messageVerifierFactory.create(projectId: projectId)
         let sessionNameSpaceBuilder = SessionNamespaceBuilder(logger: logger)
 
+        let authSignatureVerifier = AuthSignatureVerifier(
+            messageFormatter: messageFormatter,
+            signatureVerifier: signatureVerifier,
+            logger: logger
+        )
+
         let serializer = Serializer(kms: kms, logger: logger)
 
         let linkEnvelopesDispatcher = LinkEnvelopesDispatcher(serializer: serializer, logger: logger, rpcHistory: rpcHistory)
@@ -181,7 +187,8 @@ public struct SignClientFactory {
             sessionResponderDispatcher: sessionResponderDispatcher,
             linkSessionRequestResponseSubscriber: linkSessionRequestResponseSubscriber,
             authenticateTransportTypeSwitcher: authenticateTransportTypeSwitcher,
-            messageVerifier: signatureVerifier
+            messageVerifier: signatureVerifier,
+            authSignatureVerifier: authSignatureVerifier
         )
         return client
     }

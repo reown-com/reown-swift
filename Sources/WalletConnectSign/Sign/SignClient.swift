@@ -190,6 +190,7 @@ public final class SignClient: SignClientProtocol {
     private var authRequestPublisherSubject = PassthroughSubject<(request: AuthenticationRequest, context: VerifyContext?), Never>()
     private let authRequestSubscribersTracking: AuthRequestSubscribersTracking
     private let authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher
+    private let authSignatureVerifier: AuthSignatureVerifier
 
 
     // Link Mode
@@ -239,7 +240,8 @@ public final class SignClient: SignClientProtocol {
          sessionResponderDispatcher: SessionResponderDispatcher,
          linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber,
          authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher,
-         messageVerifier: MessageVerifier
+         messageVerifier: MessageVerifier,
+         authSignatureVerifier: AuthSignatureVerifier
     ) {
         self.logger = logger
         self.networkingClient = networkingClient
@@ -275,6 +277,7 @@ public final class SignClient: SignClientProtocol {
         self.linkSessionRequestResponseSubscriber = linkSessionRequestResponseSubscriber
         self.authenticateTransportTypeSwitcher = authenticateTransportTypeSwitcher
         self.messageVerifier = messageVerifier
+        self.authSignatureVerifier = authSignatureVerifier
 
         setUpConnectionObserving()
         setUpEnginesCallbacks()
@@ -411,6 +414,13 @@ public final class SignClient: SignClientProtocol {
 
     public func verifySIWE(signature: String, message: String, address: String, chainId: String) async throws {
         try await messageVerifier.verify(signature: signature, message: message, address: address, chainId: chainId)
+    }
+
+    /// For a dApp to verify authentication signature from proposal response
+    /// - Parameters:
+    ///   - authObject: AuthObject (CACAO) to verify
+    public func recoverAndVerifySignature(authObject: AuthObject) async throws {
+        try await authSignatureVerifier.recoverAndVerifySignature(authObject: authObject)
     }
 
     //-----------------------------------------------------------------------------------

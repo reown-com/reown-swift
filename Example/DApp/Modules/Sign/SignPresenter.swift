@@ -159,9 +159,43 @@ extension SignPresenter {
             }
             .store(in: &subscriptions)
 
-        Sign.instance.sessionSettlePublisher
+        Sign.instance.sessionSettleWithResponsesPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [unowned self] _ in
+            .sink { [unowned self] session, responses in
+                if let authResponses = responses?.authentication {
+                    print("DApp: Session settled with \(authResponses.count) authentication responses")
+                    
+                    // Verify authentication signatures individually
+                    Task {
+                        var verifiedCount = 0
+                        var verificationErrors: [String] = []
+                        
+                        for (index, authObject) in authResponses.enumerated() {
+                            do {
+                                try await Sign.instance.recoverAndVerifySignature(authObject: authObject)
+                                verifiedCount += 1
+                                print("DApp: Verified auth response \(index + 1) from: \(authObject.p.iss)")
+                            } catch {
+                                let errorMsg = "Auth \(index + 1) failed: \(error.localizedDescription)"
+                                verificationErrors.append(errorMsg)
+                                print("DApp: \(errorMsg)")
+                            }
+                        }
+                        
+                        // Display verification results
+                        let totalCount = authResponses.count
+                        if verifiedCount == totalCount {
+                            AlertPresenter.present(message: "✅ Verified \(verifiedCount) of \(totalCount) signatures on chains", type: .success)
+                        } else {
+                            let errorDetails = verificationErrors.joined(separator: "\n")
+                            AlertPresenter.present(message: "⚠️ Verified only \(verifiedCount) of \(totalCount) signatures\n\(errorDetails)", type: .warning)
+                        }
+                        
+                        print("DApp: Verification complete - \(verifiedCount)/\(totalCount) signatures verified")
+                    }
+                } else {
+                    print("DApp: Session settled without authentication responses")
+                }
                 self.getSession()
             }
             .store(in: &subscriptions)
