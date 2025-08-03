@@ -120,7 +120,7 @@ public class AppKitClient {
         do {
             return try await pairingClient.create()
         } catch {
-            AppKit.config.onError(error)
+            DispatchQueue.main.async { AppKit.config.onError(error) }
             throw error
         }
     }
@@ -144,7 +144,7 @@ public class AppKitClient {
                 return pairingURI
             }
         } catch {
-            AppKit.config.onError(error)
+            DispatchQueue.main.async { AppKit.config.onError(error) }
             throw error
         }
     }
@@ -237,7 +237,7 @@ public class AppKitClient {
         do {
             try await signClient.request(params: params)
         } catch {
-            AppKit.config.onError(error)
+            DispatchQueue.main.async { AppKit.config.onError(error) }
             throw error
         }
     }
@@ -255,7 +255,7 @@ public class AppKitClient {
                 try await signClient.disconnect(topic: topic)
                 analyticsService.track(.DISCONNECT_SUCCESS)
             } catch {
-                AppKit.config.onError(error)
+                DispatchQueue.main.async { AppKit.config.onError(error) }
                 analyticsService.track(.DISCONNECT_ERROR)
                 throw error
             }
@@ -297,7 +297,7 @@ public class AppKitClient {
         do {
             try await signClient.cleanup()
         } catch {
-            AppKit.config.onError(error)
+            DispatchQueue.main.async { AppKit.config.onError(error) }
             throw error
         }
     }
