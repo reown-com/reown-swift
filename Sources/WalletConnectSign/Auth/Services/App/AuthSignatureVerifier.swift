@@ -1,12 +1,12 @@
 import Foundation
 
 public class AuthSignatureVerifier {
-    private let messageFormatter: SIWEFromCacaoFormatting
+    private let messageFormatter: SignWithXFormatting
     private let signatureVerifier: MessageVerifier
     private let logger: ConsoleLogging
 
     init(
-        messageFormatter: SIWEFromCacaoFormatting,
+        messageFormatter: SignWithXFormatting,
         signatureVerifier: MessageVerifier,
         logger: ConsoleLogging
     ) {

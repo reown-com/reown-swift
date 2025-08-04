@@ -406,11 +406,11 @@ public final class SignClient: SignClientProtocol {
         try AuthPayloadBuilder.build(payload: payload, supportedEVMChains: supportedEVMChains, supportedMethods: supportedMethods)
     }
 
-    // MARK: - SIWE
+    // MARK: - CAIP-122 Sign with X
 
     public func formatAuthMessage(payload: AuthPayload, account: Account) throws -> String {
         let cacaoPayload = try CacaoPayloadBuilder.makeCacaoPayload(authPayload: payload, account: account)
-        return try SIWEFromCacaoPayloadFormatter().formatMessage(from: cacaoPayload)
+        return try SignWithXFormatter().formatMessage(from: cacaoPayload)
     }
 
     public func verifySIWE(signature: String, message: String, address: String, chainId: String) async throws {
