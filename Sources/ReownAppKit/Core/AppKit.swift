@@ -19,6 +19,9 @@ import UIKit
 /// AppKit.instance.getSessions()
 /// ```
 public class AppKit {
+    
+    private static let configQueue = DispatchQueue(label: "com.walletconnect..appkit.config", attributes: .concurrent)
+    
     /// AppKit client instance
     public static var instance: AppKitClient = {
         guard let config = AppKit.config else {
@@ -75,7 +78,16 @@ public class AppKit {
 
     }
     
-    private(set) static var config: Config!
+    private static var _config: Config!
+    
+    static var config: Config! {
+        get {
+            return configQueue.sync { _config }
+        }
+        set {
+            configQueue.async(flags: .barrier) { _config = newValue }
+        }
+    }
     
     private(set) static var viewModel: Web3ModalViewModel!
 
@@ -149,7 +161,15 @@ public class AppKit {
     }
     
     public static func set(sessionParams: SessionParams) {
-        AppKit.config.sessionParams = sessionParams
+        configQueue.async(flags: .barrier) {
+            _config.sessionParams = sessionParams
+        }
+    }
+    
+    public static func set(authRequestParams: AuthRequestParams) {
+        configQueue.async(flags: .barrier) {
+            _config.authRequestParams = authRequestParams
+        }
     }
     
     private static func configureCoinbaseIfNeeded(
