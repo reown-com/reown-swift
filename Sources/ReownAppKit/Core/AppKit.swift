@@ -181,19 +181,34 @@ public class AppKit {
             session.accounts.contains(account)
         }) {
             store.session = session
-            store.connectedWith = .wc
             store.account = .init(from: session)
+            selectChain(account.blockchain)
+            store.connectedWith = .wc
         } else if config.coinbaseEnabled,
            CoinbaseWalletSDK.shared.ownPublicKey.rawRepresentation
             .base64EncodedString().caseInsensitiveCompare(account.address) == .orderedSame
         {
             store.session = nil
-            store.connectedWith = .cb
             store.account = .init(from: account)
+            selectChain(account.blockchain)
+            store.connectedWith = .cb
         } else {
             print("Cannot select account that's not in a connected session. Setting to nil")
             clearCurrentAccount()
         }
+    }
+    
+    @MainActor
+    public static func selectChain(_ blockchain: Blockchain) {
+        guard let matchingChain = ChainPresets.ethChains.first(where: {
+            $0.chainNamespace == blockchain.namespace &&
+            $0.chainReference == blockchain.reference
+        }) else {
+            print("No matching chain found for the provided blockchain: \(blockchain.absoluteString)")
+            return
+        }
+        
+        Store.shared.selectedChain = matchingChain
     }
     
     @MainActor
@@ -244,36 +259,34 @@ public class AppKit {
                     ]
                 ) { result, account in
                     switch result {
-                        case .success:
-                            guard
-                                let account = account,
-                                let blockchain = Blockchain(
-                                    namespace: account.chain == "eth" ? "eip155" : "",
-                                    reference: String(account.networkId)
-                                )
-                            else { return }
-                        
-                            store.connectedWith = .cb
-                            store.account = .init(
-                                address: account.address,
-                                chain: blockchain
+                    case .success:
+                        guard
+                            let account = account,
+                            let blockchain = Blockchain(
+                                namespace: account.chain == "eth" ? "eip155" : "",
+                                reference: String(account.networkId)
                             )
-                        
-                            withAnimation {
-                                store.isModalShown = false
-                            }
-                            AppKit.viewModel.router.setRoute(Router.AccountSubpage.profile)
-                            
-                            let matchingChain = ChainPresets.ethChains.first(where: {
-                                $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference
-                            })
-                        
-                            store.selectedChain = matchingChain
-                        
-                            instance.coinbaseConnectedSubject.send()
+                        else { return }
+                        // CB doesn't use the Store session
+                        store.session = nil
+                        store.account = .init(
+                            address: account.address,
+                            chain: blockchain
+                        )
+                        store.selectedChain = ChainPresets.ethChains.first(where: {
+                            $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference
+                        })
+                        store.connectedWith = .cb
 
-                        case .failure(let error):
-                            store.toast = .init(style: .error, message: error.localizedDescription)
+                        withAnimation {
+                            store.isModalShown = false
+                        }
+                        AppKit.viewModel.router.setRoute(Router.AccountSubpage.profile)
+
+                        instance.coinbaseConnectedSubject.send()
+
+                    case .failure(let error):
+                        store.toast = .init(style: .error, message: error.localizedDescription)
                     }
                 }
             }
