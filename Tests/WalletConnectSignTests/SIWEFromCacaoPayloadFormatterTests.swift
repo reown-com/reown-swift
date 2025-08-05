@@ -93,6 +93,107 @@ class SIWEFromCacaoPayloadFormatterTests: XCTestCase {
         }
     }
     
+    // MARK: - CacaoSignatureType Tests
+    
+    func testCacaoSignatureTypeEncoding() throws {
+        let encoder = JSONEncoder()
+        
+        // Test EIP155 types
+        let eip191Data = try encoder.encode(CacaoSignatureType.eip155(.eip191))
+        let eip191String = String(data: eip191Data, encoding: .utf8)
+        XCTAssertEqual(eip191String, "\"eip191\"")
+        
+        let eip1271Data = try encoder.encode(CacaoSignatureType.eip155(.eip1271))
+        let eip1271String = String(data: eip1271Data, encoding: .utf8)
+        XCTAssertEqual(eip1271String, "\"eip1271\"")
+        
+        let eip6492Data = try encoder.encode(CacaoSignatureType.eip155(.eip6492))
+        let eip6492String = String(data: eip6492Data, encoding: .utf8)
+        XCTAssertEqual(eip6492String, "\"eip6492\"")
+        
+        // Test BIP122 types
+        let ecdsaData = try encoder.encode(CacaoSignatureType.bip122(.ecdsa))
+        let ecdsaString = String(data: ecdsaData, encoding: .utf8)
+        XCTAssertEqual(ecdsaString, "\"ecdsa\"")
+        
+        let bip322Data = try encoder.encode(CacaoSignatureType.bip122(.bip322Simple))
+        let bip322String = String(data: bip322Data, encoding: .utf8)
+        XCTAssertEqual(bip322String, "\"bip322-simple\"")
+        
+        // Test Solana types
+        let ed25519Data = try encoder.encode(CacaoSignatureType.solana(.ed25519))
+        let ed25519String = String(data: ed25519Data, encoding: .utf8)
+        XCTAssertEqual(ed25519String, "\"ed25519\"")
+    }
+    
+    func testCacaoSignatureTypeDecoding() throws {
+        let decoder = JSONDecoder()
+        
+        // Test EIP155 types
+        let eip191Data = "\"eip191\"".data(using: .utf8)!
+        let eip191Type = try decoder.decode(CacaoSignatureType.self, from: eip191Data)
+        if case .eip155(let innerType) = eip191Type {
+            XCTAssertEqual(innerType, .eip191)
+        } else {
+            XCTFail("Expected eip155(.eip191)")
+        }
+        
+        let eip1271Data = "\"eip1271\"".data(using: .utf8)!
+        let eip1271Type = try decoder.decode(CacaoSignatureType.self, from: eip1271Data)
+        if case .eip155(let innerType) = eip1271Type {
+            XCTAssertEqual(innerType, .eip1271)
+        } else {
+            XCTFail("Expected eip155(.eip1271)")
+        }
+        
+        // Test BIP122 types
+        let ecdsaData = "\"ecdsa\"".data(using: .utf8)!
+        let ecdsaType = try decoder.decode(CacaoSignatureType.self, from: ecdsaData)
+        if case .bip122(let innerType) = ecdsaType {
+            XCTAssertEqual(innerType, .ecdsa)
+        } else {
+            XCTFail("Expected bip122(.ecdsa)")
+        }
+        
+        // Test Solana types
+        let ed25519Data = "\"ed25519\"".data(using: .utf8)!
+        let ed25519Type = try decoder.decode(CacaoSignatureType.self, from: ed25519Data)
+        if case .solana(let innerType) = ed25519Type {
+            XCTAssertEqual(innerType, .ed25519)
+        } else {
+            XCTFail("Expected solana(.ed25519)")
+        }
+    }
+    
+    func testCacaoSignatureTypeNamespaceAndAlgorithm() {
+        // Test namespace and algorithm properties
+        let eip191 = CacaoSignatureType.eip155(.eip191)
+        XCTAssertEqual(eip191.namespace, "eip155")
+        XCTAssertEqual(eip191.algorithm, "eip191")
+        
+        let ecdsa = CacaoSignatureType.bip122(.ecdsa)
+        XCTAssertEqual(ecdsa.namespace, "bip122")
+        XCTAssertEqual(ecdsa.algorithm, "ecdsa")
+        
+        let ed25519 = CacaoSignatureType.solana(.ed25519)
+        XCTAssertEqual(ed25519.namespace, "solana")
+        XCTAssertEqual(ed25519.algorithm, "ed25519")
+        
+        let bip322 = CacaoSignatureType.bip122(.bip322Simple)
+        XCTAssertEqual(bip322.namespace, "bip122")
+        XCTAssertEqual(bip322.algorithm, "bip322-simple")
+    }
+    
+    func testCacaoSignatureTypeInvalidDecoding() {
+        let decoder = JSONDecoder()
+        
+        // Test invalid signature type
+        let invalidData = "\"invalid-signature\"".data(using: .utf8)!
+        XCTAssertThrowsError(try decoder.decode(CacaoSignatureType.self, from: invalidData)) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+    
     // MARK: - Existing Tests (Updated for Ethereum)
 
     func testNilStatement() throws {

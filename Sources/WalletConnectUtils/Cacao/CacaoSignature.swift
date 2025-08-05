@@ -68,19 +68,17 @@ extension CacaoSignatureType {
         let container = try decoder.singleValueContainer()
         let stringValue = try container.decode(String.self)
         
-        let components = stringValue.split(separator: ".", maxSplits: 1)
-        guard components.count == 2 else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid signature type format")
+        // Try to find which namespace supports this algorithm
+        let possibleNamespaces = ["eip155", "bip122", "solana"]
+        
+        for namespace in possibleNamespaces {
+            if let signatureType = CacaoSignatureType.from(namespace: namespace, algorithm: stringValue) {
+                self = signatureType
+                return
+            }
         }
         
-        let namespace = String(components[0])
-        let algorithm = String(components[1])
-        
-        guard let signatureType = CacaoSignatureType.from(namespace: namespace, algorithm: algorithm) else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown signature type: \(stringValue)")
-        }
-        
-        self = signatureType
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown signature type: \(stringValue)")
     }
     
     public func encode(to encoder: Encoder) throws {
