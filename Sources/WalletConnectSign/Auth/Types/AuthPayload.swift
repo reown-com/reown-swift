@@ -15,7 +15,7 @@ public struct AuthPayload: Codable, Equatable {
     public let statement: String?
     public let requestId: String?
     public let resources: [String]?
-    public let signatureTypes: [String: [String]]?
+    public let signatureTypes: [String: [CacaoSignatureType]]?
 
     internal init(
         domain: String,
@@ -30,7 +30,7 @@ public struct AuthPayload: Codable, Equatable {
         statement: String? = nil,
         requestId: String? = nil,
         resources: [String]? = nil,
-        signatureTypes: [String: [String]]? = nil
+        signatureTypes: [String: [CacaoSignatureType]]? = nil
     ) {
         self.domain = domain
         self.aud = aud

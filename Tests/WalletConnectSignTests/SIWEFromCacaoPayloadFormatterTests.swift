@@ -92,7 +92,7 @@ class SIWEFromCacaoPayloadFormatterTests: XCTestCase {
             }
         }
     }
-
+    
     // MARK: - Existing Tests (Updated for Ethereum)
 
     func testNilStatement() throws {

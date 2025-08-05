@@ -18,7 +18,7 @@ public struct AuthRequestParams: Codable {
     public let requestId: String?
     public var resources: [String]?
     public let methods: [String]?
-    public let signatureTypes: [String: [String]]?
+    public let signatureTypes: [String: [CacaoSignatureType]]?
     public let ttl: TimeInterval
 
     // TTL bounds
@@ -36,7 +36,7 @@ public struct AuthRequestParams: Codable {
         requestId: String?,
         resources: [String]?,
         methods: [String]?,
-        signatureTypes: [String: [String]]? = nil,
+        signatureTypes: [String: [CacaoSignatureType]]? = nil,
         ttl: TimeInterval = 3600
     ) throws {
         guard ttl >= Request.minTtl && ttl <= Request.maxTtl else {
@@ -79,7 +79,7 @@ extension AuthRequestParams {
                      requestId: String? = nil,
                      resources: [String]? = ["ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/", "https://example.com/my-web2-claim.json"],
                      methods: [String]? = ["personal_sign", "eth_sendTransaction"],
-                     signatureTypes: [String: [String]]? = ["eip155": ["eip191", "eip1271", "eip6492"]]) -> AuthRequestParams {
+                     signatureTypes: [String: [CacaoSignatureType]]? = ["eip155": [.eip155(.eip191), .eip155(.eip1271), .eip155(.eip6492)]]) -> AuthRequestParams {
         return try! AuthRequestParams(domain: domain,
                              chains: chains,
                              nonce: nonce,

@@ -422,7 +422,7 @@ public final class SignClient: SignClientProtocol {
     public func recoverAndVerifySignature(authObject: AuthObject) async throws {
         try await authSignatureVerifier.recoverAndVerifySignature(authObject: authObject)
     }
-
+    
     //-----------------------------------------------------------------------------------
 
     /// For a wallet to approve a session proposal.
