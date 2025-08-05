@@ -3,7 +3,7 @@ import Foundation
 struct CacaosBuilder {
     public static func makeCacao(authPayload: AuthPayload, signature: CacaoSignature, account: Account) throws -> Cacao {
         let cacaoPayload = try CacaoPayloadBuilder.makeCacaoPayload(authPayload: authPayload, account: account)
-        let header = CacaoHeader(t: "eip4361")
+        let header = CacaoHeader(t: "caip122")
         return Cacao(h: header, p: cacaoPayload, s: signature)
     }
 
