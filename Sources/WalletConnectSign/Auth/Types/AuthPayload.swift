@@ -1,5 +1,7 @@
 import Foundation
 
+/// CAIP-222 request params
+/// https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-222.md
 public struct AuthPayload: Codable, Equatable {
     public let domain: String
     public let aud: String
