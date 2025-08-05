@@ -109,13 +109,11 @@ final class SessionProposalPresenter: ObservableObject {
     private func createAuthObjectForChain(chain: Blockchain, authPayload: AuthPayload) throws -> AuthObject {
         let account = Account(blockchain: chain, address: importAccount.account.address)!
 
-        let supportedAuthPayload = try WalletKit.instance.buildAuthPayload(payload: authPayload, supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!, Blockchain("eip155:69")!], supportedMethods: ["personal_sign", "eth_sendTransaction"])
-
-        let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: supportedAuthPayload, account: account)
+        let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: authPayload, account: account)
 
         let signature = try messageSigner.sign(message: SIWEmessages, privateKey: Data(hex: importAccount.privateKey), type: .eip191)
 
-        let auth = try WalletKit.instance.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: account)
+        let auth = try WalletKit.instance.buildSignedAuthObject(authPayload: authPayload, signature: signature, account: account)
 
         return auth
     }

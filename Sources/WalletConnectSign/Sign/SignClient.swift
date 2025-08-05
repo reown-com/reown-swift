@@ -406,8 +406,7 @@ public final class SignClient: SignClientProtocol {
         try AuthPayloadBuilder.build(payload: payload, supportedEVMChains: supportedEVMChains, supportedMethods: supportedMethods)
     }
 
-    // MARK: - CAIP-122 Sign with X
-
+    ///Formats CAIP-122 Sign with X message
     public func formatAuthMessage(payload: AuthPayload, account: Account) throws -> String {
         let cacaoPayload = try CacaoPayloadBuilder.makeCacaoPayload(authPayload: payload, account: account)
         return try SignWithXFormatter().formatMessage(from: cacaoPayload)
