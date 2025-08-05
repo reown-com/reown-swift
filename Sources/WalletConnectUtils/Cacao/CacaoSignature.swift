@@ -64,14 +64,18 @@ public enum CacaoSignatureType: Codable, Equatable {
 
 // MARK: - Codable Implementation
 extension CacaoSignatureType {
+    
+    /// All supported namespaces
+    private static var supportedNamespaces: [String] {
+        return ["eip155", "bip122", "solana"]
+    }
+    
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let stringValue = try container.decode(String.self)
         
         // Try to find which namespace supports this algorithm
-        let possibleNamespaces = ["eip155", "bip122", "solana"]
-        
-        for namespace in possibleNamespaces {
+        for namespace in Self.supportedNamespaces {
             if let signatureType = CacaoSignatureType.from(namespace: namespace, algorithm: stringValue) {
                 self = signatureType
                 return
