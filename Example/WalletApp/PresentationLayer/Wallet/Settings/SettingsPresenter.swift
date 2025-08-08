@@ -9,6 +9,7 @@ final class SettingsPresenter: ObservableObject {
     private let importAccount: ImportAccount
     private let router: SettingsRouter
     private let accountStorage: AccountStorage
+    private let stacksAccountStorage: StacksAccountStorage
     private var disposeBag = Set<AnyCancellable>()
 
     init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount) {
@@ -17,6 +18,7 @@ final class SettingsPresenter: ObservableObject {
         self.router = router
         self.accountStorage = accountStorage
         self.importAccount = importAccount
+        self.stacksAccountStorage = StacksAccountStorage()
     }
 
     var account: String {
@@ -27,6 +29,26 @@ final class SettingsPresenter: ObservableObject {
     var privateKey: String {
         guard let importAccount = accountStorage.importAccount else { return .empty }
         return importAccount.privateKey
+    }
+    
+    var stacksMnemonic: String {
+        return stacksAccountStorage.getWallet() ?? .empty
+    }
+    
+    var stacksMainnetAddress: String {
+        do {
+            return try stacksAccountStorage.getMainnetAddress() ?? "No Stacks mainnet address"
+        } catch {
+            return "Error getting Stacks mainnet address"
+        }
+    }
+    
+    var stacksTestnetAddress: String {
+        do {
+            return try stacksAccountStorage.getTestnetAddress() ?? "No Stacks testnet address"
+        } catch {
+            return "Error getting Stacks testnet address"
+        }
     }
 
     var clientId: String {

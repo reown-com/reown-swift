@@ -230,21 +230,7 @@ let package = Package(
             dependencies: ["Commons", "TestingUtils"]),
         .testTarget(
             name: "EventsTests",
-            dependencies: ["Events"]),
-//        .testTarget(
-//            name: "ReownAppKitTests",
-//            dependencies: [
-//                "ReownAppKit",
-//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-//            ]
-//        ),
-//        .testTarget(
-//            name: "ReownAppKitUITests",
-//            dependencies: [
-//                "ReownAppKitUI",
-//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-//            ]
-//        )
+            dependencies: ["Events"])
     ],
     swiftLanguageVersions: [.v5]
 )
