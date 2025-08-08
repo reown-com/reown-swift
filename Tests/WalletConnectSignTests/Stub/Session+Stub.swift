@@ -59,6 +59,7 @@ extension SessionType.SettleParams {
             namespaces: SessionNamespace.stubDictionary(),
             sessionProperties: nil,
             scopedProperties: nil,
-            expiry: Int64(Date.distantFuture.timeIntervalSince1970))
+            expiry: Int64(Date.distantFuture.timeIntervalSince1970),
+            proposalRequestsResponses: nil)
     }
 }

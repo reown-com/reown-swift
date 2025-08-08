@@ -93,7 +93,7 @@ public struct SignClientFactory {
         let deleteSessionService = DeleteSessionService(networkingInteractor: networkingClient, kms: kms, sessionStore: sessionStore, logger: logger)
         let disconnectService = DisconnectService(deleteSessionService: deleteSessionService, sessionStorage: sessionStore)
         let sessionPingService = SessionPingService(sessionStorage: sessionStore, networkingInteractor: networkingClient, logger: logger)
-        let appProposerService = AppProposeService(metadata: metadata, networkingInteractor: networkingClient, kms: kms, logger: logger)
+        let appProposerService = AppProposeService(metadata: metadata, networkingInteractor: networkingClient, kms: kms, logger: logger, iatProvader: iatProvider)
         let proposalExpiryWatcher = ProposalExpiryWatcher(proposalPayloadsStore: proposalPayloadsStore, rpcHistory: rpcHistory)
         let pendingProposalsProvider = PendingProposalsProvider(proposalPayloadsStore: proposalPayloadsStore, verifyContextStore: verifyContextStore)
         let requestsExpiryWatcher = RequestsExpiryWatcher(proposalPayloadsStore: proposalPayloadsStore, rpcHistory: rpcHistory, historyService: historyService)
@@ -107,6 +107,12 @@ public struct SignClientFactory {
         let messageVerifierFactory = MessageVerifierFactory(crypto: crypto)
         let signatureVerifier = messageVerifierFactory.create(projectId: projectId)
         let sessionNameSpaceBuilder = SessionNamespaceBuilder(logger: logger)
+
+        let authSignatureVerifier = AuthSignatureVerifier(
+            messageFormatter: messageFormatter,
+            signatureVerifier: signatureVerifier,
+            logger: logger
+        )
 
         let serializer = Serializer(kms: kms, logger: logger)
 
@@ -181,7 +187,8 @@ public struct SignClientFactory {
             sessionResponderDispatcher: sessionResponderDispatcher,
             linkSessionRequestResponseSubscriber: linkSessionRequestResponseSubscriber,
             authenticateTransportTypeSwitcher: authenticateTransportTypeSwitcher,
-            messageVerifier: signatureVerifier
+            messageVerifier: signatureVerifier,
+            authSignatureVerifier: authSignatureVerifier
         )
         return client
     }
