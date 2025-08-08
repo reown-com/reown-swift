@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
+		44713A9E2E46126500E3027A /* YttriumUtilsWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 44713A9D2E46126500E3027A /* YttriumUtilsWrapper */; };
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
@@ -663,6 +664,7 @@
 				C56EE255293F569A004840D1 /* Starscream in Frameworks */,
 				84AEC2542B4D43CD00E27A5B /* SwiftMessages in Frameworks */,
 				A5B6C0F52A6EAB2800927332 /* WalletConnectNotify in Frameworks */,
+				44713A9E2E46126500E3027A /* YttriumUtilsWrapper in Frameworks */,
 				84943C7D2A9BA328007EBAC2 /* Mixpanel in Frameworks */,
 				8421447F2C81863A004FF494 /* ReownWalletKit in Frameworks */,
 				8421447D2C80A544004FF494 /* ReownAppKitUI in Frameworks */,
@@ -1708,6 +1710,7 @@
 				8421447C2C80A544004FF494 /* ReownAppKitUI */,
 				8421447E2C81863A004FF494 /* ReownWalletKit */,
 				84CA52162C88965C0069BB33 /* ReownRouter */,
+				44713A9D2E46126500E3027A /* YttriumUtilsWrapper */,
 			);
 			productName = ChatWallet;
 			productReference = C56EE21B293F55ED004840D1 /* WalletApp.app */;
@@ -2912,6 +2915,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		44713A9D2E46126500E3027A /* YttriumUtilsWrapper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = YttriumUtilsWrapper;
+		};
 		8421447A2C80A2B8004FF494 /* ReownAppKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ReownAppKit;
