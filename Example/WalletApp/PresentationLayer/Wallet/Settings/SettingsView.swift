@@ -15,9 +15,19 @@ struct SettingsView: View {
                     header(title: "Account")
                     row(title: "CAIP-10", subtitle: viewModel.account)
                     row(title: "Private key", subtitle: viewModel.privateKey)
+
+                    header(title: "Stacks")
                     row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
                     row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
                     row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
+
+                    header(title: "Solana")
+                    row(title: "Solana Address", subtitle: viewModel.solanaAddress)
+                    row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
+
+                    header(title: "Sui")
+                    row(title: "Sui Address", subtitle: viewModel.suiAddress)
+                    row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
                 }
                 .padding(.horizontal, 20)
 

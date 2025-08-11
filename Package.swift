@@ -86,7 +86,7 @@ let package = Package(
             targets: ["YttriumWrapper"]),
         .library(
             name: "YttriumUtilsWrapper",
-            targets: ["YttriumUtilsWrapper"])
+            targets: ["YttriumUtilsWrapper"]) 
     ],
     dependencies: dependencies,
     targets: [
