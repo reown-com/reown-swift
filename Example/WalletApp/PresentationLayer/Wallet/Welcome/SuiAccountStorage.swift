@@ -1,5 +1,6 @@
 import Foundation
 import ReownWalletKit
+import YttriumUtilsWrapper
 
 // Define the types that will be used with Sui methods
 typealias SuiKeyPair = String
