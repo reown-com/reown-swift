@@ -25,6 +25,11 @@ runs:
           **/SourcePackagesCache
         key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
 
+    - name: Select Xcode 16.4 (has iOS 18.x sims preinstalled)
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '16.4'
+
     - name: Build for testing
       shell: bash
       run: make build_all RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }}

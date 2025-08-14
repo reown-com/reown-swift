@@ -1,4 +1,7 @@
 XCODE_USER_TEMPLATES_DIR=/Applications/Xcode.app/Contents/Developer/Library/Xcode/Templates/File\ Templates
+ 
+.PHONY: build_all install_templates install_env echo_ui_tests ui_tests unit_tests integration_tests relay_tests notify_tests smoke_tests x_platform_protocol_tests release .FORCE
+.FORCE:
 TEMPLATE_NAME=VIPER
 TEMPLATES_DIR=Example/Templates/VIPER
 
@@ -16,23 +19,12 @@ ifeq "${EXISTS_FASTLANE}" ""
 endif		
 	@echo "All dependencies was installed"
 
-build_all:
-	set -o pipefail && env NSUnbufferedIO=YES \
-		xcodebuild \
-		-scheme "WalletConnect-Package" \
-		-destination "platform=iOS Simulator,name=iPhone 16,OS=18.1" \
-		-derivedDataPath DerivedDataCache \
-		-clonedSourcePackagesDirPath ../SourcePackagesCache \
-		RELAY_HOST='$(RELAY_HOST)' \
-		PROJECT_ID='$(PROJECT_ID)' \
-		build-for-testing \
-		| xcbeautify
-
+build_all: .FORCE
 	set -o pipefail && env NSUnbufferedIO=YES \
 		xcodebuild \
 		-project "Example/ExampleApp.xcodeproj" \
 		-scheme "BuildAll" \
-		-destination "platform=iOS Simulator,name=iPhone 15,OS=17.5" \
+		-destination "platform=iOS Simulator,name=iPhone 16" \
 		-derivedDataPath DerivedDataCache \
 		-clonedSourcePackagesDirPath ../SourcePackagesCache \
 		RELAY_HOST='$(RELAY_HOST)' \
@@ -50,7 +42,7 @@ ui_tests:
 	./run_tests.sh --scheme UITests --project Example/ExampleApp.xcodeproj
 
 unit_tests:
-	./run_tests.sh --scheme WalletConnect-Package
+	./run_tests.sh --scheme WalletConnect --project Example/ExampleApp.xcodeproj
 
 integration_tests:
 	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj
