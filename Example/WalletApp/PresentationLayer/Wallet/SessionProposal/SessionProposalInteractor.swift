@@ -8,33 +8,60 @@ final class SessionProposalInteractor {
         // Following properties are used to support all the required and optional namespaces for the testing purposes
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
         let supportedEvents = Set(proposal.requiredNamespaces.flatMap { $0.value.events } + (proposal.optionalNamespaces?.flatMap { $0.value.events } ?? []))
-        
+
+        let stacksAccountStorage = StacksAccountStorage()
+        let suiAccountStorage = SuiAccountStorage()
+
+        // Handle EIP155 chains
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedChains = supportedRequiredChains + supportedOptionalChains
+        var supportedEIP155Chains = supportedRequiredChains + supportedOptionalChains
 
-        var supportedAccounts: [Account]
+        // Handle Stacks chains
+        let supportedRequiredStacksChains = proposal.requiredNamespaces["stacks"]?.chains ?? []
+        let supportedOptionalStacksChains = proposal.optionalNamespaces?["stacks"]?.chains ?? []
+        let supportedStacksChains = supportedRequiredStacksChains + supportedOptionalStacksChains
+
+        // Handle Sui chains
+        let supportedRequiredSuiChains = proposal.requiredNamespaces["sui"]?.chains ?? []
+        let supportedOptionalSuiChains = proposal.optionalNamespaces?["sui"]?.chains ?? []
+        let supportedSuiChains = supportedRequiredSuiChains + supportedOptionalSuiChains
+
+        // Combine all supported chains
+        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains
+
+        var supportedAccounts: [Account] = []
         var sessionProperties = [String: String]()
 
-//        if WalletKitEnabler.shared.isSmartAccountEnabled {
-//            let sepolia = Blockchain("eip155:11155111")!
-//            let sepoliaOwnerAccount = Account(blockchain: sepolia, address: EOAAccount.address)!
-//            let smartAccountAddresses = try await WalletKitEnabler.shared.getSmartAccountsAddresses(ownerAccount: sepoliaOwnerAccount)
-//            supportedAccounts = smartAccountAddresses.map { Account(blockchain: sepolia, address: $0)! }
-//            sessionProperties = getSessionProperties(addresses: smartAccountAddresses)
-//        } else {
-            supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: EOAAccount.address)! }
-//        }
+        // Add EIP155 accounts
+        let eip155Accounts = Array(supportedEIP155Chains).map { Account(blockchain: $0, address: EOAAccount.address)! }
+        supportedAccounts.append(contentsOf: eip155Accounts)
+
+        // Add Stacks accounts if available
+        if !supportedStacksChains.isEmpty {
+            var stacksAccounts: [Account] = []
+            for chain in supportedStacksChains {
+                if let stacksAccount = try stacksAccountStorage.getCaip10Account(for: chain) {
+                    stacksAccounts.append(stacksAccount)
+                }
+            }
+            supportedAccounts.append(contentsOf: stacksAccounts)
+        }
+
+        // Add Sui accounts if available
+        if let suiAccount = suiAccountStorage.getCaip10Account(), !supportedSuiChains.isEmpty {
+            let suiAccounts = Array(supportedSuiChains).map { Account(blockchain: $0, address: suiAccount.address)! }
+            supportedAccounts.append(contentsOf: suiAccounts)
+        }
 
         /* Use only supported values for production. I.e:
-        let supportedMethods = ["eth_signTransaction", "personal_sign", "eth_signTypedData", "eth_sendTransaction", "eth_sign"]
-        let supportedEvents = ["accountsChanged", "chainChanged"]
-        let supportedChains = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
-        let supportedAccounts = [Account(blockchain: Blockchain("eip155:1")!, address: ETHSigner.address)!, Account(blockchain: Blockchain("eip155:137")!, address: ETHSigner.address)!]
-        */
+         let supportedMethods = ["eth_signTransaction", "personal_sign", "eth_signTypedData", "eth_sendTransaction", "eth_sign"]
+         let supportedEvents = ["accountsChanged", "chainChanged"]
+         let supportedChains = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
+         let supportedAccounts = [Account(blockchain: Blockchain("eip155:1")!, address: ETHSigner.address)!, Account(blockchain: Blockchain("eip155:137")!, address: ETHSigner.address)!]
+         */
 
         // Define scopedProperties according to CAIP-345
-
         let scopedProperties: [String: String] = [
             "eip155": """
             {

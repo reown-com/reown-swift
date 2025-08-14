@@ -51,10 +51,20 @@ struct WelcomeView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             
+            TextField("Stacks Mnemonic (optional)", text: $presenter.stacksInput)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            
+            TextField("Sui Private Key (optional)", text: $presenter.suiInput)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            
             Button("OK", action: presenter.onImport)
             Button("Cancel", role: .cancel) { 
                 presenter.input = .empty
                 presenter.solanaInput = .empty
+                presenter.stacksInput = .empty
+                presenter.suiInput = .empty
             }
         } message: {
             Text("Please enter account private keys")

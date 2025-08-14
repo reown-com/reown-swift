@@ -1,4 +1,3 @@
-
 import Foundation
 import WalletConnectSign
 import ReownWalletKit
@@ -30,21 +29,64 @@ final class Signer {
 
     /// Main entry point that decides which signer to call.
     static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
+        // Handle Sui methods
+        if request.method.starts(with: "sui_") {
+            let requestedAddress = try await getRequestedAddress(request)
+            let suiAccountStorage = SuiAccountStorage()
+
+            if let suiAddress = suiAccountStorage.getAddress(),
+               requestedAddress.lowercased() == suiAddress.lowercased() {
+                let suiSigner = SuiSigner()
+                return try await suiSigner.sign(request: request)
+            }
+            throw Errors.accountForRequestNotFound
+        }
+
+        // Handle Stacks methods
+        if request.method.starts(with: "stx_") {
+            let requestedAddress = try await getRequestedAddress(request)
+            let stacksAccountStorage = StacksAccountStorage()
+
+            if let stacksAddress = try stacksAccountStorage.getAddress(for: request.chainId),
+               requestedAddress.lowercased() == stacksAddress.lowercased() {
+                let stacksSigner = StacksSigner()
+                return try await stacksSigner.sign(request: request)
+            }
+            throw Errors.accountForRequestNotFound
+        }
+
+        // Default EOA route
         let requestedAddress = try await getRequestedAddress(request)
 
-        // If EOA address is requested
         if requestedAddress.lowercased() == importAccount.account.address.lowercased() {
-            // EOA route
             let eoaSigner = EOASigner()
             return try await eoaSigner.sign(request: request, importAccount: importAccount)
         }
 
-        // If none of the above matched, throw an error
         throw Errors.accountForRequestNotFound
     }
 
-    // The logic for finding a requested address stays the same
+    // Determine requested address for different method families
     private static func getRequestedAddress(_ request: Request) async throws -> String {
+        // Sui methods: read from SuiAccountStorage
+        if request.method.starts(with: "sui_") {
+            let suiAccountStorage = SuiAccountStorage()
+            if let suiAddress = suiAccountStorage.getAddress() {
+                return suiAddress
+            }
+            throw Errors.cantFindRequestedAddress
+        }
+
+        // Stacks methods: read from StacksAccountStorage for specific chain
+        if request.method.starts(with: "stx_") {
+            let stacksAccountStorage = StacksAccountStorage()
+            if let stacksAddress = try stacksAccountStorage.getAddress(for: request.chainId) {
+                return stacksAddress
+            }
+            throw Errors.cantFindRequestedAddress
+        }
+
+        // EIP-155 methods
         if let paramsArray = try? request.params.get([AnyCodable].self),
            let firstParam = paramsArray.first?.value as? [String: Any],
            let account = firstParam["from"] as? String {
@@ -53,7 +95,6 @@ final class Signer {
 
         if let paramsArray = try? request.params.get([AnyCodable].self) {
             if request.method == "personal_sign" || request.method == "eth_signTypedData" {
-                // Typically 2nd param for those
                 if paramsArray.count > 1,
                    let account = paramsArray[1].value as? String {
                     return account
