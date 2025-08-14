@@ -9,6 +9,8 @@ final class WelcomePresenter: ObservableObject {
 
     @Published var input: String = .empty
     @Published var solanaInput: String = .empty
+    @Published var stacksInput: String = .empty
+    @Published var suiInput: String = .empty
 
     init(interactor: WelcomeInteractor, router: WelcomeRouter) {
         defer {
@@ -19,6 +21,12 @@ final class WelcomePresenter: ObservableObject {
     }
     
     func onGetStarted() {
+        // Generate and save Stacks wallet
+        if let stacksWallet = interactor.generateAndSaveStacksWallet() {
+            stacksInput = stacksWallet
+        }
+        // Generate new Sui account when creating a new account
+        interactor.generateSuiAccount()
         importAccount(ImportAccount.new())
     }
 
@@ -26,10 +34,24 @@ final class WelcomePresenter: ObservableObject {
         guard let account = ImportAccount(input: input)
         else { return input = .empty }
         
-        // Save Solana private key if provided
+        // Save Solana private key only if provided
         if !solanaInput.isEmpty {
             interactor.saveSolanaPrivateKey(solanaInput)
             solanaInput = .empty
+        }
+        
+        // Save Stacks mnemonic if provided
+        if !stacksInput.isEmpty {
+            interactor.saveStacksWallet(stacksInput)
+            stacksInput = .empty
+        }
+        
+        // Save Sui private key if provided, otherwise generate a new one
+        if !suiInput.isEmpty {
+            interactor.saveSuiPrivateKey(suiInput)
+            suiInput = .empty
+        } else {
+            interactor.generateSuiAccount()
         }
         
         importAccount(account)

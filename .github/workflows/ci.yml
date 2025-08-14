@@ -47,6 +47,11 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
+    - name: Select Xcode 16.4 (iOS 18.x simulators)
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '16.4'
+
     - uses: actions/cache/restore@v3
       with:
         path: |

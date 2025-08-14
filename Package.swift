@@ -14,26 +14,30 @@ var dependencies: [Package.Dependency] = [
 //    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
 ]
 
+if yttriumDebug {
+    dependencies.append(.package(path: "../yttrium"))
+} else {
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.9.68")))
+}
 
 let yttriumTarget = buildYttriumWrapperTarget()
 
+let yttriumUtilsTarget = buildYttriumUtilsWrapperTarget()
+
 func buildYttriumWrapperTarget() -> Target {
-    // Conditionally add Yttrium dependency
-    if yttriumDebug {
-        dependencies.append(.package(path: "../yttrium"))
-        return .target(
-            name: "YttriumWrapper",
-            dependencies: [.product(name: "Yttrium", package: "yttrium")],
-            path: "Sources/YttriumWrapper"
-        )
-    } else {
-        dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.9.35")))
-        return .target(
-            name: "YttriumWrapper",
-            dependencies: [.product(name: "Yttrium", package: "yttrium")],
-            path: "Sources/YttriumWrapper"
-        )
-    }
+    .target(
+        name: "YttriumWrapper",
+        dependencies: [.product(name: "Yttrium", package: "yttrium")],
+        path: "Sources/YttriumWrapper"
+    )
+}
+
+func buildYttriumUtilsWrapperTarget() -> Target {
+    .target(
+        name: "YttriumUtilsWrapper",
+        dependencies: [.product(name: "YttriumUtils", package: "yttrium")],
+        path: "Sources/YttriumUtilsWrapper"
+    )
 }
 
 let package = Package(
@@ -79,7 +83,10 @@ let package = Package(
             targets: ["ReownAppKitUI"]),
         .library(
             name: "YttriumWrapper",
-            targets: ["YttriumWrapper"])
+            targets: ["YttriumWrapper"]),
+        .library(
+            name: "YttriumUtilsWrapper",
+            targets: ["YttriumUtilsWrapper"]) 
     ],
     dependencies: dependencies,
     targets: [
@@ -189,6 +196,7 @@ let package = Package(
             path: "Sources/ReownAppKitBackport"
         ),
         yttriumTarget,
+        yttriumUtilsTarget,
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
@@ -222,21 +230,7 @@ let package = Package(
             dependencies: ["Commons", "TestingUtils"]),
         .testTarget(
             name: "EventsTests",
-            dependencies: ["Events"]),
-//        .testTarget(
-//            name: "ReownAppKitTests",
-//            dependencies: [
-//                "ReownAppKit",
-//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-//            ]
-//        ),
-//        .testTarget(
-//            name: "ReownAppKitUITests",
-//            dependencies: [
-//                "ReownAppKitUI",
-//                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-//            ]
-//        )
+            dependencies: ["Events"])
     ],
     swiftLanguageVersions: [.v5]
 )
