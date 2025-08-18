@@ -75,6 +75,8 @@ struct WalletView: View {
                             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                             Spacer()
 
+                            // Chain abstraction transfers button commented out
+                            /*
                             Button {
                                 presenter.sendStableCoin()
                             } label: {
@@ -84,7 +86,10 @@ struct WalletView: View {
                             }
                             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                             .accessibilityIdentifier("sendStableCoin")
+                            */
 
+                            // Chain abstraction transfers button commented out
+                            /*
                             Button {
                                 presenter.sendEthereum()
                             } label: {
@@ -94,6 +99,7 @@ struct WalletView: View {
                             }
                             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                             .accessibilityIdentifier("sendEthereum")
+                            */
 
                             Button {
                                 presenter.onPasteUri()

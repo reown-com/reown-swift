@@ -72,6 +72,8 @@ extension MainPresenter {
                     return
                 }
                 router.dismiss()
+                // Chain abstraction routing logic commented out
+                /*
                 if WalletKitEnabler.shared.isChainAbstractionEnabled && request.method == "eth_sendTransaction" {
                     Task(priority: .background) {
                         try await tryRoutCATransaction(request: request, context: context)
@@ -79,6 +81,9 @@ extension MainPresenter {
                 } else {
                     router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
                 }
+                */
+                // Always use standard session request handling
+                router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
             }.store(in: &disposeBag)
 
 
@@ -99,6 +104,8 @@ extension MainPresenter {
             .store(in: &disposeBag)
     }
 
+    // Chain abstraction method commented out
+    /*
     private func tryRoutCATransaction(request: Request, context: VerifyContext?) async throws {
         guard request.method == "eth_sendTransaction" else {
             return
@@ -147,10 +154,10 @@ extension MainPresenter {
             ActivityIndicatorManager.shared.stop()
         } catch {
             await MainActor.run {
-                ActivityIndicatorManager.shared.stop()
-                AlertPresenter.present(message: "CA error: \(error.localizedDescription)", type: .error)
-                router.present(sessionRequest: request, importAccount: importAccount, sessionContext: context)
+                AlertPresenter.present(message: error.localizedDescription, type: .error)
             }
+            ActivityIndicatorManager.shared.stop()
         }
     }
+    */
 }

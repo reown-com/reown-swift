@@ -48,19 +48,10 @@ final class MainRouter {
             .presentFullScreen(from: viewController, transparentBackground: true)
     }
 
-    func presentCATransaction(
-        sessionRequest: Request,
-        importAccount: ImportAccount,
-        context: VerifyContext?,
-        call: Call,
-        from: String,
-        chainId: Blockchain,
-        uiFields: UiFields
-    ) {
-
-        CATransactionModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, call: call, from: from, chainId: chainId, uiFields: uiFields)
-                .present(from: viewController)
-        }
+    func presentCATransaction(sessionRequest: Request, importAccount: ImportAccount, context: VerifyContext?, call: Any?, from: String, chainId: Blockchain, uiFields: Any?) {
+//        CATransactionModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, call: call, from: from, chainId: chainId, uiFields: uiFields)
+//            .presentFullScreen(from: viewController, transparentBackground: false)
+    }
 
     func dismiss() {
         viewController.dismiss()
