@@ -346,6 +346,190 @@ public enum AutoNamespaces {
 
         return sessionNamespaces
     }
+
+    /// Build session namespaces directly from required/optional namespaces without a Session.Proposal instance.
+    /// Mirrors the logic of the `build(sessionProposal:chains:methods:events:accounts:)` overload.
+    public static func build(
+        requiredNamespaces: [String: ProposalNamespace],
+        optionalNamespaces: [String: ProposalNamespace]?,
+        chains: [Blockchain],
+        methods: [String],
+        events: [String],
+        accounts: [Account]
+    ) throws -> [String: SessionNamespace] {
+        var sessionNamespaces = [String: SessionNamespace]()
+
+        let chains = chains.removeDuplicates()
+        let accounts = accounts.removeDuplicates()
+        try requiredNamespaces.forEach {
+            let caip2Namespace = $0.key
+            let proposalNamespace = $0.value
+
+            if let proposalChains = proposalNamespace.chains {
+                let sessionChains = proposalChains
+
+                guard !sessionChains.isEmpty && Set(proposalChains).isSubset(of: chains) else {
+                    throw AutoNamespacesError.requiredChainsNotSatisfied
+                }
+
+                let sessionMethods = Set(proposalNamespace.methods).intersection(Set(methods))
+                guard proposalNamespace.methods.isSubset(of: Set(methods)) else {
+                    throw AutoNamespacesError.requiredMethodsNotSatisfied
+                }
+
+                let sessionEvents = Set(proposalNamespace.events).intersection(Set(events))
+                guard proposalNamespace.events.isSubset(of: Set(events)) else {
+                    throw AutoNamespacesError.requiredEventsNotSatisfied
+                }
+
+                let availableAccountsBlockchains = accounts.map { $0.blockchain }
+                guard !sessionChains.intersection(availableAccountsBlockchains).isEmpty else {
+                    throw AutoNamespacesError.requiredAccountsNotSatisfied
+                }
+
+                let sessionNamespace = SessionNamespace(
+                    chains: sessionChains,
+                    accounts: accounts.filter { sessionChains.contains($0.blockchain) },
+                    methods: sessionMethods,
+                    events: sessionEvents
+                )
+
+                if sessionNamespaces[caip2Namespace] == nil {
+                    sessionNamespaces[caip2Namespace] = sessionNamespace
+                } else {
+                    let unionChains = (sessionNamespaces[caip2Namespace]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
+                    sessionNamespaces[caip2Namespace]?.chains = unionChains
+                    let unionAccounts = sessionNamespaces[caip2Namespace]?.accounts.orderedUnion(sessionNamespace.accounts)
+                    sessionNamespaces[caip2Namespace]?.accounts = unionAccounts ?? []
+                    let unionMethods = sessionNamespaces[caip2Namespace]?.methods.union(sessionNamespace.methods)
+                    sessionNamespaces[caip2Namespace]?.methods = unionMethods ?? []
+                    let unionEvents = sessionNamespaces[caip2Namespace]?.events.union(sessionNamespace.events)
+                    sessionNamespaces[caip2Namespace]?.events = unionEvents ?? []
+                }
+            } else {
+                if let network = $0.key.components(separatedBy: ":").first,
+                   let chain = $0.key.components(separatedBy: ":").last
+                {
+                    let sessionChains = [Blockchain(namespace: network, reference: chain)].intersection(chains)
+                    guard !sessionChains.isEmpty else {
+                        throw AutoNamespacesError.requiredChainsNotSatisfied
+                    }
+
+                    let sessionMethods = Set(proposalNamespace.methods).intersection(Set(methods))
+                    guard proposalNamespace.methods.isSubset(of: Set(methods)) else {
+                        throw AutoNamespacesError.requiredMethodsNotSatisfied
+                    }
+
+                    let sessionEvents = Set(proposalNamespace.events).intersection(Set(events))
+                    guard proposalNamespace.events.isSubset(of: Set(events)) else {
+                        throw AutoNamespacesError.requiredEventsNotSatisfied
+                    }
+
+                    let availableAccountsBlockchains = accounts.map { $0.blockchain }
+                    guard !sessionChains.intersection(availableAccountsBlockchains).isEmpty else {
+                        throw AutoNamespacesError.requiredAccountsNotSatisfied
+                    }
+
+                    let sessionNamespace = SessionNamespace(
+                        chains: [Blockchain(namespace: network, reference: chain)!],
+                        accounts: Set(accounts).filter { $0.blockchain == Blockchain(namespace: network, reference: chain)! },
+                        methods: sessionMethods,
+                        events: sessionEvents
+                    )
+                    if sessionNamespaces[network] == nil {
+                        sessionNamespaces[network] = sessionNamespace
+                    } else {
+                        let unionChains = (sessionNamespaces[network]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
+                        sessionNamespaces[network]?.chains = unionChains
+                        let unionAccounts = sessionNamespaces[network]?.accounts.orderedUnion(sessionNamespace.accounts)
+                        sessionNamespaces[network]?.accounts = unionAccounts ?? []
+                        let unionMethods = sessionNamespaces[network]?.methods.union(sessionNamespace.methods)
+                        sessionNamespaces[network]?.methods = unionMethods ?? []
+                        let unionEvents = sessionNamespaces[network]?.events.union(sessionNamespace.events)
+                        sessionNamespaces[network]?.events = unionEvents ?? []
+                    }
+                }
+            }
+        }
+
+        optionalNamespaces?.forEach {
+            let caip2Namespace = $0.key
+            let proposalNamespace = $0.value
+
+            if let proposalChains = proposalNamespace.chains {
+                let sessionChains = proposalChains.intersection(chains)
+                guard !sessionChains.isEmpty else {
+                    return
+                }
+
+                let sessionMethods = Set(proposalNamespace.methods).intersection(Set(methods))
+                guard !sessionMethods.isEmpty else {
+                    return
+                }
+
+                let sessionEvents = Set(proposalNamespace.events).intersection(Set(events))
+
+                let sessionNamespace = SessionNamespace(
+                    chains: sessionChains,
+                    accounts: accounts.filter { sessionChains.contains($0.blockchain) },
+                    methods: sessionMethods,
+                    events: sessionEvents
+                )
+
+                if sessionNamespaces[caip2Namespace] == nil {
+                    sessionNamespaces[caip2Namespace] = sessionNamespace
+                } else {
+                    let unionChains = (sessionNamespaces[caip2Namespace]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
+                    sessionNamespaces[caip2Namespace]?.chains = unionChains
+                    let unionAccounts = sessionNamespaces[caip2Namespace]?.accounts.orderedUnion(sessionNamespace.accounts)
+                    sessionNamespaces[caip2Namespace]?.accounts = unionAccounts ?? []
+                    let unionMethods = sessionNamespaces[caip2Namespace]?.methods.union(sessionNamespace.methods)
+                    sessionNamespaces[caip2Namespace]?.methods = unionMethods ?? []
+                    let unionEvents = sessionNamespaces[caip2Namespace]?.events.union(sessionNamespace.events)
+                    sessionNamespaces[caip2Namespace]?.events = unionEvents ?? []
+                }
+            } else {
+                if let network = $0.key.components(separatedBy: ":").first,
+                   let chain = $0.key.components(separatedBy: ":").last
+                {
+                    let sessionChains = [Blockchain(namespace: network, reference: chain)].intersection(chains)
+                    guard !sessionChains.isEmpty else {
+                        return
+                    }
+
+                    let sessionMethods = Set(proposalNamespace.methods).intersection(Set(methods))
+                    guard !sessionMethods.isEmpty else {
+                        return
+                    }
+
+                    let sessionEvents = Set(proposalNamespace.events).intersection(Set(events))
+
+                    let sessionNamespace = SessionNamespace(
+                        chains: [Blockchain(namespace: network, reference: chain)!],
+                        accounts: accounts.filter { $0.blockchain == Blockchain(namespace: network, reference: chain)! },
+                        methods: sessionMethods,
+                        events: sessionEvents
+                    )
+
+                    if sessionNamespaces[network] == nil {
+                        sessionNamespaces[network] = sessionNamespace
+                    } else {
+                        let unionChains = (sessionNamespaces[network]?.chains ?? []).orderedUnion(sessionNamespace.chains ?? [])
+                        sessionNamespaces[network]?.chains = unionChains
+                        let unionAccounts = sessionNamespaces[network]?.accounts.orderedUnion(sessionNamespace.accounts)
+                        sessionNamespaces[network]?.accounts = unionAccounts ?? []
+                        let unionMethods = sessionNamespaces[network]?.methods.union(sessionNamespace.methods)
+                        sessionNamespaces[network]?.methods = unionMethods ?? []
+                        let unionEvents = sessionNamespaces[network]?.events.union(sessionNamespace.events)
+                        sessionNamespaces[network]?.events = unionEvents ?? []
+                    }
+                }
+            }
+        }
+        guard !sessionNamespaces.isEmpty else { throw AutoNamespacesError.emptySessionNamespacesForbidden }
+
+        return sessionNamespaces
+    }
 }
 
 

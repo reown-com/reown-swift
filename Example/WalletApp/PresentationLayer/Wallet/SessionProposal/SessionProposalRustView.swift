@@ -84,7 +84,7 @@ struct SessionProposalRustView: View {
                         .padding(.top, 12)
                         .padding(.horizontal, -18)
                     
-                    // Display actual namespaces from SessionProposalFfi
+                    // Display namespaces combined from required + optional
                     ScrollView {
                         Text("Requested namespaces".uppercased())
                             .foregroundColor(.grey50)
@@ -93,8 +93,9 @@ struct SessionProposalRustView: View {
                             .lineSpacing(4)
                             .padding(.vertical, 12)
                         
-                        ForEach(presenter.sessionProposal.requestedNamespaces.keys.sorted(), id: \.self) { chain in
-                            if let namespaces = presenter.sessionProposal.requestedNamespaces[chain] {
+                        let requested = presenter.sessionProposal.requiredNamespaces.merging(presenter.sessionProposal.optionalNamespaces ?? [:]) { current, _ in current }
+                        ForEach(Array(requested.keys).sorted(), id: \.self) { key in
+                            if let namespaces = requested[key] {
                                 sessionProposalView(namespaces: namespaces)
                             }
                         }
