@@ -26,15 +26,15 @@ struct WalletKitClientFactory {
             #endif
         }()
 
-        let chainAbstractionClient = ChainAbstractionClient(projectId: usedProjectId, pulseMetadata: metadata)
-        let ChainAbstractionNamespace = ChainAbstractionNamespace(chainAbstractionClient: chainAbstractionClient)
+//        let chainAbstractionClient = ChainAbstractionClient(projectId: usedProjectId, pulseMetadata: metadata)
+//        let ChainAbstractionNamespace = ChainAbstractionNamespace(chainAbstractionClient: chainAbstractionClient)
 
         return WalletKitClient(
             signClient: signClient,
             pairingClient: pairingClient,
-            pushClient: pushClient,
-            chainAbstractionClient: chainAbstractionClient,
-            ChainAbstractionNamespace: ChainAbstractionNamespace
+            pushClient: pushClient
+//            chainAbstractionClient: chainAbstractionClient
+//            ChainAbstractionNamespace: ChainAbstractionNamespace
         )
     }
 }

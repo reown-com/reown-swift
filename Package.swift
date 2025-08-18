@@ -76,10 +76,10 @@ let package = Package(
             targets: ["ReownAppKit"]),
         .library(
             name: "ReownAppKitUI",
-            targets: ["ReownAppKitUI"]),
-        .library(
-            name: "YttriumWrapper",
-            targets: ["YttriumWrapper"])
+            targets: ["ReownAppKitUI"])
+//        .library(
+//            name: "YttriumWrapper",
+//            targets: ["YttriumWrapper"])
     ],
     dependencies: dependencies,
     targets: [

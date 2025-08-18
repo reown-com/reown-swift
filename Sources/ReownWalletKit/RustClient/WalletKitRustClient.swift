@@ -33,8 +33,8 @@ public class WalletKitRustClient {
         return proposal
     }
     
-    public func approve(_ proposal: SessionProposalFfi) async throws -> ApprovedSessionFfi {
-        return try await yttriumClient.approve(pairing: proposal)
+    public func approve(_ proposal: SessionProposalFfi, approvedNamespaces: [String : SettleNamespace], selfMetadata: Metadata) async throws -> SessionFfi {
+        return try await yttriumClient.approve(proposal: proposal, approvedNamespaces: approvedNamespaces, selfMetadata: selfMetadata)
     }
 }
 
