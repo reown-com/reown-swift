@@ -1,6 +1,6 @@
 import Combine
 import YttriumWrapper
-
+import WalletConnectKMS
 /// WalletKitRust Client
 ///
 /// Cannot be instantiated outside of the SDK
@@ -23,6 +23,8 @@ public class WalletKitRustClient {
     
     init(yttriumClient: YttriumWrapper.SignClient) {
         self.yttriumClient = yttriumClient
+        let key = AgreementPrivateKey(
+        yttriumClient.setKey(key: <#T##Data#>)
     }
     
     /// For wallet to receive a session proposal from a dApp
