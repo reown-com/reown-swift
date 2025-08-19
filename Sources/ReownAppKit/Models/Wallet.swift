@@ -1,13 +1,22 @@
 import Foundation
 import UIKit
 
-public struct WalletMetadata {
-    let id: String
-    let scheme: String
+public struct WalletMetadata: Codable, Identifiable, Sendable {
+    public let id: String
+    public let scheme: String
     
-    func isInstalled() -> Bool {
-        guard let nativeUrl = URL(string: scheme) else { return false }
-        return UIApplication.shared.canOpenURL(nativeUrl)
+    public init(id: String, scheme: String) {
+        self.id = id
+        self.scheme = scheme
+    }
+    
+    public var schemeUrl: URL? {
+        URL(string: (scheme.hasSuffix(":") || scheme.hasSuffix("://")) ? scheme : scheme + "://")
+    }
+    
+    public func isInstalled() -> Bool {
+        guard let schemeUrl else { return false }
+        return UIApplication.shared.canOpenURL(schemeUrl)
     }
 }
 
@@ -30,8 +39,8 @@ public struct Wallet: Codable, Identifiable, Sendable {
             abs(lastTimeUsed.timeIntervalSinceNow) < (24 * 60 * 60 * 7)
         } else { false }
     }
-    var customDidSelect: Bool = false
-    var alternativeConnectionMethod: (() -> Void)? = nil
+    public var customDidSelect: Bool = false
+    public var alternativeConnectionMethod: (() -> Void)? = nil
     
     @MainActor
     public var image: UIImage? {

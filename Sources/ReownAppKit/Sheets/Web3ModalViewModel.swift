@@ -150,10 +150,13 @@ class Web3ModalViewModel: ObservableObject {
     }
 
     private func handleNewSession(session: Session) {
-        store.connectedWith = .wc
         store.account = .init(from: session)
         store.session = session
-
+        store.connectedWith = .wc
+        
+        // Set this session as the primary session
+        AppKit.primarySessionTopic = session.topic
+        
         if
             let blockchain = session.accounts.first?.blockchain,
             let matchingChain = ChainPresets.ethChains.first(where: { $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference })
@@ -162,7 +165,6 @@ class Web3ModalViewModel: ObservableObject {
         }
 
         fetchIdentity()
-
     }
 
     private func routeToProfile() {

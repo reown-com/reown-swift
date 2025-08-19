@@ -174,20 +174,22 @@ struct AllWalletsView: View {
     
     private func gridElement(for wallet: Wallet) -> some View {
         Button(action: {
+            analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
             AppKit.instance.didSelectWalletSubject.send(wallet)
             if wallet.customDidSelect {
                 store.isModalShown = false
                 return
             }
-            Task {
-                do {
-                    try await signInteractor.connect(walletUniversalLink: wallet.linkMode)
-                    analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
-                    router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
-                } catch {
-                    store.toast = .init(style: .error, message: error.localizedDescription)
-                }
-            }
+            
+//            Task {
+//                do {
+//                    try await signInteractor.connect(walletUniversalLink: wallet.linkMode)
+//                    analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
+//                    router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
+//                } catch {
+//                    store.toast = .init(style: .error, message: error.localizedDescription)
+//                }
+//            }
         }, label: {
             Text(wallet.name)
         })

@@ -9,8 +9,8 @@ public enum ConnectionProviderType {
 public class Store: ObservableObject {
     public static var shared: Store = .init()
     
-    @Published var isModalShown: Bool = false
-    @Published var retryShown = false
+    @Published public var isModalShown: Bool = false
+    @Published public var retryShown = false
 
     @Published var SIWEFallbackState: Bool = false {
         didSet {
@@ -49,8 +49,8 @@ public class Store: ObservableObject {
     var totalNumberOfWallets: Int = 0
     var currentPage: Int = 0
     var totalPages: Int = .max
-    var walletImages: [String: UIImage] = [:]
-    var walletMetdata: [WalletMetadata] = []
+    public var walletImages: [String: UIImage] = [:]
+    public var walletMetdata: [WalletMetadata] = []
     var siweRequestId: RPCID? = nil
     var siweMessage: String? = nil
 
@@ -126,11 +126,16 @@ extension Store {
 public struct W3MAccount: Codable {
     public let address: String
     public let chain: Blockchain
+    
+    public init(address: String, chain: Blockchain) {
+        self.address = address
+        self.chain = chain
+    }
 }
 
 extension W3MAccount {
     
-    init?(from session: Session) {
+    public init?(from session: Session) {
         guard let account = session.accounts.first else {
             return nil
         }
@@ -138,7 +143,7 @@ extension W3MAccount {
         self.init(from: account)
     }
     
-    init?(from account: Account) {
+    public init?(from account: Account) {
         self.init(address: account.address, chain: account.blockchain)
     }
     
@@ -147,7 +152,7 @@ extension W3MAccount {
         chain: Blockchain(namespace: "eip155", reference: "56")!
     )
 
-    func account() -> Account? {
+    public func account() -> Account? {
         return Account(blockchain: chain, address: address)
     }
 }

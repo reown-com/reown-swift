@@ -44,20 +44,25 @@ struct ConnectWalletView: View {
                 let tagTitle: String? = isRecent ? "RECENT" : isInstalled ? "INSTALLED" : nil
 
                 Button(action: {
+                    analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
                     AppKit.instance.didSelectWalletSubject.send(wallet)
+                    
                     if wallet.customDidSelect {
                         store.isModalShown = false
                         return
                     }
-                    Task {
-                        do {
-                            try await signInteractor.connect(walletUniversalLink: wallet.linkMode)
-                            router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
-                            analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
-                        } catch {
-                            store.toast = .init(style: .error, message: error.localizedDescription)
-                        }
-                    }
+                    
+//                    Task { @MainActor in
+//                        do {
+//                            try await signInteractor.connect(walletUniversalLink: wallet.linkMode)
+//                            router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
+//                            analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
+//                            print("Connected to wallet: \(wallet.name)")
+//                        } catch {
+//                            print("Error connecting wallet: \(error)")
+//                            store.toast = .init(style: .error, message: error.localizedDescription)
+//                        }
+//                    }
                 }, label: {
                     Text(wallet.name)
                 })

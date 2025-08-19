@@ -314,7 +314,7 @@ public class AppKit {
 #if canImport(UIKit)
 
 public extension AppKit {
-    static func selectChain(from presentingViewController: UIViewController? = nil) {
+    static func presentSelectChain(from presentingViewController: UIViewController? = nil) {
         guard let vc = presentingViewController ?? topViewController() else {
             assertionFailure("No controller found for presenting modal")
             return
@@ -330,7 +330,7 @@ public extension AppKit {
         vc.present(modal, animated: true)
     }
     
-    static func present(from presentingViewController: UIViewController? = nil) {
+    static func present(from presentingViewController: UIViewController? = nil, app: Wallet? = nil) {
         guard let vc = presentingViewController ?? topViewController() else {
             assertionFailure("No controller found for presenting modal")
             return
@@ -340,10 +340,18 @@ public extension AppKit {
         
         Store.shared.connecting = true
         
-        AppKit.viewModel.router.setRoute(Store.shared.account != nil ? Router.AccountSubpage.profile : Router.ConnectingSubpage.connectWallet)
-        
+        if let app {
+            AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.walletDetail(app))
+        } else {
+            AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.connectWallet)
+        }
+
         let modal = Web3ModalSheetController(router: AppKit.viewModel.router)
         vc.present(modal, animated: true)
+    }
+    
+    static func showConnectingWallet(_ app: Wallet) {
+        AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.walletDetail(app))
     }
     
     private static func topViewController(_ base: UIViewController? = nil) -> UIViewController? {
