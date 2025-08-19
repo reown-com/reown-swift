@@ -5,6 +5,12 @@ import Combine
 import Foundation
 import UIKit
 
+public enum AppKitError: Error {
+    case invalidSession
+    case invalidChain
+    case invalidRequest
+}
+
 // Web3 Modal Client
 ///
 /// Cannot be instantiated outside of the SDK
@@ -153,17 +159,20 @@ public class AppKitClient {
         logger.debug("Requesting: \(request.rawValues.method)")
         switch store.connectedWith {
         case .wc:
-            guard
-                let session = store.session,
-                let chain = getSelectedChain(),
-                let blockchain = Blockchain(namespace: chain.chainNamespace, reference: chain.chainReference)
-            else { return }
-            
+            guard let session = store.session else {
+                throw AppKitError.invalidSession
+            }
+            guard let chain = getSelectedChain(),
+                  let blockchain = Blockchain(namespace: chain.chainNamespace, reference: chain.chainReference)
+            else {
+                throw AppKitError.invalidChain
+            }
+            let (method, params) = request.rawValues
             if case let .personal_sign(address, message) = request {
                 try await signClient.request(
                     params: .init(
                         topic: session.topic,
-                        method: request.rawValues.method,
+                        method: method,
                         params: AnyCodable(any: [message, address]),
                         chainId: blockchain
                     )
@@ -172,7 +181,7 @@ public class AppKitClient {
                 try await signClient.request(
                     params: .init(
                         topic: session.topic,
-                        method: request.rawValues.method,
+                        method: method,
                         params: AnyCodable(any: [address, typedDataJson]),
                         chainId: blockchain
                     )
@@ -181,15 +190,15 @@ public class AppKitClient {
                 try await signClient.request(
                     params: .init(
                         topic: session.topic,
-                        method: request.rawValues.method,
-                        params: AnyCodable(any: request.rawValues.params),
+                        method: method,
+                        params: AnyCodable(any: [params]),
                         chainId: blockchain
                     )
                 )
             }
         case .cb:
                     
-            guard let jsonRpc = request.toCbAction() else { return }
+            guard let jsonRpc = request.toCbAction() else { throw AppKitError.invalidRequest }
                     
             // Execute on main as Coinbase SDK is not dispatching on main when calling UIApplication.openUrl()
             DispatchQueue.main.async {

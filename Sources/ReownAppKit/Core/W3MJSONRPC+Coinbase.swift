@@ -21,7 +21,7 @@ extension W3MJSONRPC {
                 toAddress: to,
                 weiValue: value,
                 data: data,
-                nonce: nonce,
+                nonce: nonce?.hexToInt,
                 gasPriceInWei: gasPrice,
                 maxFeePerGas: maxFeePerGas,
                 maxPriorityFeePerGas: maxPriorityFeePerGas,
@@ -34,7 +34,7 @@ extension W3MJSONRPC {
                 toAddress: to,
                 weiValue: value,
                 data: data,
-                nonce: nonce,
+                nonce: nonce?.hexToInt,
                 gasPriceInWei: gasPrice,
                 maxFeePerGas: maxFeePerGas,
                 maxPriorityFeePerGas: maxPriorityFeePerGas,
@@ -42,7 +42,7 @@ extension W3MJSONRPC {
                 chainId: chainId
             )
         case let .wallet_switchEthereumChain(chainId):
-            return .wallet_switchEthereumChain(chainId: chainId)
+            return .wallet_switchEthereumChain(chainId: "\(chainId.hexToInt!)") // Coinbase expects Int as a string
         case let .wallet_addEthereumChain(chainId, blockExplorerUrls, chainName, iconUrls, nativeCurrency, rpcUrls):
             return .wallet_addEthereumChain(
                 chainId: chainId,
@@ -67,5 +67,13 @@ extension W3MJSONRPC {
                 )
             )
         }
+    }
+}
+
+extension String {
+    /// Converts a hex string (with or without 0x prefix) to an Int.
+    public var hexToInt: Int? {
+        let cleaned = self.lowercased().hasPrefix("0x") ? String(self.dropFirst(2)) : self
+        return Int(cleaned, radix: 16)
     }
 }

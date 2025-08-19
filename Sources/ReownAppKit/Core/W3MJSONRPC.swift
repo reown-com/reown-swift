@@ -18,7 +18,7 @@ public enum W3MJSONRPC: Codable {
         to: String?,
         value: String,
         data: String,
-        nonce: Int?,
+        nonce: String?,
         gas: String?,
         gasPrice: String?,
         maxFeePerGas: String?,
@@ -32,7 +32,7 @@ public enum W3MJSONRPC: Codable {
         to: String?,
         value: String,
         data: String,
-        nonce: Int?,
+        nonce: String?,
         gas: String?,
         gasPrice: String?,
         maxFeePerGas: String?,
@@ -59,7 +59,7 @@ public enum W3MJSONRPC: Codable {
         options: WatchAssetOptions
     )
     
-    var rawValues: (method: String, params: [String: Any]) {
+    public var rawValues: (method: String, params: [String: Any]) {
         let json = try! JSONEncoder().encode(self)
         let dictionary = try! JSONSerialization.jsonObject(with: json) as! [String: [String: Any]]
         

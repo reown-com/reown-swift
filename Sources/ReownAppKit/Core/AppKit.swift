@@ -223,6 +223,7 @@ public class AppKit {
     
     @MainActor
     public static func clearCurrentAccount() {
+        // No need to clear Coinbase account, the SDK connect call clears it
         Store.shared.account = nil
         Store.shared.session = nil
         Store.shared.connectedWith = nil
@@ -235,7 +236,7 @@ public class AppKit {
     public static func set(authRequestParams: AuthRequestParams?) {
         AppKit.config.authRequestParams = authRequestParams
     }
-    
+
     private static func configureCoinbaseIfNeeded(
         store: Store,
         metadata: AppMetadata,
@@ -246,9 +247,7 @@ public class AppKit {
         if let redirectLink = metadata.redirect?.universal ?? metadata.redirect?.native {
             CoinbaseWalletSDK.configure(callback: URL(string: redirectLink)!)
         } else {
-            CoinbaseWalletSDK.configure(
-                callback: URL(string: "w3mdapp://")!
-            )
+            CoinbaseWalletSDK.configure(callback: URL(string: "w3mdapp://")!)
         }
             
         var wallet: Wallet = .init(
@@ -291,7 +290,6 @@ public class AppKit {
                         withAnimation {
                             store.isModalShown = false
                         }
-                        AppKit.viewModel.router.setRoute(Router.AccountSubpage.profile)
 
                         instance.coinbaseConnectedSubject.send()
 
