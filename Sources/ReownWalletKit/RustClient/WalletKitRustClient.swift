@@ -81,12 +81,8 @@ extension WalletKitRustClient: SessionRequestListener, Logger {
         do {
             let anyParams = try JSONDecoder().decode(AnyCodable.self, from: paramsData)
 
-            let rpcId: RPCID
-            if let intId = Int64(exactly: sessionRequest.id) {
-                rpcId = .right(intId)
-            } else {
-                rpcId = .left(String(sessionRequest.id))
-            }
+            let intId = Int64(exactly: sessionRequest.id)!
+            let rpcId: RPCID = .right(intId)
 
             let method = sessionRequest.params.request.method
             let expiry = sessionRequest.params.request.expiry
