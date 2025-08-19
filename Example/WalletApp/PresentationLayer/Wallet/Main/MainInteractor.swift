@@ -11,7 +11,7 @@ final class MainInteractor {
     }
     
     var sessionRequestPublisher: AnyPublisher<(request: Request, context: VerifyContext?), Never> {
-        return WalletKit.instance.sessionRequestPublisher
+        return WalletKitRust.instance.sessionRequestPublisher
     }
     
     var authenticateRequestPublisher: AnyPublisher<(request: AuthenticationRequest, context: VerifyContext?), Never> {

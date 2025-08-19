@@ -33,6 +33,8 @@ public class WalletKitRustClient {
         let projectIdKey = AgreementPrivateKey().rawRepresentation
         Task {
             await yttriumClient.setKey(key: projectIdKey)
+            await yttriumClient.registerSessionRequestListener(listener: self)
+            registerLogger(logger: self)
         }
     }
     
@@ -59,7 +61,11 @@ struct WalletKitRustClientFactory {
     }
 }
 
-extension WalletKitRustClient: SessionRequestListener {
+extension WalletKitRustClient: SessionRequestListener, Logger {
+    public func log(message: String) {
+        print("RUST: \(message)")
+    }
+    
     public func onSessionRequest(topic: String, sessionRequest: Yttrium.SessionRequestJsonRpcFfi) {
         // Convert Yttrium.SessionRequestJsonRpcFfi to WalletConnect Request
         // Expecting chainId in CAIP-2 format (e.g., "eip155:1") and params as a JSON string
@@ -106,6 +112,7 @@ extension WalletKitRustClient: SessionRequestListener {
     
     
 }
+
 
 public class WalletKitRust {
     
