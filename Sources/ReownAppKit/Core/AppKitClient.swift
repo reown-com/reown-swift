@@ -281,7 +281,19 @@ public class AppKitClient {
     /// Query sessions
     /// - Returns: All sessions
     public func getSessions() -> [Session] {
-        signClient.getSessions()
+        let allSessions = signClient.getSessions()
+
+        // Sort sessions with primary session first
+        guard let primaryTopic = AppKit.primarySessionTopic else {
+            return allSessions
+        }
+
+        return allSessions.sorted { lhs, rhs in
+            if lhs.topic == primaryTopic { return true }
+            if rhs.topic == primaryTopic { return false }
+            // Secondary sort by timestamp to maintain consistent order
+            return lhs.expiryDate < rhs.expiryDate
+        }
     }
     
     /// Query pairings
@@ -315,9 +327,9 @@ public class AppKitClient {
     }
     
     public func selectAccount(_ account: W3MAccount, in session: Session) {
-        store.connectedWith = .wc
         store.session = session
         store.account = account
+        store.connectedWith = .wc
     }
     
     public func getAddress() -> String? {

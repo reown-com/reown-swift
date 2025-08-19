@@ -24,6 +24,12 @@ public let Coinbase_walletId = "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3
 /// AppKit.instance.getSessions()
 /// ```
 public class AppKit {
+    /// Primary session topic for wallet connection
+    public static var primarySessionTopic: String? {
+        get { UserDefaults.standard.string(forKey: "appkit.primarySessionTopic") }
+        set { UserDefaults.standard.set(newValue, forKey: "appkit.primarySessionTopic") }
+    }
+        
     /// AppKit client instance
     public static var instance: AppKitClient = {
         guard let config = AppKit.config else {
@@ -39,19 +45,23 @@ public class AppKit {
         
         let store = Store.shared
         
-        if let session = client.getSessions().first {
+        if let primarySessionTopic,
+           let session = client.getSessions().first(where: {
+               $0.topic == primarySessionTopic
+           })
+        {
             store.session = session
-            store.connectedWith = .wc
             store.account = .init(from: session)
+            store.connectedWith = .wc
         } else if config.coinbaseEnabled,
-                  CoinbaseWalletSDK.shared.isConnected() {
-            let storedAccount = AccountStorage.read()
-            store.connectedWith = .cb
-            store.account = storedAccount
+                 CoinbaseWalletSDK.shared.isConnected() {
+           let storedAccount = AccountStorage.read()
+           store.account = storedAccount
+           store.connectedWith = .cb
         } else {
             AccountStorage.clear()
         }
-        
+
         return client
     }()
     
