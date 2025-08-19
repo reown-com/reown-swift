@@ -51,7 +51,7 @@ public struct Request: Codable, Equatable, Expirable {
         self.init(id: id, topic: topic, method: method, params: AnyCodable(params), chainId: chainId, expiryTimestamp: calculatedExpiry)
     }
 
-    internal init(id: RPCID, topic: String, method: String, params: AnyCodable, chainId: Blockchain, expiryTimestamp: UInt64?) {
+    public init(id: RPCID, topic: String, method: String, params: AnyCodable, chainId: Blockchain, expiryTimestamp: UInt64?) {
         self.id = id
         self.topic = topic
         self.method = method

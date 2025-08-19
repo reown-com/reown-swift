@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 import YttriumWrapper
 import WalletConnectKMS
 /// WalletKitRust Client
@@ -16,6 +17,12 @@ public class WalletKitRustClient {
     public var sessionProposalPublisher: AnyPublisher<(proposal: SessionProposalFfi, context: VerifyContext?), Never> {
         sessionProposalPublisherSubject.eraseToAnyPublisher()
     }
+    
+    public var sessionRequestPublisher: AnyPublisher<(request: Request, context: VerifyContext?), Never> {
+        sessionRequestPublisherSubject.eraseToAnyPublisher()
+    }
+    private var sessionRequestPublisherSubject = PassthroughSubject<(request: Request, context: VerifyContext?), Never>()
+
     
     // MARK: - Private Properties
     private let yttriumClient: YttriumWrapper.SignClient
@@ -50,6 +57,54 @@ struct WalletKitRustClientFactory {
         
         return WalletKitRustClient(yttriumClient: yttriumClient)
     }
+}
+
+extension WalletKitRustClient: SessionRequestListener {
+    public func onSessionRequest(topic: String, sessionRequest: Yttrium.SessionRequestJsonRpcFfi) {
+        // Convert Yttrium.SessionRequestJsonRpcFfi to WalletConnect Request
+        // Expecting chainId in CAIP-2 format (e.g., "eip155:1") and params as a JSON string
+        guard let chainId = Blockchain(sessionRequest.params.chainId) else {
+            return
+        }
+
+        let paramsJsonString = sessionRequest.params.request.params
+        guard let paramsData = paramsJsonString.data(using: .utf8) else {
+            return
+        }
+
+        do {
+            let anyParams = try JSONDecoder().decode(AnyCodable.self, from: paramsData)
+
+            let rpcId: RPCID
+            if let intId = Int64(exactly: sessionRequest.id) {
+                rpcId = .right(intId)
+            } else {
+                rpcId = .left(String(sessionRequest.id))
+            }
+
+            let method = sessionRequest.params.request.method
+            let expiry = sessionRequest.params.request.expiry
+
+            let request = Request(
+                id: rpcId,
+                topic: topic,
+                method: method,
+                params: anyParams,
+                chainId: chainId,
+                expiryTimestamp: expiry
+            )
+
+            self.sessionRequestPublisherSubject.send((request: request, context: nil))
+        } catch {
+            return
+        }
+    }
+    
+    public func onSessionRequestJson(topic: String, sessionRequest: String) {
+        // we are ignoring this
+    }
+    
+    
 }
 
 public class WalletKitRust {
