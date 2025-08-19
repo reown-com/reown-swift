@@ -1,6 +1,9 @@
 /**
  TODO: Add documentation
  */
+
+import Foundation
+
 public struct RPCResponse: Equatable {
 
     public let jsonrpc: String
@@ -90,9 +93,23 @@ extension RPCResponse: Codable {
         }
         id = try? container.decode(RPCID.self, forKey: .id)
         let result = try? container.decode(AnyCodable.self, forKey: .result)
-        let error = try? container.decode(JSONRPCError.self, forKey: .error)
+
+        // Decode the error payload first, then (if the message contains a JSON object)
+        // attempt to parse a nested JSONRPCError from the message string.
+        var parsedError: JSONRPCError? = nil
+        if let rawError = try? container.decode(JSONRPCError.self, forKey: .error) {
+            if let innerData = rawError.message.data(using: .utf8),
+               let inner = try? JSONDecoder().decode(JSONRPCError.self, from: innerData) {
+                // Prefer the inner JSONRPCError (e.g., {"code":-32004,"message":"Method not supported."})
+                parsedError = inner
+            } else {
+                // Fallback to the outer error as-is (standard JSON-RPC error without nested JSON in message)
+                parsedError = rawError
+            }
+        }
+
         if let result = result {
-            guard error == nil else {
+            guard parsedError == nil else {
                 throw DecodingError.dataCorrupted(.init(
                     codingPath: [CodingKeys.result, CodingKeys.error],
                     debugDescription: "Response is ambiguous: Both result and error members exists simultaneously."))
@@ -103,7 +120,7 @@ extension RPCResponse: Codable {
                     debugDescription: "A success response must have a valid `id`."))
             }
             outcome = .response(result)
-        } else if let error = error {
+        } else if let error = parsedError {
             outcome = .error(error)
         } else {
             throw DecodingError.dataCorrupted(.init(

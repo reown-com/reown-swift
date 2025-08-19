@@ -1,4 +1,4 @@
-enum SignReasonCode: Reason, Codable, Equatable {
+public enum SignReasonCode: Reason, Codable, Equatable {
 
     enum Context: String, Codable {
         case pairing = "pairing"
@@ -42,7 +42,7 @@ enum SignReasonCode: Reason, Codable, Equatable {
     // 8000
     case sessionRequestExpired
 
-    var code: Int {
+    public var code: Int {
         switch self {
         case .invalidMethod: return 1001
         case .invalidEvent: return 1002
@@ -76,7 +76,7 @@ enum SignReasonCode: Reason, Codable, Equatable {
         }
     }
 
-    var message: String {
+    public var message: String {
         switch self {
         case .invalidMethod:
             return "Invalid Method"

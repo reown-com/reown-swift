@@ -1,6 +1,6 @@
 import Foundation
 
-enum WalletConnectError: Error {
+public enum WalletConnectError: Error {
 
     case pairingProposalFailed
     case noPairingMatchingTopic(String)
@@ -18,7 +18,7 @@ enum WalletConnectError: Error {
 
     case `internal`(_ reason: InternalReason)
 
-    enum InternalReason: Error {
+    public enum InternalReason: Error {
         case jsonRpcDuplicateDetected
         case noJsonRpcRequestMatchingResponse
     }
