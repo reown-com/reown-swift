@@ -23,8 +23,10 @@ public class WalletKitRustClient {
     
     init(yttriumClient: YttriumWrapper.SignClient) {
         self.yttriumClient = yttriumClient
-        let key = AgreementPrivateKey(
-        yttriumClient.setKey(key: <#T##Data#>)
+        let projectIdKey = AgreementPrivateKey().rawRepresentation
+        Task {
+            await yttriumClient.setKey(key: projectIdKey)
+        }
     }
     
     /// For wallet to receive a session proposal from a dApp
