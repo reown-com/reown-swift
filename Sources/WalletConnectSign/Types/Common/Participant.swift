@@ -1,6 +1,6 @@
 import Foundation
 
-struct Participant: Codable, Equatable {
+public struct Participant: Codable, Equatable {
     let publicKey: String
     let metadata: AppMetadata
 
@@ -10,6 +10,6 @@ struct Participant: Codable, Equatable {
     }
 }
 
-struct AgreementPeer: Codable, Equatable {
+public struct AgreementPeer: Codable, Equatable {
     let publicKey: String
 }
