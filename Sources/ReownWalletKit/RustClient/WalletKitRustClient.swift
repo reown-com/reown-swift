@@ -379,8 +379,8 @@ extension CodableSession {
             sessionNamespaces: ffiNamespaces,
             requiredNamespaces: ffiRequiredNamespaces,
             optionalNamespaces: optionalNamespaces,
-            properties: <#T##[String : String]?#>,
-            scopedProperties: <#T##[String : String]?#>,
+            properties: sessionProperties,
+            scopedProperties: scopedProperties,
             isAcknowledged: acknowledged,
             pairingTopic: pairingTopic,
             transportType: ransportType.rawValue)
