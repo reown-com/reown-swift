@@ -32,10 +32,12 @@ public class WalletKitRustClient {
     private let yttriumClient: YttriumWrapper.SignClient
     private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: SessionProposalFfi, context: VerifyContext?), Never>()
     
-    init(yttriumClient: YttriumWrapper.SignClient) {
+    init(yttriumClient: YttriumWrapper.SignClient,
+         kms: KeyManagementServiceProtocol) {
         self.yttriumClient = yttriumClient
+
         let projectIdKey = AgreementPrivateKey().rawRepresentation
-        self.sessionStore = SessionStoreImpl()
+        self.sessionStore = SessionStoreImpl(kms: kms)
         Task {
             await yttriumClient.setKey(key: projectIdKey)
             await yttriumClient.registerSignListener(listener: self)
@@ -58,12 +60,19 @@ public class WalletKitRustClient {
 }
 
 struct WalletKitRustClientFactory {
-    static func create(config: WalletKitRust.Config) -> WalletKitRustClient {
+    static func create(
+        config: WalletKitRust.Config,
+        groupIdentifier: String
+    ) -> WalletKitRustClient {
+        let keychainStorage = KeychainStorage(serviceIdentifier: "com.walletconnect.sdk", accessGroup: groupIdentifier)
+
+        let kms = KeyManagementService(keychain: keychainStorage)
+
         let yttriumClient = YttriumWrapper.SignClient(
             projectId: config.projectId
         )
         
-        return WalletKitRustClient(yttriumClient: yttriumClient)
+        return WalletKitRustClient(yttriumClient: yttriumClient, kms: kms)
     }
 }
 
@@ -123,27 +132,28 @@ public class WalletKitRust {
         guard let config = WalletKitRust.config else {
             fatalError("Error - you must call WalletKitRust.configure(_:) before accessing the shared instance.")
         }
-        return WalletKitRustClientFactory.create(config: config)
+        return WalletKitRustClientFactory.create(config: config, groupIdentifier: config.groupIdentifier)
     }()
     
     private static var config: Config?
     
     struct Config {
         let projectId: String
+        let groupIdentifier: String
     }
     
     private init() { }
     
     /// WalletKitRust instance configuration method.
     /// - Parameters:
-    ///   - relayUrl: The relay URL for the connection
     ///   - projectId: The project ID for the wallet connect
-    ///   - clientId: The client ID for identification
     static public func configure(
-        projectId: String
+        projectId: String,
+        groupIdentifier: String
     ) {
         WalletKitRust.config = WalletKitRust.Config(
-            projectId: projectId
+            projectId: projectId,
+            groupIdentifier: groupIdentifier
         )
     }
 }
@@ -157,12 +167,15 @@ extension Yttrium.SessionFfi {
 
 class SessionStoreImpl: SessionStore {
     private let store: CodableStore<CodableSession>
+    private let kms: KeyManagementServiceProtocol
 
-    init(defaults: KeyValueStorage = UserDefaults.standard) {
+    init(defaults: KeyValueStorage = UserDefaults.standard,
+         kms: KeyManagementServiceProtocol) {
         self.store = CodableStore<CodableSession>(
             defaults: defaults,
             identifier: SignStorageIdentifiers.sessions.rawValue
         )
+        self.kms = kms
     }
 
     func addSession(session: Yttrium.SessionFfi) {
@@ -181,12 +194,16 @@ class SessionStoreImpl: SessionStore {
     func getSession(topic: String) -> Yttrium.SessionFfi? {
         // Try decode as CodableSession (migration compatible with WCSession JSON layout)
         guard let codable = try? store.get(key: topic) else { return nil }
-        return codable.toYttriumSession()
+        
+        let symKey =  kms.getSymmetricKey(for: topic)!.rawRepresentation
+        
+        return codable.toYttriumSession(topic: topic, symKey: symKey)
     }
 
     func getAllSessions() -> [Yttrium.SessionFfi] {
         let all = store.getAll()
-        return all.compactMap { $0.toYttriumSession() }
+        fatalError("to be implemented")
+//        return all.compactMap { $0.toYttriumSession() }
     }
 }
 
@@ -321,7 +338,7 @@ extension Yttrium.SessionFfi {
 
 extension CodableSession {
     // Convert persisted Codable session back to FFI for the rust client
-    func toYttriumSession() -> Yttrium.SessionFfi? {
+    func toYttriumSession(topic: String, symKey: Data) -> Yttrium.SessionFfi? {
         // Metadata
         guard
             let selfMeta = fromAppMetadata(selfParticipant.metadata),
@@ -353,20 +370,25 @@ extension CodableSession {
             acc[key] = Yttrium.ProposalNamespace(chains: chains, methods: Array(ns.methods), events: Array(ns.events))
         }
 
-        // Note: We don't have optionalNamespaces from WCSession persisted; set nil
         let optionalNamespaces: [String: Yttrium.ProposalNamespace]? = nil
 
         // Expiry seconds
         let expiry = UInt64(expiryDate.timeIntervalSince1970)
 
-        // Topic: need Yttrium.Topic initializer; cannot construct without its definition
-        // TransportType: leaving nil until mapping is defined
+        // Convert transport type
+        let yttriumTransportType: Yttrium.TransportType = {
+            switch transportType {
+            case .relay:
+                return .relay
+            case .linkMode:
+                return .linkMode
+            }
+        }()
 
-        let transportType = Yttrium.TransportType(transportType.rawValue)
-        
+
         let session = Yttrium.SessionFfi(
             requestId: 0,
-            sessionSymKey: <#T##Data#>,
+            sessionSymKey: symKey,
             selfPublicKey: selfPubKey,
             topic: topic,
             expiry: expiry,
@@ -383,7 +405,7 @@ extension CodableSession {
             scopedProperties: scopedProperties,
             isAcknowledged: acknowledged,
             pairingTopic: pairingTopic,
-            transportType: ransportType.rawValue)
+            transportType: yttriumTransportType)
         return session
     }
 }
@@ -414,8 +436,6 @@ private func fromAppMetadata(_ m: AppMetadata) -> Yttrium.Metadata? {
     }
     return Yttrium.Metadata(name: m.name, description: m.description, url: m.url, icons: m.icons, redirect: redirect)
 }
-
-
 
 
 
