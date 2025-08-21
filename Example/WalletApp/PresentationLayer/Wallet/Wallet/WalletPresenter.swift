@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 
-import ReownWalletKit
+import WalletConnectYttrium
 
 final class WalletPresenter: ObservableObject {
     enum Errors: LocalizedError {
@@ -47,13 +47,13 @@ final class WalletPresenter: ObservableObject {
         showPairingLoading = app.requestSent
         setUpPairingIndicatorRemoval()
 
-        let pendingRequests = interactor.getPendingRequests()
-        if let request = pendingRequests.first(where: { $0.context != nil }) {
-            router.present(sessionRequest: request.request, importAccount: importAccount, sessionContext: request.context)
-        }
+//        let pendingRequests = interactor.getPendingRequests()
+//        if let request = pendingRequests.first(where: { $0.context != nil }) {
+//            router.present(sessionRequest: request.request, importAccount: importAccount, sessionContext: request.context)
+//        }
     }
     
-    func onConnection(session: Session) {
+    func onConnection(session: WalletConnectYttrium.Session) {
         router.presentConnectionDetails(session: session)
     }
 
@@ -157,11 +157,11 @@ extension WalletPresenter {
     }
 
     private func setUpPairingIndicatorRemoval() {
-        WalletKit.instance.pairingStatePublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isPairing in
-            self?.showPairingLoading = isPairing
-        }.store(in: &disposeBag)
+//        WalletKit.instance.pairingStatePublisher
+//            .receive(on: DispatchQueue.main)
+//            .sink { [weak self] isPairing in
+//            self?.showPairingLoading = isPairing
+//        }.store(in: &disposeBag)
     }
 }
 

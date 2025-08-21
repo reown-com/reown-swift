@@ -20,7 +20,7 @@ final class WalletInteractor {
     }
     
     func disconnectSession(session: Session) async throws {
-        try await WalletKit.instance.disconnect(topic: session.topic)
+//        try await WalletKit.instance.disconnect(topic: session.topic)
     }
 
 //    func getPendingRequests() -> [(request: Request, context: VerifyContext?)] {

@@ -3,6 +3,7 @@ import UIKit
 import ReownWalletKit
 import WalletConnectNotify
 import YttriumWrapper
+import WalletConnectYttrium
 
 final class MainRouter {
     weak var viewController: UIViewController!
@@ -28,10 +29,10 @@ final class MainRouter {
             .wrapToNavigationController()
     }
     
-    func present(proposal: Session.Proposal, importAccount: ImportAccount, context: VerifyContext?) {
-        SessionProposalModule.create(app: app, importAccount: importAccount, proposal: proposal, context: context)
-            .presentFullScreen(from: viewController, transparentBackground: true)
-    }
+//    func present(proposal: WalletConnectYttrium.Session.Proposal, importAccount: ImportAccount, context: VerifyContext?) {
+//        SessionProposalModule.create(app: app, importAccount: importAccount, proposal: proposal, context: context)
+//            .presentFullScreen(from: viewController, transparentBackground: true)
+//    }
     
     func present(proposal: SessionProposalFfi, importAccount: ImportAccount, context: VerifyContext?) {
         SessionProposalRustModule.create(app: app, importAccount: importAccount, proposal: proposal, context: context)

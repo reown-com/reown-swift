@@ -61,7 +61,8 @@ extension MainPresenter {
         interactor.sessionProposalPublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] session in
-                router.present(proposal: session.proposal, importAccount: importAccount, context: session.context)
+                AlertPresenter.present(message: "not implemented", type: .error)
+//                router.present(proposal: session.proposal, importAccount: importAccount, context: session.context)
             }
             .store(in: &disposeBag)
 

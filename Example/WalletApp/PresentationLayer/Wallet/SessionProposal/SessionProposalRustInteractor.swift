@@ -3,6 +3,7 @@ import Foundation
 import ReownWalletKit
 import ReownRouter
 import YttriumWrapper
+import WalletConnectYttrium
 
 final class SessionProposalRustInteractor {
     func approve(proposal: SessionProposalFfi, EOAAccount: Account) async throws -> Bool {

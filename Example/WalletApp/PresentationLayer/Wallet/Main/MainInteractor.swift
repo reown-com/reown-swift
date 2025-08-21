@@ -3,11 +3,12 @@ import Combine
 
 import ReownWalletKit
 import WalletConnectNotify
+import WalletConnectYttrium
 
 final class MainInteractor {
 
-    var sessionProposalPublisher: AnyPublisher<(proposal: Session.Proposal, context: VerifyContext?), Never> {
-        return WalletKit.instance.sessionProposalPublisher
+    var sessionProposalPublisher: AnyPublisher<(proposal: WalletConnectYttrium.Session.Proposal, context: VerifyContext?), Never> {
+        return WalletKitRust.instance.sessionProposalPublisher
     }
     
     var sessionRequestPublisher: AnyPublisher<(request: Request, context: VerifyContext?), Never> {

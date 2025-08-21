@@ -1,12 +1,14 @@
 import UIKit
 import Combine
 
-import ReownWalletKit
+
+import WalletConnectYttrium
+
 
 final class ConnectionDetailsPresenter: ObservableObject {
     private let router: ConnectionDetailsRouter
     
-    let session: Session
+    let session: WalletConnectYttrium.Session
     
     private var disposeBag = Set<AnyCancellable>()
 
@@ -22,7 +24,8 @@ final class ConnectionDetailsPresenter: ObservableObject {
         Task {
             do {
                 ActivityIndicatorManager.shared.start()
-                try await WalletKit.instance.disconnect(topic: session.topic)
+//                try await WalletKit.instance.disconnect(topic: session.topic)
+                AlertPresenter.present(message: "not implemented", type: .error)
                 ActivityIndicatorManager.shared.stop()
                 DispatchQueue.main.async {
                     self.router.dismiss()
@@ -40,18 +43,18 @@ final class ConnectionDetailsPresenter: ObservableObject {
     }
 
     func changeForMainnet() {
-        Task {
-            do {
-                ActivityIndicatorManager.shared.start()
-
-                try await WalletKit.instance.emit(topic: session.topic, event: Session.Event(name: "chainChanged", data: AnyCodable("1")), chainId: Blockchain("eip155:1")!)
-
-                ActivityIndicatorManager.shared.stop()
-            } catch {
-                ActivityIndicatorManager.shared.stop()
-                print(error)
-            }
-        }
+//        Task {
+//            do {
+//                ActivityIndicatorManager.shared.start()
+//
+//                try await WalletKit.instance.emit(topic: session.topic, event: Session.Event(name: "chainChanged", data: AnyCodable("1")), chainId: Blockchain("eip155:1")!)
+//
+//                ActivityIndicatorManager.shared.stop()
+//            } catch {
+//                ActivityIndicatorManager.shared.stop()
+//                print(error)
+//            }
+//        }
     }
 }
 

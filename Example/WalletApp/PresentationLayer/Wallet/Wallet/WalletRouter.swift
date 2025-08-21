@@ -1,6 +1,7 @@
 import UIKit
 
 import ReownWalletKit
+import WalletConnectYttrium
 
 final class WalletRouter {
     weak var viewController: UIViewController!
@@ -16,9 +17,10 @@ final class WalletRouter {
             .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
     }
     
-    func present(sessionProposal: Session.Proposal, importAccount: ImportAccount, sessionContext: VerifyContext?) {
-        SessionProposalModule.create(app: app, importAccount: importAccount, proposal: sessionProposal, context: sessionContext)
-            .presentFullScreen(from: viewController, transparentBackground: true)
+    func present(sessionProposal: WalletConnectYttrium.Session.Proposal, importAccount: ImportAccount, sessionContext: VerifyContext?) {
+        AlertPresenter.present(message: "not implemented", type: .error)
+//        SessionProposalModule.create(app: app, importAccount: importAccount, proposal: sessionProposal, context: sessionContext)
+//            .presentFullScreen(from: viewController, transparentBackground: true)
     }
     
     func presentPaste(onValue: @escaping (String) -> Void, onError: @escaping (Error) -> Void) {
@@ -26,7 +28,7 @@ final class WalletRouter {
             .presentFullScreen(from: viewController, transparentBackground: true)
     }
     
-    func presentConnectionDetails(session: Session) {
+    func presentConnectionDetails(session: WalletConnectYttrium.Session) {
         ConnectionDetailsModule.create(app: app, session: session)
             .push(from: viewController)
     }
