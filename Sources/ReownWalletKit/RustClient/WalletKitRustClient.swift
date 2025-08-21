@@ -158,12 +158,6 @@ public class WalletKitRust {
     }
 }
 
-extension Yttrium.SessionFfi {
-    // we need to convert to codable type
-    func toWCSession() -> CodableSession {
-        
-    }
-}
 
 class SessionStoreImpl: SessionStore {
     private let store: CodableStore<CodableSession>
@@ -308,7 +302,7 @@ extension Yttrium.SessionFfi {
 
         // Transport type (default to relay when unknown)
         let transportType: TransportType = {
-            let t = transportType
+            let t = self.transportType
             let desc = String(describing: t).lowercased()
             return desc.contains("link") ? .linkMode : .relay
         }()
@@ -428,13 +422,13 @@ private func toAppMetadata(_ m: Yttrium.Metadata) -> AppMetadata? {
 }
 
 private func fromAppMetadata(_ m: AppMetadata) -> Yttrium.Metadata? {
-    let redirect: Yttrium.Metadata.Redirect?
+    let redirect: Yttrium.Redirect?
     if let r = m.redirect {
-        redirect = Yttrium.Metadata.Redirect(native: r.native, universal: r.universal, linkMode: r.linkMode)
+        redirect = Yttrium.Redirect(native: r.native, universal: r.universal, linkMode: r.linkMode ?? false)
     } else {
         redirect = nil
     }
-    return Yttrium.Metadata(name: m.name, description: m.description, url: m.url, icons: m.icons, redirect: redirect)
+    return Yttrium.Metadata(name: m.name, description: m.description, url: m.url, icons: m.icons, verifyUrl: nil, redirect: redirect)
 }
 
 
