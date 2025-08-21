@@ -267,7 +267,7 @@ extension Yttrium.SessionFfi {
         let relay = RelayProtocolOptions(protocol: relayProtocol, data: relayData)
 
         // Namespaces
-        let namespaces: [String: SessionNamespace] = sessionNamespaces.reduce(into: [:]) { acc, element in
+        let namespaces: [String: CodableSession.SessionNamespace] = sessionNamespaces.reduce(into: [:]) { acc, element in
             let (key, ffiNs) = element
             let accounts: [Account] = ffiNs.accounts.compactMap { Account($0) }
             let chains: [Blockchain]? = {
@@ -277,7 +277,7 @@ extension Yttrium.SessionFfi {
             }()
             let methods = Set(ffiNs.methods)
             let events = Set(ffiNs.events)
-            acc[key] = SessionNamespace(chains: chains, accounts: accounts, methods: methods, events: events)
+            acc[key] = CodableSession.SessionNamespace(chains: chains, accounts: accounts, methods: methods, events: events)
         }
 
         let requiredNamespaces: [String: CodableSession.ProposalNamespace] = self.requiredNamespaces.mapValues { ffiNs in
@@ -291,7 +291,7 @@ extension Yttrium.SessionFfi {
 
         // Transport type (default to relay when unknown)
         let transportType: TransportType = {
-            guard let t = transportType else { return .relay }
+            let t = transportType
             let desc = String(describing: t).lowercased()
             return desc.contains("link") ? .linkMode : .relay
         }()
@@ -347,14 +347,14 @@ extension CodableSession {
             acc[key] = SettleNamespace(accounts: accounts, methods: methods, events: events, chains: chains)
         }
 
-        let ffiRequiredNamespaces: [String: ProposalNamespace] = requiredNamespaces.reduce(into: [:]) { acc, element in
+        let ffiRequiredNamespaces: [String: Yttrium.ProposalNamespace] = requiredNamespaces.reduce(into: [:]) { acc, element in
             let (key, ns) = element
             let chains = (ns.chains ?? []).map { $0.absoluteString }
-            acc[key] = ProposalNamespace(chains: chains, methods: Array(ns.methods), events: Array(ns.events))
+            acc[key] = Yttrium.ProposalNamespace(chains: chains, methods: Array(ns.methods), events: Array(ns.events))
         }
 
         // Note: We don't have optionalNamespaces from WCSession persisted; set nil
-        let optionalNamespaces: [String: ProposalNamespace]? = nil
+        let optionalNamespaces: [String: Yttrium.ProposalNamespace]? = nil
 
         // Expiry seconds
         let expiry = UInt64(expiryDate.timeIntervalSince1970)
@@ -362,7 +362,29 @@ extension CodableSession {
         // Topic: need Yttrium.Topic initializer; cannot construct without its definition
         // TransportType: leaving nil until mapping is defined
 
-        return nil
+        let transportType = Yttrium.TransportType(transportType.rawValue)
+        
+        let session = Yttrium.SessionFfi(
+            requestId: 0,
+            sessionSymKey: <#T##Data#>,
+            selfPublicKey: selfPubKey,
+            topic: topic,
+            expiry: expiry,
+            relayProtocol: relayProtocol,
+            relayData: relayData,
+            controllerKey: controllerKeyData,
+            selfMetaData: selfMeta,
+            peerPublicKey: peerPubKey,
+            peerMetaData: peerMeta,
+            sessionNamespaces: ffiNamespaces,
+            requiredNamespaces: ffiRequiredNamespaces,
+            optionalNamespaces: optionalNamespaces,
+            properties: <#T##[String : String]?#>,
+            scopedProperties: <#T##[String : String]?#>,
+            isAcknowledged: acknowledged,
+            pairingTopic: pairingTopic,
+            transportType: ransportType.rawValue)
+        return session
     }
 }
 
@@ -398,7 +420,7 @@ private func fromAppMetadata(_ m: AppMetadata) -> Yttrium.Metadata? {
 
 
 // WalletConnectSign types copies
-public enum TransportType: Codable {
+public enum TransportType: String, Codable {
     case relay
     case linkMode
 }

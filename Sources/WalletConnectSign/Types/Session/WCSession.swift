@@ -1,10 +1,10 @@
 import Foundation
 
-public enum TransportType: Codable {
-    case relay
-    case linkMode
-}
 struct WCSession: SequenceObject, Equatable {
+    public enum TransportType: Codable {
+        case relay
+        case linkMode
+    }
     enum Error: Swift.Error {
         case controllerNotSet
         case unsatisfiedUpdateNamespaceRequirement
