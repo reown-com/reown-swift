@@ -31,6 +31,12 @@ public class WalletKitRustClient {
         sessionRequestPublisherSubject.eraseToAnyPublisher()
     }
     private var sessionRequestPublisherSubject = PassthroughSubject<(request: Request, context: VerifyContext?), Never>()
+    
+    public var sessionsPublisher: AnyPublisher<[Session], Never> {
+        sessionsPublisherSubject.eraseToAnyPublisher()
+    }
+    private let sessionsPublisherSubject = PassthroughSubject<[Session], Never>()
+
 
     private let sessionStore: SessionStore
     
@@ -71,6 +77,10 @@ public class WalletKitRustClient {
     
     public func approve(_ proposal: SessionProposalFfi, approvedNamespaces: [String : SettleNamespace], selfMetadata: Metadata) async throws -> SessionFfi {
         return try await yttriumClient.approve(proposal: proposal, approvedNamespaces: approvedNamespaces, selfMetadata: selfMetadata)
+    }
+    
+    public func getSessions() -> [Session] {
+        sessionStore.getAllSessions().compactMap {$0.toCodableSession()?.publicRepresentation()}
     }
 }
 

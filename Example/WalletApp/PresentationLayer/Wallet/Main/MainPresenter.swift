@@ -4,6 +4,7 @@ import SwiftUI
 import WalletConnectUtils
 import ReownWalletKit
 import YttriumWrapper
+import WalletConnectYttrium
 
 struct Tx: Codable {
     let data: String

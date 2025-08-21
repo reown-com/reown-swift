@@ -45,6 +45,9 @@ let package = Package(
     ],
     products: [
         .library(
+            name: "WalletConnectYttrium",
+            targets: ["WalletConnectYttrium"]),
+        .library(
             name: "WalletConnect",
             targets: ["WalletConnectSign"]),
         .library(
@@ -83,6 +86,11 @@ let package = Package(
     ],
     dependencies: dependencies,
     targets: [
+        .target(
+            name: "WalletConnectYttrium",
+            dependencies: ["WalletConnectKMS", "WalletConnectVerify", "YttriumWrapper", "WalletConnectUtils"],
+            path: "Sources/WalletConnectYttrium",
+            resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "WalletConnectSign",
             dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events", "YttriumWrapper"],

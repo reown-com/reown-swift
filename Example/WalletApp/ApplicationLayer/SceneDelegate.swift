@@ -2,6 +2,7 @@ import SafariServices
 import UIKit
 import ReownWalletKit
 import WalletConnectSign
+import WalletConnectYttrium
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
     var window: UIWindow?

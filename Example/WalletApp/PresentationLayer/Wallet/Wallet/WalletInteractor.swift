@@ -1,15 +1,15 @@
 import Combine
 
-import ReownWalletKit
-import WalletConnectNotify
+import WalletConnectYttrium
+import WalletConnectUtils
 
 final class WalletInteractor {
     var sessionsPublisher: AnyPublisher<[Session], Never> {
-        return WalletKit.instance.sessionsPublisher
+        return WalletKitRust.instance.sessionsPublisher
     }
 
     func getSessions() -> [Session] {
-        return WalletKit.instance.getSessions()
+        return WalletKitRust.instance.getSessions()
     }
     
     func pair(uri: WalletConnectURI) async throws {
@@ -23,7 +23,7 @@ final class WalletInteractor {
         try await WalletKit.instance.disconnect(topic: session.topic)
     }
 
-    func getPendingRequests() -> [(request: Request, context: VerifyContext?)] {
-        WalletKit.instance.getPendingRequests()
-    }
+//    func getPendingRequests() -> [(request: Request, context: VerifyContext?)] {
+//        WalletKit.instance.getPendingRequests()
+//    }
 }

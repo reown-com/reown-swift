@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
+		4425E08E2E56EBEF00B196E6 /* WalletConnectYttrium in Frameworks */ = {isa = PBXBuildFile; productRef = 4425E08D2E56EBEF00B196E6 /* WalletConnectYttrium */; };
 		44713A852E30EFE000E3027A /* SessionProposalRustModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A812E30EFE000E3027A /* SessionProposalRustModule.swift */; };
 		44713A862E30EFE000E3027A /* SessionProposalRustRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A832E30EFE000E3027A /* SessionProposalRustRouter.swift */; };
 		44713A872E30EFE000E3027A /* SessionProposalRustView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A842E30EFE000E3027A /* SessionProposalRustView.swift */; };
@@ -675,6 +676,7 @@
 				A5B6C0F52A6EAB2800927332 /* WalletConnectNotify in Frameworks */,
 				84943C7D2A9BA328007EBAC2 /* Mixpanel in Frameworks */,
 				8421447F2C81863A004FF494 /* ReownWalletKit in Frameworks */,
+				4425E08E2E56EBEF00B196E6 /* WalletConnectYttrium in Frameworks */,
 				8421447D2C80A544004FF494 /* ReownAppKitUI in Frameworks */,
 				84CA52172C88965C0069BB33 /* ReownRouter in Frameworks */,
 			);
@@ -1723,6 +1725,7 @@
 				8421447C2C80A544004FF494 /* ReownAppKitUI */,
 				8421447E2C81863A004FF494 /* ReownWalletKit */,
 				84CA52162C88965C0069BB33 /* ReownRouter */,
+				4425E08D2E56EBEF00B196E6 /* WalletConnectYttrium */,
 			);
 			productName = ChatWallet;
 			productReference = C56EE21B293F55ED004840D1 /* WalletApp.app */;
@@ -2932,6 +2935,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4425E08D2E56EBEF00B196E6 /* WalletConnectYttrium */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WalletConnectYttrium;
+		};
 		8421447A2C80A2B8004FF494 /* ReownAppKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ReownAppKit;

@@ -6,34 +6,38 @@
 //
 
 import Foundation
+import YttriumWrapper
+import WalletConnectKMS
+import WalletConnectUtils
+import WalletConnectPairing
+import WalletConnectSign
 
-
-struct CodableSession: Codable {
-    public struct ProposalNamespace: Equatable, Codable {
-        public let chains: [Blockchain]?
-        public let methods: Set<String>
-        public let events: Set<String>
-
-        public init(chains: [Blockchain]? = nil, methods: Set<String>, events: Set<String>) {
-            self.chains = chains
-            self.methods = methods
-            self.events = events
-        }
-    }
+public struct ProposalNamespace: Equatable, Codable {
+    public let chains: [Blockchain]?
+    public let methods: Set<String>
+    public let events: Set<String>
     
-    public struct SessionNamespace: Equatable, Codable {
-        public var chains: [Blockchain]?
-        public var accounts: [Account]
-        public var methods: Set<String>
-        public var events: Set<String>
-
-        public init(chains: [Blockchain]? = nil, accounts: [Account], methods: Set<String>, events: Set<String>) {
-            self.chains = chains
-            self.accounts = accounts
-            self.methods = methods
-            self.events = events
-        }
+    public init(chains: [Blockchain]? = nil, methods: Set<String>, events: Set<String>) {
+        self.chains = chains
+        self.methods = methods
+        self.events = events
     }
+}
+
+public struct SessionNamespace: Equatable, Codable {
+    public var chains: [Blockchain]?
+    public var accounts: [Account]
+    public var methods: Set<String>
+    public var events: Set<String>
+    
+    public init(chains: [Blockchain]? = nil, accounts: [Account], methods: Set<String>, events: Set<String>) {
+        self.chains = chains
+        self.accounts = accounts
+        self.methods = methods
+        self.events = events
+    }
+}
+struct CodableSession: Codable {
     
     let topic: String
     let pairingTopic: String
@@ -51,6 +55,19 @@ struct CodableSession: Codable {
     private(set) var requiredNamespaces: [String: ProposalNamespace]
     private(set) var sessionProperties: [String: String]?
     private(set) var scopedProperties: [String: String]?
+    
+    func publicRepresentation() -> Session {
+        return Session(
+            topic: topic,
+            pairingTopic: pairingTopic,
+            peer: peerParticipant.metadata,
+            requiredNamespaces: requiredNamespaces,
+            namespaces: namespaces,
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
+            expiryDate: expiryDate
+        )
+    }
 }
 
 // MARK: - Migration-compatible CodingKeys
@@ -85,7 +102,7 @@ extension Yttrium.SessionFfi {
         let relay = RelayProtocolOptions(protocol: relayProtocol, data: relayData)
 
         // Namespaces
-        let namespaces: [String: CodableSession.SessionNamespace] = sessionNamespaces.reduce(into: [:]) { acc, element in
+        let namespaces: [String: SessionNamespace] = sessionNamespaces.reduce(into: [:]) { acc, element in
             let (key, ffiNs) = element
             let accounts: [Account] = ffiNs.accounts.compactMap { Account($0) }
             let chains: [Blockchain]? = {
@@ -95,12 +112,12 @@ extension Yttrium.SessionFfi {
             }()
             let methods = Set(ffiNs.methods)
             let events = Set(ffiNs.events)
-            acc[key] = CodableSession.SessionNamespace(chains: chains, accounts: accounts, methods: methods, events: events)
+            acc[key] = SessionNamespace(chains: chains, accounts: accounts, methods: methods, events: events)
         }
 
-        let requiredNamespaces: [String: CodableSession.ProposalNamespace] = self.requiredNamespaces.mapValues { ffiNs in
+        let requiredNamespaces: [String: ProposalNamespace] = self.requiredNamespaces.mapValues { ffiNs in
             let chains = ffiNs.chains.compactMap { Blockchain($0) }
-            return CodableSession.ProposalNamespace(chains: chains, methods: Set(ffiNs.methods), events: Set(ffiNs.events))
+            return ProposalNamespace(chains: chains, methods: Set(ffiNs.methods), events: Set(ffiNs.events))
         }
 
         // Timing
@@ -271,4 +288,147 @@ enum SignStorageIdentifiers: String {
     case sessionTopicToProposal = "com.walletconnect.sdk.sessionTopicToProposal"
     case authResponseTopicRecord = "com.walletconnect.sdk.authResponseTopicRecord"
     case linkModeLinks = "com.walletconnect.sdk.linkModeLinks"
+}
+
+/**
+ A representation of an active session connection.
+ */
+public struct Session: Codable {
+    public let topic: String
+    @available(*, deprecated, message: "The pairingTopic property is deprecated.")
+    public let pairingTopic: String
+    public let peer: AppMetadata
+    public let requiredNamespaces: [String: ProposalNamespace]
+    public let namespaces: [String: SessionNamespace]
+    public let sessionProperties: [String: String]?
+    public let scopedProperties: [String: String]?
+    public let expiryDate: Date
+    
+    public init(
+        topic: String,
+        pairingTopic: String,
+        peer: AppMetadata,
+        requiredNamespaces: [String: ProposalNamespace],
+        namespaces: [String: SessionNamespace],
+        sessionProperties: [String: String]?,
+        scopedProperties: [String: String]?,
+        expiryDate: Date
+    ) {
+        self.topic = topic
+        self.pairingTopic = pairingTopic
+        self.peer = peer
+        self.requiredNamespaces = requiredNamespaces
+        self.namespaces = namespaces
+        self.sessionProperties = sessionProperties
+        self.scopedProperties = scopedProperties
+        self.expiryDate = expiryDate
+    }
+}
+
+extension Session {
+
+    public struct Proposal: Equatable, Codable {
+        public var id: String
+        public let pairingTopic: String
+        public let proposer: AppMetadata
+        public let requiredNamespaces: [String: ProposalNamespace]
+        public let optionalNamespaces: [String: ProposalNamespace]?
+        public let sessionProperties: [String: String]?
+        public let scopedProperties: [String: String]?
+
+        // TODO: Refactor internal objects to manage only needed data
+        internal let proposal: SessionProposal
+
+        func isExpired() -> Bool {
+            return proposal.isExpired()
+        }
+
+        init(
+            id: String,
+            pairingTopic: String,
+            proposer: AppMetadata,
+            requiredNamespaces: [String: ProposalNamespace],
+            optionalNamespaces: [String: ProposalNamespace]?,
+            sessionProperties: [String: String]?,
+            scopedProperties: [String: String]?,
+            proposal: SessionProposal
+        ) {
+            self.id = id
+            self.pairingTopic = pairingTopic
+            self.proposer = proposer
+            self.requiredNamespaces = requiredNamespaces
+            self.optionalNamespaces = optionalNamespaces
+            self.sessionProperties = sessionProperties
+            self.scopedProperties = scopedProperties
+            self.proposal = proposal
+        }
+    }
+
+    public struct Event: Equatable, Hashable {
+        public let name: String
+        public let data: AnyCodable
+
+        public init(name: String, data: AnyCodable) {
+            self.name = name
+            self.data = data
+        }
+        
+    }
+
+    public var accounts: [Account] {
+        return namespaces.values.reduce(into: []) { result, namespace in
+            result = result + Array(namespace.accounts)
+        }
+    }
+}
+
+
+
+struct SessionProposal: Codable, Equatable {
+    
+    let relays: [RelayProtocolOptions]
+    let proposer: Participant
+    let requiredNamespaces: [String: ProposalNamespace]
+    let optionalNamespaces: [String: ProposalNamespace]?
+    let sessionProperties: [String: String]?
+    let scopedProperties: [String: String]?
+    let expiryTimestamp: UInt64?
+
+    static let proposalTtl: TimeInterval = 300 // 5 minutes
+
+    internal init(relays: [RelayProtocolOptions],
+                  proposer: Participant,
+                  requiredNamespaces: [String : ProposalNamespace],
+                  optionalNamespaces: [String : ProposalNamespace]? = nil,
+                  sessionProperties: [String : String]? = nil,
+                  scopedProperties: [String : String]? = nil) {
+        self.relays = relays
+        self.proposer = proposer
+        self.requiredNamespaces = requiredNamespaces
+        self.optionalNamespaces = optionalNamespaces
+        self.sessionProperties = sessionProperties
+        self.scopedProperties = scopedProperties
+        self.expiryTimestamp = UInt64(Date().timeIntervalSince1970 + Self.proposalTtl)
+    }
+
+    func publicRepresentation(pairingTopic: String) -> Session.Proposal {
+        return Session.Proposal(
+            id: proposer.publicKey,
+            pairingTopic: pairingTopic,
+            proposer: proposer.metadata,
+            requiredNamespaces: requiredNamespaces,
+            optionalNamespaces: optionalNamespaces ?? [:],
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
+            proposal: self
+        )
+    }
+
+    func isExpired(currentDate: Date = Date()) -> Bool {
+        guard let expiry = expiryTimestamp else { return false }
+
+        let expiryDate = Date(timeIntervalSince1970: TimeInterval(expiry))
+
+        return expiryDate < currentDate
+    }
 }
