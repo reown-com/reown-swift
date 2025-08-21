@@ -5,6 +5,12 @@ import WalletConnectKMS
 import WalletConnectUtils
 import WalletConnectPairing
 import WalletConnectSign
+
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 /// WalletKitRust Client
 ///
 /// Cannot be instantiated outside of the SDK
@@ -31,6 +37,7 @@ public class WalletKitRustClient {
     // MARK: - Private Properties
     private let yttriumClient: YttriumWrapper.SignClient
     private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: SessionProposalFfi, context: VerifyContext?), Never>()
+    private let appStateObserver = WalletKitAppStateObserver()
     
     init(yttriumClient: YttriumWrapper.SignClient,
          kms: KeyManagementServiceProtocol) {
@@ -38,6 +45,14 @@ public class WalletKitRustClient {
 
         let projectIdKey = AgreementPrivateKey().rawRepresentation
         self.sessionStore = SessionStoreImpl(kms: kms)
+        
+        // Set up app state observer to call online when entering foreground
+        appStateObserver.onWillEnterForeground = { [weak self] in
+            Task {
+                await self?.yttriumClient.online()
+            }
+        }
+        
         Task {
             await yttriumClient.setKey(key: projectIdKey)
             await yttriumClient.registerSignListener(listener: self)
@@ -203,5 +218,55 @@ class SessionStoreImpl: SessionStore {
             }
             return session.toYttriumSession(symKey: symKey.rawRepresentation)
         }
+    }
+}
+
+// MARK: - App State Observer
+class WalletKitAppStateObserver {
+    @objc var onWillEnterForeground: (() -> Void)?
+    @objc var onWillEnterBackground: (() -> Void)?
+
+    init() {
+        subscribeNotificationCenter()
+    }
+
+    private func subscribeNotificationCenter() {
+#if os(iOS)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterBackground),
+            name: UIApplication.willResignActiveNotification,
+            object: nil)
+#elseif os(macOS)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterForeground),
+            name: NSApplication.willBecomeActiveNotification,
+            object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterBackground),
+            name: NSApplication.willResignActiveNotification,
+            object: nil)
+#endif
+    }
+
+    @objc
+    private func appWillEnterBackground() {
+        onWillEnterBackground?()
+    }
+
+    @objc
+    private func appWillEnterForeground() {
+        onWillEnterForeground?()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
