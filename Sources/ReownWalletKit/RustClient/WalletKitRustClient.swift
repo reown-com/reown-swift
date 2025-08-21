@@ -175,7 +175,7 @@ class SessionStoreImpl: SessionStore {
     func addSession(session: Yttrium.SessionFfi) {
         // Convert to CodableSession and store
         guard let codable = session.toCodableSession() else {
-            print("RUST SessionStore: Failed to convert SessionFfi to CodableSession")
+            print("SessionStore: Failed to convert SessionFfi to CodableSession")
             return
         }
         store.set(codable, forKey: codable.topic)
@@ -191,7 +191,7 @@ class SessionStoreImpl: SessionStore {
         
         let symKey =  kms.getSymmetricKey(for: topic)!.rawRepresentation
         
-        return codable.toYttriumSession(topic: topic, symKey: symKey)
+        return codable.toYttriumSession(symKey: symKey)
     }
 
     func getAllSessions() -> [Yttrium.SessionFfi] {
@@ -332,7 +332,7 @@ extension Yttrium.SessionFfi {
 
 extension CodableSession {
     // Convert persisted Codable session back to FFI for the rust client
-    func toYttriumSession(topic: String, symKey: Data) -> Yttrium.SessionFfi? {
+    func toYttriumSession(symKey: Data) -> Yttrium.SessionFfi? {
         // Metadata
         guard
             let selfMeta = fromAppMetadata(selfParticipant.metadata),
@@ -415,7 +415,7 @@ private func toAppMetadata(_ m: Yttrium.Metadata) -> AppMetadata? {
             redirect: .init(native: "", universal: nil)
         )
     }
-    guard let appRedirect = try? AppMetadata.Redirect(native: redirect.native ?? "", universal: redirect.universal, linkMode: redirect.linkMode ?? false) else {
+    guard let appRedirect = try? AppMetadata.Redirect(native: redirect.native ?? "", universal: redirect.universal, linkMode: redirect.linkMode) else {
         return nil
     }
     return AppMetadata(name: m.name, description: m.description, url: m.url, icons: m.icons, redirect: appRedirect)

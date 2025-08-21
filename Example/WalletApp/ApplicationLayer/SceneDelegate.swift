@@ -160,7 +160,7 @@ private extension SceneDelegate {
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
-        WalletKitRust.configure(projectId: InputConfig.projectId)
+        WalletKitRust.configure(projectId: InputConfig.projectId, groupIdentifier: "group.com.walletconnect.sdk")
 
     }
 
