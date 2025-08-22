@@ -2,14 +2,14 @@ import UIKit
 import Combine
 
 import ReownWalletKit
-import YttriumWrapper
+import WalletConnectSign
 
 final class SessionProposalRustPresenter: ObservableObject {
     private let interactor: SessionProposalRustInteractor
     private let router: SessionProposalRustRouter
 
     let importAccount: ImportAccount
-    let sessionProposal: SessionProposalFfi
+    let sessionProposal: Session.Proposal
     let validationStatus: VerifyContext.ValidationStatus?
     
     @Published var showError = false
@@ -22,7 +22,7 @@ final class SessionProposalRustPresenter: ObservableObject {
         interactor: SessionProposalRustInteractor,
         router: SessionProposalRustRouter,
         importAccount: ImportAccount,
-        proposal: SessionProposalFfi,
+        proposal: Session.Proposal,
         context: VerifyContext?
     ) {
         defer { setupInitialState() }

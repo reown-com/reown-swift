@@ -2,11 +2,11 @@ import Foundation
 
 import ReownWalletKit
 import ReownRouter
-import YttriumWrapper
+import WalletConnectSign
 import WalletConnectYttrium
 
 final class SessionProposalRustInteractor {
-    func approve(proposal: SessionProposalFfi, EOAAccount: Account) async throws -> Bool {
+    func approve(proposal: Session.Proposal, EOAAccount: Account) async throws -> Bool {
         
         // Compute supported sets from proposal
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
@@ -18,14 +18,14 @@ final class SessionProposalRustInteractor {
 
         // Build supported accounts for AutoNamespaces
         let supportedAccounts: [Account] = Array(supportedChains).compactMap { chainId in
-            Account(chainIdentifier: chainId, address: EOAAccount.address)
+            Account(chainIdentifier: chainId.absoluteString, address: EOAAccount.address)
         }
 
         // 1) Build WalletConnectSign session namespaces using AutoNamespaces
         let wcSessionNamespaces = try AutoNamespaces.build(
-            requiredNamespaces: proposal.requiredNamespaces.mapValues { toWCSProposalNamespace($0) },
-            optionalNamespaces: proposal.optionalNamespaces?.mapValues { toWCSProposalNamespace($0) },
-            chains: supportedChains.compactMap { Blockchain($0) },
+            requiredNamespaces: proposal.requiredNamespaces,
+            optionalNamespaces: proposal.optionalNamespaces,
+            chains: supportedChains,
             methods: Array(supportedMethods),
             events: Array(supportedEvents),
             accounts: supportedAccounts

@@ -81,8 +81,12 @@ public class WalletKitRustClient {
         return sessionProposal
     }
     
-    public func approve(_ proposal: SessionProposalFfi, approvedNamespaces: [String : SettleNamespace], selfMetadata: Metadata) async throws -> SessionFfi {
-        return try await yttriumClient.approve(proposal: proposal, approvedNamespaces: approvedNamespaces, selfMetadata: selfMetadata)
+    public func approve(_ proposal: Session.Proposal, approvedNamespaces: [String : SettleNamespace], selfMetadata: Metadata) async throws -> SessionFfi {
+        // Convert Session.Proposal back to SessionProposalFfi for the Rust client
+        guard let ffiProposal = proposal.toSessionProposalFfi() else {
+            throw Errors.failedToDecodeSessionProposal
+        }
+        return try await yttriumClient.approve(proposal: ffiProposal, approvedNamespaces: approvedNamespaces, selfMetadata: selfMetadata)
     }
     
     public func getSessions() -> [Session] {
