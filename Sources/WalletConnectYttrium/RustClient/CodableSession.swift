@@ -158,10 +158,10 @@ extension CodableSession {
     // Convert persisted Codable session back to FFI for the rust client
     func toYttriumSession(symKey: Data) -> Yttrium.SessionFfi? {
         // Metadata
-        guard
-            let selfMeta = fromAppMetadata(selfParticipant.metadata),
-            let peerMeta = fromAppMetadata(peerParticipant.metadata)
-        else { return nil }
+        
+        let selfMeta = fromAppMetadata(selfParticipant.metadata)
+        let peerMeta = fromAppMetadata(peerParticipant.metadata)
+        
 
         // Keys
         let selfPubKey = Data(hex: selfParticipant.publicKey)
@@ -245,7 +245,7 @@ func toAppMetadata(_ m: Yttrium.Metadata) -> AppMetadata? {
     return AppMetadata(name: m.name, description: m.description, url: m.url, icons: m.icons, redirect: appRedirect)
 }
 
-private func fromAppMetadata(_ m: AppMetadata) -> Yttrium.Metadata? {
+func fromAppMetadata(_ m: AppMetadata) -> Yttrium.Metadata {
     let redirect: Yttrium.Redirect?
     if let r = m.redirect {
         redirect = Yttrium.Redirect(native: r.native, universal: r.universal, linkMode: r.linkMode ?? false)

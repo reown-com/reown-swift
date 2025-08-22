@@ -6,7 +6,7 @@ import WalletConnectSign
 import WalletConnectYttrium
 
 final class SessionProposalRustInteractor {
-    func approve(proposal: Session.Proposal, EOAAccount: Account) async throws -> Bool {
+    func approve(proposal: WalletConnectYttrium.Session.Proposal, EOAAccount: Account) async throws -> Bool {
         
         // Compute supported sets from proposal
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
@@ -42,7 +42,7 @@ final class SessionProposalRustInteractor {
         }
         
         // Self metadata for this wallet (mirrors app configuration)
-        let metadata = try Metadata(
+        let metadata = try WalletConnectYttrium.AppMetadata(
             name: "Example Wallet",
             description: "wallet description",
             url: "example.wallet",
@@ -62,21 +62,11 @@ final class SessionProposalRustInteractor {
         return true
     }
 
-    func reject(proposal: SessionProposalFfi) async throws {
+    func reject(proposal: WalletConnectYttrium.Session.Proposal) async throws {
         // TODO: Implement reject functionality in WalletKitRust
         // For now, we can't reject through the Rust client
         throw NSError(domain: "SessionProposalRustInteractor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Reject not yet implemented for Rust client"])
     }
 }
 
-private extension SessionProposalRustInteractor {
-    // Convert YttriumWrapper.ProposalNamespace to WalletConnectSign.ProposalNamespace
-    func toWCSProposalNamespace(_ ns: YttriumWrapper.ProposalNamespace) -> WalletConnectSign.ProposalNamespace {
-        let chains = ns.chains.compactMap { Blockchain($0) }
-        return WalletConnectSign.ProposalNamespace(
-            chains: chains,
-            methods: Set(ns.methods),
-            events: Set(ns.events)
-        )
-    }
-}
+

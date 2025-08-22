@@ -81,12 +81,13 @@ public class WalletKitRustClient {
         return sessionProposal
     }
     
-    public func approve(_ proposal: Session.Proposal, approvedNamespaces: [String : SettleNamespace], selfMetadata: Metadata) async throws -> SessionFfi {
+    public func approve(_ proposal: Session.Proposal, approvedNamespaces: [String : SettleNamespace], selfMetadata: AppMetadata) async throws -> SessionFfi {
         // Convert Session.Proposal back to SessionProposalFfi for the Rust client
         guard let ffiProposal = proposal.toSessionProposalFfi() else {
             throw Errors.failedToDecodeSessionProposal
         }
-        return try await yttriumClient.approve(proposal: ffiProposal, approvedNamespaces: approvedNamespaces, selfMetadata: selfMetadata)
+        let yttriumMetadata = fromAppMetadata(selfMetadata)
+        return try await yttriumClient.approve(proposal: ffiProposal, approvedNamespaces: approvedNamespaces, selfMetadata: yttriumMetadata)
     }
     
     public func getSessions() -> [Session] {
@@ -342,6 +343,60 @@ extension SessionProposalFfi {
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
             proposal: sessionProposal
+        )
+    }
+}
+
+// MARK: - Session.Proposal back to SessionProposalFfi Conversion
+extension Session.Proposal {
+    func toSessionProposalFfi() -> SessionProposalFfi? {
+        // Convert AppMetadata back to Yttrium.Metadata
+        let yttriumMetadata = fromAppMetadata(proposer)
+        
+        // Get proposer public key from internal proposal
+        let proposerPublicKey = Data(hex: proposal.proposer.publicKey)
+        
+        // Convert RelayProtocolOptions back to Yttrium.Relay
+        let yttriumRelays = proposal.relays.map { relay in
+            Yttrium.Relay(protocol: relay.protocol)
+        }
+        
+        // Convert required namespaces from WalletConnectSign.ProposalNamespace to Yttrium.ProposalNamespace
+        let yttriumRequiredNamespaces: [String: Yttrium.ProposalNamespace] = requiredNamespaces.mapValues { wcNs in
+            let chains = (wcNs.chains ?? []).map { $0.absoluteString }
+            return Yttrium.ProposalNamespace(
+                chains: chains,
+                methods: Array(wcNs.methods),
+                events: Array(wcNs.events)
+            )
+        }
+        
+        // Convert optional namespaces
+        let yttriumOptionalNamespaces: [String: Yttrium.ProposalNamespace]? = optionalNamespaces?.mapValues { wcNs in
+            let chains = (wcNs.chains ?? []).map { $0.absoluteString }
+            return Yttrium.ProposalNamespace(
+                chains: chains,
+                methods: Array(wcNs.methods),
+                events: Array(wcNs.events)
+            )
+        }
+        
+        // Note: pairingSymKey is not available in Session.Proposal, using placeholder
+        // In a real implementation, this should be retrieved from secure storage
+        let pairingSymKey = Data.randomBytes(count: 32)
+        
+        return SessionProposalFfi(
+            id: id,
+            topic: pairingTopic,
+            pairingSymKey: pairingSymKey,
+            proposerPublicKey: proposerPublicKey,
+            relays: yttriumRelays,
+            requiredNamespaces: yttriumRequiredNamespaces,
+            optionalNamespaces: yttriumOptionalNamespaces,
+            metadata: yttriumMetadata,
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
+            expiryTimestamp: proposal.expiryTimestamp
         )
     }
 }

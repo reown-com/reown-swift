@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 
-import ReownWalletKit
+import WalletConnectYttrium
 import WalletConnectSign
 
 final class SessionProposalRustPresenter: ObservableObject {
@@ -9,7 +9,7 @@ final class SessionProposalRustPresenter: ObservableObject {
     private let router: SessionProposalRustRouter
 
     let importAccount: ImportAccount
-    let sessionProposal: Session.Proposal
+    let sessionProposal: WalletConnectYttrium.Session.Proposal
     let validationStatus: VerifyContext.ValidationStatus?
     
     @Published var showError = false
@@ -22,7 +22,7 @@ final class SessionProposalRustPresenter: ObservableObject {
         interactor: SessionProposalRustInteractor,
         router: SessionProposalRustRouter,
         importAccount: ImportAccount,
-        proposal: Session.Proposal,
+        proposal: WalletConnectYttrium.Session.Proposal,
         context: VerifyContext?
     ) {
         defer { setupInitialState() }

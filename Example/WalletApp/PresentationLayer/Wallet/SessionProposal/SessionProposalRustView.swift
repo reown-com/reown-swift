@@ -1,6 +1,6 @@
 import SwiftUI
 import ReownWalletKit
-import YttriumWrapper
+import WalletConnectSign
 
 struct SessionProposalRustView: View {
     @EnvironmentObject var presenter: SessionProposalRustPresenter
@@ -33,8 +33,7 @@ struct SessionProposalRustView: View {
                         .scaledToFit()
                     
                     HStack {
-                        // TODO: Replace with actual proposer name from SessionProposalFfi when available
-                        Text("dApp")
+                        Text(presenter.sessionProposal.proposer.name)
                             .foregroundColor(.grey8)
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                     }
@@ -152,10 +151,10 @@ struct SessionProposalRustView: View {
         .edgesIgnoringSafeArea(.all)
     }
 
-    private func sessionProposalView(namespaces: YttriumWrapper.ProposalNamespace) -> some View {
+    private func sessionProposalView(namespaces: ProposalNamespace) -> some View {
         VStack {
             VStack(alignment: .leading) {
-                TagsView(items: namespaces.chains) {
+                TagsView(items: namespaces.chains?.map { $0.absoluteString } ?? []) {
                     Text($0.uppercased())
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .foregroundColor(.whiteBackground)
@@ -178,7 +177,7 @@ struct SessionProposalRustView: View {
                     .padding(.horizontal, 18)
                     .padding(.top, 10)
                     
-                    TagsView(items: namespaces.methods) {
+                    TagsView(items: Array(namespaces.methods)) {
                         Text($0)
                             .foregroundColor(.cyanBackround)
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -205,7 +204,7 @@ struct SessionProposalRustView: View {
                         .padding(.horizontal, 18)
                         .padding(.top, 10)
                         
-                        TagsView(items: namespaces.events) {
+                        TagsView(items: Array(namespaces.events)) {
                             Text($0)
                                 .foregroundColor(.cyanBackround)
                                 .font(.system(size: 13, weight: .semibold, design: .rounded))
