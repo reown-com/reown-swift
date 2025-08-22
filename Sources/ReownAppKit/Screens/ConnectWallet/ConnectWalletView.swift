@@ -10,7 +10,7 @@ struct ConnectWalletView: View {
 
     let displayWCConnection = false
     
-    var wallets: [Wallet] { Array(store.sortedWallets.prefix(5)) }
+    var wallets: [Wallet] { Array(store.sortedWallets.prefix(7)) }
     
     var body: some View {
         VStack {

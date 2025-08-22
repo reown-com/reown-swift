@@ -96,12 +96,19 @@ extension Store {
             
             return featuredWallet
         }
-        
+        return sortWallets(unsortedWallets)
+    }
+    
+    public var sortedSearchWallets: [Wallet] {
+        sortWallets(searchedWallets)
+    }
+    
+    private func sortWallets(_ wallets: [Wallet]) -> [Wallet] {
         let recommended = AppKit.config.recommendedWalletIds
         let installed = installedWalletIds
         let distantPast = Date.distantPast
         
-        return Array(unsortedWallets
+        return wallets
             .sorted(by: { $0.order < $1.order } )
             .sorted(by: {
                 if installed.contains($0.id) && installed.contains($1.id) {
@@ -119,7 +126,6 @@ extension Store {
             } )
             .sorted(by: { $0.lastTimeUsed ?? distantPast > $1.lastTimeUsed ?? distantPast } )
             .sorted(by: { $0.id == DesktopWallet_walletId && $1.id != DesktopWallet_walletId } )
-        )
     }
 }
 
