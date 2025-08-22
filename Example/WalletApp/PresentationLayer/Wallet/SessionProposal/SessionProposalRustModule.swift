@@ -2,6 +2,7 @@ import SwiftUI
 
 import ReownWalletKit
 import YttriumWrapper
+import WalletConnectYttrium
 
 final class SessionProposalRustModule {
 
@@ -9,7 +10,7 @@ final class SessionProposalRustModule {
     static func create(
         app: Application,
         importAccount: ImportAccount,
-        proposal: SessionProposalFfi,
+        proposal:  WalletConnectYttrium.Session.Proposal,
         context: VerifyContext?
     ) -> UIViewController {
         let router = SessionProposalRustRouter(app: app)

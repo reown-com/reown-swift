@@ -17,13 +17,16 @@ import AppKit
 ///
 /// Access via `WalletKitRust.instance`
 public class WalletKitRustClient {
+    public enum Errors: Error {
+        case failedToDecodeSessionProposal
+    }
     
     // MARK: - Public Properties
     
     /// Publisher that sends session proposal
     ///
     /// event is emited on responder client only
-    public var sessionProposalPublisher: AnyPublisher<(proposal: SessionProposalFfi, context: VerifyContext?), Never> {
+    public var sessionProposalPublisher: AnyPublisher<(proposal: Session.Proposal, context: VerifyContext?), Never> {
         sessionProposalPublisherSubject.eraseToAnyPublisher()
     }
     
@@ -42,7 +45,7 @@ public class WalletKitRustClient {
     
     // MARK: - Private Properties
     private let yttriumClient: YttriumWrapper.SignClient
-    private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: SessionProposalFfi, context: VerifyContext?), Never>()
+    private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: Session.Proposal, context: VerifyContext?), Never>()
     private let appStateObserver = WalletKitAppStateObserver()
     
     init(yttriumClient: YttriumWrapper.SignClient,
@@ -69,10 +72,13 @@ public class WalletKitRustClient {
     
     /// For wallet to receive a session proposal from a dApp
     /// Responder should call this function in order to accept peer's pairing and be able to subscribe for future session proposals.
-    public func pair(uri: String) async throws -> SessionProposalFfi {
-        let proposal = try await yttriumClient.pair(uri: uri)
-        sessionProposalPublisherSubject.send((proposal: proposal, context: nil))
-        return proposal
+    public func pair(uri: String) async throws -> Session.Proposal {
+        let ffiProposal = try await yttriumClient.pair(uri: uri)
+        guard let sessionProposal = ffiProposal.toSessionProposal() else {
+            throw Errors.failedToDecodeSessionProposal
+        }
+        sessionProposalPublisherSubject.send((proposal: sessionProposal, context: nil))
+        return sessionProposal
     }
     
     public func approve(_ proposal: SessionProposalFfi, approvedNamespaces: [String : SettleNamespace], selfMetadata: Metadata) async throws -> SessionFfi {
@@ -278,5 +284,60 @@ class WalletKitAppStateObserver {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+    }
+}
+
+// MARK: - SessionProposal Conversion
+extension SessionProposalFfi {
+    func toSessionProposal() -> Session.Proposal? {
+        // Convert Yttrium.Metadata to AppMetadata
+        guard let appMetadata = toAppMetadata(metadata) else {
+            return nil
+        }
+        
+        // Convert required namespaces from Yttrium.ProposalNamespace to WalletConnectSign.ProposalNamespace
+        let wcRequiredNamespaces: [String: ProposalNamespace] = requiredNamespaces.mapValues { ffiNs in
+            let chains = ffiNs.chains.compactMap { Blockchain($0) }
+            return ProposalNamespace(
+                chains: chains.isEmpty ? nil : chains,
+                methods: Set(ffiNs.methods),
+                events: Set(ffiNs.events)
+            )
+        }
+        
+        // Convert optional namespaces
+        let wcOptionalNamespaces: [String: ProposalNamespace]? = optionalNamespaces?.mapValues { ffiNs in
+            let chains = ffiNs.chains.compactMap { Blockchain($0) }
+            return ProposalNamespace(
+                chains: chains.isEmpty ? nil : chains,
+                methods: Set(ffiNs.methods),
+                events: Set(ffiNs.events)
+            )
+        }
+
+        // Convert Yttrium.Relay to RelayProtocolOptions
+        let wcRelays = [RelayProtocolOptions(protocol: "irn", data: nil)]
+        
+        // Create SessionProposal for the internal proposal field
+        let proposer = Participant(publicKey: proposerPublicKey.toHexString(), metadata: appMetadata)
+        let sessionProposal = SessionProposal(
+            relays: wcRelays,
+            proposer: proposer,
+            requiredNamespaces: wcRequiredNamespaces,
+            optionalNamespaces: wcOptionalNamespaces,
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties
+        )
+        
+        return Session.Proposal(
+            id: id,
+            pairingTopic: topic,
+            proposer: appMetadata,
+            requiredNamespaces: wcRequiredNamespaces,
+            optionalNamespaces: wcOptionalNamespaces,
+            sessionProperties: sessionProperties,
+            scopedProperties: scopedProperties,
+            proposal: sessionProposal
+        )
     }
 }

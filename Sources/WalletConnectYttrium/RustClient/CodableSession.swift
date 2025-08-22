@@ -229,7 +229,7 @@ extension CodableSession {
 }
 
 // MARK: - Helpers
-private func toAppMetadata(_ m: Yttrium.Metadata) -> AppMetadata? {
+func toAppMetadata(_ m: Yttrium.Metadata) -> AppMetadata? {
     guard let redirect = m.redirect else {
         return try? AppMetadata(
             name: m.name,

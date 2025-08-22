@@ -34,7 +34,7 @@ final class MainRouter {
 //            .presentFullScreen(from: viewController, transparentBackground: true)
 //    }
     
-    func present(proposal: SessionProposalFfi, importAccount: ImportAccount, context: VerifyContext?) {
+    func present(proposal: WalletConnectYttrium.Session.Proposal, importAccount: ImportAccount, context: VerifyContext?) {
         SessionProposalRustModule.create(app: app, importAccount: importAccount, proposal: proposal, context: context)
             .presentFullScreen(from: viewController, transparentBackground: true)
     }
