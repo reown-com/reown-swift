@@ -40,6 +40,7 @@ public class Store: ObservableObject {
     @Published public var session: Session?
     @Published public var uri: WalletConnectURI?
     
+    @Published public var currentWallet: Wallet? = nil
     @Published public var wallets: Set<Wallet> = []
     @Published public var featuredWallets: [Wallet] = []
     @Published public var searchedWallets: [Wallet] = []

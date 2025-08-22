@@ -9,17 +9,20 @@ public struct W3MListSelectStyle<ImageContent: View>: ButtonStyle {
     var imageContent: (CGFloat) -> ImageContent
     var tag: W3MTag?
     var showChevron: Bool
+    var isLoading: Bool
 
     var isPressedOverride: Bool?
 
     public init(
         @ViewBuilder imageContent: @escaping (CGFloat) -> ImageContent,
         tag: W3MTag? = nil,
-        showChevron: Bool = false
+        showChevron: Bool = false,
+        isLoading: Bool = false,
     ) {
         self.imageContent = imageContent
         self.tag = tag
         self.showChevron = showChevron
+        self.isLoading = isLoading
     }
 
     #if DEBUG
@@ -27,12 +30,14 @@ public struct W3MListSelectStyle<ImageContent: View>: ButtonStyle {
             @ViewBuilder imageContent: @escaping (CGFloat) -> ImageContent,
             tag: W3MTag? = nil,
             isPressedOverride: Bool? = nil,
-            showChevron: Bool = false
+            showChevron: Bool = false,
+            isLoading: Bool = false,
         ) {
             self.imageContent = imageContent
             self.tag = tag
             self.isPressedOverride = isPressedOverride
             self.showChevron = showChevron
+            self.isLoading = isLoading
         }
     #endif
 
@@ -61,7 +66,11 @@ public struct W3MListSelectStyle<ImageContent: View>: ButtonStyle {
                     Spacer()
                 }
                 
-                if let tag {
+                if isLoading {
+                    ProgressView()
+//                        .tint(Color(hex: "#3C3C43"))
+                        .transition(.opacity)
+                } else if let tag {
                     tag
                         .saturation(isEnabled ? 1 : 0)
                         .layoutPriority(3)

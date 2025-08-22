@@ -17,6 +17,9 @@ struct AllWalletsView: View {
     @State private var hasSearched: Bool = false
     let searchTermPublisher = PassthroughSubject<String, Never>()
     
+    @State var loadingWalletId: String?
+    @State var loadingWalletTask: Task<Void, Error>?
+    
     private let semaphore = AsyncSemaphore(count: 1)
     
     var isSearching: Bool {
@@ -155,21 +158,7 @@ struct AllWalletsView: View {
     private func gridElement(for wallet: Wallet) -> some View {
         Button(action: {
             analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
-            AppKit.instance.didSelectWalletSubject.send(wallet)
-            if wallet.customDidSelect {
-                store.isModalShown = false
-                return
-            }
-            
-//            Task {
-//                do {
-//                    try await signInteractor.connect(walletUniversalLink: wallet.linkMode)
-//                    analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
-//                    router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
-//                } catch {
-//                    store.toast = .init(style: .error, message: error.localizedDescription)
-//                }
-//            }
+            loadWallet(wallet)
         }, label: {
             Text(wallet.name)
         })
@@ -184,9 +173,38 @@ struct AllWalletsView: View {
                         .resizable()
                 }
             },
-            isLoading: .constant(false)
+            isLoading: .init(
+                get: { loadingWalletId == wallet.id },
+                set: { _ in }
+            )
         ))
         .id(wallet.id)
+    }
+    
+    private func loadWallet(_ wallet: Wallet) {
+        let isLoading = loadingWalletId == wallet.id
+        if isLoading { return }
+        loadingWalletId = wallet.id
+        loadingWalletTask?.cancel()
+        
+        loadingWalletTask = Task {
+            do {
+                defer {
+                    loadingWalletId = nil
+                    Store.shared.currentWallet = nil
+                }
+                
+                if wallet.customDidSelect {
+                    // Trigger this manually for custom wallets that don't use WC
+                    AppKit.showConnectingWallet(wallet)
+                }
+                
+                try await AppKit.instance.onWalletTap?(wallet)
+            } catch {
+                // Swallow the error, forget the toast
+//                store.toast = .init(style: .error, message: error.localizedDescription)
+            }
+        }
     }
     
     private func fetchWallets(search: String = "") {

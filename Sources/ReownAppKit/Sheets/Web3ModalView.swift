@@ -55,7 +55,8 @@ struct Web3ModalView: View {
             case .none:
                 EmptyView()
             case .connectWallet:
-                helpButton()
+//                helpButton()
+                EmptyView()
             default:
                 backButton()
             }

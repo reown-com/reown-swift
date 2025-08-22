@@ -7,10 +7,19 @@ struct ConnectWalletView: View {
     @Environment(\.analyticsService) var analyticsService: AnalyticsService
     
     @EnvironmentObject var signInteractor: SignInteractor
+    @State var loadingWalletId: String?
+    @State var loadingWalletTask: Task<Void, Error>?
 
     let displayWCConnection = false
     
     var wallets: [Wallet] { Array(store.sortedWallets.prefix(7)) }
+    
+    init() {
+        if let wallet = Store.shared.currentWallet {
+            Store.shared.currentWallet = nil
+            loadWallet(wallet)
+        }
+    }
     
     var body: some View {
         VStack {
@@ -35,34 +44,44 @@ struct ConnectWalletView: View {
         .padding(.bottom)
     }
     
+    private func loadWallet(_ wallet: Wallet) {
+        let isLoading = loadingWalletId == wallet.id
+        if isLoading { return }
+        loadingWalletId = wallet.id
+        loadingWalletTask?.cancel()
+        
+        loadingWalletTask = Task {
+            do {
+                defer {
+                    loadingWalletId = nil
+                    Store.shared.currentWallet = nil
+                }
+                
+                if wallet.customDidSelect {
+                    // Trigger this manually for custom wallets that don't use WC
+                    AppKit.showConnectingWallet(wallet)
+                }
+                
+                try await AppKit.instance.onWalletTap?(wallet)
+            } catch {
+                // Swallow the error, forget the toast
+//                store.toast = .init(style: .error, message: error.localizedDescription)
+            }
+        }
+    }
+    
     @ViewBuilder
     private func featuredWallets() -> some View {
         ForEach(wallets, id: \.self) { wallet in
             Group {
+                let isLoading = loadingWalletId == wallet.id
                 let isRecent: Bool = wallet.isRecent
                 let isInstalled: Bool = wallet.isInstalled
                 let tagTitle: String? = isRecent ? "RECENT" : isInstalled ? "INSTALLED" : nil
-
+                
                 Button(action: {
                     analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
-                    AppKit.instance.didSelectWalletSubject.send(wallet)
-                    
-                    if wallet.customDidSelect {
-                        store.isModalShown = false
-                        return
-                    }
-                    
-//                    Task { @MainActor in
-//                        do {
-//                            try await signInteractor.connect(walletUniversalLink: wallet.linkMode)
-//                            router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
-//                            analyticsService.track(.SELECT_WALLET(name: wallet.name, platform: .mobile))
-//                            print("Connected to wallet: \(wallet.name)")
-//                        } catch {
-//                            print("Error connecting wallet: \(error)")
-//                            store.toast = .init(style: .error, message: error.localizedDescription)
-//                        }
-//                    }
+                    loadWallet(wallet)
                 }, label: {
                     Text(wallet.name)
                 })
@@ -84,7 +103,8 @@ struct ConnectWalletView: View {
                                 .stroke(.Overgray010, lineWidth: 1)
                         }
                     },
-                    tag: tagTitle != nil ? .init(title: tagTitle!, variant: .info) : nil
+                    tag: tagTitle != nil ? .init(title: tagTitle!, variant: .info) : nil,
+                    isLoading: isLoading,
                 ))
             }
         }

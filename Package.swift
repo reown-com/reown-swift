@@ -39,9 +39,9 @@ func buildYttriumWrapperTarget() -> Target {
 let package = Package(
     name: "reown",
     platforms: [
-        .iOS(.v13),
+        .iOS(.v15),
         .macOS(.v11),
-        .tvOS(.v13)
+        .tvOS(.v15)
     ],
     products: [
         .library(

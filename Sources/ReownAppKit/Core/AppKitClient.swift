@@ -67,7 +67,8 @@ public class AppKitClient {
     public var coinbaseResponseSubject = PassthroughSubject<W3MResponse, Never>()
     public var coinbaseConnectedSubject = PassthroughSubject<Void, Never>()
     
-    public var didSelectWalletSubject = PassthroughSubject<Wallet, Never>()
+    public typealias OnWalletTap = @Sendable (_ wallet: Wallet) async throws -> Void
+    public var onWalletTap: OnWalletTap?
 
     /// Publisher that sends web socket connection status
     public var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> {

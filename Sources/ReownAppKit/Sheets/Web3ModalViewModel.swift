@@ -66,9 +66,8 @@ class Web3ModalViewModel: ObservableObject {
                 self.handleNewSession(session: session)
                 if supportsAuthenticatedSession {
                     self.handleSIWEFallback()
-                } else {
-                    self.routeToProfile()
                 }
+                self.dismissModal()
             }
             .store(in: &disposeBag)
 
@@ -80,7 +79,7 @@ class Web3ModalViewModel: ObservableObject {
                 case .success(let (session, _)):
                     if let session = session {
                         self?.handleNewSession(session: session)
-                        self?.routeToProfile()
+                        self?.dismissModal()
                     }
                 case .failure(let error):
                     if error == .methodUnsupported {
@@ -99,7 +98,6 @@ class Web3ModalViewModel: ObservableObject {
         signInteractor.sessionDeletePublisher
             .receive(on: DispatchQueue.main)
             .sink { topic, _ in
-                
                 if store.session?.topic == topic {
                     store.session = nil
                     store.account = nil
@@ -126,18 +124,7 @@ class Web3ModalViewModel: ObservableObject {
             try? await signInteractor.connect(walletUniversalLink: nil)
         }
     }
-    
-    func fetchIdentity() {
-        Task { @MainActor in
-            do {
-                try await blockchainApiInteractor.getIdentity()
-            } catch {
-                store.toast = .init(style: .error, message: "Network error")
-                AppKit.config.onError(error)
-            }
-        }
-    }
-    
+
     func fetchBalance() {
         Task { @MainActor in
             do {
@@ -163,12 +150,9 @@ class Web3ModalViewModel: ObservableObject {
         {
             store.selectedChain = matchingChain
         }
-
-        fetchIdentity()
     }
 
-    private func routeToProfile() {
-        router.setRoute(Router.AccountSubpage.profile)
+    private func dismissModal() {
         withAnimation {
             store.isModalShown = false
         }

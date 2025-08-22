@@ -208,6 +208,10 @@ public class AppKit {
         }
     }
     
+    public static func setCurrentWallet(_ wallet: Wallet?) {
+        Store.shared.currentWallet = wallet
+    }
+    
     @MainActor
     public static func selectChain(_ blockchain: Blockchain) {
         guard let matchingChain = ChainPresets.ethChains.first(where: {
@@ -340,11 +344,16 @@ public extension AppKit {
         
         Store.shared.connecting = true
         
-        if let app {
-            AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.walletDetail(app))
+        if var wallet = app {
+            wallet.lastTimeUsed = Date()
+            Store.shared.recentWallets.append(wallet)
+            AppKit.setCurrentWallet(app)
         } else {
-            AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.connectWallet)
+            AppKit.setCurrentWallet(nil)
         }
+        
+        // Always start from here
+        AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.connectWallet)
 
         let modal = Web3ModalSheetController(router: AppKit.viewModel.router)
         vc.present(modal, animated: true)
