@@ -47,8 +47,7 @@ final class SessionProposalRustInteractor {
             description: "wallet description",
             url: "example.wallet",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
-            verifyUrl: nil,
-            redirect: Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
+            redirect: AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
         )
         
         _ = try await WalletKitRust.instance.approve(

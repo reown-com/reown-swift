@@ -26,6 +26,14 @@ public enum AutoNamespacesError: Error, LocalizedError {
 
 
 enum Namespace {
+    enum Errors: Error {
+        case unsupportedChains
+        case unsupportedAccounts
+        case unsupportedNamespaceKey
+        case unsupportedMethods
+        case unsupportedEvents
+        case emptySessionProperties
+    }
 
     static func validate(_ namespaces: [String: ProposalNamespace]) throws {
         for (key, namespace) in namespaces {
@@ -33,15 +41,15 @@ enum Namespace {
             
             if caip2Namespace.count > 1 {
                 if let chain = caip2Namespace.last, !chain.isEmpty, namespace.chains != nil {
-                    throw WalletConnectError.unsupportedNamespace(.unsupportedChains)
+                    throw Namespace.Errors.unsupportedChains
                 }
             } else {
                 guard let chains = namespace.chains, !chains.isEmpty else {
-                    throw WalletConnectError.unsupportedNamespace(.unsupportedChains)
+                    throw Namespace.Errors.unsupportedChains
                 }
                 for chain in chains {
                     if key != chain.namespace {
-                        throw WalletConnectError.unsupportedNamespace(.unsupportedChains)
+                        throw Namespace.Errors.unsupportedChains
                     }
                 }
             }
@@ -51,15 +59,15 @@ enum Namespace {
     static func validate(_ namespaces: [String: SessionNamespace]) throws {
         for (key, namespace) in namespaces {
             if namespace.accounts.isEmpty {
-                throw WalletConnectError.unsupportedNamespace(.unsupportedAccounts)
+                throw Namespace.Errors.unsupportedAccounts
             }
             for account in namespace.accounts {
                 if key.components(separatedBy: ":").count > 1 {
                     if key != account.namespace + ":\(account.reference)" {
-                        throw WalletConnectError.unsupportedNamespace(.unsupportedAccounts)
+                        throw Namespace.Errors.unsupportedAccounts
                     }
                 } else if key != account.namespace {
-                    throw WalletConnectError.unsupportedNamespace(.unsupportedAccounts)
+                    throw Namespace.Errors.unsupportedAccounts
                 }
             }
         }
@@ -95,27 +103,27 @@ enum Namespace {
         
         for (key, proposedNamespace) in requiredNamespaces {
             guard let approvedNamespace = sessionNamespaces[key] else {
-                throw WalletConnectError.unsupportedNamespace(.unsupportedNamespaceKey)
+                throw Namespace.Errors.unsupportedNamespaceKey
             }
             try proposedNamespace.methods.forEach {
                 if !approvedNamespace.methods.contains($0) {
-                    throw WalletConnectError.unsupportedNamespace(.unsupportedMethods)
+                    throw Namespace.Errors.unsupportedMethods
                 }
             }
             try proposedNamespace.events.forEach {
                 if !approvedNamespace.events.contains($0) {
-                    throw WalletConnectError.unsupportedNamespace(.unsupportedEvents)
+                    throw Namespace.Errors.unsupportedEvents
                 }
             }
             if let chains = proposedNamespace.chains {
                 try chains.forEach { chain in
                     if !approvedNamespace.accounts.contains(where: { $0.blockchain == chain }) {
-                        throw WalletConnectError.unsupportedNamespace(.unsupportedAccounts)
+                        throw Namespace.Errors.unsupportedAccounts
                     }
                 }
             } else {
                 if !approvedNamespace.accounts.contains(where: { $0.blockchain == Blockchain(key) }) {
-                    throw WalletConnectError.unsupportedNamespace(.unsupportedChains)
+                    throw Namespace.Errors.unsupportedChains
                 }
             }
         }
@@ -125,7 +133,7 @@ enum Namespace {
 enum SessionProperties {
     static func validate(_ sessionProperties: [String: String]) throws {
         if sessionProperties.isEmpty {
-            throw WalletConnectError.emptySessionProperties
+            throw Namespace.Errors.emptySessionProperties
         }
     }
 }

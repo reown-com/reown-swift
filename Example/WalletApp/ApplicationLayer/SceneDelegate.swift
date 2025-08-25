@@ -156,10 +156,10 @@ private extension SceneDelegate {
             description: "wallet description",
             url: "example.wallet",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
-            redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
+            redirect: try! WalletConnectYttrium.AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
         )
 
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+//        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
         WalletKitRust.configure(projectId: InputConfig.projectId, groupIdentifier: "group.com.walletconnect.sdk")
 

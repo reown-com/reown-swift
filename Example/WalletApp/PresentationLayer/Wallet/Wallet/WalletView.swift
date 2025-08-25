@@ -1,5 +1,6 @@
 import SwiftUI
 import ReownWalletKit
+import WalletConnectYttrium
 
 struct WalletView: View {
     @EnvironmentObject var presenter: WalletPresenter
@@ -164,7 +165,7 @@ struct WalletView: View {
         }
     }
     
-    private func connectionView(session: Session) -> some View {
+    private func connectionView(session: WalletConnectYttrium.Session) -> some View {
         Button {
             presenter.onConnection(session: session)
         } label: {

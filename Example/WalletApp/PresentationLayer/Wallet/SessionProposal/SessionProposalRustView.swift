@@ -1,7 +1,7 @@
 import SwiftUI
 import ReownWalletKit
-import WalletConnectSign
-
+//import WalletConnectSign
+import WalletConnectYttrium
 struct SessionProposalRustView: View {
     @EnvironmentObject var presenter: SessionProposalRustPresenter
     
@@ -151,7 +151,7 @@ struct SessionProposalRustView: View {
         .edgesIgnoringSafeArea(.all)
     }
 
-    private func sessionProposalView(namespaces: ProposalNamespace) -> some View {
+    private func sessionProposalView(namespaces: WalletConnectYttrium.ProposalNamespace) -> some View {
         VStack {
             VStack(alignment: .leading) {
                 TagsView(items: namespaces.chains?.map { $0.absoluteString } ?? []) {
