@@ -55,6 +55,15 @@ public class WalletKitRustClient {
         let projectIdKey = AgreementPrivateKey().rawRepresentation
         self.sessionStore = SessionStoreImpl(kms: kms)
         
+        // Set up sessions publisher callback
+        if let sessionStoreImpl = sessionStore as? SessionStoreImpl {
+            sessionStoreImpl.onSessionsUpdate = { [weak self] in
+                guard let self = self else { return }
+                let sessions = self.getSessions()
+                self.sessionsPublisherSubject.send(sessions)
+            }
+        }
+        
         // Set up app state observer to call online when entering foreground
         appStateObserver.onWillEnterForeground = { [weak self] in
             Task {
@@ -67,6 +76,10 @@ public class WalletKitRustClient {
             await yttriumClient.registerSignListener(listener: self)
             await yttriumClient.registerSessionStore(sessionStore: sessionStore)
             registerLogger(logger: self)
+            
+            // Emit initial sessions after setup
+            let sessions = getSessions()
+            sessionsPublisherSubject.send(sessions)
         }
     }
     
@@ -87,11 +100,38 @@ public class WalletKitRustClient {
             throw Errors.failedToDecodeSessionProposal
         }
         let yttriumMetadata = fromAppMetadata(selfMetadata)
-        return try await yttriumClient.approve(proposal: ffiProposal, approvedNamespaces: approvedNamespaces, selfMetadata: yttriumMetadata)
+        let sessionFfi = try await yttriumClient.approve(proposal: ffiProposal, approvedNamespaces: approvedNamespaces, selfMetadata: yttriumMetadata)
+        
+        // Trigger sessions update after successful approval
+        let sessions = getSessions()
+        sessionsPublisherSubject.send(sessions)
+        
+        return sessionFfi
     }
     
     public func getSessions() -> [Session] {
         sessionStore.getAllSessions().compactMap {$0.toCodableSession()?.publicRepresentation()}
+    }
+    
+    /// For the wallet to reject a session proposal
+    /// - Parameters:
+    ///   - proposal: Session Proposal to reject
+    public func reject(_ proposal: Session.Proposal) async throws {
+        // Convert Session.Proposal back to SessionProposalFfi for the Rust client
+        guard let ffiProposal = proposal.toSessionProposalFfi() else {
+            throw Errors.failedToDecodeSessionProposal
+        }
+        try await yttriumClient.reject(proposal: ffiProposal)
+        
+        // Note: Rejecting a proposal doesn't change existing sessions,
+        // so no need to trigger sessionsPublisher here
+    }
+    
+    /// Manually trigger sessions update
+    /// This will emit the current sessions through the sessionsPublisher
+    public func refreshSessions() {
+        let sessions = getSessions()
+        sessionsPublisherSubject.send(sessions)
     }
 }
 

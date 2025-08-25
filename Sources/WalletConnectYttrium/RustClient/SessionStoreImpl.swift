@@ -8,6 +8,8 @@ import WalletConnectSign
 
 
 class SessionStoreImpl: SessionStore {
+    public var onSessionsUpdate: (() -> Void)?
+    
     private let store: CodableStore<CodableSession>
     private let kms: KeyManagementServiceProtocol
 
@@ -29,10 +31,12 @@ class SessionStoreImpl: SessionStore {
         store.set(codable, forKey: codable.topic)
         let symKey = try! SymmetricKey(rawRepresentation: session.sessionSymKey)
         try! kms.setSymmetricKey(symKey, for: session.topic)
+        onSessionsUpdate?()
     }
 
     func deleteSession(topic: String) {
         store.delete(forKey: topic)
+        onSessionsUpdate?()
     }
 
     func getSession(topic: String) -> Yttrium.SessionFfi? {
