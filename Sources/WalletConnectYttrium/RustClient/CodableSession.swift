@@ -10,7 +10,8 @@ import YttriumWrapper
 import WalletConnectKMS
 import WalletConnectUtils
 import WalletConnectPairing
-import WalletConnectSign
+import WalletConnectVerify
+
 
 public struct ProposalNamespace: Equatable, Codable {
     public let chains: [Blockchain]?

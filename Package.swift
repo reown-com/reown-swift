@@ -88,7 +88,7 @@ let package = Package(
     targets: [
         .target(
             name: "WalletConnectYttrium",
-            dependencies: ["WalletConnectKMS", "WalletConnectVerify", "YttriumWrapper", "WalletConnectUtils"],
+            dependencies: ["WalletConnectKMS", "WalletConnectVerify", "YttriumWrapper", "WalletConnectUtils", "WalletConnectPairing"],
             path: "Sources/WalletConnectYttrium",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(

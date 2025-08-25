@@ -3,8 +3,7 @@ import Foundation
 import YttriumWrapper
 import WalletConnectKMS
 import WalletConnectUtils
-import WalletConnectPairing
-import WalletConnectSign
+
 
 
 class SessionStoreImpl: SessionStore {

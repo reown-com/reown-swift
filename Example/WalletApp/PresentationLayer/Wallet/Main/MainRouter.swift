@@ -1,6 +1,5 @@
 import UIKit
 
-import ReownWalletKit
 import WalletConnectNotify
 import YttriumWrapper
 import WalletConnectYttrium
@@ -40,14 +39,15 @@ final class MainRouter {
     }
     
     func present(sessionRequest: Request, importAccount: ImportAccount, sessionContext: VerifyContext?) {
-        SessionRequestModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, sessionContext: sessionContext)
-            .presentFullScreen(from: viewController, transparentBackground: true)
+        AlertPresenter.present(message: "not implemented xcv", type: .error)
+//        SessionRequestModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, sessionContext: sessionContext)
+//            .presentFullScreen(from: viewController, transparentBackground: true)
     }
-
-    func present(request: AuthenticationRequest, importAccount: ImportAccount, context: VerifyContext?) {
-        AuthRequestModule.create(app: app, request: request, importAccount: importAccount, context: context)
-            .presentFullScreen(from: viewController, transparentBackground: true)
-    }
+//
+//    func present(request: AuthenticationRequest, importAccount: ImportAccount, context: VerifyContext?) {
+//        AuthRequestModule.create(app: app, request: request, importAccount: importAccount, context: context)
+//            .presentFullScreen(from: viewController, transparentBackground: true)
+//    }
 
     func presentCATransaction(sessionRequest: Request, importAccount: ImportAccount, context: VerifyContext?, call: Any?, from: String, chainId: Blockchain, uiFields: Any?) {
 //        CATransactionModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, call: call, from: from, chainId: chainId, uiFields: uiFields)

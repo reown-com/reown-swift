@@ -1,6 +1,5 @@
 import UIKit
 
-import ReownWalletKit
 import WalletConnectYttrium
 
 final class WalletRouter {
@@ -13,8 +12,9 @@ final class WalletRouter {
     }
     
     func present(sessionRequest: Request, importAccount: ImportAccount, sessionContext: VerifyContext?) {
-        SessionRequestModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, sessionContext: sessionContext)
-            .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+        AlertPresenter.present(message: "not implemented sds", type: .error)
+//        SessionRequestModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, sessionContext: sessionContext)
+//            .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
     }
     
     func present(sessionProposal: WalletConnectYttrium.Session.Proposal, importAccount: ImportAccount, sessionContext: VerifyContext?) {

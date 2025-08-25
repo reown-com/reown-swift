@@ -1,7 +1,6 @@
 import Foundation
 import Combine
 
-import ReownWalletKit
 import WalletConnectNotify
 import WalletConnectYttrium
 
@@ -15,7 +14,7 @@ final class MainInteractor {
         return WalletKitRust.instance.sessionRequestPublisher
     }
     
-    var authenticateRequestPublisher: AnyPublisher<(request: AuthenticationRequest, context: VerifyContext?), Never> {
-        return WalletKit.instance.authenticateRequestPublisher
-    }
+//    var authenticateRequestPublisher: AnyPublisher<(request: AuthenticationRequest, context: VerifyContext?), Never> {
+//        return WalletKit.instance.authenticateRequestPublisher
+//    }
 }

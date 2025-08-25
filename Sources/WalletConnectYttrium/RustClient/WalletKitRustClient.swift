@@ -4,7 +4,7 @@ import YttriumWrapper
 import WalletConnectKMS
 import WalletConnectUtils
 import WalletConnectPairing
-import WalletConnectSign
+import WalletConnectVerify
 
 #if canImport(UIKit)
 import UIKit
@@ -118,10 +118,10 @@ public class WalletKitRustClient {
     ///   - proposal: Session Proposal to reject
     public func reject(_ proposal: Session.Proposal) async throws {
         // Convert Session.Proposal back to SessionProposalFfi for the Rust client
-        guard let ffiProposal = proposal.toSessionProposalFfi() else {
-            throw Errors.failedToDecodeSessionProposal
-        }
-        try await yttriumClient.reject(proposal: ffiProposal)
+//        guard let ffiProposal = proposal.toSessionProposalFfi() else {
+//            throw Errors.failedToDecodeSessionProposal
+//        }
+//        try await yttriumClient.reject(proposal: ffiProposal)
         
         // Note: Rejecting a proposal doesn't change existing sessions,
         // so no need to trigger sessionsPublisher here
