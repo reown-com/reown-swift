@@ -19,11 +19,14 @@ class SignInteractor: ObservableObject {
     }
     
     func connect(walletUniversalLink: String?) async throws  {
-        let uri = try await AppKit.instance.connect(walletUniversalLink: walletUniversalLink)
-
-        DispatchQueue.main.async {
-            self.store.uri = uri
-            self.store.retryShown = false
+        do {
+            let uri = try await AppKit.instance.connect(walletUniversalLink: nil, authParams: AppKit.config.authRequestParams)
+            DispatchQueue.main.async {
+                self.store.uri = uri
+                self.store.retryShown = false
+            }
+        } catch {
+            throw error
         }
     }
     

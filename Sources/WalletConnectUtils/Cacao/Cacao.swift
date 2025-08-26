@@ -3,7 +3,7 @@ import Foundation
 /// CAIP-74 Cacao object
 ///
 /// specs at:  https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-74.md
-public struct Cacao: Codable, Equatable {
+public struct Cacao: Codable, Equatable, Sendable {
     public let h: CacaoHeader
     public let p: CacaoPayload
     public let s: CacaoSignature

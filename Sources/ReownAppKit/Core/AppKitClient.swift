@@ -137,10 +137,10 @@ public class AppKitClient {
     /// Namespaces from Web3Modal.config will be used
     /// - Parameters:
     ///   - topic: pairing topic
-    public func connect(walletUniversalLink: String?) async throws -> WalletConnectURI? {
-        logger.debug("Connecting Application \(walletUniversalLink ?? "")")
+    public func connect(walletUniversalLink: String?, authParams: AuthRequestParams?) async throws -> WalletConnectURI? {
+        logger.debug("Connecting Application \(walletUniversalLink ?? "") using \(authParams != nil ? "Link Mode" : "Websocket Relay")")
         do {
-            if let authParams = AppKit.config.authRequestParams {
+            if let authParams {
                 return try await signClient.authenticate(authParams, walletUniversalLink: walletUniversalLink)
             } else {
                 let pairingURI = try await signClient.connect(

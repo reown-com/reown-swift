@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CacaoPayload: Codable, Equatable {
+public struct CacaoPayload: Codable, Equatable, Sendable {
     public let iss: String
     public let domain: String
     public let aud: String
