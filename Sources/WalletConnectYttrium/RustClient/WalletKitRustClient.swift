@@ -41,7 +41,7 @@ public class WalletKitRustClient {
     private let sessionsPublisherSubject = PassthroughSubject<[Session], Never>()
 
 
-    private let sessionStore: SessionStore
+    private let sessionStore: SessionStoreImpl
     
     // MARK: - Private Properties
     private let yttriumClient: YttriumWrapper.SignClient
@@ -49,19 +49,17 @@ public class WalletKitRustClient {
     private let appStateObserver = WalletKitAppStateObserver()
     
     init(yttriumClient: YttriumWrapper.SignClient,
-         kms: KeyManagementServiceProtocol) {
+         sessionStore: SessionStoreImpl) {
         self.yttriumClient = yttriumClient
-
+        self.sessionStore = sessionStore
         let projectIdKey = AgreementPrivateKey().rawRepresentation
-        self.sessionStore = SessionStoreImpl(kms: kms)
+
         
         // Set up sessions publisher callback
-        if let sessionStoreImpl = sessionStore as? SessionStoreImpl {
-            sessionStoreImpl.onSessionsUpdate = { [weak self] in
-                guard let self = self else { return }
-                let sessions = self.getSessions()
-                self.sessionsPublisherSubject.send(sessions)
-            }
+        sessionStore.onSessionsUpdate = { [weak self] in
+            guard let self = self else { return }
+            let sessions = self.getSessions()
+            self.sessionsPublisherSubject.send(sessions)
         }
         
         // Set up app state observer to call online when entering foreground
@@ -72,9 +70,7 @@ public class WalletKitRustClient {
         }
         
         Task {
-            await yttriumClient.setKey(key: projectIdKey)
             await yttriumClient.registerSignListener(listener: self)
-            await yttriumClient.registerSessionStore(sessionStore: sessionStore)
             registerLogger(logger: self)
             
             // Emit initial sessions after setup
@@ -143,16 +139,44 @@ struct WalletKitRustClientFactory {
         let keychainStorage = KeychainStorage(serviceIdentifier: "com.walletconnect.sdk", accessGroup: groupIdentifier)
 
         let kms = KeyManagementService(keychain: keychainStorage)
+        
+        // to do store the project id key in keychain and retrieve it for migration
+        let projectIdKey = AgreementPrivateKey().rawRepresentation
+        
+        let sessionStore = SessionStoreImpl(kms: kms)
 
+        
         let yttriumClient = YttriumWrapper.SignClient(
-            projectId: config.projectId
+            projectId: config.projectId,
+            key: projectIdKey,
+            sessionStore: sessionStore
         )
         
-        return WalletKitRustClient(yttriumClient: yttriumClient, kms: kms)
+        return WalletKitRustClient(yttriumClient: yttriumClient, sessionStore: sessionStore)
     }
 }
 
 extension WalletKitRustClient: SignListener, Logger {
+    public func onSessionDisconnect(id: UInt64, topic: String) {
+        //todo
+    }
+    
+    public func onSessionEvent(id: UInt64, topic: String, params: Bool) {
+        //todo
+    }
+    
+    public func onSessionExtend(id: UInt64, topic: String) {
+        //todo
+    }
+    
+    public func onSessionUpdate(id: UInt64, topic: String, params: Bool) {
+        //todo
+    }
+    
+    public func onSessionConnect(id: UInt64) {
+        //todo
+    }
+    
     public func log(message: String) {
         print("RUST: \(message)")
     }

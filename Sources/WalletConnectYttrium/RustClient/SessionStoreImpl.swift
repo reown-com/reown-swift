@@ -6,7 +6,23 @@ import WalletConnectUtils
 
 
 
-class SessionStoreImpl: SessionStore {
+class SessionStoreImpl: SessionStoreFfi {
+    func deleteSession(topic: String) -> Yttrium.SessionFfi? {
+        store.delete(forKey: topic)
+        onSessionsUpdate?()
+        return nil
+    }
+    
+    func getDecryptionKeyForTopic(topic: String) -> Data? {
+        let symKey =  kms.getSymmetricKey(for: topic)!.rawRepresentation
+        return symKey
+    }
+    
+    func savePairingKey(topic: String, symKey: Data) {
+        let symKey = try! SymmetricKey(rawRepresentation: symKey)
+        try! kms.setSymmetricKey(symKey, for: topic)
+    }
+    
     public var onSessionsUpdate: (() -> Void)?
     
     private let store: CodableStore<CodableSession>
@@ -30,11 +46,6 @@ class SessionStoreImpl: SessionStore {
         store.set(codable, forKey: codable.topic)
         let symKey = try! SymmetricKey(rawRepresentation: session.sessionSymKey)
         try! kms.setSymmetricKey(symKey, for: session.topic)
-        onSessionsUpdate?()
-    }
-
-    func deleteSession(topic: String) {
-        store.delete(forKey: topic)
         onSessionsUpdate?()
     }
 
