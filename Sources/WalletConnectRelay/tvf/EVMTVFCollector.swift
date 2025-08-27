@@ -49,11 +49,57 @@ class EVMTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // For EVM methods, the response is the transaction hash as a string
+        // Special handling for wallet_sendCalls
+        if rpcMethod == Self.WALLET_SEND_CALLS {
+            return parseWalletSendCallsResponse(anycodable)
+        }
+        
+        // For other EVM methods, the response is the transaction hash as a string
         if let rawHash = try? anycodable.get(String.self) {
             return [rawHash]
         }
         return nil
+    }
+    
+    // MARK: - wallet_sendCalls Response Parsing
+    
+    private func parseWalletSendCallsResponse(_ anycodable: AnyCodable) -> [String]? {
+        // Unwrap potential nested AnyCodable created via AnyCodable(any:)
+        let underlying: Any
+        if let nested = anycodable.value as? AnyCodable {
+            underlying = nested.value
+        } else {
+            underlying = anycodable.value
+        }
+
+        // Try V2 object first
+        if let responseDict = underlying as? [String: Any] {
+            return parseV2Response(responseDict)
+        }
+
+        // Fallback to V1: plain string hash
+        if let rawHash = underlying as? String {
+            return [rawHash]
+        }
+        return nil
+    }
+    
+    private func parseV2Response(_ responseDict: [String: Any]) -> [String]? {
+        // Extract the id field
+        guard let id = responseDict["id"] as? String else {
+            return nil
+        }
+        
+        var result = [id]
+        
+        // Try to extract transaction hashes from capabilities.caip345.transactionHashes
+        if let capabilities = responseDict["capabilities"] as? [String: Any],
+           let caip345 = capabilities["caip345"] as? [String: Any],
+           let transactionHashes = caip345["transactionHashes"] as? [String] {
+            result.append(contentsOf: transactionHashes)
+        }
+        
+        return result
     }
     
     // MARK: - Contract Data Validation
