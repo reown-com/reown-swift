@@ -73,7 +73,7 @@ public class WalletKitClient {
         pairingClient.pairingStatePublisher
     }
 
-    public var pairingExpirationPublisher: AnyPublisher<Pairing, Never> {
+    public var pairingExpirationPublisher: AnyPublisher<WalletConnectPairing.Pairing, Never> {
         return pairingClient.pairingExpirationPublisher
     }
 
@@ -268,7 +268,7 @@ public class WalletKitClient {
         try await signClient.cleanup()
     }
     
-    public func getPairings() -> [Pairing] {
+    public func getPairings() -> [WalletConnectPairing.Pairing] {
         return pairingClient.getPairings()
     }
 
