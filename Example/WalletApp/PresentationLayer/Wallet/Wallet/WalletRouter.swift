@@ -17,12 +17,6 @@ final class WalletRouter {
 //            .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
     }
     
-    func present(sessionProposal: WalletConnectYttrium.Session.Proposal, importAccount: ImportAccount, sessionContext: VerifyContext?) {
-        AlertPresenter.present(message: "not implemented", type: .error)
-//        SessionProposalModule.create(app: app, importAccount: importAccount, proposal: sessionProposal, context: sessionContext)
-//            .presentFullScreen(from: viewController, transparentBackground: true)
-    }
-    
     func presentPaste(onValue: @escaping (String) -> Void, onError: @escaping (Error) -> Void) {
         PasteUriModule.create(app: app, onValue: onValue, onError: onError)
             .presentFullScreen(from: viewController, transparentBackground: true)
