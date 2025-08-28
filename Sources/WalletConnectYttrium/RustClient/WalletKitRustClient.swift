@@ -130,6 +130,19 @@ public class WalletKitRustClient {
         let sessions = getSessions()
         sessionsPublisherSubject.send(sessions)
     }
+
+    /// For a wallet and a dApp to terminate a session
+    ///
+    /// Should Error:
+    /// - When the session topic is not found
+    /// - Parameters:
+    ///   - topic: Session topic that you want to delete
+    public func disconnect(topic: String) async throws {
+        sessionStore.deleteSession(topic: topic)
+        // Trigger sessions update after successful disconnection
+        let sessions = getSessions()
+        sessionsPublisherSubject.send(sessions)
+    }
 }
 
 struct WalletKitRustClientFactory {

@@ -4,128 +4,141 @@ import WalletConnectYttrium
 
 struct WalletView: View {
     @EnvironmentObject var presenter: WalletPresenter
-    
+
     var body: some View {
-        ZStack {
-            Color.grey100
-                .edgesIgnoringSafeArea(.all)
-            
-            VStack(alignment: .leading, spacing: 16) {
-                ZStack {
-                    if presenter.sessions.isEmpty {
-                        VStack(spacing: 10) {
-                            Image("connect-template")
-                            
-                            Text("Apps you connect with will appear here. To connect scan or paste the code that's displayed in the app.")
-                                .foregroundColor(.grey50)
-                                .font(.system(size: 15, weight: .regular, design: .rounded))
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
+        NavigationView {
+            ZStack {
+                Color.grey100
+                    .edgesIgnoringSafeArea(.all)
+
+                VStack(alignment: .leading, spacing: 16) {
+                    ZStack {
+                        if presenter.sessions.isEmpty {
+                            VStack(spacing: 10) {
+                                Image("connect-template")
+
+                                Text("Apps you connect with will appear here. To connect scan or paste the code that's displayed in the app.")
+                                    .foregroundColor(.grey50)
+                                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(4)
+                            }
+                            .padding(20)
                         }
-                        .padding(20)
-                    }
-                    
-                    VStack {
-                        ZStack {
-                            if !presenter.sessions.isEmpty {
-                                List {
-                                    ForEach(presenter.sessions, id: \.topic) { session in
-                                        connectionView(session: session)
-                                            .listRowSeparator(.hidden)
-                                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 16, trailing: 0))
-                                    }
-                                    .onDelete { indexSet in
-                                        Task(priority: .high) {
-                                            try await presenter.removeSession(at: indexSet)
+
+                        VStack {
+                            ZStack {
+                                if !presenter.sessions.isEmpty {
+                                    List {
+                                        ForEach(presenter.sessions, id: \.topic) { session in
+                                            connectionView(session: session)
+                                                .listRowSeparator(.hidden)
+                                                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 16, trailing: 0))
+                                        }
+                                        .onDelete { indexSet in
+                                            Task(priority: .high) {
+                                                try await presenter.removeSession(at: indexSet)
+                                            }
                                         }
                                     }
+                                    .listStyle(PlainListStyle())
                                 }
-                                .listStyle(PlainListStyle())
-                            }
-                            
-                            if presenter.showPairingLoading {
-                                VStack {
-                                    Spacer()
-                                    
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 20).fill(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    .blue100,
-                                                    .blue200
-                                                ]),
-                                                startPoint: .top, endPoint: .bottom)
-                                        )
-                                        .blink()
-                                        
-                                        Text("WalletConnect is pairing...")
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 16, weight: .regular, design: .rounded))
-                                            .padding(.vertical, 10)
-                                            .padding(.horizontal, 15)
+
+                                if presenter.showPairingLoading {
+                                    VStack {
+                                        Spacer()
+
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 20).fill(
+                                                LinearGradient(
+                                                    gradient: Gradient(colors: [
+                                                        .blue100,
+                                                        .blue200
+                                                    ]),
+                                                    startPoint: .top, endPoint: .bottom)
+                                            )
+                                            .blink()
+
+                                            Text("WalletConnect is pairing...")
+                                                .foregroundColor(.white)
+                                                .font(.system(size: 16, weight: .regular, design: .rounded))
+                                                .padding(.vertical, 10)
+                                                .padding(.horizontal, 15)
+                                        }
+                                        .fixedSize(horizontal: true, vertical: true)
                                     }
-                                    .fixedSize(horizontal: true, vertical: true)
                                 }
                             }
-                        }
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 20) {
-                            Spacer()
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+
                             Spacer()
 
-                            // Chain abstraction transfers button commented out
-                            /*
-                            Button {
-                                presenter.sendStableCoin()
-                            } label: {
-                                Image(systemName: "dollarsign.circle.fill")
-                                    .resizable()
-                                    .frame(width: 40, height: 40)
-                            }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            .accessibilityIdentifier("sendStableCoin")
-                            */
+                            HStack(spacing: 20) {
+                                Spacer()
+                                Spacer()
 
-                            // Chain abstraction transfers button commented out
-                            /*
-                            Button {
-                                presenter.sendEthereum()
-                            } label: {
-                                Image(systemName: "paperplane.fill")
-                                    .resizable()
-                                    .frame(width: 40, height: 40)
-                            }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            .accessibilityIdentifier("sendEthereum")
-                            */
+                                // Chain abstraction transfers button commented out
+                                /*
+                                Button {
+                                    presenter.sendStableCoin()
+                                } label: {
+                                    Image(systemName: "dollarsign.circle.fill")
+                                        .resizable()
+                                        .frame(width: 40, height: 40)
+                                }
+                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                                .accessibilityIdentifier("sendStableCoin")
+                                */
 
-                            Button {
-                                presenter.onPasteUri()
-                            } label: {
-                                Image("copy")
-                                    .resizable()
-                                    .frame(width: 56, height: 56)
+                                // Chain abstraction transfers button commented out
+                                /*
+                                Button {
+                                    presenter.sendEthereum()
+                                } label: {
+                                    Image(systemName: "paperplane.fill")
+                                        .resizable()
+                                        .frame(width: 40, height: 40)
+                                }
+                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                                .accessibilityIdentifier("sendEthereum")
+                                */
+
+                                Button {
+                                    presenter.onPasteUri()
+                                } label: {
+                                    Image("copy")
+                                        .resizable()
+                                        .frame(width: 56, height: 56)
+                                }
+                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                                .accessibilityIdentifier("copy")
+
+                                Button {
+                                    presenter.onScanUri()
+                                } label: {
+                                    Image("scan")
+                                        .resizable()
+                                        .frame(width: 56, height: 56)
+                                }
+                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                             }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            .accessibilityIdentifier("copy")
-                            
-                            Button {
-                                presenter.onScanUri()
-                            } label: {
-                                Image("scan")
-                                    .resizable()
-                                    .frame(width: 56, height: 56)
-                            }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                            .padding(.horizontal, 20)
                         }
-                        .padding(.horizontal, 20)
                     }
                 }
             }
             .padding(.vertical, 20)
+            .navigationBarItems(trailing:
+                Button(action: {
+                    Task {
+                        await presenter.removeAllSessions()
+                    }
+                }) {
+                    Text("Delete All")
+                        .foregroundColor(.red)
+                        .font(.system(size: 16, weight: .medium))
+                }
+                .disabled(presenter.sessions.isEmpty)
+            )
         }
         .alert(presenter.errorMessage, isPresented: $presenter.showError) {
             Button("OK", role: .cancel) {}

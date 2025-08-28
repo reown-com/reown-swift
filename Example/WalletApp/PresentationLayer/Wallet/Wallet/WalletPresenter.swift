@@ -112,6 +112,17 @@ final class WalletPresenter: ObservableObject {
         }
     }
 
+    func removeAllSessions() async {
+        do {
+            ActivityIndicatorManager.shared.start()
+            try await interactor.disconnectAllSessions()
+            ActivityIndicatorManager.shared.stop()
+        } catch {
+            ActivityIndicatorManager.shared.stop()
+            AlertPresenter.present(message: error.localizedDescription, type: .error)
+        }
+    }
+
     private func handlePairingLoadingChanged() {
         isPairingTimer?.invalidate()
 
