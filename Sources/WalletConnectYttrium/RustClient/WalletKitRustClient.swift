@@ -71,6 +71,7 @@ public class WalletKitRustClient {
         
         Task {
             await yttriumClient.registerSignListener(listener: self)
+            await yttriumClient.start()
             registerLogger(logger: self)
             
             // Emit initial sessions after setup

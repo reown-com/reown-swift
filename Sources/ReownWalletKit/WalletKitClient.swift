@@ -64,7 +64,8 @@ public class WalletKitClient {
     public var sessionResponsePublisher: AnyPublisher<Response, Never> {
         signClient.sessionResponsePublisher.eraseToAnyPublisher()
     }
-
+ 
+    
     public var pairingDeletePublisher: AnyPublisher<(code: Int, message: String), Never> {
         pairingClient.pairingDeletePublisher
     }
