@@ -1,15 +1,14 @@
 import UIKit
 import Combine
 
-
 import WalletConnectYttrium
-
+import WalletConnectUtils
 
 final class ConnectionDetailsPresenter: ObservableObject {
     private let router: ConnectionDetailsRouter
-    
+
     let session: WalletConnectYttrium.Session
-    
+
     private var disposeBag = Set<AnyCancellable>()
 
     init(
@@ -24,14 +23,14 @@ final class ConnectionDetailsPresenter: ObservableObject {
         Task {
             do {
                 ActivityIndicatorManager.shared.start()
-//                try await WalletKit.instance.disconnect(topic: session.topic)
-                AlertPresenter.present(message: "not implemented", type: .error)
+                try await WalletKitRust.instance.disconnect(topic: session.topic)
                 ActivityIndicatorManager.shared.stop()
                 DispatchQueue.main.async {
                     self.router.dismiss()
                 }
             } catch {
                 ActivityIndicatorManager.shared.stop()
+                AlertPresenter.present(message: error.localizedDescription, type: .error)
                 print(error)
             }
         }
