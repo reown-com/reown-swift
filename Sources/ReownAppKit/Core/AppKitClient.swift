@@ -274,7 +274,7 @@ public class AppKitClient {
     
     /// Query pairings
     /// - Returns: All pairings
-    public func getPairings() -> [Pairing] {
+    public func getPairings() -> [WalletConnectPairing.Pairing] {
         pairingClient.getPairings()
     }
     
