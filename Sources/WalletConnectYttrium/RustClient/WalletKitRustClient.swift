@@ -110,11 +110,11 @@ public class WalletKitRustClient {
         sessionStore.getAllSessions().compactMap {$0.toCodableSession()?.publicRepresentation()}
     }
     
-    /// Respond to a pending session request
-    /// Currently bridges to the legacy networking responder while Rust networking is being integrated
+    /// Respond to a pending session request via Yttrium
     public func respond(topic: String, requestId: RPCID, response: RPCResult) async throws {
-        // Temporary bridge: use Sign.instance to respond over networking
-        try await yttriumClient.respond(topic: <#T##String#>, response: SessionRequestJsonRpcResponseFfi)
+        let ffiResponse = try response.toYttriumFfiResponse(id: requestId)
+        
+        try await yttriumClient.respond(topic: topic, response: ffiResponse)
     }
     
     /// For the wallet to reject a session proposal
