@@ -1,6 +1,7 @@
 import SwiftUI
 
 import ReownWalletKit
+import WalletConnectYttrium
 
 final class SessionRequestModule {
     static let restorationIdentifier = "SessionRequestViewController"
@@ -8,7 +9,13 @@ final class SessionRequestModule {
     static func create(app: Application, sessionRequest: Request, importAccount: ImportAccount, sessionContext: VerifyContext?) -> UIViewController {
         let router = SessionRequestRouter(app: app)
         let interactor = SessionRequestInteractor()
-        let presenter = SessionRequestPresenter(interactor: interactor, router: router, sessionRequest: sessionRequest, importAccount: importAccount, context: sessionContext)
+        let presenter = SessionRequestPresenter(
+            interactor: interactor,
+            router: router,
+            sessionRequest: sessionRequest,
+            importAccount: importAccount,
+            context: sessionContext
+        )
         let view = SessionRequestView().environmentObject(presenter)
         let viewController = SceneViewController(viewModel: presenter, content: view)
         viewController.restorationIdentifier = Self.restorationIdentifier

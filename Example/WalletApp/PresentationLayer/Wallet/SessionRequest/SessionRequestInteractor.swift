@@ -1,14 +1,15 @@
 import Foundation
 
-import ReownWalletKit
+
 import ReownRouter
+import WalletConnectYttrium
 
 final class SessionRequestInteractor {
     func respondSessionRequest(sessionRequest: Request, importAccount: ImportAccount) async throws -> Bool {
         do {
             let result = try await Signer.sign(request: sessionRequest, importAccount: importAccount)
             AlertPresenter.present(message: result.description, type: .success)
-            try await WalletKit.instance.respond(
+            try await WalletKitRust.instance.respond(
                 topic: sessionRequest.topic,
                 requestId: sessionRequest.id,
                 response: .response(result)
@@ -27,7 +28,7 @@ final class SessionRequestInteractor {
     }
 
     func respondError(sessionRequest: Request) async throws {
-        try await WalletKit.instance.respond(
+        try await WalletKitRust.instance.respond(
             topic: sessionRequest.topic,
             requestId: sessionRequest.id,
             response: .error(.init(code: 0, message: ""))
@@ -41,6 +42,6 @@ final class SessionRequestInteractor {
     }
     
     func getSession(topic: String) -> Session? {
-        return WalletKit.instance.getSessions().first(where: { $0.topic == topic })
+        return WalletKitRust.instance.getSessions().first(where: { $0.topic == topic })
     }
 }

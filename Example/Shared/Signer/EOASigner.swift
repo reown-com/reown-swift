@@ -1,7 +1,7 @@
 import Foundation
 import Commons
-import WalletConnectSign
-import ReownWalletKit
+
+import WalletConnectYttrium
 import Web3
 
 final class EOASigner {

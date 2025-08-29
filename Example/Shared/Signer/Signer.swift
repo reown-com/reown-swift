@@ -1,7 +1,6 @@
 
 import Foundation
-import WalletConnectSign
-import ReownWalletKit
+import WalletConnectYttrium
 import Web3
 
 

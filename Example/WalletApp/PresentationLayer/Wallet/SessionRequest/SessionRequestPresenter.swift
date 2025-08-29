@@ -3,6 +3,7 @@ import Combine
 import Web3
 
 import ReownWalletKit
+import WalletConnectYttrium
 
 final class SessionRequestPresenter: ObservableObject {
     private let interactor: SessionRequestInteractor

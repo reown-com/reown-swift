@@ -39,9 +39,8 @@ final class MainRouter {
     }
     
     func present(sessionRequest: Request, importAccount: ImportAccount, sessionContext: VerifyContext?) {
-        AlertPresenter.present(message: "not implemented xcv", type: .error)
-//        SessionRequestModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, sessionContext: sessionContext)
-//            .presentFullScreen(from: viewController, transparentBackground: true)
+        SessionRequestModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, sessionContext: sessionContext)
+            .presentFullScreen(from: viewController, transparentBackground: true)
     }
 //
 //    func present(request: AuthenticationRequest, importAccount: ImportAccount, context: VerifyContext?) {
