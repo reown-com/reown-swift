@@ -358,6 +358,7 @@ extension SessionProposalFfi {
         
         // Create SessionProposal for the internal proposal field
         let proposer = Participant(publicKey: proposerPublicKey.toHexString(), metadata: appMetadata)
+            
         let sessionProposal = SessionProposal(
             relays: wcRelays,
             proposer: proposer,
@@ -370,6 +371,7 @@ extension SessionProposalFfi {
         return Session.Proposal(
             id: id,
             pairingTopic: topic,
+            pairingSymKey: pairingSymKey,
             proposer: appMetadata,
             requiredNamespaces: wcRequiredNamespaces,
             optionalNamespaces: wcOptionalNamespaces,
@@ -414,9 +416,7 @@ extension Session.Proposal {
             )
         }
         
-        // Note: pairingSymKey is not available in Session.Proposal, using placeholder
-        // In a real implementation, this should be retrieved from secure storage
-        let pairingSymKey = Data.randomBytes(count: 32)
+        
         
         return SessionProposalFfi(
             id: id,

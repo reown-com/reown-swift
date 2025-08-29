@@ -26,7 +26,7 @@ class SessionStoreImpl: SessionStoreFfi {
     public var onSessionsUpdate: (() -> Void)?
     
     private let store: CodableStore<CodableSession>
-    private let kms: KeyManagementServiceProtocol
+    private let kms: KeyManagementServiceProtocol //migrate keys from KMS and update codable session with derived symkey if symkey was nil from codable storage
 
     init(defaults: KeyValueStorage = UserDefaults.standard,
          kms: KeyManagementServiceProtocol) {
@@ -55,7 +55,7 @@ class SessionStoreImpl: SessionStoreFfi {
         
         let symKey =  kms.getSymmetricKey(for: topic)!.rawRepresentation
         
-        return codable.toYttriumSession(symKey: symKey)
+        return codable.toYttriumSession()
     }
 
     func getAllSessions() -> [Yttrium.SessionFfi] {
@@ -65,7 +65,7 @@ class SessionStoreImpl: SessionStoreFfi {
                 print("SessionStore: Failed to get symmetric key for topic: \(session.topic)")
                 return nil
             }
-            return session.toYttriumSession(symKey: symKey.rawRepresentation)
+            return session.toYttriumSession()
         }
     }
 }

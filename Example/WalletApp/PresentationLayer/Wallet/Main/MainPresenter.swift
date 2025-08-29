@@ -50,22 +50,14 @@ extension MainPresenter {
     private func setupInitialState() {
         configurationService.configure(importAccount: importAccount)
         pushRegisterer.registerForPushNotifications()
-
+        
         WalletKitRust.instance.sessionProposalPublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] proposalWithContext in
                 router.present(proposal: proposalWithContext.proposal, importAccount: importAccount, context: proposalWithContext.context)
             }
             .store(in: &disposeBag)
-
-        interactor.sessionProposalPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [unowned self] session in
-                AlertPresenter.present(message: "implement sessionProposalPublisher", type: .error)
-//                router.present(proposal: session.proposal, importAccount: importAccount, context: session.context)
-            }
-            .store(in: &disposeBag)
-
+        
         interactor.sessionRequestPublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] (request, context) in
