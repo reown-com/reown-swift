@@ -42,18 +42,19 @@ final class ConnectionDetailsPresenter: ObservableObject {
     }
 
     func changeForMainnet() {
-//        Task {
-//            do {
-//                ActivityIndicatorManager.shared.start()
-//
-//                try await WalletKit.instance.emit(topic: session.topic, event: Session.Event(name: "chainChanged", data: AnyCodable("1")), chainId: Blockchain("eip155:1")!)
-//
-//                ActivityIndicatorManager.shared.stop()
-//            } catch {
-//                ActivityIndicatorManager.shared.stop()
-//                print(error)
-//            }
-//        }
+        Task {
+            do {
+                ActivityIndicatorManager.shared.start()
+
+                let namespaces = ["eip155:1": SettleNamespace(accounts: ["eip155:1:0xcA4FcC31B41f30667895d3318521d957750D4945"], methods: ["personal_sign"], events: [], chains: ["eip155:1"])]
+                try await WalletKitRust.instance.update(topic: session.topic, namespaces: namespaces)
+
+                ActivityIndicatorManager.shared.stop()
+            } catch {
+                ActivityIndicatorManager.shared.stop()
+                print(error)
+            }
+        }
     }
 }
 

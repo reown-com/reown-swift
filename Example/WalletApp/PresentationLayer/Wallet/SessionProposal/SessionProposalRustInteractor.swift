@@ -64,7 +64,7 @@ final class SessionProposalRustInteractor {
     func reject(proposal: WalletConnectYttrium.Session.Proposal) async throws {
         // TODO: Implement reject functionality in WalletKitRust
         // For now, we can't reject through the Rust client
-        throw NSError(domain: "SessionProposalRustInteractor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Reject not yet implemented for Rust client"])
+        try await WalletKitRust.instance.reject(proposal, reason: .userRejected)
     }
 }
 

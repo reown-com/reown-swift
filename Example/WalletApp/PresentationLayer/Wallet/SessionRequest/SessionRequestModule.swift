@@ -1,6 +1,5 @@
 import SwiftUI
 
-import ReownWalletKit
 import WalletConnectYttrium
 
 final class SessionRequestModule {

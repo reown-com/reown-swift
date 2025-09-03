@@ -6,11 +6,26 @@ import WalletConnectUtils
 
 
 
-class SessionStoreImpl: SessionStoreFfi {
-    func deleteSession(topic: String) -> Yttrium.SessionFfi? {
+class SessionStoreImpl: StorageFfi {
+    func getAllTopics() -> [Yttrium.Topic] {
+        return []
+    }
+    
+    func savePairing(topic: String, rpcId: UInt64, symKey: Data, selfKey: Data) {
+        
+    }
+    
+    func getPairing(topic: String, rpcId: UInt64) -> Yttrium.PairingFfi? {
+        return nil
+    }
+    
+    func savePartialSession(topic: String, symKey: Data) {
+        
+    }
+    
+    func deleteSession(topic: String)  {
         store.delete(forKey: topic)
         onSessionsUpdate?()
-        return nil
     }
     
     func getDecryptionKeyForTopic(topic: String) -> Data? {

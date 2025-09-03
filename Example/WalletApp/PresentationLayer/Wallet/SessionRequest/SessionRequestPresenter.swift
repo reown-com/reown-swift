@@ -2,7 +2,6 @@ import UIKit
 import Combine
 import Web3
 
-import ReownWalletKit
 import WalletConnectYttrium
 
 final class SessionRequestPresenter: ObservableObject {
@@ -90,14 +89,14 @@ final class SessionRequestPresenter: ObservableObject {
 // MARK: - Private functions
 private extension SessionRequestPresenter {
     func setupInitialState() {
-        WalletKit.instance.requestExpirationPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] requestId in
-                guard let self = self else { return }
-                if requestId == sessionRequest.id {
-                    dismiss()
-                }
-            }.store(in: &disposeBag)
+//        WalletKitRust.instance.requestExpirationPublisher
+//            .receive(on: DispatchQueue.main)
+//            .sink { [weak self] requestId in
+//                guard let self = self else { return }
+//                if requestId == sessionRequest.id {
+//                    dismiss()
+//                }
+//            }.store(in: &disposeBag)
     }
 }
 

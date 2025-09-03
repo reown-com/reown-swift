@@ -13,8 +13,7 @@ extension RPCResult {
             let res = SessionRequestJsonRpcResultResponseFfi(id: idUInt, jsonrpc: "2.0", result: jsonString)
             return .result(res)
         case .error(let jsonError):
-            let errObj = SessionRequestJsonRpcErrorResponseFfi(code: Int64(jsonError.code), message: jsonError.message)
-            let err = SessionRequestJsonRpcErrorResponseFfi(id: idUInt, jsonrpc: "2.0", error: errObj)
+            let err = SessionRequestJsonRpcErrorResponseFfi(id: idUInt, jsonrpc: "2.0", error: jsonError.message)
             return .error(err)
         }
     }

@@ -120,15 +120,17 @@ public class WalletKitRustClient {
     /// For the wallet to reject a session proposal
     /// - Parameters:
     ///   - proposal: Session Proposal to reject
-    public func reject(_ proposal: Session.Proposal) async throws {
-        // Convert Session.Proposal back to SessionProposalFfi for the Rust client
-//        guard let ffiProposal = proposal.toSessionProposalFfi() else {
-//            throw Errors.failedToDecodeSessionProposal
-//        }
-//        try await yttriumClient.reject(proposal: ffiProposal)
+    public func reject(_ proposal: Session.Proposal, reason: RejectionReason) async throws {
+//         Convert Session.Proposal back to SessionProposalFfi for the Rust client
+        guard let ffiProposal = proposal.toSessionProposalFfi() else {
+            throw Errors.failedToDecodeSessionProposal
+        }
         
-        // Note: Rejecting a proposal doesn't change existing sessions,
-        // so no need to trigger sessionsPublisher here
+        try await yttriumClient.reject(proposal: proposal.toSessionProposalFfi()!, reason: reason.ffi)
+    }
+    
+    public func update(topic: String, namespaces: [String: SettleNamespace]) async throws {
+        try await yttriumClient.update(topic: topic, namespaces: namespaces)
     }
     
     /// Manually trigger sessions update
@@ -178,6 +180,14 @@ struct WalletKitRustClientFactory {
 }
 
 extension WalletKitRustClient: SignListener, Logger {
+    public func onSessionRequestResponse(id: UInt64, topic: String, response: Yttrium.SessionRequestJsonRpcResponseFfi) {
+        //todo
+    }
+    
+    public func onSessionUpdate(id: UInt64, topic: String, namespaces: [String : Yttrium.SettleNamespace]) {
+        //todo
+    }
+    
     public func onSessionDisconnect(id: UInt64, topic: String) {
         //todo
     }
@@ -187,10 +197,6 @@ extension WalletKitRustClient: SignListener, Logger {
     }
     
     public func onSessionExtend(id: UInt64, topic: String) {
-        //todo
-    }
-    
-    public func onSessionUpdate(id: UInt64, topic: String, params: Bool) {
         //todo
     }
     
@@ -278,6 +284,31 @@ public class WalletKitRust {
         )
     }
 }
+
+
+public enum RejectionReason {
+    case userRejected
+    case unsupportedChains
+    case unsupportedMethods
+    case unsupportedAccounts
+    case unsupportedEvents
+    
+    var ffi: YttriumWrapper.RejectionReason {
+        switch self {
+        case .userRejected:
+            YttriumWrapper.RejectionReason.userRejected
+        case .unsupportedChains:
+            YttriumWrapper.RejectionReason.unsupportedChains
+        case .unsupportedMethods:
+            YttriumWrapper.RejectionReason.unsupportedMethods
+        case .unsupportedAccounts:
+            YttriumWrapper.RejectionReason.unsupportedAccounts
+        case .unsupportedEvents:
+            YttriumWrapper.RejectionReason.unsupportedEvents
+        }
+    }
+}
+
 
 
 
