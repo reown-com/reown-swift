@@ -10,7 +10,7 @@ Pod::Spec.new do |spec|
   spec.summary     = "Reown Swift WalletKit & AppKit"
   spec.description = "Implementation of WalletKit and AppKit"
   spec.homepage    = "https://reown.com"
-  spec.license     = { :type => 'Apache-2.0', :file => 'LICENSE' }
+  spec.license     = { :type => 'WalletConnect Community License Agreement', :file => 'LICENSE' }
   spec.authors          = "Reown, Inc."
   spec.source = {
     :git => 'https://github.com/reown-com/reown-swift.git',
