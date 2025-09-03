@@ -133,6 +133,10 @@ public class WalletKitRustClient {
         try await yttriumClient.update(topic: topic, namespaces: namespaces)
     }
     
+    public func extend(topic: String) async throws {
+        try await yttriumClient.extend(topic: topic)
+    }
+    
     /// Manually trigger sessions update
     /// This will emit the current sessions through the sessionsPublisher
     public func refreshSessions() {

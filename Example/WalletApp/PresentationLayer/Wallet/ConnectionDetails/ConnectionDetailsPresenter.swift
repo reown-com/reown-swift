@@ -56,6 +56,20 @@ final class ConnectionDetailsPresenter: ObservableObject {
             }
         }
     }
+
+    func onExtend() {
+        Task {
+            do {
+                ActivityIndicatorManager.shared.start()
+                try await WalletKitRust.instance.extend(topic: session.topic)
+                ActivityIndicatorManager.shared.stop()
+            } catch {
+                ActivityIndicatorManager.shared.stop()
+                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                print(error)
+            }
+        }
+    }
 }
 
 // MARK: - Private functions

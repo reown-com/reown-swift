@@ -194,6 +194,15 @@ struct ConnectionDetailsView: View {
                     .padding(.top, 20)
 
                     Button {
+                        presenter.onExtend()
+                    } label: {
+                        Text("Extend Session")
+                            .foregroundColor(.grey50)
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    }
+                    .padding(.top, 12)
+
+                    Button {
                         presenter.onDelete()
                     } label: {
                         Text("Delete")
