@@ -76,6 +76,7 @@ extension Store {
     public var sortedWalletsPublisher: AnyPublisher<[Wallet], Never> {
         Publishers
             .CombineLatest4($customWallets, $featuredWallets, $wallets, $installedWalletIds)
+            .receive(on: DispatchQueue.main)
             .compactMap { [weak self] _ in self?.sortedWallets }
             .eraseToAnyPublisher()
     }

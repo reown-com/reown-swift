@@ -23,7 +23,7 @@ final class W3MAPIInteractor: ObservableObject {
         NotificationCenter.default
             .publisher(for: UIApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
-                Task {
+                Task { @MainActor in
                     try? await self?.detectInstalledWallets()
                 }
             }
