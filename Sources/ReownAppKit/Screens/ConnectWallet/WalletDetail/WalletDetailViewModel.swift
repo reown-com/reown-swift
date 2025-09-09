@@ -100,14 +100,13 @@ class WalletDetailViewModel: ObservableObject {
             store.toast = .init(style: .success, message: "Link copied")
         case .onAppear:
             
-            if wallet.alternativeConnectionMethod == nil {
-                
-                navigateToWalletWithPairingUri(
-                    wallet: wallet,
-                    preferBrowser: preferredPlatform == .browser
-                )
-            } else {
-                wallet.alternativeConnectionMethod?()
+            if wallet.alternativeConnectionMethod != nil {
+                if wallet.isInstalled {
+                    wallet.alternativeConnectionMethod?()
+                } else {
+                    store.retryShown = true
+                    store.toast = .init(style: .error, message: "\(wallet.name) is not installed")
+                }
             }
                 
             var wallet = wallet
@@ -117,13 +116,17 @@ class WalletDetailViewModel: ObservableObject {
         case .didTapOpen:
                 store.retryShown = false
             
-            if wallet.alternativeConnectionMethod == nil {
-                navigateToWalletWithPairingUri(
-                    wallet: wallet,
-                    preferBrowser: preferredPlatform == .browser
-                )
+            if wallet.alternativeConnectionMethod != nil {
+                if wallet.isInstalled {
+                    wallet.alternativeConnectionMethod?()
+                } else {
+                    store.retryShown = true
+                    store.toast = .init(style: .error, message: "\(wallet.name) is not installed")
+                }
             } else {
-                wallet.alternativeConnectionMethod?()
+                Task {
+                    try await AppKit.instance.onWalletTap?(wallet)
+                }
             }
             
         case .didTapAppStore:

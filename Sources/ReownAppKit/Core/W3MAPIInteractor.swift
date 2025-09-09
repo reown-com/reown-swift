@@ -139,6 +139,7 @@ final class W3MAPIInteractor: ObservableObject {
         try await detectInstalledWallets()
     }
     
+    @MainActor
     func detectInstalledWallets() async throws {
         do {
             // Make copy to avoid race in concurrentMap

@@ -140,8 +140,10 @@ public class AppKitClient {
     public func connect(walletUniversalLink: String?, authParams: AuthRequestParams?) async throws -> WalletConnectURI? {
         logger.debug("Connecting Application \(walletUniversalLink ?? "") using \(authParams != nil ? "Link Mode" : "Websocket Relay")")
         do {
-            if let authParams {
-                return try await signClient.authenticate(authParams, walletUniversalLink: walletUniversalLink)
+            if let authParams,
+               let uri = try await signClient.authenticate(authParams, walletUniversalLink: walletUniversalLink)
+            {
+                return uri
             } else {
                 let pairingURI = try await signClient.connect(
                     requiredNamespaces: AppKit.config.sessionParams.requiredNamespaces,

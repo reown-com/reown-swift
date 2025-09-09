@@ -240,6 +240,10 @@ public class AppKit {
     public static func set(authRequestParams: AuthRequestParams?) {
         AppKit.config.authRequestParams = authRequestParams
     }
+    
+    public static func getAuthRequestParams() -> AuthRequestParams? {
+        AppKit.config.authRequestParams
+    }
 
     private static func configureCoinbaseIfNeeded(
         store: Store,
@@ -352,7 +356,7 @@ public extension AppKit {
             AppKit.setCurrentWallet(nil)
         }
         
-        // Always start from here
+        // Always start from here until we remove alternative connection methods
         AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.connectWallet)
 
         let modal = Web3ModalSheetController(router: AppKit.viewModel.router)
