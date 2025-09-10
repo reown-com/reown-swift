@@ -1,6 +1,3 @@
-import class CoinbaseWalletSDK.CoinbaseWalletSDK
-import struct CoinbaseWalletSDK.Action
-import struct CoinbaseWalletSDK.ActionError
 import Combine
 import Foundation
 import UIKit
@@ -60,12 +57,8 @@ public class AppKitClient {
                     result: response.result
                 )
             }
-            .merge(with: coinbaseResponseSubject)
             .eraseToAnyPublisher()
     }
-    
-    public var coinbaseResponseSubject = PassthroughSubject<W3MResponse, Never>()
-    public var coinbaseConnectedSubject = PassthroughSubject<Void, Never>()
     
     public typealias OnWalletTap = @Sendable (_ wallet: Wallet) async throws -> Void
     public var onWalletTap: OnWalletTap?
@@ -160,85 +153,42 @@ public class AppKitClient {
     
     public func request(_ request: W3MJSONRPC) async throws {
         logger.debug("Requesting: \(request.rawValues.method)")
-        switch store.connectedWith {
-        case .wc:
-            guard let session = store.session else {
-                throw AppKitError.invalidSession
-            }
-            guard let chain = getSelectedChain(),
-                  let blockchain = Blockchain(namespace: chain.chainNamespace, reference: chain.chainReference)
-            else {
-                throw AppKitError.invalidChain
-            }
-            let (method, params) = request.rawValues
-            if case let .personal_sign(address, message) = request {
-                try await signClient.request(
-                    params: .init(
-                        topic: session.topic,
-                        method: method,
-                        params: AnyCodable(any: [message, address]),
-                        chainId: blockchain
-                    )
+        guard let session = store.session else {
+            throw AppKitError.invalidSession
+        }
+        guard let chain = getSelectedChain(),
+              let blockchain = Blockchain(namespace: chain.chainNamespace, reference: chain.chainReference)
+        else {
+            throw AppKitError.invalidChain
+        }
+        let (method, params) = request.rawValues
+        if case let .personal_sign(address, message) = request {
+            try await signClient.request(
+                params: .init(
+                    topic: session.topic,
+                    method: method,
+                    params: AnyCodable(any: [message, address]),
+                    chainId: blockchain
                 )
-            } else if case let .eth_signTypedData_v4(address, typedDataJson) = request {
-                try await signClient.request(
-                    params: .init(
-                        topic: session.topic,
-                        method: method,
-                        params: AnyCodable(any: [address, typedDataJson]),
-                        chainId: blockchain
-                    )
+            )
+        } else if case let .eth_signTypedData_v4(address, typedDataJson) = request {
+            try await signClient.request(
+                params: .init(
+                    topic: session.topic,
+                    method: method,
+                    params: AnyCodable(any: [address, typedDataJson]),
+                    chainId: blockchain
                 )
-            } else {
-                try await signClient.request(
-                    params: .init(
-                        topic: session.topic,
-                        method: method,
-                        params: AnyCodable(any: [params]),
-                        chainId: blockchain
-                    )
+            )
+        } else {
+            try await signClient.request(
+                params: .init(
+                    topic: session.topic,
+                    method: method,
+                    params: AnyCodable(any: [params]),
+                    chainId: blockchain
                 )
-            }
-        case .cb:
-                    
-            guard let jsonRpc = request.toCbAction() else { throw AppKitError.invalidRequest }
-                    
-            // Execute on main as Coinbase SDK is not dispatching on main when calling UIApplication.openUrl()
-            DispatchQueue.main.async {
-                CoinbaseWalletSDK.shared.makeRequest(
-                    .init(
-                        actions: [
-                            Action(jsonRpc: jsonRpc)
-                        ]
-                    )
-                ) { result in
-                    let response: W3MResponse
-                    switch result {
-                    case let .success(payload):
-                        
-                        switch payload.content.first {
-                        case let .success(JSONString):
-                            response = .init(result: .response(AnyCodable(JSONString)))
-                        case let .failure(error):
-                            response = .init(result: .error(.init(code: error.code, message: error.message)))
-                        case .none:
-                            response = .init(result: .error(.init(code: -1, message: "Empty response")))
-                        }
-                    case let .failure(error):
-                        AppKit.config.onError(error)
-                        
-                        if let cbError = error as? ActionError {
-                            response = .init(result: .error(.init(code: cbError.code, message: cbError.message)))
-                        } else {
-                            response = .init(result: .error(.init(code: -1, message: error.localizedDescription)))
-                        }
-                    }
-                    
-                    self.coinbaseResponseSubject.send(response)
-                }
-            }
-        case .none:
-            break
+            )
         }
     }
     
@@ -261,25 +211,13 @@ public class AppKitClient {
     /// - Parameters:
     ///   - topic: Session topic that you want to delete
     public func disconnect(topic: String) async throws {
-        switch store.connectedWith {
-        case .wc:
-            do {
-                try await signClient.disconnect(topic: topic)
-                analyticsService.track(.DISCONNECT_SUCCESS)
-            } catch {
-                DispatchQueue.main.async { AppKit.config.onError(error) }
-                analyticsService.track(.DISCONNECT_ERROR)
-                throw error
-            }
-        case .cb:
-            if case let .failure(error) = CoinbaseWalletSDK.shared.resetSession() {
-                analyticsService.track(.DISCONNECT_ERROR)
-                throw error
-            } else {
-                analyticsService.track(.DISCONNECT_SUCCESS)
-            }
-        case .none:
-            break
+        do {
+            try await signClient.disconnect(topic: topic)
+            analyticsService.track(.DISCONNECT_SUCCESS)
+        } catch {
+            DispatchQueue.main.async { AppKit.config.onError(error) }
+            analyticsService.track(.DISCONNECT_ERROR)
+            throw error
         }
     }
 
@@ -326,10 +264,6 @@ public class AppKitClient {
         }
     }
     
-    public func isConnectedToCoinbase() -> Bool {
-        store.connectedWith == .cb
-    }
-    
     public func getSession() -> Session? {
         store.session
     }
@@ -341,7 +275,6 @@ public class AppKitClient {
     public func selectAccount(_ account: W3MAccount, in session: Session) {
         store.session = session
         store.account = account
-        store.connectedWith = .wc
     }
     
     public func getAddress() -> String? {
@@ -368,27 +301,17 @@ public class AppKitClient {
     
     @discardableResult
     public func handleDeeplink(_ url: URL) -> Bool {
-        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let queryItems = components.queryItems,
-           queryItems.contains(where: { $0.name == "wc_ev" }) {
-            do {
-                try signClient.dispatchEnvelope(url.absoluteString)
-                print("Handle deeplink Wallet Connect")
-                return true
-            } catch {
-                print("Handle deeplink Wallet Connect with error \(error)")
-                store.toast = .init(style: .error, message: error.localizedDescription)
-                return false
-            }
-        }
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           let queryItems = components.queryItems,
+           queryItems.contains(where: { $0.name == "wc_ev" })
+        else { return false }
         
-        guard CoinbaseWalletSDK.isConfigured else { return false }
         do {
-            let handled = try CoinbaseWalletSDK.shared.handleResponse(url)
-            print("Handle Coinbase SDK deeplink with response: \(handled)")
-            return handled
+            try signClient.dispatchEnvelope(url.absoluteString)
+            print("Handle deeplink Wallet Connect")
+            return true
         } catch {
-            print("Handle Coinbase SDK deeplink with error \(error)")
+            print("Handle deeplink Wallet Connect with error \(error)")
             store.toast = .init(style: .error, message: error.localizedDescription)
             return false
         }

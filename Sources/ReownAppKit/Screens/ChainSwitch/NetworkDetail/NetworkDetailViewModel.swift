@@ -132,27 +132,18 @@ final class NetworkDetailViewModel: ObservableObject {
         to: Chain
     ) async throws {
         guard let chainIdNumber = Int(to.chainReference) else { return }
+        let chainHex = String(format: "%X", chainIdNumber)
         
-        switch store.connectedWith {
-        case .wc:
-            
-            let chainHex = String(format: "%X", chainIdNumber)
-            
-            guard let session = store.session else { return }
-            
-            try await AppKit.instance.request(params:
-                    .init(
-                        topic: session.topic,
-                        method: EthUtils.walletSwitchEthChain,
-                        params: AnyCodable([AnyCodable(ChainSwitchParams(chainId: "0x\(chainHex)"))]),
-                        chainId: .init(from.id)!
-                    )
-            )
-        case .cb:
-            try await AppKit.instance.request(.wallet_switchEthereumChain(chainId: to.chainReference))
-        case .none:
-            break
-        }
+        guard let session = store.session else { return }
+        
+        try await AppKit.instance.request(params:
+                .init(
+                    topic: session.topic,
+                    method: EthUtils.walletSwitchEthChain,
+                    params: AnyCodable([AnyCodable(ChainSwitchParams(chainId: "0x\(chainHex)"))]),
+                    chainId: .init(from.id)!
+                )
+        )
     }
 
     @MainActor
@@ -160,41 +151,19 @@ final class NetworkDetailViewModel: ObservableObject {
         from: Chain,
         to: Chain
     ) async throws {
+        guard
+            let addChainParams = createAddEthChainParams(chain: to),
+            let session = store.session
+        else { return }
         
-        guard let addChainParams = createAddEthChainParams(chain: to) else {
-            return
-        }
-        
-        switch store.connectedWith {
-        case .wc:
-            
-            guard let session = store.session else { return }
-            
-            try await AppKit.instance.request(params:
-                .init(
-                    topic: session.topic,
-                    method: EthUtils.walletAddEthChain,
-                    params: AnyCodable([AnyCodable(addChainParams)]),
-                    chainId: .init(from.id)!
-                )
+        try await AppKit.instance.request(params:
+            .init(
+                topic: session.topic,
+                method: EthUtils.walletAddEthChain,
+                params: AnyCodable([AnyCodable(addChainParams)]),
+                chainId: .init(from.id)!
             )
-        case .cb:
-            try await AppKit.instance.request(
-                .wallet_addEthereumChain(
-                    chainId: addChainParams.chainId,
-                    blockExplorerUrls: addChainParams.blockExplorerUrls,
-                     chainName: addChainParams.chainName,
-                     iconUrls: addChainParams.iconUrls,
-                    nativeCurrency: .init(
-                        name: addChainParams.nativeCurrency.name,
-                        symbol: addChainParams.nativeCurrency.symbol,
-                        decimals: addChainParams.nativeCurrency.decimals
-                    ),
-                     rpcUrls: addChainParams.rpcUrls
-                 ))
-        case .none:
-            break
-        }
+        )
     }
 
     func createAddEthChainParams(chain: Chain) -> ChainAddParams? {

@@ -245,15 +245,6 @@
         }
       },
       {
-        "package": "CoinbaseWalletSDK",
-        "repositoryURL": "https://github.com/MobileWalletProtocol/wallet-mobile-sdk",
-        "state": {
-          "branch": null,
-          "revision": "4aa89e682f8d7ab1515d85d0797f0d25306bb56a",
-          "version": "1.0.5"
-        }
-      },
-      {
         "package": "Web3",
         "repositoryURL": "https://github.com/Boilertalk/Web3.swift",
         "state": {

@@ -1,4 +1,3 @@
-import CoinbaseWalletSDK
 import Foundation
 import SwiftUI
 import WalletConnectUtils
@@ -6,10 +5,6 @@ import WalletConnectUtils
 #if canImport(UIKit)
 import UIKit
 #endif
-
-public let DesktopWallet_walletId = "desktopWallet"
-public let MetaMask_walletId = "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96"
-public let Coinbase_walletId = "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa"
 
 /// AppKit instance wrapper
 ///
@@ -52,12 +47,6 @@ public class AppKit {
         {
             store.session = session
             store.account = .init(from: session)
-            store.connectedWith = .wc
-        } else if config.coinbaseEnabled,
-                 CoinbaseWalletSDK.shared.isConnected() {
-           let storedAccount = AccountStorage.read()
-           store.account = storedAccount
-           store.connectedWith = .cb
         } else {
             AccountStorage.clear()
         }
@@ -84,7 +73,6 @@ public class AppKit {
         let excludedWalletIds: [String]
         let queryableWalletSchemes: [String]
         let customWallets: [Wallet]
-        let coinbaseEnabled: Bool
 
         let onError: (Error) -> Void
 
@@ -111,7 +99,6 @@ public class AppKit {
         excludedWalletIds: [String] = [],
         queryableWalletSchemes: [String] = [],
         customWallets: [Wallet] = [],
-        coinbaseEnabled: Bool = true,
         onError: @escaping (Error) -> Void = { _ in }
     ) {
         Pair.configure(metadata: metadata)
@@ -128,7 +115,6 @@ public class AppKit {
             excludedWalletIds: excludedWalletIds,
             queryableWalletSchemes: queryableWalletSchemes,
             customWallets: customWallets,
-            coinbaseEnabled: coinbaseEnabled,
             onError: onError
         )
 
@@ -141,12 +127,6 @@ public class AppKit {
         let blockchainApiInteractor = BlockchainAPIInteractor(store: store)
         
         store.customWallets = customWallets
-        
-        configureCoinbaseIfNeeded(
-            store: store,
-            metadata: metadata,
-            w3mApiInteractor: w3mApiInteractor
-        )
         
         AppKit.viewModel = Web3ModalViewModel(
             router: router,
@@ -167,11 +147,7 @@ public class AppKit {
     }
     
     public func currentSession() -> Session? {
-        let store = Store.shared
-        return switch store.connectedWith {
-        case .wc: store.session
-        default: nil
-        }
+        Store.shared.session
     }
     
     public func currentAccount() -> W3MAccount? {
@@ -193,15 +169,6 @@ public class AppKit {
             store.session = session
             store.account = .init(from: session)
             selectChain(account.blockchain)
-            store.connectedWith = .wc
-        } else if config.coinbaseEnabled,
-           CoinbaseWalletSDK.shared.ownPublicKey.rawRepresentation
-            .base64EncodedString().caseInsensitiveCompare(account.address) == .orderedSame
-        {
-            store.session = nil
-            store.account = .init(from: account)
-            selectChain(account.blockchain)
-            store.connectedWith = .cb
         } else {
             print("Cannot select account that's not in a connected session. Setting to nil")
             clearCurrentAccount()
@@ -227,10 +194,8 @@ public class AppKit {
     
     @MainActor
     public static func clearCurrentAccount() {
-        // No need to clear Coinbase account, the SDK connect call clears it
         Store.shared.account = nil
         Store.shared.session = nil
-        Store.shared.connectedWith = nil
     }
     
     public static func set(sessionParams: SessionParams) {
@@ -244,79 +209,6 @@ public class AppKit {
     public static func getAuthRequestParams() -> AuthRequestParams? {
         AppKit.config.authRequestParams
     }
-
-    private static func configureCoinbaseIfNeeded(
-        store: Store,
-        metadata: AppMetadata,
-        w3mApiInteractor: W3MAPIInteractor
-    ) {
-        guard AppKit.config.coinbaseEnabled else { return }
-        
-        if let redirectLink = metadata.redirect?.universal ?? metadata.redirect?.native {
-            CoinbaseWalletSDK.configure(callback: URL(string: redirectLink)!)
-        } else {
-            CoinbaseWalletSDK.configure(callback: URL(string: "w3mdapp://")!)
-        }
-            
-        var wallet: Wallet = .init(
-            id: "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa",
-            name: "Coinbase",
-            homepage: "https://www.coinbase.com/wallet/",
-            imageId: "a5ebc364-8f91-4200-fcc6-be81310a0000",
-            order: 4,
-            mobileLink: "cbwallet://",
-            linkMode: nil,
-            desktopLink: nil,
-            webappLink: nil,
-            appStore: "https://apps.apple.com/us/app/coinbase-wallet-nfts-crypto/id1278383455",
-            alternativeConnectionMethod: {
-                CoinbaseWalletSDK.shared.initiateHandshake(
-                    initialActions: [
-                        Action(jsonRpc: .eth_requestAccounts)
-                    ]
-                ) { result, account in
-                    switch result {
-                    case .success:
-                        guard
-                            let account = account,
-                            let blockchain = Blockchain(
-                                namespace: account.chain == "eth" ? "eip155" : "",
-                                reference: String(account.networkId)
-                            )
-                        else { return }
-                        // CB doesn't use the Store session
-                        store.session = nil
-                        store.account = .init(
-                            address: account.address,
-                            chain: blockchain
-                        )
-                        store.selectedChain = ChainPresets.ethChains.first(where: {
-                            $0.chainNamespace == blockchain.namespace && $0.chainReference == blockchain.reference
-                        })
-                        store.connectedWith = .cb
-
-                        withAnimation {
-                            store.isModalShown = false
-                        }
-
-                        instance.coinbaseConnectedSubject.send()
-
-                    case .failure(let error):
-                        store.toast = .init(style: .error, message: error.localizedDescription)
-                    }
-                }
-            }
-        )
-            
-        wallet.isInstalled = CoinbaseWalletSDK.isCoinbaseWalletInstalled()
-            
-        store.customWallets.append(wallet)
-            
-        Task { [wallet] in
-            try? await w3mApiInteractor.fetchWalletImages(for: [wallet])
-        }
-    }
-
 }
 
 #if canImport(UIKit)

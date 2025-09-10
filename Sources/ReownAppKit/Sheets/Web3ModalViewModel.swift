@@ -139,7 +139,6 @@ class Web3ModalViewModel: ObservableObject {
     private func handleNewSession(session: Session) {
         store.account = .init(from: session)
         store.session = session
-        store.connectedWith = .wc
         
         // Set this session as the primary session
         AppKit.primarySessionTopic = session.topic

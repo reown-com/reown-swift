@@ -8,9 +8,7 @@ class BlockchainAPIInteractor: ObservableObject {
     }
     
     func getIdentity() async throws {
-        guard 
-            let account = store.account,
-            store.connectedWith == .wc
+        guard  let account = store.account
         else { return }
         
         let address = account.address

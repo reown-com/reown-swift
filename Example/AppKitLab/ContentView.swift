@@ -21,7 +21,7 @@ struct ContentView: View {
                     Task {
                         do {
                             try await requestPersonalSign()
-                            AppKit.instance.launchCurrentWallet()
+//                            AppKit.instance.launchCurrentWallet()
                         } catch {
                             print("Error occurred: \(error)")
                         }

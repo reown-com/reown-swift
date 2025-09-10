@@ -1,10 +1,7 @@
 import Combine
 import SwiftUI
 
-public enum ConnectionProviderType {
-    case wc
-    case cb
-}
+public let DesktopWallet_walletId = "desktopWallet"
 
 public class Store: ObservableObject {
     public static var shared: Store = .init()
@@ -23,7 +20,6 @@ public class Store: ObservableObject {
     @Published var identity: Identity?
     @Published var balance: Double?
     
-    @Published public var connectedWith: ConnectionProviderType?
     @Published public var connecting: Bool = false
     @Published public var account: W3MAccount? {
         didSet {
