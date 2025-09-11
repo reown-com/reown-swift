@@ -40,7 +40,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
         } else { false }
     }
     public var customDidSelect: Bool = false
-    public var alternativeConnectionMethod: (() -> Void)? = nil
     
     @MainActor
     public var image: UIImage? {
@@ -102,7 +101,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
         lastTimeUsed: Date? = nil, 
         isInstalled: Bool = false,
         customDidSelect: Bool = false,
-        alternativeConnectionMethod: (() -> Void)? = nil
     ) {
         self.id = id
         self.name = name
@@ -118,7 +116,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
         self.lastTimeUsed = lastTimeUsed
         self.isInstalled = isInstalled
         self.customDidSelect = customDidSelect
-        self.alternativeConnectionMethod = alternativeConnectionMethod
     }
     
     public init(from decoder: Decoder) throws {

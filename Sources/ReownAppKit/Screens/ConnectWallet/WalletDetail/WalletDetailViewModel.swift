@@ -98,35 +98,16 @@ class WalletDetailViewModel: ObservableObject {
         case .didTapCopy:
             UIPasteboard.general.string = store.uri?.absoluteString ?? ""
             store.toast = .init(style: .success, message: "Link copied")
+        
         case .onAppear:
-            
-            if wallet.alternativeConnectionMethod != nil {
-                if wallet.isInstalled {
-                    wallet.alternativeConnectionMethod?()
-                } else {
-                    store.retryShown = true
-                    store.toast = .init(style: .error, message: "\(wallet.name) is not installed")
-                }
-            }
-                
             var wallet = wallet
             wallet.lastTimeUsed = Date()
-            
             store.recentWallets.append(wallet)
-        case .didTapOpen:
-                store.retryShown = false
             
-            if wallet.alternativeConnectionMethod != nil {
-                if wallet.isInstalled {
-                    wallet.alternativeConnectionMethod?()
-                } else {
-                    store.retryShown = true
-                    store.toast = .init(style: .error, message: "\(wallet.name) is not installed")
-                }
-            } else {
-                Task {
-                    try await AppKit.instance.onWalletTap?(wallet)
-                }
+        case .didTapOpen:
+            store.retryShown = false
+            Task {
+                try await AppKit.instance.onWalletTap?(wallet)
             }
             
         case .didTapAppStore:
