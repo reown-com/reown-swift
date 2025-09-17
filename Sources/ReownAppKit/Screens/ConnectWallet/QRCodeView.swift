@@ -25,10 +25,10 @@ struct QRCodeView: View {
     }
             
     @MainActor private func render(content: String, size: CGSize) -> Image {
-        let doc = QRCode.Document(
+        guard let doc = try? QRCode.Document(
             utf8String: content,
             errorCorrection: .quantize
-        )
+        ) else {return Image(systemName: "x.mark")}
         doc.design.shape.eye = QRCode.EyeShape.Squircle2()
         doc.design.shape.onPixels = QRCode.PixelShape.Vertical(
             insetFraction: 0.15,
@@ -62,11 +62,11 @@ struct QRCodeView: View {
                 inset: 20
             )
         }
-        return doc.imageUI(
+        return (try? doc.imageUI(
             size.applying(.init(scaleX: 3, y: 3)),
             dpi: 72 * 3,
             label: Text("QR code with URI")
-        )!
+        )) ?? Image(systemName: "x.mark")
     }
 }
 
@@ -115,6 +115,7 @@ struct QRCodeView_Previews: PreviewProvider {
 extension QRCode.EyeShape {
     /// A 'squircle' eye style
     @objc(QRCodeEyeShapeSquircle2) class Squircle2: NSObject, QRCodeEyeShapeGenerator {
+        
         @objc public static let Name = "squircle"
         @objc public static var Title: String { "Squircle2" }
         @objc public static func Create(_ settings: [String: Any]?) -> QRCodeEyeShapeGenerator {
@@ -149,6 +150,10 @@ extension QRCode.EyeShape {
 
         private static let _defaultPupil = QRCode.PupilShape.Squircle2()
         public func defaultPupil() -> QRCodePupilShapeGenerator { Self._defaultPupil }
+        
+        func reset() {
+            
+        }
     }
 }
 
@@ -182,6 +187,10 @@ extension QRCode.PupilShape {
             path.addRoundedRect(in: CGRect(x: offset, y: offset, width: size, height: size), cornerWidth: cornerRadius, cornerHeight: cornerRadius)
             
             return path
+        }
+        
+        func reset() {
+            
         }
     }
 }

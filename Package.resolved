@@ -3,11 +3,11 @@
     "pins": [
       {
         "package": "QRCode",
-        "repositoryURL": "https://github.com/WalletConnect/QRCode",
+        "repositoryURL": "https://github.com/dagronf/QRCode.git",
         "state": {
           "branch": null,
-          "revision": "263f280d2c8144adfb0b6676109846cfc8dd552b",
-          "version": "14.3.1"
+          "revision": "ea4047a7777bae470adc140cd94bfa5396a96202",
+          "version": "27.11.0"
         }
       },
       {
@@ -33,8 +33,8 @@
         "repositoryURL": "https://github.com/dagronf/swift-qrcode-generator",
         "state": {
           "branch": null,
-          "revision": "5ca09b6a2ad190f94aa3d6ddef45b187f8c0343b",
-          "version": "1.0.3"
+          "revision": "2b1980b825f08a81ccc762b0c4d17fcde9d5e953",
+          "version": "2.0.2"
         }
       },
       {
@@ -42,8 +42,8 @@
         "repositoryURL": "https://github.com/dagronf/SwiftImageReadWrite",
         "state": {
           "branch": null,
-          "revision": "5596407d1cf61b953b8e658fa8636a471df3c509",
-          "version": "1.1.6"
+          "revision": "42ace2412279f18bc264bc306e96b51c36e12a33",
+          "version": "1.9.2"
         }
       },
       {
