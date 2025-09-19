@@ -78,7 +78,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
         // Decorated
         case lastTimeUsed
         case isInstalled
-        case customDidSelect
     }
     
     public init(
