@@ -27,7 +27,9 @@ class WalletDetailViewModel: ObservableObject {
     private var disposeBag = Set<AnyCancellable>()
     
     var showToggle: Bool {
-        hasWebAppLink && hasMobileLink && wallet.isInstalled != true
+        false
+        // TODO: try connecting to a web app
+//        hasWebAppLink && hasMobileLink && wallet.isInstalled != true
     }
     
     var hasWebAppLink: Bool { wallet.webappLink?.isEmpty == false }

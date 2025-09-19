@@ -39,7 +39,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
             abs(lastTimeUsed.timeIntervalSinceNow) < (24 * 60 * 60 * 7)
         } else { false }
     }
-    public var customDidSelect: Bool = false
     
     public enum LogoSize: String, Sendable, Hashable {
         case sm
@@ -96,7 +95,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
         appStore: String? = nil, 
         lastTimeUsed: Date? = nil, 
         isInstalled: Bool = false,
-        customDidSelect: Bool = false,
     ) {
         self.id = id
         self.name = name
@@ -111,7 +109,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
         self.appStore = appStore
         self.lastTimeUsed = lastTimeUsed
         self.isInstalled = isInstalled
-        self.customDidSelect = customDidSelect
     }
     
     public init(from decoder: Decoder) throws {
@@ -129,7 +126,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
         self.appStore = try container.decodeIfPresent(String.self, forKey: .appStore)
         self.lastTimeUsed = try container.decodeIfPresent(Date.self, forKey: .lastTimeUsed)
         self.isInstalled = try container.decodeIfPresent(Bool.self, forKey: .isInstalled) ?? false
-        self.customDidSelect = try container.decodeIfPresent(Bool.self, forKey: .customDidSelect) ?? false
     }
 }
 

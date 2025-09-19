@@ -60,7 +60,7 @@ public class AppKitClient {
             .eraseToAnyPublisher()
     }
     
-    public typealias OnWalletTap = @Sendable (_ wallet: Wallet) async throws -> Void
+    public typealias OnWalletTap = @Sendable (_ wallet: Wallet) async -> Void
     public var onWalletTap: OnWalletTap?
 
     /// Publisher that sends web socket connection status
@@ -133,17 +133,15 @@ public class AppKitClient {
     public func connect(walletUniversalLink: String?, authParams: AuthRequestParams?) async throws -> WalletConnectURI? {
         logger.debug("Connecting Application \(walletUniversalLink ?? "") using \(authParams != nil ? "Link Mode" : "Websocket Relay")")
         do {
-            if let authParams,
-               let uri = try await signClient.authenticate(authParams, walletUniversalLink: walletUniversalLink)
-            {
+            if let authParams {
+                let uri = try await signClient.authenticate(authParams, walletUniversalLink: walletUniversalLink)
                 return uri
             } else {
-                let pairingURI = try await signClient.connect(
+                return try await signClient.connect(
                     requiredNamespaces: AppKit.config.sessionParams.requiredNamespaces,
                     optionalNamespaces: AppKit.config.sessionParams.optionalNamespaces,
                     sessionProperties: AppKit.config.sessionParams.sessionProperties
                 )
-                return pairingURI
             }
         } catch {
             DispatchQueue.main.async { AppKit.config.onError(error) }

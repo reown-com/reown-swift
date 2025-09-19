@@ -22,7 +22,7 @@ public final class SubscriptionsTracker: SubscriptionsTracking {
         concurrentQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.subscriptions[topic] = id
-            self.logger.debug("Subscription set: \(self.subscriptions)")
+            self.logger.debug("Subscription set, total \(subscriptions.count)")
         }
     }
 

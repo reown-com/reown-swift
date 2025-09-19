@@ -51,22 +51,13 @@ struct ConnectWalletView: View {
         loadingWalletTask?.cancel()
         
         loadingWalletTask = Task {
-            do {
-                defer {
-                    loadingWalletId = nil
-                    Store.shared.currentWallet = nil
-                }
-                
-                if wallet.customDidSelect {
-                    // Trigger this manually for custom wallets that don't use WC
-                    AppKit.showConnectingWallet(wallet)
-                }
-                
-                try await AppKit.instance.onWalletTap?(wallet)
-            } catch {
-                // Swallow the error, forget the toast
-//                store.toast = .init(style: .error, message: error.localizedDescription)
+            defer {
+                loadingWalletId = nil
+                Store.shared.currentWallet = nil
             }
+
+            AppKit.showConnectingWallet(wallet)
+            await AppKit.instance.onWalletTap?(wallet)
         }
     }
     

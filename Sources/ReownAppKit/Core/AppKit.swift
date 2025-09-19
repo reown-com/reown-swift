@@ -243,12 +243,11 @@ public extension AppKit {
             wallet.lastTimeUsed = Date()
             Store.shared.recentWallets.append(wallet)
             AppKit.setCurrentWallet(app)
+            AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.walletDetail(wallet))
         } else {
             AppKit.setCurrentWallet(nil)
+            AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.connectWallet)
         }
-        
-        // Always start from here until we remove alternative connection methods
-        AppKit.viewModel.router.setRoute(Router.ConnectingSubpage.connectWallet)
 
         let modal = Web3ModalSheetController(router: AppKit.viewModel.router)
         vc.present(modal, animated: true)
