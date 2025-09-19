@@ -18,14 +18,14 @@ struct GetAWalletView: View {
                 .buttonStyle(W3MListSelectStyle(
                     imageContent: { _ in
                         Group {
-                            if let storedImage = store.walletImages[wallet.id] {
-                                Image(uiImage: storedImage)
+                            CacheAsyncImage(url: wallet.appIconUrl, content: { image in
+                                image
                                     .resizable()
-                            } else {
-                                Image.Regular.wallet
-                                    .resizable()
+                                    .scaledToFit()
+                            }, placeholder: {
+                                Image.Regular.wallet.resizable()
                                     .padding(Spacing.xxs)
-                            }
+                            })
                         }
                         .background(
                             RoundedRectangle(cornerRadius: Radius.xxxs)
@@ -68,13 +68,6 @@ struct GetAWalletView_Previews: PreviewProvider {
     static let store = {
         let store = Store()
         store.featuredWallets = Wallet.stubList
-
-        for id in Wallet.stubList.map(\.imageId).compactMap({ $0 }).prefix(2) {
-            store.walletImages[id] = UIImage(
-                named: "MockWalletImage", in: .coreModule, compatibleWith: nil
-            )
-        }
-
         return store
     }()
 

@@ -41,11 +41,6 @@ public struct Wallet: Codable, Identifiable, Sendable {
     }
     public var customDidSelect: Bool = false
     
-    @MainActor
-    public var image: UIImage? {
-        Store.shared.walletImages[id]
-    }
-    
     public enum LogoSize: String, Sendable, Hashable {
         case sm
         case md
@@ -58,12 +53,13 @@ public struct Wallet: Codable, Identifiable, Sendable {
             }
         }
     }
-    
-    public func logoImageUrl(_ size: LogoSize = .md) -> String? {
-        if let imageId {
-            return "https://explorer-api.walletconnect.com/v3/logo/\(size.rawValue)/\(imageId)?projectId=\(AppKit.config.projectId)"
+    public var appIconUrl: URL? {
+        if let imageUrl {
+            return URL(string: imageUrl)
+        } else if let imageId {
+            return URL(string: "https://explorer-api.walletconnect.com/v3/logo/md/\(imageId)?projectId=\(AppKit.config.projectId)")
         } else {
-            return imageUrl
+            return nil
         }
     }
     

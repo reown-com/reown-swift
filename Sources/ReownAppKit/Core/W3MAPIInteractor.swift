@@ -60,9 +60,7 @@ final class W3MAPIInteractor: ObservableObject {
                 params: params
             )
         )
-    
-        try await fetchWalletImages(for: response.data)
-        
+            
         DispatchQueue.main.async { [self] in
             var wallets = response.data
                 
@@ -182,9 +180,7 @@ final class W3MAPIInteractor: ObservableObject {
                 )
             )
         )
-        
-        try await fetchWalletImages(for: response.data)
-        
+                
         DispatchQueue.main.async { [self] in
             
             var wallets = response.data
@@ -217,9 +213,7 @@ final class W3MAPIInteractor: ObservableObject {
                 )
             )
         )
-        
-        try await fetchWalletImages(for: response.data)
-        
+                
         DispatchQueue.main.async { [self] in
             
             var wallets = response.data
@@ -256,60 +250,6 @@ final class W3MAPIInteractor: ObservableObject {
             
             self.store.totalNumberOfWallets = response.count
             self.store.featuredWallets.append(contentsOf: wallets)
-        }
-    }
-    
-    func fetchWalletImages(for wallets: [Wallet]) async throws {
-        var walletImages: [String: UIImage] = [:]
-        
-        // Make a copy to avoid a race condition with concurrentMap
-        let existingImages = self.store.walletImages
-        
-        try await wallets.concurrentMap { wallet in
-            
-            // Build URL
-            var imageUrl: URL?
-            if let imageId = wallet.imageId {
-                imageUrl = URL(string: "https://api.web3modal.com/getWalletImage/\(imageId)")
-            } else if let customImageUrl = wallet.imageUrl {
-                imageUrl = URL(string: customImageUrl)
-            }
-            
-            // Check whether we have some url and not fetched already
-            guard
-                let imageUrl,
-                !existingImages.contains(where: { key, _ in key == wallet.id })
-            else {
-                return ("", UIImage?.none)
-            }
-            
-            var request = URLRequest(url: imageUrl)
-            request.setW3MHeaders()
-            
-            do {
-                let (data, _) = try await URLSession.shared.data(for: request)
-                let image = UIImage(data: data)
-                return (wallet.id, image)
-            } catch {
-                print(error.localizedDescription)
-            }
-            
-            return ("", UIImage?.none)
-        }
-        // Assign to outside dictionary
-        .forEach { (key: String, value: UIImage?) in
-            if value == nil || key == "" {
-                return
-            }
-            
-            walletImages[key] = value
-        }
-        
-        // Update images in Store
-        DispatchQueue.main.async { [walletImages] in
-            self.store.walletImages.merge(walletImages) { _, new in
-                new
-            }
         }
     }
     

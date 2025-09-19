@@ -138,7 +138,6 @@ public class AppKit {
         )
         
         Task(priority: .background) {
-            try? await w3mApiInteractor.fetchWalletImages(for: store.recentWallets + store.customWallets)
             try? await w3mApiInteractor.fetchAllWalletMetadata()
             try? await w3mApiInteractor.fetchFeaturedWallets()
             try? await w3mApiInteractor.fetchAllWalletsFirstPage()

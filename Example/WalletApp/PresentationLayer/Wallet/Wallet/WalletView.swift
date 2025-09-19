@@ -164,7 +164,7 @@ struct WalletView: View {
         } label: {
             VStack {
                 HStack(spacing: 10) {
-                    AsyncImage(url: URL(string: session.peer.icons.first ?? "")) { phase in
+                    CacheAsyncImage(url: URL(string: session.peer.icons.first ?? "")) { phase in
                         if let image = phase.image {
                             image
                                 .resizable()

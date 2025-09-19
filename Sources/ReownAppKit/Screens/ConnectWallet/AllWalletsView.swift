@@ -165,13 +165,13 @@ struct AllWalletsView: View {
         .buttonStyle(W3MCardSelectStyle(
             variant: .wallet,
             imageContent: {
-                if let storedImage = store.walletImages[wallet.id] {
-                    Image(uiImage: storedImage)
+                CacheAsyncImage(url: wallet.appIconUrl, content: { image in
+                    image
                         .resizable()
-                } else {
-                    Image.Regular.wallet
-                        .resizable()
-                }
+                        .scaledToFit()
+                }, placeholder: {
+                    Image.Regular.wallet.resizable()
+                })
             },
             isLoading: .init(
                 get: { loadingWalletId == wallet.id },

@@ -127,10 +127,14 @@ struct WalletDetailView: View {
     
     private func walletImage() -> some View {
         return ZStack {
-            Image(
-                uiImage: store.walletImages[viewModel.wallet.id] ?? UIImage()
-            )
-            .resizable()
+            CacheAsyncImage(url: viewModel.wallet.appIconUrl, content: { image in
+                image
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
+            }, placeholder: {
+                Image.Regular.wallet.resizable()
+            })
             .frame(width: 80, height: 80)
             .cornerRadius(Radius.m)
             .backport.overlay(alignment: .bottomTrailing) {
@@ -291,10 +295,6 @@ class MockWalletDetailViewModel: WalletDetailViewModel {
 struct WalletDetailView_Preview: PreviewProvider {
     static let store = {
         let store = Store()
-        store.walletImages["0528ee7e-16d1-4089-21e3-bbfb41933100"] = UIImage(
-            named: "MockWalletImage", in: .coreModule, compatibleWith: nil
-        )
-        
         return store
     }()
     

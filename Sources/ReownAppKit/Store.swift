@@ -38,15 +38,18 @@ public class Store: ObservableObject {
     
     @Published public var currentWallet: Wallet? = nil
     @Published public var wallets: Set<Wallet> = []
-    @Published public var featuredWallets: [Wallet] = []
+    @Published public var featuredWallets: [Wallet] = [] {
+        didSet { prefetchImages(for: featuredWallets) }
+    }
     @Published public var searchedWallets: [Wallet] = []
-    @Published public var customWallets: [Wallet] = []
+    @Published public var customWallets: [Wallet] = [] {
+        didSet { prefetchImages(for: customWallets) }
+    }
     @Published public var installedWalletIds: [String] = []
 
     var totalNumberOfWallets: Int = 0
     var currentPage: Int = 0
     var totalPages: Int = .max
-    public var walletImages: [String: UIImage] = [:]
     public var walletMetdata: [WalletMetadata] = []
     var siweRequestId: RPCID? = nil
     var siweMessage: String? = nil
@@ -124,6 +127,36 @@ extension Store {
             } )
             .sorted(by: { $0.lastTimeUsed ?? distantPast > $1.lastTimeUsed ?? distantPast } )
             .sorted(by: { $0.id == DesktopWallet_walletId && $1.id != DesktopWallet_walletId } )
+    }
+    
+    private func prefetchImages(for wallets: [Wallet]) {
+        // Collect unique URLs we don't already have cached
+        let urls = Array(
+            Set(wallets.compactMap { $0.appIconUrl })
+        ).filter { ImageCache[$0] == nil }
+
+        guard !urls.isEmpty else { return }
+
+        // Prefetch in the background
+        Task.detached(priority: .background) {
+            let session = URLSession(configuration: .default)
+
+            await withTaskGroup(of: Void.self) { group in
+                for url in urls {
+                    group.addTask {
+                        do {
+                            let (data, _) = try await session.data(from: url)
+                            guard let uiImage = UIImage(data: data) else { return }
+                            let image = Image(uiImage: uiImage)
+                            await MainActor.run { ImageCache[url] = image }
+                        } catch {
+                            // You can log here if you want
+                            print("Prefetch failed for \(url): \(error)")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

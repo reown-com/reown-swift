@@ -88,14 +88,14 @@ struct ConnectWalletView: View {
                 .buttonStyle(W3MListSelectStyle(
                     imageContent: { _ in
                         Group {
-                            if let storedImage = store.walletImages[wallet.id] {
-                                Image(uiImage: storedImage)
+                            CacheAsyncImage(url: wallet.appIconUrl, content: { image in
+                                image
                                     .resizable()
-                            } else {
-                                Image.Regular.wallet
-                                    .resizable()
+                                    .scaledToFit()
+                            }, placeholder: {
+                                Image.Regular.wallet.resizable()
                                     .padding(Spacing.xxs)
-                            }
+                            })
                         }
                         .background(Color.Overgray005)
                         .backport.overlay {
@@ -138,5 +138,58 @@ struct ConnectWalletView: View {
 struct ConnectWalletView_Previews: PreviewProvider {
     static var previews: some View {
         ConnectWalletView()
+    }
+}
+
+
+struct CacheAsyncImage<Content, Placeholder>: View where Content: View, Placeholder: View {
+    private let url: URL?
+    private let scale: CGFloat
+    private let content: (Image) -> Content
+    private let placeholder: () -> Placeholder
+
+    init(
+        url: URL?,
+        scale: CGFloat = 1.0,
+        @ViewBuilder content: @escaping (Image) -> Content,
+        @ViewBuilder placeholder: @escaping () -> Placeholder
+    ) {
+        self.url = url
+        self.scale = scale
+        self.content = content
+        self.placeholder = placeholder
+    }
+
+    var body: some View {
+        if let url, let cached = ImageCache[url] {
+            content(cached)
+        } else {
+            AsyncImage(url: url, scale: scale) { phase in
+                cacheAndRender(phase: phase)
+            }
+        }
+    }
+
+    private func cacheAndRender(phase: AsyncImagePhase) -> some View {
+        switch phase {
+        case .success(let image):
+            if let url {
+                ImageCache[url] = image
+            }
+            return AnyView(content(image))
+        case .empty, .failure:
+            return AnyView(placeholder())
+        @unknown default:
+            return AnyView(placeholder())
+        }
+    }
+}
+
+public final class ImageCache {
+    static private var cache: [URL: Image] = [:]
+
+    public static subscript(url: URL) -> Image? {
+        get { cache[url] }
+        set { cache[url] = newValue }
     }
 }
