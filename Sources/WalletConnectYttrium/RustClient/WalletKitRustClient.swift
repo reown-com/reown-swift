@@ -6,11 +6,6 @@ import WalletConnectUtils
 import WalletConnectPairing
 import WalletConnectVerify
 
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
 /// WalletKitRust Client
 ///
 /// Cannot be instantiated outside of the SDK
@@ -42,6 +37,7 @@ public class WalletKitRustClient {
 
 
     private let sessionStore: SessionStoreImpl
+    private let metadata: AppMetadata
     
     // MARK: - Private Properties
     private let yttriumClient: YttriumWrapper.SignClient
@@ -49,9 +45,12 @@ public class WalletKitRustClient {
     private let appStateObserver = WalletKitAppStateObserver()
     
     init(yttriumClient: YttriumWrapper.SignClient,
-         sessionStore: SessionStoreImpl) {
+         sessionStore: SessionStoreImpl,
+         metadata: AppMetadata
+    ) {
         self.yttriumClient = yttriumClient
         self.sessionStore = sessionStore
+        self.metadata = metadata
         let projectIdKey = AgreementPrivateKey().rawRepresentation
 
         
@@ -161,7 +160,8 @@ public class WalletKitRustClient {
 struct WalletKitRustClientFactory {
     static func create(
         config: WalletKitRust.Config,
-        groupIdentifier: String
+        groupIdentifier: String,
+        metadata: AppMetadata
     ) -> WalletKitRustClient {
         let keychainStorage = KeychainStorage(serviceIdentifier: "com.walletconnect.sdk", accessGroup: groupIdentifier)
 
@@ -184,6 +184,21 @@ struct WalletKitRustClientFactory {
 }
 
 extension WalletKitRustClient: SignListener, Logger {
+    public func onSessionEvent(topic: String, name: String, data: String, chainId: String) {
+        //todo
+
+    }
+    
+    public func onSessionConnect(id: UInt64, topic: String) {
+        //todo
+
+    }
+    
+    public func onSessionReject(id: UInt64, topic: String) {
+        //todo
+
+    }
+    
     public func onSessionRequestResponse(id: UInt64, topic: String, response: Yttrium.SessionRequestJsonRpcResponseFfi) {
         //todo
     }
@@ -252,41 +267,34 @@ extension WalletKitRustClient: SignListener, Logger {
         // we are ignoring this
     }
     
+    public func connect(
+        namespaces: [String: ProposalNamespace],
+        sessionProperties: [String: String]? = nil,
+        scopedProperties: [String: String]? = nil
+    ) async throws -> WalletConnectURI {
+        // Map WalletConnect ProposalNamespace -> Yttrium ProposalNamespace
+        let ytOptionalNamespaces: [String: YttriumWrapper.ProposalNamespace] = namespaces.reduce(into: [:]) { acc, element in
+            let (key, ns) = element
+            acc[key] = ns.toYttriumProposalNamespace()
+        }
+        
+        
+        let ytMetadata = fromAppMetadata(metadata)
+
+        let params = ConnectParamsFfi(optionalNamespaces: ytOptionalNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties, metadata: ytMetadata)
+
+        let connectResultFfi = try await yttriumClient.connect(params: params, selfMetadata: ytMetadata)
+
+        let uri = connectResultFfi.uri
+
+        return try WalletConnectURI(uriString: uri)
+    }
+    
     
 }
 
-
-public class WalletKitRust {
+extension AppMetadata {
     
-    /// WalletKitRust client instance
-    public static var instance: WalletKitRustClient = {
-        guard let config = WalletKitRust.config else {
-            fatalError("Error - you must call WalletKitRust.configure(_:) before accessing the shared instance.")
-        }
-        return WalletKitRustClientFactory.create(config: config, groupIdentifier: config.groupIdentifier)
-    }()
-    
-    private static var config: Config?
-    
-    struct Config {
-        let projectId: String
-        let groupIdentifier: String
-    }
-    
-    private init() { }
-    
-    /// WalletKitRust instance configuration method.
-    /// - Parameters:
-    ///   - projectId: The project ID for the wallet connect
-    static public func configure(
-        projectId: String,
-        groupIdentifier: String
-    ) {
-        WalletKitRust.config = WalletKitRust.Config(
-            projectId: projectId,
-            groupIdentifier: groupIdentifier
-        )
-    }
 }
 
 
@@ -315,57 +323,17 @@ public enum RejectionReason {
 
 
 
-
-
-// MARK: - App State Observer
-class WalletKitAppStateObserver {
-    @objc var onWillEnterForeground: (() -> Void)?
-    @objc var onWillEnterBackground: (() -> Void)?
-
-    init() {
-        subscribeNotificationCenter()
-    }
-
-    private func subscribeNotificationCenter() {
-#if os(iOS)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appWillEnterForeground),
-            name: UIApplication.willEnterForegroundNotification,
-            object: nil)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appWillEnterBackground),
-            name: UIApplication.willResignActiveNotification,
-            object: nil)
-#elseif os(macOS)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appWillEnterForeground),
-            name: NSApplication.willBecomeActiveNotification,
-            object: nil)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appWillEnterBackground),
-            name: NSApplication.willResignActiveNotification,
-            object: nil)
-#endif
-    }
-
-    @objc
-    private func appWillEnterBackground() {
-        onWillEnterBackground?()
-    }
-
-    @objc
-    private func appWillEnterForeground() {
-        onWillEnterForeground?()
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+extension ProposalNamespace {
+    func toYttriumProposalNamespace() -> YttriumWrapper.ProposalNamespace {
+        let chains = chains?.compactMap {$0.absoluteString} ?? []
+        return YttriumWrapper.ProposalNamespace(
+            chains: chains,
+            methods: Array(methods),
+            events: Array(events)
+        )
     }
 }
+
 
 // MARK: - SessionProposal Conversion
 extension SessionProposalFfi {
