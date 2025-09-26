@@ -122,14 +122,6 @@ final class W3MAPIInteractor: ObservableObject {
                 )
             )
         )
-    
-        // Determine if there are new schemes that should be added to app's LSApplicationQueriesSchemes
-        let registeredSchemes = response.data.map { $0.ios_schema.components(separatedBy: ":")[0].lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
-        let bundleSchemes = AppKit.config.queryableWalletSchemes
-        let newSchemes = registeredSchemes.filter { !bundleSchemes.contains($0) }
-        if newSchemes.count > 0 {
-            print("[AppKit] \(newSchemes.count) of \(registeredSchemes.count) (current: \(bundleSchemes.count)) schemes should be added to the app's Info.plist:\n\(newSchemes)\n")
-        }
 
         // Detect which wallets are installed
         let data: [WalletMetadata] = response.data.map { .init(id: $0.id, scheme: $0.ios_schema) }
