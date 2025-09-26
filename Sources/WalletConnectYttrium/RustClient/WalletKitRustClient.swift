@@ -179,7 +179,7 @@ struct WalletKitRustClientFactory {
             sessionStore: sessionStore
         )
         
-        return WalletKitRustClient(yttriumClient: yttriumClient, sessionStore: sessionStore)
+        return WalletKitRustClient(yttriumClient: yttriumClient, sessionStore: sessionStore, metadata: metadata)
     }
 }
 
@@ -267,6 +267,14 @@ extension WalletKitRustClient: SignListener, Logger {
         // we are ignoring this
     }
     
+
+    /// For a dApp to propose a session to a wallet.
+    /// Function will create pairing and propose session.
+    /// - Parameters:
+    ///   - optionalNamespaces: optional namespaces for a session
+    ///   - sessionProperties: session properties
+    ///   - scopedProperties: scoped properties
+    /// - Returns: Pairing URI that should be shared with responder out of bound. Common way is to present it as a QR code.
     public func connect(
         namespaces: [String: ProposalNamespace],
         sessionProperties: [String: String]? = nil,
@@ -291,12 +299,23 @@ extension WalletKitRustClient: SignListener, Logger {
     }
     
     
-}
-
-extension AppMetadata {
+    /// For a dApp to send JSON-RPC requests to wallet.
+    /// - Parameters:
+    ///   - params: Parameters defining request and related session
+    public func request(params: Request) async throws {
+        let ffi = try params.toYttriumFfi()
+        let _ = try await yttriumClient.request(topic: params.topic, sessionRequest: ffi)
+    }
     
 }
 
+extension Request {
+    func toYttriumFfi() throws -> SessionRequestFfi {
+        let stringParams = try params.get(String.self)
+        let sessionRequestRequestFfi = SessionRequestRequestFfi(method: method, params: stringParams, expiry: expiryTimestamp)
+        return SessionRequestFfi(chainId: chainId.absoluteString, request: sessionRequestRequestFfi)
+    }
+}
 
 public enum RejectionReason {
     case userRejected
