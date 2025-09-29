@@ -4,6 +4,7 @@ import ReownAppKit
 import WalletConnectRelay
 import WalletConnectNetworking
 import Combine
+import WalletConnectYttrium
 
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -96,9 +97,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             description: "WalletConnect DApp sample",
             url: "https://lab.web3modal.com/dapp",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
-            redirect: try! AppMetadata.Redirect(native: "wcdapp://", universal: "https://lab.web3modal.com/dapp", linkMode: true)
+            redirect: try! WalletConnectSign.AppMetadata.Redirect(native: "wcdapp://", universal: "https://lab.web3modal.com/dapp", linkMode: true)
+        )
+        
+        let ytmetadata = AppMetadata(
+            name: "Swift Dapp",
+            description: "WalletConnect DApp sample",
+            url: "https://lab.web3modal.com/dapp",
+            icons: ["https://avatars.githubusercontent.com/u/37784886"],
+            redirect: try! WalletConnectYttrium.AppMetadata.Redirect(native: "wcdapp://", universal: "https://lab.web3modal.com/dapp", linkMode: true)
         )
 
+        WalletKitRust.configure(projectId: InputConfig.projectId, groupIdentifier: "group.com.walletconnect.sdk", metadata: ytmetadata)
+
+        
         AppKit.configure(
             projectId: InputConfig.projectId,
             metadata: metadata,

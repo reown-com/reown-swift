@@ -12,7 +12,8 @@ class SessionStoreImpl: StorageFfi {
     }
     
     func savePairing(topic: String, rpcId: UInt64, symKey: Data, selfKey: Data) {
-        
+        fatalError()
+        tutaj
     }
     
     func getPairing(topic: String, rpcId: UInt64) -> Yttrium.PairingFfi? {
@@ -20,7 +21,8 @@ class SessionStoreImpl: StorageFfi {
     }
     
     func savePartialSession(topic: String, symKey: Data) {
-        
+        fatalError()
+        titaj
     }
     
     func deleteSession(topic: String)  {

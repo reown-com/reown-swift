@@ -1,6 +1,6 @@
 import Foundation
 
-import WalletConnectSign
+import WalletConnectYttrium
 
 enum Proposal {
     static let namespaces: [String: ProposalNamespace] = [

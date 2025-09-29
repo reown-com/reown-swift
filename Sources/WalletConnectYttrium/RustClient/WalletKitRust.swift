@@ -15,7 +15,7 @@ public class WalletKitRust {
         guard let config = WalletKitRust.config else {
             fatalError("Error - you must call WalletKitRust.configure(_:) before accessing the shared instance.")
         }
-        return WalletKitRustClientFactory.create(config: config, groupIdentifier: config.groupIdentifier)
+        return WalletKitRustClientFactory.create(config: config)
     }()
     
     private static var config: Config?

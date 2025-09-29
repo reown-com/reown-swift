@@ -15,6 +15,7 @@
 		44713A882E30EFE000E3027A /* SessionProposalRustPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A822E30EFE000E3027A /* SessionProposalRustPresenter.swift */; };
 		44713A892E30EFE000E3027A /* SessionProposalRustInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44713A802E30EFE000E3027A /* SessionProposalRustInteractor.swift */; };
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
+		44E23EF42E86A5B10028053B /* WalletConnectYttrium in Frameworks */ = {isa = PBXBuildFile; productRef = 44E23EF32E86A5B10028053B /* WalletConnectYttrium */; };
 		767DC83528997F8E00080FA9 /* EthSendTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767DC83428997F8E00080FA9 /* EthSendTransaction.swift */; };
 		840507E32C8BAC7C00148A9B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 840507E22C8BAC7C00148A9B /* Preview Assets.xcassets */; };
 		8421447B2C80A2B8004FF494 /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8421447A2C80A2B8004FF494 /* ReownAppKit */; };
@@ -628,6 +629,7 @@
 				A54195A52934E83F0035AD19 /* Web3 in Frameworks */,
 				A5D85228286333E300DAF5C3 /* Starscream in Frameworks */,
 				8486EDD32B4F2EA6008E53C3 /* SwiftMessages in Frameworks */,
+				44E23EF42E86A5B10028053B /* WalletConnectYttrium in Frameworks */,
 				84943C7B2A9BA206007EBAC2 /* Mixpanel in Frameworks */,
 				A573C53929EC365000E3CBFD /* HDWalletKit in Frameworks */,
 			);
@@ -1628,6 +1630,7 @@
 				84943C7A2A9BA206007EBAC2 /* Mixpanel */,
 				8486EDD22B4F2EA6008E53C3 /* SwiftMessages */,
 				8421447A2C80A2B8004FF494 /* ReownAppKit */,
+				44E23EF32E86A5B10028053B /* WalletConnectYttrium */,
 			);
 			productName = DApp;
 			productReference = 84CE641C27981DED00142511 /* DApp.app */;
@@ -2936,6 +2939,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		4425E08D2E56EBEF00B196E6 /* WalletConnectYttrium */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WalletConnectYttrium;
+		};
+		44E23EF32E86A5B10028053B /* WalletConnectYttrium */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WalletConnectYttrium;
 		};

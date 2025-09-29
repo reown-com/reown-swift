@@ -3,6 +3,7 @@ import Combine
 
 import ReownAppKit
 import WalletConnectSign
+import WalletConnectYttrium
 
 final class SignPresenter: ObservableObject {
     @Published var accountsDetails = [AccountDetails]()
@@ -21,7 +22,7 @@ final class SignPresenter: ObservableObject {
     private let interactor: SignInteractor
     private let router: SignRouter
 
-    private var session: Session?
+    private var session: WalletConnectSign.Session?
     
     private var subscriptions = Set<AnyCancellable>()
 
@@ -43,12 +44,14 @@ final class SignPresenter: ObservableObject {
     }
     
     func connectWalletWithW3M() {
-        Task {
-            AppKit.set(sessionParams: .init(
-                namespaces: Proposal.namespaces
-            ))
-        }
-        AppKit.present(from: nil)
+        
+        AlertPresenter.present(message: "commented out 123", type: .warning)
+//        Task {
+//            AppKit.set(sessionParams: .init(
+//                namespaces: Proposal.namespaces
+//            ))
+//        }
+//        AppKit.present(from: nil)
     }
 
     @MainActor
@@ -56,9 +59,14 @@ final class SignPresenter: ObservableObject {
         Task {
             do {
                 ActivityIndicatorManager.shared.start()
-                walletConnectUri = try await Sign.instance.connect(
-                    namespaces: Proposal.namespaces
-                )
+                
+                
+                
+                walletConnectUri = try await WalletKitRust.instance.connect(namespaces: Proposal.namespaces)
+                
+//                walletConnectUri = try await Sign.instance.connect(
+//                    namespaces: Proposal.namespaces
+//                )
                 ActivityIndicatorManager.shared.stop()
                 router.presentNewPairing(walletConnectUri: walletConnectUri!)
             } catch {

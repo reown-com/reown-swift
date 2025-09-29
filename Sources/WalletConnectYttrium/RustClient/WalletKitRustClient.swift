@@ -159,11 +159,9 @@ public class WalletKitRustClient {
 
 struct WalletKitRustClientFactory {
     static func create(
-        config: WalletKitRust.Config,
-        groupIdentifier: String,
-        metadata: AppMetadata
+        config: WalletKitRust.Config
     ) -> WalletKitRustClient {
-        let keychainStorage = KeychainStorage(serviceIdentifier: "com.walletconnect.sdk", accessGroup: groupIdentifier)
+        let keychainStorage = KeychainStorage(serviceIdentifier: "com.walletconnect.sdk", accessGroup: config.groupIdentifier)
 
         let kms = KeyManagementService(keychain: keychainStorage)
         
@@ -179,7 +177,7 @@ struct WalletKitRustClientFactory {
             sessionStore: sessionStore
         )
         
-        return WalletKitRustClient(yttriumClient: yttriumClient, sessionStore: sessionStore, metadata: metadata)
+        return WalletKitRustClient(yttriumClient: yttriumClient, sessionStore: sessionStore, metadata: config.metadata)
     }
 }
 
@@ -293,6 +291,8 @@ extension WalletKitRustClient: SignListener, Logger {
 
         let connectResultFfi = try await yttriumClient.connect(params: params, selfMetadata: ytMetadata)
 
+
+        
         let uri = connectResultFfi.uri
 
         return try WalletConnectURI(uriString: uri)

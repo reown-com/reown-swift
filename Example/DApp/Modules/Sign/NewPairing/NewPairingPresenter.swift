@@ -1,6 +1,5 @@
 import UIKit
 import Combine
-
 import WalletConnectSign
 
 final class NewPairingPresenter: ObservableObject {
