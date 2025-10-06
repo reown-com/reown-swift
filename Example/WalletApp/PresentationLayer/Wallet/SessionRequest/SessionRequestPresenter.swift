@@ -123,26 +123,23 @@ private extension SessionRequestPresenter {
 
 
         // From YttriumUtilsWrapper UniFFI
-        
-        let displayModel = try! clearSigningFormat(
-            chainId: chainIdNumber,
-            to: to,
-            calldataHex: calldataHex
-        )
-        
-//        let displayModel = try! clearSigningFormat(
-//            chainId: 10,
-//            to: "0x521B4C065Bbdbe3E20B3727340730936912DfA46",
-//            calldataHex: "0x7c616fe60000000000000000000000000000000000000000000000000000000067741500"
-//        )
+        do {
+            let displayModel = try clearSigningFormat(
+                chainId: chainIdNumber,
+                to: to,
+                calldataHex: calldataHex
+            )
 
-
-        clearSigningIntent = displayModel.intent
-        clearSigningItems = displayModel.items.map { ($0.label, $0.value) }
-        clearSigningWarnings = displayModel.warnings
-        if let raw = displayModel.raw {
-            clearSigningRawSelector = raw.selector
-            clearSigningRawArgs = raw.args
+            clearSigningIntent = displayModel.intent
+            clearSigningItems = displayModel.items.map { ($0.label, $0.value) }
+            clearSigningWarnings = displayModel.warnings
+            if let raw = displayModel.raw {
+                clearSigningRawSelector = raw.selector
+                clearSigningRawArgs = raw.args
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
         }
     }
 }
