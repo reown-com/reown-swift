@@ -29,88 +29,105 @@ struct SessionRequestView: View {
                     Image("header")
                         .resizable()
                         .scaledToFit()
-                    
-                    if LinkModeTopicsStorage.shared.containsTopic(presenter.sessionRequest.topic) {
-                        Text("LINK MODE")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 8)
-                            .background(Color.blue)
-                            .cornerRadius(20)
-                            .padding(.vertical, 5)
-                    }
-                    
-                    Text(presenter.sessionRequest.method)
-                        .foregroundColor(.grey8)
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .padding(.top, 10)
-                    
-                    if case .valid = presenter.validationStatus {
-                        HStack {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundColor(.blue)
-                            
-                            Text(presenter.session?.peer.url ?? "")
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            if LinkModeTopicsStorage.shared.containsTopic(presenter.sessionRequest.topic) {
+                                Text("LINK MODE")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 8)
+                                    .background(Color.blue)
+                                    .cornerRadius(20)
+                                    .padding(.vertical, 5)
+                            }
+
+                            Text(presenter.sessionRequest.method)
                                 .foregroundColor(.grey8)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .lineSpacing(4)
+                                .font(.system(size: 22, weight: .bold, design: .rounded))
+                                .padding(.top, 10)
+
+                            if case .valid = presenter.validationStatus {
+                                HStack {
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.blue)
+
+                                    Text(presenter.session?.peer.url ?? "")
+                                        .foregroundColor(.grey8)
+                                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                        .lineSpacing(4)
+                                }
+                                .padding(.top, 8)
+                            } else {
+                                Text(presenter.session?.peer.url ?? "")
+                                    .foregroundColor(.grey8)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(4)
+                                    .padding(.top, 8)
+                            }
+
+                            switch presenter.validationStatus {
+                            case .unknown:
+                                verifyBadgeView(imageName: "exclamationmark.circle.fill", title: "Cannot verify", color: .orange)
+
+                            case .invalid:
+                                verifyBadgeView(imageName: "exclamationmark.triangle.fill", title: "Invalid domain", color: .red)
+
+                            case .scam:
+                                verifyBadgeView(imageName: "exclamationmark.shield.fill", title: "Security risk", color: .red)
+
+                            default:
+                                EmptyView()
+                            }
+
+                            if presenter.clearSigningIntent != nil || !presenter.clearSigningItems.isEmpty || presenter.clearSigningRawSelector != nil {
+                                intentSectionView()
+                            }
+
+                            if presenter.message != "[:]" {
+                                authRequestView()
+                            }
+
+                            // Surface warnings from clear signing as secondary notices
+                            if !presenter.clearSigningWarnings.isEmpty {
+                                VStack(spacing: 10) {
+                                    ForEach(0..<presenter.clearSigningWarnings.count, id: \.self) { idx in
+                                        verifyDescriptionView(imageName: "exclamationmark.circle.fill", title: "Warning", description: presenter.clearSigningWarnings[idx], color: .orange)
+                                    }
+                                }
+                            }
+
+                            switch presenter.validationStatus {
+                            case .invalid:
+                                verifyDescriptionView(imageName: "exclamationmark.triangle.fill", title: "Invalid domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .red)
+
+                            case .unknown:
+                                verifyDescriptionView(imageName: "exclamationmark.circle.fill", title: "Unknown domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .orange)
+
+                            case .scam:
+                                verifyDescriptionView(imageName: "exclamationmark.shield.fill", title: "Security risk", description: "This website is flagged as unsafe by multiple security providers. Leave immediately to protect your assets.", color: .red)
+
+                            default:
+                                EmptyView()
+                            }
+
+                            if case .scam = presenter.validationStatus {
+                                VStack(spacing: 20) {
+                                    declineButton()
+                                    allowButton()
+                                }
+                                .padding(.top, 25)
+                            } else {
+                                HStack {
+                                    declineButton()
+                                    allowButton()
+                                }
+                                .padding(.top, 25)
+                            }
                         }
-                        .padding(.top, 8)
-                    } else {
-                        Text(presenter.session?.peer.url ?? "")
-                            .foregroundColor(.grey8)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(4)
-                            .padding(.top, 8)
-                    }
-                    
-                    switch presenter.validationStatus {
-                    case .unknown:
-                        verifyBadgeView(imageName: "exclamationmark.circle.fill", title: "Cannot verify", color: .orange)
-                        
-                    case .invalid:
-                        verifyBadgeView(imageName: "exclamationmark.triangle.fill", title: "Invalid domain", color: .red)
-                        
-                    case .scam:
-                        verifyBadgeView(imageName: "exclamationmark.shield.fill", title: "Security risk", color: .red)
-                        
-                    default:
-                        EmptyView()
-                    }
-                    
-                    if presenter.message != "[:]" {
-                        authRequestView()
-                    }
-                    
-                    switch presenter.validationStatus {
-                    case .invalid:
-                        verifyDescriptionView(imageName: "exclamationmark.triangle.fill", title: "Invalid domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .red)
-                        
-                    case .unknown:
-                        verifyDescriptionView(imageName: "exclamationmark.circle.fill", title: "Unknown domain", description: "This domain cannot be verified. Check the request carefully before approving.", color: .orange)
-                        
-                    case .scam:
-                        verifyDescriptionView(imageName: "exclamationmark.shield.fill", title: "Security risk", description: "This website is flagged as unsafe by multiple security providers. Leave immediately to protect your assets.", color: .red)
-                        
-                    default:
-                        EmptyView()
-                    }
-                    
-                    if case .scam = presenter.validationStatus {
-                        VStack(spacing: 20) {
-                            declineButton()
-                            allowButton()
-                        }
-                        .padding(.top, 25)
-                    } else {
-                        HStack {
-                            declineButton()
-                            allowButton()
-                        }
-                        .padding(.top, 25)
+                        .padding(.horizontal, 0)
                     }
                 }
                 .padding(20)
@@ -133,6 +150,76 @@ struct SessionRequestView: View {
             }
         }
         .edgesIgnoringSafeArea(.all)
+    }
+    
+    private func intentSectionView() -> some View {
+        VStack {
+            VStack(alignment: .leading) {
+                Text("Intent")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundColor(.whiteBackground)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(Color.grey70)
+                    .cornerRadius(28, corners: .allCorners)
+                    .padding(.leading, 15)
+                    .padding(.top, 9)
+
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        if let intent = presenter.clearSigningIntent {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Intent")
+                                    .foregroundColor(.grey50)
+                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                Text(intent)
+                                    .foregroundColor(.grey8)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        if !presenter.clearSigningItems.isEmpty {
+                            ForEach(0..<presenter.clearSigningItems.count, id: \.self) { idx in
+                                let item = presenter.clearSigningItems[idx]
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(item.label)
+                                        .foregroundColor(.grey50)
+                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                    Text(item.value)
+                                        .foregroundColor(.grey8)
+                                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        } else if let selector = presenter.clearSigningRawSelector {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Selector: \(selector)")
+                                    .foregroundColor(.grey8)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                if !presenter.clearSigningRawArgs.isEmpty {
+                                    Text("Args: \(presenter.clearSigningRawArgs.joined(separator: ", "))")
+                                        .foregroundColor(.grey8)
+                                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 10)
+                }
+                .background(Color.whiteBackground)
+                .cornerRadius(20, corners: .allCorners)
+                .padding(.horizontal, 5)
+                .padding(.bottom, 5)
+
+            }
+            .background(.thinMaterial)
+            .cornerRadius(25, corners: .allCorners)
+        }
+        .padding(.vertical, 10)
     }
     
     private func authRequestView() -> some View {

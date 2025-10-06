@@ -16,7 +16,7 @@ enum Proposal {
         "eip155": ProposalNamespace(
             chains: [
                 Blockchain("eip155:137")!,
-                Blockchain("eip155:1")!
+                Blockchain("eip155:10")!
             ],
             methods: [
                 "eth_sendTransaction",
