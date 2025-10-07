@@ -29,6 +29,18 @@ final class Signer {
 
     /// Main entry point that decides which signer to call.
     static func sign(request: Request, importAccount: ImportAccount) async throws -> AnyCodable {
+        // Handle TON methods
+        if request.method.starts(with: "ton_") {
+            let requestedAddress = try await getRequestedAddress(request)
+            let tonAccountStorage = TonAccountStorage()
+
+            if let tonAddress = tonAccountStorage.getAddress(for: request.chainId),
+               requestedAddress.lowercased() == tonAddress.lowercased() {
+                let tonSigner = TonSigner()
+                return try await tonSigner.sign(request: request)
+            }
+            throw Errors.accountForRequestNotFound
+        }
         // Handle Sui methods
         if request.method.starts(with: "sui_") {
             let requestedAddress = try await getRequestedAddress(request)
@@ -68,6 +80,14 @@ final class Signer {
 
     // Determine requested address for different method families
     private static func getRequestedAddress(_ request: Request) async throws -> String {
+        // TON methods: read from TonAccountStorage for specific chain
+        if request.method.starts(with: "ton_") {
+            let tonAccountStorage = TonAccountStorage()
+            if let tonAddress = tonAccountStorage.getAddress(for: request.chainId) {
+                return tonAddress
+            }
+            throw Errors.cantFindRequestedAddress
+        }
         // Sui methods: read from SuiAccountStorage
         if request.method.starts(with: "sui_") {
             let suiAccountStorage = SuiAccountStorage()
