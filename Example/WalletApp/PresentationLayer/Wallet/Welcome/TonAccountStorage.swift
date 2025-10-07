@@ -10,12 +10,12 @@ class TonAccountStorage {
 
     static let privateKeyStorageKey = "ton_privateKey" // base64-encoded 32-byte Ed25519 seed
 
-    private let chainId: Blockchain = Blockchain("ton:mainnet")!
+    private let chainId: Blockchain = Blockchain("ton:-239")!
 
     @discardableResult
-    func generateAndSaveKeypair(networkId: String = "mainnet") -> Bool {
+    func generateAndSaveKeypair() -> Bool {
         do {
-            let cfg = TonClientConfig(networkId: networkId)
+            let cfg = TonClientConfig(networkId: chainId.absoluteString)
             let client = try TonClient(cfg: cfg)
             let keypair = client.generateKeypair()
             // Persist only the private seed; public key is always derived on demand
@@ -38,10 +38,10 @@ class TonAccountStorage {
         return UserDefaults.standard.string(forKey: Self.privateKeyStorageKey)
     }
 
-    func getAddress(networkId: String = "mainnet") -> String? {
+    func getAddress() -> String? {
         guard let sk = getPrivateKey(), let pk = derivePublicKeyHex(from: sk) else { return nil }
         do {
-            let cfg = TonClientConfig(networkId: networkId)
+            let cfg = TonClientConfig(networkId: chainId.absoluteString)
             let client = try TonClient(cfg: cfg)
             let identity = try client.getAddressFromKeypair(keypair: Keypair(sk: sk, pk: pk))
             return identity.friendlyEq
