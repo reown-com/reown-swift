@@ -38,10 +38,11 @@ class TonAccountStorage {
         return UserDefaults.standard.string(forKey: Self.privateKeyStorageKey)
     }
 
-    func getAddress() -> String? {
+    func getAddress(for chainId: Blockchain? = nil) -> String? {
+        let resolvedChainId = chainId ?? self.chainId
         guard let sk = getPrivateKey(), let pk = derivePublicKeyHex(from: sk) else { return nil }
         do {
-            let cfg = TonClientConfig(networkId: chainId.absoluteString)
+            let cfg = TonClientConfig(networkId: resolvedChainId.absoluteString)
             let client = try TonClient(cfg: cfg)
             let identity = try client.getAddressFromKeypair(keypair: Keypair(sk: sk, pk: pk))
             return identity.friendlyEq
@@ -50,9 +51,10 @@ class TonAccountStorage {
         }
     }
 
-    func getCaip10Account() -> ReownWalletKit.Account? {
-        guard let address = getAddress() else { return nil }
-        return Account(blockchain: chainId, address: address)!
+    func getCaip10Account(for chainId: Blockchain? = nil) -> ReownWalletKit.Account? {
+        let resolvedChainId = chainId ?? self.chainId
+        guard let address = getAddress(for: resolvedChainId) else { return nil }
+        return Account(blockchain: resolvedChainId, address: address)!
     }
 }
 
