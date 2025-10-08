@@ -46,13 +46,15 @@ class Web3ModalViewModel: ObservableObject {
 
                 case "accountsChanged":
 
-                    guard let account = try? event.data.get([String].self) else {
-                        return
+                    guard let accounts = try? event.data.get([String].self),
+                          let account = accounts.first
+                    else { return }
+
+                    let components = account.split(separator: ":")
+                    if components.count > 1 {
+                        let chainReference = components[1]
+                        Store.shared.selectedChain = ChainPresets.ethChains.first(where: { $0.chainReference == String(chainReference) })
                     }
-
-                    let chainReference = account[0].split(separator: ":")[1]
-
-                    Store.shared.selectedChain = ChainPresets.ethChains.first(where: { $0.chainReference == String(chainReference) })
                 default:
                     break
                 }
