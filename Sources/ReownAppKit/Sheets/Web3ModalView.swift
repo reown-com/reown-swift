@@ -50,37 +50,62 @@ struct Web3ModalView: View {
     }
     
     private func modalHeader() -> some View {
-        HStack(spacing: 0) {
-            switch router.currentRoute as? Router.ConnectingSubpage {
-            case .none:
-                EmptyView()
-            case .connectWallet:
-//                helpButton()
-                EmptyView()
-            default:
-                backButton()
+        VStack(spacing: 12) {
+            HStack(spacing: 0) {
+                switch router.currentRoute as? Router.ConnectingSubpage {
+                case .none:
+                    EmptyView()
+                case .connectWallet:
+                    //                helpButton()
+                    EmptyView()
+                default:
+                    backButton()
+                }
+                
+                Spacer()
+                
+                (router.currentRoute as? Router.ConnectingSubpage)?.title.map { title in
+                    Text(title)
+                        .font(.title700)
+                        .foregroundColor(.Foreground100)
+                }
+                
+                Spacer()
+                
+                closeButton()
             }
             
-            Spacer()
-            
-            (router.currentRoute as? Router.ConnectingSubpage)?.title.map { title in
-                Text(title)
+            if let connectingAddress {
+                Text(connectingAddress)
                     .font(.paragraph700)
+                    .foregroundColor(.secondary)
             }
-            
-            Spacer()
-            
-            closeButton()
         }
-        .padding()
-        .frame(height: 64)
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+        .padding(.bottom, connectingAddress != nil ? 4 : 24)
         .frame(maxWidth: .infinity)
-        .foregroundColor(.Foreground100)
         .overlay(
             RoundedCorner(radius: 30, corners: [.topLeft, .topRight])
                 .stroke(Color.GrayGlass005, lineWidth: 1)
         )
         .cornerRadius(30, corners: [.topLeft, .topRight])
+    }
+    
+    private var connectingAddress: String? {
+        guard let account = store.connectingAccount else { return nil }
+        return format(account.address)
+    }
+    
+    public static let ellipsis = "····"
+    private func format(_ value: String) -> String {
+        // Greater than 12 since 10 or 11 would be shorter than the ellipsis
+        guard value.count > 12 else { return value }
+        
+        // Use the first 6 charactors and the last 4 charactors of the hex address, and replace the rest with "..."
+        let prefix = value.starts(with: "0x") ? value.prefix(6) : value.prefix(4)
+        let suffix = value.suffix(4)
+        return [prefix, suffix].joined(separator: Self.ellipsis)
     }
     
     private func helpButton() -> some View {

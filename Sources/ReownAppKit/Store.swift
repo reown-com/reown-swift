@@ -21,6 +21,8 @@ public class Store: ObservableObject {
     @Published var balance: Double?
     
     @Published public var connecting: Bool = false
+    @Published public var connectingAccount: W3MAccount? = nil
+    
     @Published public var account: W3MAccount? {
         didSet {
             let matchingChain = ChainPresets.ethChains.first(where: {
