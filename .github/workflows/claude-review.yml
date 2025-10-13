@@ -34,20 +34,71 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           project_context: |
-            This is a Swift implementation of WalletKit and AppKit for native iOS, macOS, and tvOS applications.
+            This is a Swift implementation of WalletConnect protocol and SDKs for native iOS, macOS, and tvOS applications, providing both wallet-side and app-side implementations.
+            
+            Repository Structure (Swift Package Manager):
+            Core Protocol Layer:
+            - WalletConnectSign: Core Sign protocol implementation with session management, proposal handling, request/response flow
+            - WalletConnectPairing: Pairing protocol for establishing connections between wallets and dApps
+            - WalletConnectRelay: WebSocket relay client with automatic reconnection and message queue management
+            
+            Wallet SDK:
+            - ReownWalletKit: Complete wallet-side SDK combining Sign, Push, Verify, and Yttrium integration
+            - WalletConnectNotify: Push notification protocol with Identity and Push dependencies
+            - WalletConnectPush: Push notification delivery via networking and JWT
+            
+            App SDK:
+            - ReownAppKit: Embeddable dApp SDK with QR code scanning, wallet connection UI, Coinbase Wallet SDK integration
+            - ReownAppKitUI: SwiftUI and UIKit components for wallet connection flows (buttons, modals, account views)
+            - ReownAppKitBackport: Backport utilities for older iOS versions
+            
+            Infrastructure:
+            - WalletConnectNetworking: HTTP client and relay integration layer
+            - HTTPClient: Low-level HTTP client implementation
+            - WalletConnectKMS: Key Management System for cryptographic operations (key generation, signing, encryption)
+            - WalletConnectJWT: JWT token generation and validation for authentication
+            - WalletConnectIdentity: Identity management and verification
+            - WalletConnectVerify: Domain verification and attestation system
+            - WalletConnectSigner: Signing operations abstraction
+            
+            Utilities:
+            - Commons: Common data types and extensions
+            - JSONRPC: JSON-RPC 2.0 protocol implementation
+            - WalletConnectUtils: Shared utilities, logging, encoding/decoding
+            - Database: Persistent storage layer
+            - Events: Event analytics and telemetry
+            
+            Router:
+            - ReownRouter: Modern deep linking and universal links handling
+            - WalletConnectRouterLegacy: Legacy routing implementation for backwards compatibility
+            
+            Integrations:
+            - YttriumWrapper: Swift wrapper for Yttrium Rust library (account abstraction, version 0.9.68 pinned)
+            - YttriumUtilsWrapper: Utility functions from Yttrium
+            - QRCode (14.3.1+): QR code generation
+            - CoinbaseWalletSDK (1.1.0+): Coinbase Wallet integration
             
             Tech Stack:
-            - Swift 5
-            - Swift Package Manager
-            - iOS 13+, macOS 11+, tvOS 13+
-            - Key components: WalletConnectSign, ReownWalletKit, ReownAppKit, WalletConnectNotify
-            - Dependencies: Yttrium, QRCode, CoinbaseWalletSDK
+            - Swift 5 with Swift Package Manager
+            - Minimum Deployment: iOS 13+, macOS 11+, tvOS 13+
+            - Swift Concurrency: async/await, actors, structured concurrency
+            - Privacy: PrivacyInfo.xcprivacy resources for App Privacy Details
+            - Testing: XCTest for unit tests across all major modules
+            - Resources: Asset catalogs (xcassets), PackageConfig.json
             
             Key Considerations:
-            - Follow Swift best practices and conventions
-            - Proper async/await patterns with Swift concurrency
-            - Memory management and ARC
-            - Platform-specific considerations for iOS/macOS/tvOS
-            - Proper error handling and optional unwrapping
-            - Thread safety for networking and crypto operations
-            - Security for wallet operations and key management
+            - Follow Swift best practices and Swift API Design Guidelines
+            - Proper async/await patterns with Swift concurrency (avoid callback hell, use structured concurrency)
+            - Memory management: understand ARC, avoid retain cycles with weak/unowned, proper capture lists in closures
+            - Platform-specific considerations: conditional compilation for iOS/macOS/tvOS differences
+            - Error handling: use Swift's typed error handling, provide descriptive error types
+            - Thread safety: use actors for mutable state, @MainActor for UI updates, avoid data races
+            - Security: secure keychain storage for sensitive data (via KMS), proper JWT validation, domain verification
+            - Networking: handle network failures gracefully, implement retry logic, WebSocket reconnection
+            - Protocol compliance: strict adherence to WalletConnect protocol specifications
+            - Dependency management: pinned Yttrium version (0.9.68) for stability, semantic versioning for other deps
+            - Testing: unit tests for business logic, mock networking layers, test async operations properly
+            - Documentation: use Swift's documentation markup (///) for public APIs
+            - Privacy: declare data collection in PrivacyInfo.xcprivacy files
+            - Backwards compatibility: maintain legacy router for existing integrations
+            - Yttrium Integration: Swift wrappers around Rust FFI, handle cross-language error boundaries
