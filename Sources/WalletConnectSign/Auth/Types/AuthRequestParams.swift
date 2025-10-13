@@ -4,7 +4,7 @@ import Foundation
 /// for details read CAIP-74 and EIP-4361 specs
 /// https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-74.md
 /// https://eips.ethereum.org/EIPS/eip-4361
-public struct AuthRequestParams {
+public struct AuthRequestParams: Codable {
     public enum Errors: Error {
         case invalidTtl
     }
@@ -18,6 +18,7 @@ public struct AuthRequestParams {
     public let requestId: String?
     public var resources: [String]?
     public let methods: [String]?
+    public let signatureTypes: [String: [CacaoSignatureType]]?
     public let ttl: TimeInterval
 
     // TTL bounds
@@ -35,6 +36,7 @@ public struct AuthRequestParams {
         requestId: String?,
         resources: [String]?,
         methods: [String]?,
+        signatureTypes: [String: [CacaoSignatureType]]? = nil,
         ttl: TimeInterval = 3600
     ) throws {
         guard ttl >= Request.minTtl && ttl <= Request.maxTtl else {
@@ -51,6 +53,7 @@ public struct AuthRequestParams {
         self.requestId = requestId
         self.resources = resources
         self.methods = methods
+        self.signatureTypes = signatureTypes
         self.ttl = ttl
     }
 
@@ -75,7 +78,8 @@ extension AuthRequestParams {
                      statement: String? = "I accept the ServiceOrg Terms of Service: https://service.invalid/tos",
                      requestId: String? = nil,
                      resources: [String]? = ["ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/", "https://example.com/my-web2-claim.json"],
-                     methods: [String]? = ["personal_sign", "eth_sendTransaction"]) -> AuthRequestParams {
+                     methods: [String]? = ["personal_sign", "eth_sendTransaction"],
+                     signatureTypes: [String: [CacaoSignatureType]]? = ["eip155": [.eip155(.eip191), .eip155(.eip1271), .eip155(.eip6492)]]) -> AuthRequestParams {
         return try! AuthRequestParams(domain: domain,
                              chains: chains,
                              nonce: nonce,
@@ -85,7 +89,8 @@ extension AuthRequestParams {
                              statement: statement,
                              requestId: requestId,
                              resources: resources,
-                             methods: methods)
+                             methods: methods,
+                             signatureTypes: signatureTypes)
     }
 }
 #endif

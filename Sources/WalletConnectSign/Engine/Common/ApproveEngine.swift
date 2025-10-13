@@ -16,6 +16,7 @@ final class ApproveEngine {
     var onSessionProposal: ((Session.Proposal, VerifyContext?) -> Void)?
     var onSessionRejected: ((Session.Proposal, Reason) -> Void)?
     var onSessionSettle: ((Session) -> Void)?
+    var onSessionSettleWithResponses: ((Session, ProposalRequestsResponses?) -> Void)?
 
     private let networkingInteractor: NetworkInteracting
     private let pairingStore: WCPairingStorage
@@ -73,7 +74,7 @@ final class ApproveEngine {
     }
 
 
-    func approveProposal(proposerPubKey: String, validating sessionNamespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil) async throws -> Session {
+    func approveProposal(proposerPubKey: String, validating sessionNamespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil, proposalRequestsResponses: ProposalRequestsResponses? = nil) async throws -> Session {
         eventsClient.startTrace(topic: "")
         logger.debug("Approving session proposal...")
 
@@ -140,7 +141,7 @@ final class ApproveEngine {
         let result = SessionType.ProposeResponse(relay: relay, responderPublicKey: selfPublicKey.hexRepresentation)
         let response = RPCResponse(id: payload.id, result: result)
         
-        let settleParams = try createSettleParams(sessionTopic: sessionTopic, proposal: proposal, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties)
+        let settleParams = try createSettleParams(sessionTopic: sessionTopic, proposal: proposal, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties, proposalRequestsResponses: proposalRequestsResponses)
         
         let settleRequest = RPCRequest(method: SessionSettleProtocolMethod().method, params: settleParams)
         
@@ -193,7 +194,7 @@ final class ApproveEngine {
         kms.deleteSymmetricKey(for: pairingTopic)
     }
     
-    func createSettleParams(sessionTopic: String, proposal: SessionProposal, namespaces: [String: SessionNamespace], sessionProperties: [String: String]?, scopedProperties: [String: String]?) throws -> SessionType.SettleParams {
+    func createSettleParams(sessionTopic: String, proposal: SessionProposal, namespaces: [String: SessionNamespace], sessionProperties: [String: String]?, scopedProperties: [String: String]?, proposalRequestsResponses: ProposalRequestsResponses?) throws -> SessionType.SettleParams {
         
         guard let agreementKeys = kms.getAgreementSecret(for: sessionTopic) else {
             throw Errors.agreementMissingOrInvalid
@@ -210,13 +211,17 @@ final class ApproveEngine {
             .addingTimeInterval(TimeInterval(WCSession.defaultTimeToLive))
             .timeIntervalSince1970
 
+        // Create default empty ProposalRequestsResponses if none provided
+        let requestsResponses = proposalRequestsResponses ?? ProposalRequestsResponses(authentication: [])
+
         let settleParams = SessionType.SettleParams(
             relay: relay,
             controller: selfParticipant,
             namespaces: namespaces,
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
-            expiry: Int64(expiry)
+            expiry: Int64(expiry),
+            proposalRequestsResponses: requestsResponses
         )
         
         return settleParams
@@ -469,6 +474,7 @@ private extension ApproveEngine {
             try await networkingInteractor.respondSuccess(topic: payload.topic, requestId: payload.id, protocolMethod: protocolMethod)
         }
         onSessionSettle?(session.publicRepresentation())
+        onSessionSettleWithResponses?(session.publicRepresentation(), params.proposalRequestsResponses)
     }
     
     func resolveNetworkConnectionStatus() async -> NetworkConnectionStatus {
