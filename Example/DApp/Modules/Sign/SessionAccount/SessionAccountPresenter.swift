@@ -165,8 +165,8 @@ private enum Stub {
     }
     
     static let tx = [Transaction(from: "0x9b2055d370f73ec7d8a03e965129118dc8f5bf83",
-                                to: "0x9b2055d370f73ec7d8a03e965129118dc8f5bf83",
-                                data: "0x",
+                                to: "0x521B4C065Bbdbe3E20B3727340730936912DfA46",
+                                data: "0x7c616fe60000000000000000000000000000000000000000000000000000000067741500",
                                 gasLimit: "0x5208",
                                 gasPrice: "0x013e3d2ed4",
                                 value: "0x00",
@@ -174,8 +174,8 @@ private enum Stub {
 
     static func tx(from: String) -> [Transaction] {
         return [Transaction(from: from,
-                            to: "0x9b2055d370f73ec7d8a03e965129118dc8f5bf83",
-                            data: "0x",
+                            to: "0x521B4C065Bbdbe3E20B3727340730936912DfA46",
+                            data: "0x7c616fe60000000000000000000000000000000000000000000000000000000067741500",
                             gasLimit: "0x5208",
                             gasPrice: "0x013e3d2ed4",
                             value: "0x186A0",
