@@ -1,0 +1,53 @@
+name: Claude Auto Review
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [main, develop]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'pull_request'
+      || (
+        github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && contains(github.event.comment.body, '@claude review')
+      )
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Review
+        uses: WalletConnect/actions/claude/auto-review@974cce051b8452198a144e0e6c4df4d2328a132c
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          project_context: |
+            This is a Swift implementation of WalletKit and AppKit for native iOS, macOS, and tvOS applications.
+            
+            Tech Stack:
+            - Swift 5
+            - Swift Package Manager
+            - iOS 13+, macOS 11+, tvOS 13+
+            - Key components: WalletConnectSign, ReownWalletKit, ReownAppKit, WalletConnectNotify
+            - Dependencies: Yttrium, QRCode, CoinbaseWalletSDK
+            
+            Key Considerations:
+            - Follow Swift best practices and conventions
+            - Proper async/await patterns with Swift concurrency
+            - Memory management and ARC
+            - Platform-specific considerations for iOS/macOS/tvOS
+            - Proper error handling and optional unwrapping
+            - Thread safety for networking and crypto operations
+            - Security for wallet operations and key management
