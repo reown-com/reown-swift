@@ -16,7 +16,14 @@ class TonAccountStorage {
     func generateAndSaveKeypair() -> Bool {
         do {
             let cfg = TonClientConfig(networkId: chainId.absoluteString)
-            let client = try TonClient(cfg: cfg)
+            let bundleId: String = Bundle.main.bundleIdentifier ?? ""
+            let pulseMetadata = YttriumUtils.PulseMetadata(
+                url: nil,
+                bundleId: bundleId,
+                sdkVersion: "reown-swift-\(EnvironmentInfo.sdkName)",
+                sdkPlatform: "mobile"
+            )
+            let client = try TonClient(cfg: cfg, projectId: InputConfig.projectId, pulseMetadata: pulseMetadata)
             let keypair = client.generateKeypair()
             // Persist only the private seed; public key is always derived on demand
             UserDefaults.standard.set(keypair.sk, forKey: Self.privateKeyStorageKey)
@@ -43,9 +50,16 @@ class TonAccountStorage {
         guard let sk = getPrivateKey(), let pk = derivePublicKeyHex(from: sk) else { return nil }
         do {
             let cfg = TonClientConfig(networkId: resolvedChainId.absoluteString)
-            let client = try TonClient(cfg: cfg)
+            let bundleId: String = Bundle.main.bundleIdentifier ?? ""
+            let pulseMetadata = YttriumUtils.PulseMetadata(
+                url: nil,
+                bundleId: bundleId,
+                sdkVersion: "reown-swift-\(EnvironmentInfo.sdkName)",
+                sdkPlatform: "mobile"
+            )
+            let client = TonClient(cfg: cfg, projectId: InputConfig.projectId, pulseMetadata: pulseMetadata)
             let identity = try client.getAddressFromKeypair(keypair: Keypair(sk: sk, pk: pk))
-            return identity.friendlyEq
+            return identity.friendly
         } catch {
             return nil
         }

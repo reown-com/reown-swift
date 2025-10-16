@@ -46,9 +46,10 @@ final class SuiSigner {
     private static var suiClient: SuiClient?
     
     static func initialize(projectId: String) {
-        let pulseMetadata = PulseMetadata(
+        let bundleId: String = Bundle.main.bundleIdentifier ?? ""
+        let pulseMetadata = YttriumUtils.PulseMetadata(
             url: nil,
-            bundleId: Bundle.main.bundleIdentifier ?? "",
+            bundleId: bundleId,
             sdkVersion: "reown-swift-\(EnvironmentInfo.sdkName)",
             sdkPlatform: "mobile"
         )
