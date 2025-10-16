@@ -8,7 +8,8 @@ final class SettingsModule {
         let interactor = SettingsInteractor()
         let solanaAccountStorage = SolanaAccountStorage()
         let suiAccountStorage = SuiAccountStorage()
-        let presenter = SettingsPresenter(interactor: interactor, router: router, accountStorage: app.accountStorage, importAccount: importAccount, solanaAccountStorage: solanaAccountStorage, suiAccountStorage: suiAccountStorage)
+        let tonAccountStorage = TonAccountStorage()
+        let presenter = SettingsPresenter(interactor: interactor, router: router, accountStorage: app.accountStorage, importAccount: importAccount, solanaAccountStorage: solanaAccountStorage, suiAccountStorage: suiAccountStorage, tonAccountStorage: tonAccountStorage)
         let view = SettingsView().environmentObject(presenter)
         let viewController = SceneViewController(viewModel: presenter, content: view)
 

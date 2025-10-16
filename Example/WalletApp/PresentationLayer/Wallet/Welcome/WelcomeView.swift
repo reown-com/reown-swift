@@ -58,6 +58,10 @@ struct WelcomeView: View {
             TextField("Sui Private Key (optional)", text: $presenter.suiInput)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+
+            TextField("TON Private Key (base64 32-byte seed, optional)", text: $presenter.tonPrivateKeyBase64Input)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
             
             Button("OK", action: presenter.onImport)
             Button("Cancel", role: .cancel) { 
@@ -65,6 +69,7 @@ struct WelcomeView: View {
                 presenter.solanaInput = .empty
                 presenter.stacksInput = .empty
                 presenter.suiInput = .empty
+                presenter.tonPrivateKeyBase64Input = .empty
             }
         } message: {
             Text("Please enter account private keys")
