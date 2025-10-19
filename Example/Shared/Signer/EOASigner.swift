@@ -16,7 +16,7 @@ final class EOASigner {
             return signer.signTypedData(request.params)
 
         case "eth_sendTransaction":
-            return try signer.sendTransaction(request.params)
+            return try await signer.sendTransaction(request: request)
 
         case "solana_signTransaction":
             return SOLSigner.signTransaction(request.params)
