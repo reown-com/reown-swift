@@ -108,7 +108,7 @@ struct ETHSigner {
             chainId: request.chainId.absoluteString,
             from: normalizeAddress(fromAddress) ?? fromAddress,
             to: normalizeAddress(tx.to),
-            value: ensureHexPrefix(tx.value ?? "0x0"),
+            value: ensureHexPrefix(tx.value),
             data: normalizedDataHex(tx.data),
             gasLimit: ensureHexPrefix(coalesce(tx.gasLimit, tx.gas)),
             maxFeePerGas: ensureHexPrefix(coalesce(tx.maxFeePerGas, tx.gasPrice)),
