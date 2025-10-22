@@ -37,7 +37,8 @@ public class TVFCollector: TVFCollectorProtocol {
             BitcoinTVFCollector(),
             StacksTVFCollector(),
             SuiTVFCollector(),
-            PolkadotTVFCollector()
+            PolkadotTVFCollector(),
+            TonTVFCollector()
         ]
     }
 
