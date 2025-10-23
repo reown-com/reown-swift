@@ -167,8 +167,8 @@ public final class RelayClient {
         subscriptionsTracker.setSubscription(for: pairingTopic, id: UUID().uuidString)
     }
     
-    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: String, sessionSettlementRequest: String, correlationId: RPCID?) async throws {
-        let request = ApproveSession(params: .init(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: sessionProposalResponse, sessionSettlementRequest: sessionSettlementRequest, correlationId: correlationId)).asRPCRequest()
+    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: String, sessionSettlementRequest: String, correlationId: RPCID?, approvedChains: [String]) async throws {
+        let request = ApproveSession(params: .init(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: sessionProposalResponse, sessionSettlementRequest: sessionSettlementRequest, correlationId: correlationId, approvedChains: approvedChains)).asRPCRequest()
         let message = try request.asJSONEncodedString()
         try await dispatcher.protectedSend(message, connectUnconditionally: true)
         topicsTracker.addTopics([sessionTopic])

@@ -144,8 +144,10 @@ final class ApproveEngine {
         
         let settleRequest = RPCRequest(method: SessionSettleProtocolMethod().method, params: settleParams)
         
+        let approvedChains = ApprovedChainsBuilder.build(from: settleParams.namespaces)
+        
         do {
-            try await networkingInteractor.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest)
+            try await networkingInteractor.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest, approvedChains: approvedChains)
         } catch {
             eventsClient.saveTraceEvent(ApproveSessionTraceErrorEvents.approveSessionFailure)
             throw error
@@ -221,7 +223,7 @@ final class ApproveEngine {
         
         return settleParams
     }
-
+    
     func createSession(topic: String, proposal: SessionProposal, pairingTopic: String, settleParams: SessionType.SettleParams) -> WCSession {
 
         let verifyContext = (try? verifyContextStore.get(key: proposal.proposer.publicKey)) ?? verifyClient.createVerifyContext(origin: nil, domain: proposal.proposer.metadata.url, isScam: false, isVerified: nil)
@@ -483,6 +485,33 @@ private extension ApproveEngine {
                 } onCancel: { }
             }
         }
+    }
+}
+
+enum ApprovedChainsBuilder {
+    static func build(from namespaces: [String: SessionNamespace]) -> [String] {
+        var seenChains = Set<String>()
+        var orderedChains: [String] = []
+
+        namespaces.values.forEach { namespace in
+            if let namespaceChains = namespace.chains, !namespaceChains.isEmpty {
+                namespaceChains.forEach { chain in
+                    let absolute = chain.absoluteString
+                    if seenChains.insert(absolute).inserted {
+                        orderedChains.append(absolute)
+                    }
+                }
+            } else {
+                namespace.accounts.forEach { account in
+                    let absolute = account.blockchain.absoluteString
+                    if seenChains.insert(absolute).inserted {
+                        orderedChains.append(absolute)
+                    }
+                }
+            }
+        }
+
+        return orderedChains
     }
 }
 
