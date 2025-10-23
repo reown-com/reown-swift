@@ -17,7 +17,7 @@ var dependencies: [Package.Dependency] = [
 if yttriumDebug {
     dependencies.append(.package(path: "../yttrium"))
 } else {
-    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.9.68")))
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.9.75")))
 }
 
 let yttriumTarget = buildYttriumWrapperTarget()

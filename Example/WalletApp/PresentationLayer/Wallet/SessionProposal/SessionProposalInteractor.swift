@@ -11,6 +11,7 @@ final class SessionProposalInteractor {
 
         let stacksAccountStorage = StacksAccountStorage()
         let suiAccountStorage = SuiAccountStorage()
+        let tonAccountStorage = TonAccountStorage()
 
         // Handle EIP155 chains
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
@@ -27,8 +28,13 @@ final class SessionProposalInteractor {
         let supportedOptionalSuiChains = proposal.optionalNamespaces?["sui"]?.chains ?? []
         let supportedSuiChains = supportedRequiredSuiChains + supportedOptionalSuiChains
 
+        // Handle TON chains
+        let supportedRequiredTonChains = proposal.requiredNamespaces["ton"]?.chains ?? []
+        let supportedOptionalTonChains = proposal.optionalNamespaces?["ton"]?.chains ?? []
+        let supportedTonChains = supportedRequiredTonChains + supportedOptionalTonChains
+
         // Combine all supported chains
-        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains
+        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains
 
         var supportedAccounts: [Account] = []
         var sessionProperties = [String: String]()
@@ -52,6 +58,17 @@ final class SessionProposalInteractor {
         if let suiAccount = suiAccountStorage.getCaip10Account(), !supportedSuiChains.isEmpty {
             let suiAccounts = Array(supportedSuiChains).map { Account(blockchain: $0, address: suiAccount.address)! }
             supportedAccounts.append(contentsOf: suiAccounts)
+        }
+
+        // Add TON accounts if available
+        if !supportedTonChains.isEmpty {
+            var tonAccounts: [Account] = []
+            for chain in supportedTonChains {
+                if let tonAccount = tonAccountStorage.getCaip10Account(for: chain) {
+                    tonAccounts.append(tonAccount)
+                }
+            }
+            supportedAccounts.append(contentsOf: tonAccounts)
         }
 
         /* Use only supported values for production. I.e:

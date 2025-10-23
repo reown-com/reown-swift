@@ -146,6 +146,64 @@ final class ApproveEngineTests: XCTestCase {
         XCTAssertFalse(cryptoMock.hasAgreementSecret(for: session.topic), "Responder must remove agreement secret")
         XCTAssertFalse(cryptoMock.hasPrivateKey(for: session.self.publicKey!), "Responder must remove private key")
     }
+
+    func testApprovedChainsBuilderUsesExplicitChains() {
+        let ethMainnet = Blockchain("eip155:1")!
+        let polygon = Blockchain("eip155:137")!
+
+        let namespace = SessionNamespace(
+            chains: [ethMainnet, polygon],
+            accounts: [
+                Account("eip155:1:0x1234567890abcdef1234567890abcdef12345678")!,
+                Account("eip155:137:0xabcdefabcdefabcdefabcdefabcdefabcdefabcd")!
+            ],
+            methods: ["eth_sendTransaction"],
+            events: []
+        )
+
+        let approved = ApprovedChainsBuilder.build(from: ["eip155": namespace])
+
+        XCTAssertEqual(approved, ["eip155:1", "eip155:137"])
+    }
+
+    func testApprovedChainsBuilderFallsBackToAccounts() {
+        let tonMainnetAccount = Account("ton:-239:UQCjI2QtnNXkYxNovk87FQF0J")!
+        let tonTestAccount = Account("ton:-3:UQCjI2QtnNXkYxNovk87FQF0J")!
+
+        let namespace = SessionNamespace(
+            chains: nil,
+            accounts: [tonMainnetAccount, tonTestAccount],
+            methods: ["ton_sendMessage"],
+            events: []
+        )
+
+        let approved = ApprovedChainsBuilder.build(from: ["ton": namespace])
+
+        XCTAssertEqual(approved, ["ton:-239", "ton:-3"])
+    }
+
+    func testApprovedChainsBuilderDeduplicatesChains() {
+        let ethMainnet = Blockchain("eip155:1")!
+        let namespaceWithChains = SessionNamespace(
+            chains: [ethMainnet],
+            accounts: [Account("eip155:1:0x1234567890abcdef1234567890abcdef12345678")!],
+            methods: ["eth_sendTransaction"],
+            events: []
+        )
+        let namespaceWithAccountsOnly = SessionNamespace(
+            chains: nil,
+            accounts: [Account("eip155:1:0xabcdefabcdefabcdefabcdefabcdefabcdefabcd")!],
+            methods: ["eth_sign"],
+            events: []
+        )
+
+        let approved = ApprovedChainsBuilder.build(from: [
+            "eip155": namespaceWithChains,
+            "eip155:1": namespaceWithAccountsOnly
+        ])
+
+        XCTAssertEqual(approved, ["eip155:1"])
+    }
     
     func testVerifyContextStorageAdd() {
         let proposalReceivedExpectation = expectation(description: "Wallet expects to receive a proposal")

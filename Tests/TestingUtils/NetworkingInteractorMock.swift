@@ -10,7 +10,7 @@ public class NetworkingInteractorMock: NetworkInteracting {
         subscriptions.append(topic)
     }
     
-    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: JSONRPC.RPCResponse, sessionSettleRequest: JSONRPC.RPCRequest) async throws {
+    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: JSONRPC.RPCResponse, sessionSettleRequest: JSONRPC.RPCRequest, approvedChains: [String]) async throws {
         subscriptions.append(sessionTopic)
     }
     

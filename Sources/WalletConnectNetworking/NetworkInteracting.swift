@@ -18,7 +18,7 @@ public protocol NetworkInteracting {
     func handleHistoryRequest(topic: String, request: RPCRequest)
     func trackTopics(_ topics: [String])
     func proposeSession(_ request: RPCRequest, topic: String) async throws
-    func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest) async throws 
+    func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest, approvedChains: [String]) async throws 
 
     func requestSubscription<Request: Codable>(
         on request: ProtocolMethod

@@ -251,7 +251,7 @@ public class NetworkingInteractor: NetworkInteracting {
         try await relayClient.proposeSession(pairingTopic: topic, sessionProposal: message, correlationId: correlationId)
     }
     
-    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest) async throws {
+    public func approveSession(pairingTopic: String, sessionTopic: String, sessionProposalResponse: RPCResponse, sessionSettleRequest: RPCRequest, approvedChains: [String]) async throws {
         
         let correlationId = sessionProposalResponse.id
 
@@ -262,7 +262,7 @@ public class NetworkingInteractor: NetworkInteracting {
         
         let serialisedSessionSettlementRequest = try serializer.serialize(topic: sessionTopic, encodable: sessionSettleRequest, envelopeType: .type0)
         
-        try await relayClient.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: serialisedSessionProposalResponse, sessionSettlementRequest: serialisedSessionSettlementRequest, correlationId: correlationId)
+        try await relayClient.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: serialisedSessionProposalResponse, sessionSettlementRequest: serialisedSessionSettlementRequest, correlationId: correlationId, approvedChains: approvedChains)
         
         try rpcHistory.resolve(sessionProposalResponse)
 
