@@ -144,10 +144,20 @@ final class ApproveEngine {
         
         let settleRequest = RPCRequest(method: SessionSettleProtocolMethod().method, params: settleParams)
         
-        let approvedChains = ApprovedChainsBuilder.build(from: settleParams.namespaces)
+        let approvedChains = ApprovedSessionMetadataBuilder.chains(from: settleParams.namespaces)
+        let approvedMethods = ApprovedSessionMetadataBuilder.methods(from: settleParams.namespaces)
+        let approvedEvents = ApprovedSessionMetadataBuilder.events(from: settleParams.namespaces)
         
         do {
-            try await networkingInteractor.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest, approvedChains: approvedChains)
+            try await networkingInteractor.approveSession(
+                pairingTopic: pairingTopic,
+                sessionTopic: sessionTopic,
+                sessionProposalResponse: response,
+                sessionSettleRequest: settleRequest,
+                approvedChains: approvedChains,
+                approvedMethods: approvedMethods,
+                approvedEvents: approvedEvents
+            )
         } catch {
             eventsClient.saveTraceEvent(ApproveSessionTraceErrorEvents.approveSessionFailure)
             throw error
@@ -488,30 +498,36 @@ private extension ApproveEngine {
     }
 }
 
-enum ApprovedChainsBuilder {
-    static func build(from namespaces: [String: SessionNamespace]) -> [String] {
-        var seenChains = Set<String>()
-        var orderedChains: [String] = []
-
+enum ApprovedSessionMetadataBuilder {
+    static func chains(from namespaces: [String: SessionNamespace]) -> [String] {
+        var chains = Set<String>()
         namespaces.values.forEach { namespace in
             if let namespaceChains = namespace.chains, !namespaceChains.isEmpty {
                 namespaceChains.forEach { chain in
-                    let absolute = chain.absoluteString
-                    if seenChains.insert(absolute).inserted {
-                        orderedChains.append(absolute)
-                    }
+                    chains.insert(chain.absoluteString)
                 }
             } else {
                 namespace.accounts.forEach { account in
-                    let absolute = account.blockchain.absoluteString
-                    if seenChains.insert(absolute).inserted {
-                        orderedChains.append(absolute)
-                    }
+                    chains.insert(account.blockchain.absoluteString)
                 }
             }
         }
 
-        return orderedChains
+        return chains.sorted()
+    }
+
+    static func methods(from namespaces: [String: SessionNamespace]) -> [String] {
+        let methods = namespaces.values.reduce(into: Set<String>()) { result, namespace in
+            result.formUnion(namespace.methods)
+        }
+        return methods.sorted()
+    }
+
+    static func events(from namespaces: [String: SessionNamespace]) -> [String] {
+        let events = namespaces.values.reduce(into: Set<String>()) { result, namespace in
+            result.formUnion(namespace.events)
+        }
+        return events.sorted()
     }
 }
 
