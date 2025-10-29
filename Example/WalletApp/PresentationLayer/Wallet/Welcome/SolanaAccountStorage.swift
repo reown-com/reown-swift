@@ -28,6 +28,18 @@ class SolanaAccountStorage {
         return UserDefaults.standard.string(forKey: Self.storageKey)
     }
 
+    /// Generates a new account and stores its private key
+    @discardableResult
+    func generateAndSaveAccount() -> SolanaSwift.Account? {
+        guard
+            let keypair = try? NaclSign.KeyPair.keyPair(),
+            let account = try? Account(secretKey: Data(keypair.secretKey))
+        else { return nil }
+
+        UserDefaults.standard.set(Base58.encode(Array(account.secretKey)), forKey: Self.storageKey)
+        return account
+    }
+
     /// Returns the Solana address for the stored private key
     func getAddress() -> String? {
         guard let privateKey = getPrivateKey() else { return nil }

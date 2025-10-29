@@ -33,7 +33,7 @@ final class SessionProposalPresenter: ObservableObject {
         return authRequests.enumerated().compactMap { index, authPayload in
             getCommonAndRequestedChainsIntersection(authPayload: authPayload).enumerated().compactMap { chainIndex, chain in
                 guard chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame,
-                      let chainAccount = account(for: chain, fallbackAccount: account) else {
+                      let chainAccount = resolvedAccount(for: chain, defaultAccount: account) else {
                     return nil
                 }
                 guard let formattedMessage = try? WalletKit.instance.formatAuthMessage(payload: authPayload, account: chainAccount) else {
@@ -109,7 +109,7 @@ final class SessionProposalPresenter: ObservableObject {
     }
 
     private func createAuthObjectForChain(chain: Blockchain, authPayload: AuthPayload) throws -> AuthObject {
-        guard let account = account(for: chain, fallbackAccount: importAccount.account) else {
+        guard let account = resolvedAccount(for: chain, defaultAccount: importAccount.account) else {
             throw Errors.noCommonChains
         }
 
@@ -166,9 +166,9 @@ private extension SessionProposalPresenter {
 }
 
 private extension SessionProposalPresenter {
-    func account(for chain: Blockchain, fallbackAccount: Account) -> Account? {
+    func resolvedAccount(for chain: Blockchain, defaultAccount: Account) -> Account? {
         if chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame {
-            return Account(blockchain: chain, address: fallbackAccount.address)
+            return Account(blockchain: chain, address: defaultAccount.address)
         }
 
         if chain.namespace.caseInsensitiveCompare("solana") == .orderedSame,

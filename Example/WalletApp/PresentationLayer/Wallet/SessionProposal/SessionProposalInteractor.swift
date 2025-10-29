@@ -13,11 +13,17 @@ final class SessionProposalInteractor {
         let stacksAccountStorage = StacksAccountStorage()
         let suiAccountStorage = SuiAccountStorage()
         let tonAccountStorage = TonAccountStorage()
+        let solanaAccountStorage = SolanaAccountStorage()
 
         // Handle EIP155 chains
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
         var supportedEIP155Chains = supportedRequiredChains + supportedOptionalChains
+
+        // Handle Solana chains
+        let supportedRequiredSolanaChains = proposal.requiredNamespaces["solana"]?.chains ?? []
+        let supportedOptionalSolanaChains = proposal.optionalNamespaces?["solana"]?.chains ?? []
+        let supportedSolanaChains = supportedRequiredSolanaChains + supportedOptionalSolanaChains
 
         // Handle Stacks chains
         let supportedRequiredStacksChains = proposal.requiredNamespaces["stacks"]?.chains ?? []
@@ -35,7 +41,7 @@ final class SessionProposalInteractor {
         let supportedTonChains = supportedRequiredTonChains + supportedOptionalTonChains
 
         // Combine all supported chains
-        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains
+        var supportedChains = supportedEIP155Chains + supportedSolanaChains + supportedStacksChains + supportedSuiChains + supportedTonChains
 
         var supportedAccounts: [Account] = []
         var sessionProperties = [String: String]()
@@ -43,6 +49,16 @@ final class SessionProposalInteractor {
         // Add EIP155 accounts
         let eip155Accounts = Array(supportedEIP155Chains).map { Account(blockchain: $0, address: EOAAccount.address)! }
         supportedAccounts.append(contentsOf: eip155Accounts)
+
+        // Add Solana accounts if available
+        if let solanaAccount = solanaAccountStorage.getCaip10Account(), !supportedSolanaChains.isEmpty {
+            supportedSolanaChains.forEach { chain in
+                if chain.reference == solanaAccount.blockchain.reference,
+                   let account = Account(blockchain: chain, address: solanaAccount.address) {
+                    supportedAccounts.append(account)
+                }
+            }
+        }
 
         // Add Stacks accounts if available
         if !supportedStacksChains.isEmpty {
@@ -157,4 +173,3 @@ final class SessionProposalInteractor {
         return sessionProperties
     }
 }
-

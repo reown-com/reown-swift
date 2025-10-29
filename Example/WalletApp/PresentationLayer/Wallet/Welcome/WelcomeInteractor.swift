@@ -21,6 +21,10 @@ final class WelcomeInteractor {
     func saveSolanaPrivateKey(_ privateKey: String) {
         solanaAccountStorage.savePrivateKey(privateKey)
     }
+
+    func generateSolanaAccount() {
+        _ = solanaAccountStorage.generateAndSaveAccount()
+    }
     
     func saveStacksWallet(_ wallet: String) {
         stacksAccountStorage.saveWallet(wallet: wallet)

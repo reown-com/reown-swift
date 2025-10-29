@@ -21,7 +21,7 @@ final class AuthRequestPresenter: ObservableObject {
     func buildFormattedMessages(request: AuthenticationRequest) -> [(String, String)] {
         getCommonAndRequestedChainsIntersection().enumerated().compactMap { index, chain in
             guard chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame,
-                  let chainAccount = account(for: chain) else {
+                  let chainAccount = resolvedAccount(for: chain) else {
                 return nil
             }
             guard let formattedMessage = try? WalletKit.instance.formatAuthMessage(payload: request.payload, account: chainAccount) else {
@@ -127,7 +127,7 @@ final class AuthRequestPresenter: ObservableObject {
     }
 
     private func createAuthObjectForChain(chain: Blockchain) throws -> AuthObject {
-        guard let account = account(for: chain) else {
+        guard let account = resolvedAccount(for: chain) else {
             throw Errors.noCommonChains
         }
 
@@ -195,7 +195,7 @@ private extension AuthRequestPresenter {
             }.store(in: &disposeBag)
     }
 
-    func account(for chain: Blockchain) -> Account? {
+    func resolvedAccount(for chain: Blockchain) -> Account? {
         if chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame {
             return Account(blockchain: chain, address: importAccount.account.address)
         }
