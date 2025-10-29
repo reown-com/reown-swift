@@ -36,15 +36,8 @@ public final class SignClient: SignClientProtocol {
     /// Publisher that sends session when one is settled
     ///
     /// Event is emited on proposer and responder client when both communicating peers have successfully established a session.
-    public var sessionSettlePublisher: AnyPublisher<Session, Never> {
+    public var sessionSettlePublisher: AnyPublisher<(session: Session, responses: ProposalRequestsResponses?), Never> {
         sessionSettlePublisherSubject.eraseToAnyPublisher()
-    }
-
-    /// Publisher that sends session with proposal responses when one is settled
-    ///
-    /// Event is emited on dApp client when a session is established and includes any proposal request responses from the wallet.
-    public var sessionSettleWithResponsesPublisher: AnyPublisher<(session: Session, responses: ProposalRequestsResponses?), Never> {
-        sessionSettleWithResponsesPublisherSubject.eraseToAnyPublisher()
     }
 
     /// Publisher that sends deleted session topic
@@ -177,8 +170,7 @@ public final class SignClient: SignClientProtocol {
 
     private let sessionProposalPublisherSubject = PassthroughSubject<(proposal: Session.Proposal, context: VerifyContext?), Never>()
     private let socketConnectionStatusPublisherSubject = PassthroughSubject<SocketConnectionStatus, Never>()
-    private let sessionSettlePublisherSubject = PassthroughSubject<Session, Never>()
-    private let sessionSettleWithResponsesPublisherSubject = PassthroughSubject<(session: Session, responses: ProposalRequestsResponses?), Never>()
+    private let sessionSettlePublisherSubject = PassthroughSubject<(session: Session, responses: ProposalRequestsResponses?), Never>()
     private let sessionDeletePublisherSubject = PassthroughSubject<(String, Reason), Never>()
     private let sessionResponsePublisherSubject = PassthroughSubject<Response, Never>()
     private let sessionRejectionPublisherSubject = PassthroughSubject<(Session.Proposal, Reason), Never>()
@@ -190,7 +182,6 @@ public final class SignClient: SignClientProtocol {
     private var authRequestPublisherSubject = PassthroughSubject<(request: AuthenticationRequest, context: VerifyContext?), Never>()
     private let authRequestSubscribersTracking: AuthRequestSubscribersTracking
     private let authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher
-    private let authSignatureVerifier: AuthSignatureVerifier
 
 
     // Link Mode
@@ -240,8 +231,7 @@ public final class SignClient: SignClientProtocol {
          sessionResponderDispatcher: SessionResponderDispatcher,
          linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber,
          authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher,
-         messageVerifier: MessageVerifier,
-         authSignatureVerifier: AuthSignatureVerifier
+         messageVerifier: MessageVerifier
     ) {
         self.logger = logger
         self.networkingClient = networkingClient
@@ -277,7 +267,6 @@ public final class SignClient: SignClientProtocol {
         self.linkSessionRequestResponseSubscriber = linkSessionRequestResponseSubscriber
         self.authenticateTransportTypeSwitcher = authenticateTransportTypeSwitcher
         self.messageVerifier = messageVerifier
-        self.authSignatureVerifier = authSignatureVerifier
 
         setUpConnectionObserving()
         setUpEnginesCallbacks()
@@ -345,6 +334,7 @@ public final class SignClient: SignClientProtocol {
     //---------------------------------------AUTH-----------------------------------
 
     /// For a dApp to propose an authenticated session to a wallet.
+    @available(*, deprecated, message: "Use connect(namespaces:sessionProperties:scopedProperties:authentication:walletPay:) and pass authentication params instead.")
     public func authenticate(
         _ params: AuthRequestParams,
         walletUniversalLink: String? = nil
@@ -419,10 +409,6 @@ public final class SignClient: SignClientProtocol {
     /// For a dApp to verify authentication signature from proposal response
     /// - Parameters:
     ///   - authObject: AuthObject (CACAO) to verify
-    public func recoverAndVerifySignature(authObject: AuthObject) async throws {
-        try await authSignatureVerifier.recoverAndVerifySignature(authObject: authObject)
-    }
-
     //-----------------------------------------------------------------------------------
 
     /// For a wallet to approve a session proposal.
@@ -577,10 +563,10 @@ public final class SignClient: SignClientProtocol {
             sessionRejectionPublisherSubject.send((proposal, reason))
         }
         approveEngine.onSessionSettle = { [unowned self] settledSession in
-            sessionSettlePublisherSubject.send(settledSession)
+            sessionSettlePublisherSubject.send((session: settledSession, responses: nil))
         }
         approveEngine.onSessionSettleWithResponses = { [unowned self] settledSession, responses in
-            sessionSettleWithResponsesPublisherSubject.send((session: settledSession, responses: responses))
+            sessionSettlePublisherSubject.send((session: settledSession, responses: responses))
         }
         sessionEngine.onSessionDelete = { [unowned self] topic, reason in
             sessionDeletePublisherSubject.send((topic, reason))
@@ -627,4 +613,3 @@ public final class SignClient: SignClientProtocol {
     }
     
 }
-

@@ -51,7 +51,9 @@ public class WalletKitClient {
     ///
     /// Event is emited on proposer and responder client when both communicating peers have successfully established a session.
     public var sessionSettlePublisher: AnyPublisher<Session, Never> {
-        signClient.sessionSettlePublisher.eraseToAnyPublisher()
+        signClient.sessionSettlePublisher
+            .map(\.session)
+            .eraseToAnyPublisher()
     }
     
     /// Publisher that sends deleted session topic
@@ -299,4 +301,3 @@ extension WalletKitClient {
     }
 }
 #endif
-

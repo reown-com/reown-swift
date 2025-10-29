@@ -22,6 +22,7 @@ final class SignPresenter: ObservableObject {
     private let router: SignRouter
 
     private var session: Session?
+    private let authSignatureVerifier = AuthSignatureVerifier()
     
     private var subscriptions = Set<AnyCancellable>()
 
@@ -176,7 +177,7 @@ extension SignPresenter {
             }
             .store(in: &subscriptions)
 
-        Sign.instance.sessionSettleWithResponsesPublisher
+        Sign.instance.sessionSettlePublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] session, responses in
                 if let authResponses = responses?.authentication {
@@ -190,7 +191,7 @@ extension SignPresenter {
                         
                         for (index, authObject) in authResponses.enumerated() {
                             do {
-                                try await Sign.instance.recoverAndVerifySignature(authObject: authObject)
+                                try await authSignatureVerifier.recoverAndVerifySignature(authObject: authObject)
                                 verifiedCount += 1
                                 
                                 // Extract chain from the issuer (did:pkh:chainId:address)
@@ -353,4 +354,3 @@ extension WalletPayParams {
         )
     }
 }
-

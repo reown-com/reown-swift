@@ -139,14 +139,14 @@ final class SignClientTests: XCTestCase {
         var walletSession: Session?
 
         print("🧪TEST: Step 4 - Subscribing to dapp.sessionSettlePublisher...")
-        dapp.sessionSettlePublisher.sink { settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { settledSession in
             print("🧪TEST: Dapp's sessionSettlePublisher triggered. Session topic: \(settledSession.topic)")
             dappSession = settledSession
             dappSettlementExpectation.fulfill()
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Subscribing to wallet.sessionSettlePublisher...")
-        wallet.sessionSettlePublisher.sink { settledSession in
+        wallet.sessionSettlePublisher.map(\.session).sink { settledSession in
             print("🧪TEST: Wallet's sessionSettlePublisher triggered. Session topic: \(settledSession.topic)")
             walletSession = settledSession
             walletSettlementExpectation.fulfill()
@@ -261,7 +261,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 3 - Dapp listens for session settle and then disconnects")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             print("🧪TEST: Dapp sees session settle. Disconnecting session topic: \(settledSession.topic)")
             Task(priority: .high) {
                 try await dapp.disconnect(topic: settledSession.topic)
@@ -302,7 +302,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 3 - Dapp listens for session settle then pings")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             print("🧪TEST: Dapp sees session settle. Pinging session topic: \(settledSession.topic)")
             Task(priority: .high) {
                 try! await dapp.ping(topic: settledSession.topic)
@@ -358,7 +358,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 2 - Dapp listens for session settle then sends a request")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             print("🧪TEST: Dapp sees session settle. Sending session request with method: \(requestMethod)")
             Task(priority: .high) {
                 let request = try! Request(id: RPCID(0), topic: settledSession.topic, method: requestMethod, params: requestParams, chainId: chain)
@@ -424,7 +424,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 2 - Dapp listens for session settle & sends a request")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             print("🧪TEST: Dapp sees session settle. Sending a request with method: \(requestMethod)")
             Task(priority: .high) {
                 let req = try! Request(id: RPCID(0), topic: settledSession.topic, method: requestMethod, params: requestParams, chainId: chain)
@@ -475,7 +475,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 2 - Dapp listens for session settle & triggers update")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             Task(priority: .high) {
                 let updateNamespace = SessionNamespace.make(
                     toRespond: ProposalNamespace.stubRequired(chains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!])
@@ -520,7 +520,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 3 - Dapp listens for session settle and extends session")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             Task(priority: .high) {
                 try! await wallet.extend(topic: settledSession.topic)
             }
@@ -559,7 +559,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 3 - Dapp listens for session settle then emits event")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             Task(priority: .high) {
                 try! await wallet.emit(topic: settledSession.topic, event: event, chainId: chain)
             }
@@ -593,7 +593,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 2 - Dapp listens for session settle then tries to emit event with unknown name")
-        dapp.sessionSettlePublisher.sink { [unowned self] settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             Task(priority: .high) {
                 await XCTAssertThrowsErrorAsync(try await wallet.emit(topic: settledSession.topic, event: event, chainId: chain))
                 expectation.fulfill()
@@ -683,10 +683,10 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Dapp & Wallet both listen for session settle")
-        dapp.sessionSettlePublisher.sink { settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { settledSession in
             dappSettlementExpectation.fulfill()
         }.store(in: &publishers)
-        wallet.sessionSettlePublisher.sink { _ in
+        wallet.sessionSettlePublisher.map(\.session).sink { _ in
             walletSettlementExpectation.fulfill()
         }.store(in: &publishers)
 
@@ -764,10 +764,10 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Dapp & Wallet both wait for sessionSettle")
-        dapp.sessionSettlePublisher.sink { _ in
+        dapp.sessionSettlePublisher.map(\.session).sink { _ in
             dappSettlementExpectation.fulfill()
         }.store(in: &publishers)
-        wallet.sessionSettlePublisher.sink { _ in
+        wallet.sessionSettlePublisher.map(\.session).sink { _ in
             walletSettlementExpectation.fulfill()
         }.store(in: &publishers)
 
@@ -833,10 +833,10 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Dapp & Wallet both wait for sessionSettle")
-        dapp.sessionSettlePublisher.sink { _ in
+        dapp.sessionSettlePublisher.map(\.session).sink { _ in
             dappSettlementExpectation.fulfill()
         }.store(in: &publishers)
-        wallet.sessionSettlePublisher.sink { _ in
+        wallet.sessionSettlePublisher.map(\.session).sink { _ in
             walletSettlementExpectation.fulfill()
         }.store(in: &publishers)
 
@@ -1399,7 +1399,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 2 - Dapp listens for sessionSettlePublisher to fulfill fallbackExpectation")
-        dapp.sessionSettlePublisher.sink { settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { settledSession in
             Task(priority: .high) {
                 fallbackExpectation.fulfill()
             }
@@ -1436,7 +1436,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 3 - Dapp listens for sessionSettlePublisher to fulfill expectation")
-        dapp.sessionSettlePublisher.sink { settledSession in
+        dapp.sessionSettlePublisher.map(\.session).sink { settledSession in
             Task(priority: .high) {
                 responseExpectation.fulfill()
             }
