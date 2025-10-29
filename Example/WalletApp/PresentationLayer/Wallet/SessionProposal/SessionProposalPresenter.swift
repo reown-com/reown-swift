@@ -21,6 +21,7 @@ final class SessionProposalPresenter: ObservableObject {
     @Published var showConnectedSheet = false
     
     private var disposeBag = Set<AnyCancellable>()
+    private let solanaAccountStorage = SolanaAccountStorage()
     private let messageSigner: MessageSigner
 
     var authMessages: [(String, String)] {
@@ -31,7 +32,8 @@ final class SessionProposalPresenter: ObservableObject {
     func buildFormattedMessages(authRequests: [AuthPayload], account: Account) -> [(String, String)] {
         return authRequests.enumerated().compactMap { index, authPayload in
             getCommonAndRequestedChainsIntersection(authPayload: authPayload).enumerated().compactMap { chainIndex, chain in
-                guard let chainAccount = Account(blockchain: chain, address: account.address) else {
+                guard chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame,
+                      let chainAccount = account(for: chain, fallbackAccount: account) else {
                     return nil
                 }
                 guard let formattedMessage = try? WalletKit.instance.formatAuthMessage(payload: authPayload, account: chainAccount) else {
@@ -107,7 +109,9 @@ final class SessionProposalPresenter: ObservableObject {
     }
 
     private func createAuthObjectForChain(chain: Blockchain, authPayload: AuthPayload) throws -> AuthObject {
-        let account = Account(blockchain: chain, address: importAccount.account.address)!
+        guard let account = account(for: chain, fallbackAccount: importAccount.account) else {
+            throw Errors.noCommonChains
+        }
 
         let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: authPayload, account: account)
 
@@ -124,7 +128,8 @@ final class SessionProposalPresenter: ObservableObject {
         var auths = [AuthObject]()
         
         try authRequests.forEach { authPayload in
-            try getCommonAndRequestedChainsIntersection(authPayload: authPayload).forEach { chain in
+            let evmChains = getCommonAndRequestedChainsIntersection(authPayload: authPayload).filter { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }
+            try evmChains.forEach { chain in
                 let auth = try createAuthObjectForChain(chain: chain, authPayload: authPayload)
                 auths.append(auth)
             }
@@ -133,9 +138,8 @@ final class SessionProposalPresenter: ObservableObject {
     }
 
     func getCommonAndRequestedChainsIntersection(authPayload: AuthPayload) -> Set<Blockchain> {
-        let requestedChains: Set<Blockchain> = Set(authPayload.chains.compactMap { Blockchain($0) })
-        let supportedChains: Set<Blockchain> = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
-        return requestedChains.intersection(supportedChains)
+        let requestedChains = Set(authPayload.chains.compactMap { Blockchain($0) })
+        return supportedChainsIntersection(from: requestedChains)
     }
 }
 
@@ -158,6 +162,37 @@ private extension SessionProposalPresenter {
                     self?.dismiss()
                 }
         }.store(in: &disposeBag)
+    }
+}
+
+private extension SessionProposalPresenter {
+    func account(for chain: Blockchain, fallbackAccount: Account) -> Account? {
+        if chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame {
+            return Account(blockchain: chain, address: fallbackAccount.address)
+        }
+
+        if chain.namespace.caseInsensitiveCompare("solana") == .orderedSame,
+           let solanaAccount = solanaAccountStorage.getCaip10Account(),
+           solanaAccount.blockchain == chain {
+            return solanaAccount
+        }
+
+        return nil
+    }
+
+    func supportedChainsIntersection(from requestedChains: Set<Blockchain>) -> Set<Blockchain> {
+        let evmChains = requestedChains.filter { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }
+        var supported = Set(evmChains)
+
+        if let solanaAccount = solanaAccountStorage.getCaip10Account() {
+            let solanaChains = requestedChains.filter { chain in
+                chain.namespace.caseInsensitiveCompare("solana") == .orderedSame &&
+                chain.reference == solanaAccount.reference
+            }
+            supported.formUnion(solanaChains)
+        }
+
+        return supported
     }
 }
 

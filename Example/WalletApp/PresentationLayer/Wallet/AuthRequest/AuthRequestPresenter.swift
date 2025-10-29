@@ -15,12 +15,13 @@ final class AuthRequestPresenter: ObservableObject {
     let validationStatus: VerifyContext.ValidationStatus?
     
     var messages: [(String, String)] {
-        return buildFormattedMessages(request: request, account: importAccount.account)
+        return buildFormattedMessages(request: request)
     }
 
-    func buildFormattedMessages(request: AuthenticationRequest, account: Account) -> [(String, String)] {
+    func buildFormattedMessages(request: AuthenticationRequest) -> [(String, String)] {
         getCommonAndRequestedChainsIntersection().enumerated().compactMap { index, chain in
-            guard let chainAccount = Account(blockchain: chain, address: account.address) else {
+            guard chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame,
+                  let chainAccount = account(for: chain) else {
                 return nil
             }
             guard let formattedMessage = try? WalletKit.instance.formatAuthMessage(payload: request.payload, account: chainAccount) else {
@@ -34,6 +35,7 @@ final class AuthRequestPresenter: ObservableObject {
     @Published var showSignedSheet = false
     
     private var disposeBag = Set<AnyCancellable>()
+    private let solanaAccountStorage = SolanaAccountStorage()
 
     private let messageSigner: MessageSigner
 
@@ -125,9 +127,20 @@ final class AuthRequestPresenter: ObservableObject {
     }
 
     private func createAuthObjectForChain(chain: Blockchain) throws -> AuthObject {
-        let account = Account(blockchain: chain, address: importAccount.account.address)!
+        guard let account = account(for: chain) else {
+            throw Errors.noCommonChains
+        }
 
-        let supportedAuthPayload = try WalletKit.instance.buildAuthPayload(payload: request.payload, supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!, Blockchain("eip155:69")!], supportedMethods: ["personal_sign", "eth_sendTransaction"])
+        let evmChains = getCommonAndRequestedChainsIntersection().filter { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }
+        guard !evmChains.isEmpty else {
+            throw Errors.noCommonChains
+        }
+
+        let supportedAuthPayload = try WalletKit.instance.buildAuthPayload(
+            payload: request.payload,
+            supportedEVMChains: Array(evmChains),
+            supportedMethods: ["personal_sign", "eth_sendTransaction"]
+        )
 
         let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: supportedAuthPayload, account: account)
 
@@ -141,7 +154,8 @@ final class AuthRequestPresenter: ObservableObject {
     private func buildAuthObjects() throws -> [AuthObject] {
         var auths = [AuthObject]()
 
-        try getCommonAndRequestedChainsIntersection().forEach { chain in
+        let evmChains = getCommonAndRequestedChainsIntersection().filter { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }
+        try evmChains.forEach { chain in
             let auth = try createAuthObjectForChain(chain: chain)
             auths.append(auth)
         }
@@ -149,7 +163,7 @@ final class AuthRequestPresenter: ObservableObject {
     }
 
     private func buildOneAuthObject() throws -> [AuthObject] {
-        guard let chain = getCommonAndRequestedChainsIntersection().first else {
+        guard let chain = getCommonAndRequestedChainsIntersection().first(where: { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }) else {
             throw Errors.noCommonChains
         }
 
@@ -159,9 +173,8 @@ final class AuthRequestPresenter: ObservableObject {
 
 
     func getCommonAndRequestedChainsIntersection() -> Set<Blockchain> {
-        let requestedChains: Set<Blockchain> = Set(request.payload.chains.compactMap { Blockchain($0) })
-        let supportedChains: Set<Blockchain> = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
-        return requestedChains.intersection(supportedChains)
+        let requestedChains = Set(request.payload.chains.compactMap { Blockchain($0) })
+        return supportedChainsIntersection(from: requestedChains)
     }
 
     func dismiss() {
@@ -180,6 +193,35 @@ private extension AuthRequestPresenter {
                     dismiss()
                 }
             }.store(in: &disposeBag)
+    }
+
+    func account(for chain: Blockchain) -> Account? {
+        if chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame {
+            return Account(blockchain: chain, address: importAccount.account.address)
+        }
+
+        if chain.namespace.caseInsensitiveCompare("solana") == .orderedSame,
+           let solanaAccount = solanaAccountStorage.getCaip10Account(),
+           solanaAccount.blockchain == chain {
+            return solanaAccount
+        }
+
+        return nil
+    }
+
+    func supportedChainsIntersection(from requestedChains: Set<Blockchain>) -> Set<Blockchain> {
+        let evmChains = requestedChains.filter { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }
+        var supported = Set(evmChains)
+
+        if let solanaAccount = solanaAccountStorage.getCaip10Account() {
+            let solanaChains = requestedChains.filter { chain in
+                chain.namespace.caseInsensitiveCompare("solana") == .orderedSame &&
+                chain.reference == solanaAccount.reference
+            }
+            supported.formUnion(solanaChains)
+        }
+
+        return supported
     }
 }
 
