@@ -145,8 +145,20 @@ final class ApproveEngine {
         
         let settleRequest = RPCRequest(method: SessionSettleProtocolMethod().method, params: settleParams)
         
+        let approvedChains = ApprovedSessionMetadataBuilder.chains(from: settleParams.namespaces)
+        let approvedMethods = ApprovedSessionMetadataBuilder.methods(from: settleParams.namespaces)
+        let approvedEvents = ApprovedSessionMetadataBuilder.events(from: settleParams.namespaces)
+        
         do {
-            try await networkingInteractor.approveSession(pairingTopic: pairingTopic, sessionTopic: sessionTopic, sessionProposalResponse: response, sessionSettleRequest: settleRequest)
+            try await networkingInteractor.approveSession(
+                pairingTopic: pairingTopic,
+                sessionTopic: sessionTopic,
+                sessionProposalResponse: response,
+                sessionSettleRequest: settleRequest,
+                approvedChains: approvedChains,
+                approvedMethods: approvedMethods,
+                approvedEvents: approvedEvents
+            )
         } catch {
             eventsClient.saveTraceEvent(ApproveSessionTraceErrorEvents.approveSessionFailure)
             throw error
@@ -226,7 +238,7 @@ final class ApproveEngine {
         
         return settleParams
     }
-
+    
     func createSession(topic: String, proposal: SessionProposal, pairingTopic: String, settleParams: SessionType.SettleParams) -> WCSession {
 
         let verifyContext = (try? verifyContextStore.get(key: proposal.proposer.publicKey)) ?? verifyClient.createVerifyContext(origin: nil, domain: proposal.proposer.metadata.url, isScam: false, isVerified: nil)
@@ -489,6 +501,39 @@ private extension ApproveEngine {
                 } onCancel: { }
             }
         }
+    }
+}
+
+enum ApprovedSessionMetadataBuilder {
+    static func chains(from namespaces: [String: SessionNamespace]) -> [String] {
+        var chains = Set<String>()
+        namespaces.values.forEach { namespace in
+            if let namespaceChains = namespace.chains, !namespaceChains.isEmpty {
+                namespaceChains.forEach { chain in
+                    chains.insert(chain.absoluteString)
+                }
+            } else {
+                namespace.accounts.forEach { account in
+                    chains.insert(account.blockchain.absoluteString)
+                }
+            }
+        }
+
+        return chains.sorted()
+    }
+
+    static func methods(from namespaces: [String: SessionNamespace]) -> [String] {
+        let methods = namespaces.values.reduce(into: Set<String>()) { result, namespace in
+            result.formUnion(namespace.methods)
+        }
+        return methods.sorted()
+    }
+
+    static func events(from namespaces: [String: SessionNamespace]) -> [String] {
+        let events = namespaces.values.reduce(into: Set<String>()) { result, namespace in
+            result.formUnion(namespace.events)
+        }
+        return events.sorted()
     }
 }
 

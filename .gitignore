@@ -33,3 +33,6 @@ DerivedDataCache
 test_results/
 
 Sources/WalletConnectModal/Secrets/secrets.json
+
+# iOS Provisioning Profiles
+*.mobileprovision

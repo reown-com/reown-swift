@@ -2,10 +2,16 @@ final class WelcomeInteractor {
 
     private let accountStorage: AccountStorage
     private let solanaAccountStorage: SolanaAccountStorage
+    private let stacksAccountStorage: StacksAccountStorage
+    private let suiAccountStorage: SuiAccountStorage
+    private let tonAccountStorage: TonAccountStorage
     
-    init(accountStorage: AccountStorage, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage()) {
+    init(accountStorage: AccountStorage, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), stacksAccountStorage: StacksAccountStorage = StacksAccountStorage(), suiAccountStorage: SuiAccountStorage = SuiAccountStorage(), tonAccountStorage: TonAccountStorage = TonAccountStorage()) {
         self.accountStorage = accountStorage
         self.solanaAccountStorage = solanaAccountStorage
+        self.stacksAccountStorage = stacksAccountStorage
+        self.suiAccountStorage = suiAccountStorage
+        self.tonAccountStorage = tonAccountStorage
     }
 
     func save(importAccount: ImportAccount) {
@@ -15,64 +21,28 @@ final class WelcomeInteractor {
     func saveSolanaPrivateKey(_ privateKey: String) {
         solanaAccountStorage.savePrivateKey(privateKey)
     }
-}
-
-import Foundation
-import SolanaSwift
-import TweetNacl
-import ReownWalletKit
-
-class SolanaAccountStorage {
-    enum Errors: Error {
-        case invalidPrivateKey
+    
+    func saveStacksWallet(_ wallet: String) {
+        stacksAccountStorage.saveWallet(wallet: wallet)
     }
     
-    static var storageKey = "solana_privateKey"
-    private let chainId: Blockchain = Blockchain("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")!
-
-    /// Saves a private key to UserDefaults and returns the created account
-    @discardableResult
-    func savePrivateKey(_ privateKey: String) -> SolanaSwift.Account? {
-        do {
-            let account = try createAccount(from: privateKey)
-            UserDefaults.standard.set(privateKey, forKey: Self.storageKey)
-            return account
-        } catch {
-            return nil
-        }
+    func generateAndSaveStacksWallet() -> String? {
+        return stacksAccountStorage.generateAndSaveWallet()
     }
 
-    /// Returns the stored private key from UserDefaults
-    func getPrivateKey() -> String? {
-        return UserDefaults.standard.string(forKey: Self.storageKey)
+    func saveSuiPrivateKey(_ privateKey: String) {
+        suiAccountStorage.savePrivateKey(privateKey)
     }
-
-    /// Returns the Solana address for the stored private key
-    func getAddress() -> String? {
-        guard let privateKey = getPrivateKey() else { return nil }
-        
-        do {
-            let account = try createAccount(from: privateKey)
-            return account.publicKey.base58EncodedString
-        } catch {
-            return nil
-        }
-    }
-
-    func getCaip10Account() -> ReownWalletKit.Account? {
-        guard let address = getAddress() else { return nil }
-        return Account(blockchain: chainId, address: address)!
-    }
-
     
-    /// Creates a Solana account from a private key
-    func createAccount(from privateKey: String) throws -> SolanaSwift.Account {
-        let secretKey = Data(SolanaSwift.Base58.decode(privateKey))
+    func generateSuiAccount() {
+        suiAccountStorage.generateAndSaveKeypair()
+    }
 
-        do {
-            return try Account(secretKey: secretKey)
-        } catch {
-            throw Errors.invalidPrivateKey
-        }
+    func saveTonPrivateKey(_ privateKeyBase64: String) {
+        _ = tonAccountStorage.savePrivateKey(privateKeyBase64)
+    }
+
+    func generateTonAccount() {
+        _ = tonAccountStorage.generateAndSaveKeypair()
     }
 }

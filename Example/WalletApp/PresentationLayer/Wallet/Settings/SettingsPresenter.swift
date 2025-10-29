@@ -9,19 +9,22 @@ final class SettingsPresenter: ObservableObject {
     private let importAccount: ImportAccount
     private let router: SettingsRouter
     private let accountStorage: AccountStorage
+    private let stacksAccountStorage: StacksAccountStorage
+    private let solanaAccountStorage: SolanaAccountStorage
+    private let suiAccountStorage: SuiAccountStorage
+    private let tonAccountStorage: TonAccountStorage
     private var disposeBag = Set<AnyCancellable>()
-    @Published var smartAccountSafe: String = "Loading..."
 
-    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount) {
+    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), suiAccountStorage: SuiAccountStorage = SuiAccountStorage(), tonAccountStorage: TonAccountStorage = TonAccountStorage()) {
         defer { setupInitialState() }
         self.interactor = interactor
         self.router = router
         self.accountStorage = accountStorage
         self.importAccount = importAccount
-    }
-
-    func enableChainAbstraction(_ enable: Bool) {
-        WalletKitEnabler.shared.isChainAbstractionEnabled = enable
+        self.stacksAccountStorage = StacksAccountStorage()
+        self.solanaAccountStorage = solanaAccountStorage
+        self.suiAccountStorage = suiAccountStorage
+        self.tonAccountStorage = tonAccountStorage
     }
 
     var account: String {
@@ -32,6 +35,50 @@ final class SettingsPresenter: ObservableObject {
     var privateKey: String {
         guard let importAccount = accountStorage.importAccount else { return .empty }
         return importAccount.privateKey
+    }
+    
+    var stacksMnemonic: String {
+        return stacksAccountStorage.getWallet() ?? .empty
+    }
+    
+    var stacksMainnetAddress: String {
+        do {
+            return try stacksAccountStorage.getMainnetAddress() ?? "No Stacks mainnet address"
+        } catch {
+            return "Error getting Stacks mainnet address"
+        }
+    }
+    
+    var stacksTestnetAddress: String {
+        do {
+            return try stacksAccountStorage.getTestnetAddress() ?? "No Stacks testnet address"
+        } catch {
+            return "Error getting Stacks testnet address"
+        }
+    }
+
+    var solanaAddress: String {
+        return solanaAccountStorage.getAddress() ?? "No Solana account"
+    }
+
+    var solanaPrivateKey: String {
+        return solanaAccountStorage.getPrivateKey() ?? "No Solana private key"
+    }
+
+    var suiAddress: String {
+        return suiAccountStorage.getAddress() ?? "No Sui account"
+    }
+
+    var suiPrivateKey: String {
+        return suiAccountStorage.getPrivateKey() ?? "No Sui private key"
+    }
+
+    var tonAddress: String {
+        return tonAccountStorage.getAddress() ?? "No TON account"
+    }
+
+    var tonPrivateKey: String {
+        return tonAccountStorage.getPrivateKey() ?? "No TON private key"
     }
 
     var clientId: String {

@@ -38,15 +38,15 @@ final class WalletRouter {
     }
 
     func presentSendStableCoin(importAccount: ImportAccount) {
-        SendStableCoinModule.create(app: app, importAccount: importAccount)
-            .wrapToNavigationController()
-            .present(from: viewController)
+//        SendStableCoinModule.create(app: app, importAccount: importAccount)
+//            .wrapToNavigationController()
+//            .present(from: viewController)
     }
 
     func presentSendEthereum(importAccount: ImportAccount) {
-        SendEthereumModule.create(app: app, importAccount: importAccount)
-            .wrapToNavigationController()
-            .present(from: viewController)
+//        SendEthereumModule.create(app: app, importAccount: importAccount)
+//            .wrapToNavigationController()
+//            .present(from: viewController)
     }
 
     func dismiss() {

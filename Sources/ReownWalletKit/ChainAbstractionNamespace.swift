@@ -1,3 +1,4 @@
+/*
 import Foundation
 import YttriumWrapper
 
@@ -18,3 +19,4 @@ public class ChainAbstractionNamespace {
         return try await chainAbstractionClient.execute(uiFields: uiFields, routeTxnSigs: routeTxnSigs, initialTxnSig: initialTxnSig)
     }
 }
+*/

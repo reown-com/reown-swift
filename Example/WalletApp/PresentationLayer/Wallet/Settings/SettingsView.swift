@@ -5,7 +5,6 @@ import ReownAppKitUI
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
     @State private var copyAlert: Bool = false
-    @State private var isChainAbstractionEnabled: Bool = WalletKitEnabler.shared.isChainAbstractionEnabled
 
     var body: some View {
         ScrollView {
@@ -15,25 +14,24 @@ struct SettingsView: View {
                 Group {
                     header(title: "Account")
                     row(title: "CAIP-10", subtitle: viewModel.account)
-                    row(title: "Smart Account Safe", subtitle: viewModel.smartAccountSafe)
                     row(title: "Private key", subtitle: viewModel.privateKey)
 
-                    HStack {
-                        Text("Chain Abstraction")
-                            .foregroundColor(.Foreground100)
-                            .font(.paragraph700)
+                    header(title: "Stacks")
+                    row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
+                    row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
+                    row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
 
-                        Spacer()
+                    header(title: "Solana")
+                    row(title: "Solana Address", subtitle: viewModel.solanaAddress)
+                    row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
 
-                        Toggle("", isOn: $isChainAbstractionEnabled)
-                            .onChange(of: isChainAbstractionEnabled) { newValue in
-                                viewModel.enableChainAbstraction(newValue)
-                            }
-                            .labelsHidden()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 16)
-                    .background(Color.Foreground100.opacity(0.05).cornerRadius(12))
+                    header(title: "Sui")
+                    row(title: "Sui Address", subtitle: viewModel.suiAddress)
+                    row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
+
+                    header(title: "TON")
+                    row(title: "TON Address", subtitle: viewModel.tonAddress)
+                    row(title: "TON Private Key", subtitle: viewModel.tonPrivateKey)
                 }
                 .padding(.horizontal, 20)
 

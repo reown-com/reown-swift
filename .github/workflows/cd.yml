@@ -9,13 +9,17 @@ name: cd
 on:
   pull_request:
     branches: [ main ]
+    types: [ closed ]
 env:
   PACKAGE_VERSION: ${{ github.event.pull_request.title }}
 jobs:
   set-user-agent:
+    if: github.event.pull_request.merged == true
     runs-on: macos-latest-xlarge
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
 
@@ -25,6 +29,7 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Set User Agent
+          branch: main
 
       - name: Lint CocoaPods
         run: |

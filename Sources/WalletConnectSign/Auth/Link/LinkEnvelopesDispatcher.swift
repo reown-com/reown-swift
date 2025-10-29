@@ -136,7 +136,7 @@ final class LinkEnvelopesDispatcher {
 
         guard var components = URLComponents(string: peerUniversalLink) else { throw URLError(.badURL) }
 
-        components.queryItems = [URLQueryItem(name: "wc_ev", value: envelope), URLQueryItem(name: "topic", value: topic)]
+        components.queryItems = (components.queryItems ?? []) + [URLQueryItem(name: "wc_ev", value: envelope), URLQueryItem(name: "topic", value: topic)]
 
         guard let finalURL = components.url else { throw URLError(.badURL) }
         return finalURL

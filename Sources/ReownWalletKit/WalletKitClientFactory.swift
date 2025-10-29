@@ -1,5 +1,5 @@
 import Foundation
-import YttriumWrapper
+// import YttriumWrapper
 
 struct WalletKitClientFactory {
     static func create(
@@ -9,6 +9,8 @@ struct WalletKitClientFactory {
         config: WalletKit.Config,
         projectId: String? = nil  
     ) -> WalletKitClient {
+        // Chain abstraction client creation commented out
+        /*
         let metadata = PulseMetadata(
             url: nil,
             bundleId: Bundle.main.bundleIdentifier,
@@ -28,13 +30,14 @@ struct WalletKitClientFactory {
 
         let chainAbstractionClient = ChainAbstractionClient(projectId: usedProjectId, pulseMetadata: metadata)
         let ChainAbstractionNamespace = ChainAbstractionNamespace(chainAbstractionClient: chainAbstractionClient)
+        */
 
         return WalletKitClient(
             signClient: signClient,
             pairingClient: pairingClient,
-            pushClient: pushClient,
-            chainAbstractionClient: chainAbstractionClient,
-            ChainAbstractionNamespace: ChainAbstractionNamespace
+            pushClient: pushClient
+            // chainAbstractionClient: chainAbstractionClient,
+            // ChainAbstractionNamespace: ChainAbstractionNamespace
         )
     }
 }

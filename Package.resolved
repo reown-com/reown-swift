@@ -51,8 +51,8 @@
         "repositoryURL": "https://github.com/MobileWalletProtocol/wallet-mobile-sdk",
         "state": {
           "branch": null,
-          "revision": "84b3d3f25a2e3b140ec12bb0d22c35b58f817d44",
-          "version": "1.0.0"
+          "revision": "4293df51d3500b8e876ca4bf0d7548adf097569a",
+          "version": "1.1.2"
         }
       },
       {
@@ -60,8 +60,8 @@
         "repositoryURL": "https://github.com/reown-com/yttrium",
         "state": {
           "branch": null,
-          "revision": "f6566a2b028ae60746254298ce1d5ba822ca5388",
-          "version": "0.9.7"
+          "revision": "ed8e8f5af2029406263be5993e484c3a69c1db7a",
+          "version": "0.9.68"
         }
       }
     ]
