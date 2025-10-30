@@ -222,9 +222,6 @@ final class ApproveEngine {
             .addingTimeInterval(TimeInterval(WCSession.defaultTimeToLive))
             .timeIntervalSince1970
 
-        // Create default empty ProposalRequestsResponses if none provided
-        let requestsResponses = proposalRequestsResponses ?? ProposalRequestsResponses(authentication: [])
-
         let settleParams = SessionType.SettleParams(
             relay: relay,
             controller: selfParticipant,
@@ -232,7 +229,7 @@ final class ApproveEngine {
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
             expiry: Int64(expiry),
-            proposalRequestsResponses: requestsResponses
+            proposalRequestsResponses: proposalRequestsResponses
         )
         
         return settleParams
