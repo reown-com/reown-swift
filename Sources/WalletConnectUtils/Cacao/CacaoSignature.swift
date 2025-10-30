@@ -3,6 +3,7 @@ import Foundation
 public enum CacaoSignatureType: String, Codable {
     case eip191
     case eip1271
+    case ed25519
 }
 
 public struct CacaoSignature: Codable, Equatable {

@@ -31,8 +31,9 @@ class SolanaAccountStorage {
     /// Generates a new account and stores its private key
     @discardableResult
     func generateAndSaveAccount() -> SolanaSwift.Account? {
+        let seed = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
         guard
-            let keypair = try? NaclSign.KeyPair.keyPair(),
+            let keypair = try? NaclSign.KeyPair.keyPair(fromSeed: seed),
             let account = try? Account(secretKey: Data(keypair.secretKey))
         else { return nil }
 

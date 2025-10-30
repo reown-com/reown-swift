@@ -3,12 +3,28 @@ import Combine
 
 import ReownWalletKit
 import ReownRouter
+import SolanaSwift
+import TweetNacl
+import WalletConnectUtils
 
 final class SessionProposalPresenter: ObservableObject {
     enum Errors: LocalizedError {
         case noCommonChains
+        case solanaAccountUnavailable
+        case invalidPrivateKey
+
+        var errorDescription: String? {
+            switch self {
+            case .noCommonChains:
+                return "No supported chains available for this authentication request."
+            case .solanaAccountUnavailable:
+                return "Solana account is not available. Please create or import a Solana account."
+            case .invalidPrivateKey:
+                return "Unable to read the signing key for this account."
+            }
+        }
     }
-    
+
     private let interactor: SessionProposalInteractor
     private let router: SessionProposalRouter
 
@@ -29,11 +45,10 @@ final class SessionProposalPresenter: ObservableObject {
         return buildFormattedMessages(authRequests: authRequests, account: importAccount.account)
     }
 
-    func buildFormattedMessages(authRequests: [AuthPayload], account: Account) -> [(String, String)] {
+    func buildFormattedMessages(authRequests: [AuthPayload], account: WalletConnectUtils.Account) -> [(String, String)] {
         return authRequests.enumerated().compactMap { index, authPayload in
             getCommonAndRequestedChainsIntersection(authPayload: authPayload).enumerated().compactMap { chainIndex, chain in
-                guard chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame,
-                      let chainAccount = resolvedAccount(for: chain, defaultAccount: account) else {
+                guard let chainAccount = resolvedAccount(for: chain, defaultAccount: account) else {
                     return nil
                 }
                 guard let formattedMessage = try? WalletKit.instance.formatAuthMessage(payload: authPayload, account: chainAccount) else {
@@ -113,13 +128,23 @@ final class SessionProposalPresenter: ObservableObject {
             throw Errors.noCommonChains
         }
 
-        let SIWEmessages = try WalletKit.instance.formatAuthMessage(payload: authPayload, account: account)
+        let message = try WalletKit.instance.formatAuthMessage(payload: authPayload, account: account)
+        let signature: CacaoSignature
 
-        let signature = try messageSigner.sign(message: SIWEmessages, privateKey: Data(hex: importAccount.privateKey), type: .eip191)
+        if chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame {
+            let privateKey = try dataFromHexString(importAccount.privateKey)
+            signature = try messageSigner.sign(
+                message: message,
+                privateKey: privateKey,
+                type: .eip191
+            )
+        } else if chain.namespace.caseInsensitiveCompare("solana") == .orderedSame {
+            signature = try solanaSignature(for: message)
+        } else {
+            throw Errors.noCommonChains
+        }
 
-        let auth = try WalletKit.instance.buildSignedAuthObject(authPayload: authPayload, signature: signature, account: account)
-
-        return auth
+        return try WalletKit.instance.buildSignedAuthObject(authPayload: authPayload, signature: signature, account: account)
     }
 
     private func buildAuthObjects() throws -> [AuthObject] {
@@ -128,8 +153,8 @@ final class SessionProposalPresenter: ObservableObject {
         var auths = [AuthObject]()
         
         try authRequests.forEach { authPayload in
-            let evmChains = getCommonAndRequestedChainsIntersection(authPayload: authPayload).filter { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }
-            try evmChains.forEach { chain in
+            let chains = prioritizedChains(from: getCommonAndRequestedChainsIntersection(authPayload: authPayload))
+            try chains.forEach { chain in
                 let auth = try createAuthObjectForChain(chain: chain, authPayload: authPayload)
                 auths.append(auth)
             }
@@ -166,7 +191,7 @@ private extension SessionProposalPresenter {
 }
 
 private extension SessionProposalPresenter {
-    func resolvedAccount(for chain: Blockchain, defaultAccount: Account) -> Account? {
+    func resolvedAccount(for chain: Blockchain, defaultAccount: WalletConnectUtils.Account) -> WalletConnectUtils.Account? {
         if chain.namespace.caseInsensitiveCompare("eip155") == .orderedSame {
             return Account(blockchain: chain, address: defaultAccount.address)
         }
@@ -193,6 +218,55 @@ private extension SessionProposalPresenter {
         }
 
         return supported
+    }
+
+    func prioritizedChains(from chains: Set<Blockchain>) -> [Blockchain] {
+        chains.sorted { lhs, rhs in
+            let lhsPriority = chainPriority(lhs)
+            let rhsPriority = chainPriority(rhs)
+            if lhsPriority == rhsPriority {
+                return lhs.absoluteString < rhs.absoluteString
+            }
+            return lhsPriority < rhsPriority
+        }
+    }
+
+    func chainPriority(_ chain: Blockchain) -> Int {
+        switch chain.namespace.lowercased() {
+        case "eip155": return 0
+        case "solana": return 1
+        default: return 2
+        }
+    }
+
+    func solanaSignature(for message: String) throws -> CacaoSignature {
+        guard
+            let privateKey = solanaAccountStorage.getPrivateKey(),
+            let messageData = message.data(using: .utf8)
+        else { throw Errors.solanaAccountUnavailable }
+
+        let secretKey = Data(SolanaSwift.Base58.decode(privateKey))
+        let signatureBytes = try NaclSign.signDetached(message: messageData, secretKey: secretKey)
+        let signature = SolanaSwift.Base58.encode(Array(signatureBytes))
+        return CacaoSignature(t: .ed25519, s: signature)
+    }
+
+    func dataFromHexString(_ hex: String) throws -> Data {
+        var cleaned = hex
+        if cleaned.hasPrefix("0x") { cleaned.removeFirst(2) }
+        guard cleaned.count % 2 == 0 else { throw Errors.invalidPrivateKey }
+
+        var data = Data(capacity: cleaned.count / 2)
+        var index = cleaned.startIndex
+        while index < cleaned.endIndex {
+            let nextIndex = cleaned.index(index, offsetBy: 2)
+            guard nextIndex <= cleaned.endIndex else { throw Errors.invalidPrivateKey }
+            let byteString = cleaned[index..<nextIndex]
+            guard let byte = UInt8(byteString, radix: 16) else { throw Errors.invalidPrivateKey }
+            data.append(byte)
+            index = nextIndex
+        }
+        return data
     }
 }
 

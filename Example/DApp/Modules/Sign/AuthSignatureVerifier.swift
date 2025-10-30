@@ -26,6 +26,14 @@ final class AuthSignatureVerifier {
             throw AuthError.malformedResponseParams
         }
 
+        if account.namespace.caseInsensitiveCompare("solana") == .orderedSame {
+            guard authObject.s.t == .ed25519 else {
+                throw AuthError.signatureVerificationFailed
+            }
+            // TODO: add ed25519 signature verification once available.
+            return
+        }
+
         do {
             try await signatureVerifier.verify(
                 signature: authObject.s,
