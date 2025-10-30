@@ -102,6 +102,23 @@ final class SignPresenter: ObservableObject {
     }
 
     @MainActor
+    func connectWalletWith1CAV2() {
+        Task {
+            do {
+                ActivityIndicatorManager.shared.start()
+                walletConnectUri = try await Sign.instance.connect(
+                    namespaces: Proposal.namespaces,
+                    authentication: [AuthRequestParams.stub(chains: ["eip155:1", "eip155:137"], methods: nil)]
+                )
+                ActivityIndicatorManager.shared.stop()
+                router.presentNewPairing(walletConnectUri: walletConnectUri!)
+            } catch {
+                ActivityIndicatorManager.shared.stop()
+            }
+        }
+    }
+
+    @MainActor
     func connectWalletWithSessionAuthenticateSIWEOnly() {
         Task {
             do {
