@@ -649,7 +649,7 @@ final class SignClientTests: XCTestCase {
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
             scopedProperties: nil,
-            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
+            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:]), requests: nil
         )
 
         print("🧪TEST: Step 3 - Build auto session namespaces")
@@ -734,7 +734,7 @@ final class SignClientTests: XCTestCase {
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
             scopedProperties: nil,
-            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
+            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:]), requests: nil
         )
 
         print("🧪TEST: Step 3 - Build auto session namespaces")
@@ -803,7 +803,7 @@ final class SignClientTests: XCTestCase {
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
             scopedProperties: nil,
-            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
+            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:]), requests: nil
         )
 
         print("🧪TEST: Step 3 - Build auto session namespaces")
@@ -879,7 +879,7 @@ final class SignClientTests: XCTestCase {
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
             scopedProperties: nil,
-            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
+            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:]), requests: nil
         )
 
         print("🧪TEST: Step 2 - Attempt to build auto namespaces with missing chain")
@@ -950,7 +950,7 @@ final class SignClientTests: XCTestCase {
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
             scopedProperties: nil,
-            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:])
+            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:], optionalNamespaces: [:], sessionProperties: [:]), requests: nil
         )
 
         print("🧪TEST: Step 2 - Attempt to build auto namespaces with missing method (we only pass personal_sign, skipping eth_sendTransaction)")
