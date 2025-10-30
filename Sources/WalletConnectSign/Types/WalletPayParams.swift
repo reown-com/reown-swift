@@ -3,13 +3,6 @@
 //  reown
 //
 //  Created by BARTOSZ ROZWARSKI on 30/07/2025.
-//
-//  CAIP-122 Sign with X Support Added:
-//  Now supports chain-agnostic authentication messages:
-//  - Ethereum (eip155): "example.com wants you to sign in with your Ethereum account:"
-//  - Bitcoin (bip122): "example.com wants you to sign in with your Bitcoin account:"
-//  - Solana (solana): "example.com wants you to sign in with your Solana account:"
-//
 
 import Foundation
 
