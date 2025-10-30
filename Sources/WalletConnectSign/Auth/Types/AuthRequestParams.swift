@@ -11,7 +11,7 @@ import Foundation
 /// a wallet should attempt to satisfy one of the requested types:
 ///
 /// - `eip155:*` (Ethereum / EVM): supports `eip191`, `eip1271`, `eip6492`
-/// - `bip122:*` (Bitcoin mainnet): supports `ecdsa`, `bip322-simple`
+/// - `bip122:000000000019d6689c085ae165831e93` (Bitcoin mainnet): supports `ecdsa`, `bip322-simple`
 /// - `solana:*` (Solana): supports `ed25519`
 public struct AuthRequestParams: Codable {
     public enum Errors: Error {
