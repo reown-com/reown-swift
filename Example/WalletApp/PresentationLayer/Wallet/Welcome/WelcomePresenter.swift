@@ -26,9 +26,9 @@ final class WelcomePresenter: ObservableObject {
         if let stacksWallet = interactor.generateAndSaveStacksWallet() {
             stacksInput = stacksWallet
         }
-        // Generate new Sui account when creating a new account
+        // Generate new Solana, Sui, and TON accounts when creating a new account
+        interactor.generateSolanaAccount()
         interactor.generateSuiAccount()
-        // Generate TON keypair
         interactor.generateTonAccount()
         importAccount(ImportAccount.new())
     }
@@ -46,6 +46,8 @@ final class WelcomePresenter: ObservableObject {
         if !solanaInput.isEmpty {
             interactor.saveSolanaPrivateKey(solanaInput)
             solanaInput = .empty
+        } else {
+            interactor.generateSolanaAccount()
         }
         
         // Save Stacks mnemonic if provided, otherwise generate a new one

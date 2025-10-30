@@ -18,7 +18,8 @@ final class SessionProposalModule {
             router: router,
             importAccount: importAccount,
             proposal: proposal,
-            context: context
+            context: context,
+            messageSigner: app.messageSigner
         )
         let view = SessionProposalView().environmentObject(presenter)
         let viewController = SceneViewController(viewModel: presenter, content: view)

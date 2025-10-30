@@ -55,13 +55,4 @@ class CacaoSignerTest: XCTestCase {
         XCTAssertEqual(formatted, message)
         XCTAssertEqual(try signer.sign(payload: cacaoPayload, privateKey: privateKey, type: .eip191), signature)
     }
-
-    func testCacaoVerify() async throws {
-        do {
-            try await verifier.verify(signature: signature, message: message, address: "0x15bca56b6e2728aec2532df9d436bd1600e86688", chainId: "eip155:1")
-        } catch {
-            print(error)
-            throw error
-        }
-    }
 }

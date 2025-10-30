@@ -96,7 +96,8 @@ class ApproveSessionAuthenticateUtil {
             namespaces: sessionNamespaces,
             sessionProperties: nil,
             scopedProperties: nil,
-            expiry: Int64(expiry)
+            expiry: Int64(expiry),
+            proposalRequestsResponses: nil
         )
 
         let session = WCSession(
