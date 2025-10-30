@@ -15,8 +15,7 @@ final class ApproveEngine {
 
     var onSessionProposal: ((Session.Proposal, VerifyContext?) -> Void)?
     var onSessionRejected: ((Session.Proposal, Reason) -> Void)?
-    var onSessionSettle: ((Session) -> Void)?
-    var onSessionSettleWithResponses: ((Session, ProposalRequestsResponses?) -> Void)?
+    var onSessionSettle: ((Session, ProposalRequestsResponses?) -> Void)?
 
     private let networkingInteractor: NetworkInteracting
     private let pairingStore: WCPairingStorage
@@ -168,7 +167,7 @@ final class ApproveEngine {
         
         sessionStore.setSession(session)
 
-        onSessionSettle?(session.publicRepresentation())
+        onSessionSettle?(session.publicRepresentation(), nil)
         eventsClient.saveTraceEvent(SessionApproveExecutionTraceEvents.approvSessionSuccess)
         logger.debug("wc_sessionApprove have been sent")
         
@@ -485,8 +484,9 @@ private extension ApproveEngine {
         Task(priority: .high) {
             try await networkingInteractor.respondSuccess(topic: payload.topic, requestId: payload.id, protocolMethod: protocolMethod)
         }
-        onSessionSettle?(session.publicRepresentation())
-        onSessionSettleWithResponses?(session.publicRepresentation(), params.proposalRequestsResponses)
+        let publicSession = session.publicRepresentation()
+        let responses = params.proposalRequestsResponses?.authentication?.isEmpty == false ? params.proposalRequestsResponses : nil
+        onSessionSettle?(publicSession, responses)
     }
     
     func resolveNetworkConnectionStatus() async -> NetworkConnectionStatus {

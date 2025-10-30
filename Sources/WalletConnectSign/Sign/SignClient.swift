@@ -562,10 +562,7 @@ public final class SignClient: SignClientProtocol {
         approveEngine.onSessionRejected = { [unowned self] proposal, reason in
             sessionRejectionPublisherSubject.send((proposal, reason))
         }
-        approveEngine.onSessionSettle = { [unowned self] settledSession in
-            sessionSettlePublisherSubject.send((session: settledSession, responses: nil))
-        }
-        approveEngine.onSessionSettleWithResponses = { [unowned self] settledSession, responses in
+        approveEngine.onSessionSettle = { [unowned self] settledSession, responses in
             sessionSettlePublisherSubject.send((session: settledSession, responses: responses))
         }
         sessionEngine.onSessionDelete = { [unowned self] topic, reason in
