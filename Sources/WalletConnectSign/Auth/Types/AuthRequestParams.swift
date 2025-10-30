@@ -26,6 +26,7 @@ public struct AuthRequestParams: Codable {
     public let statement: String?
     public let requestId: String?
     public var resources: [String]?
+    @available(*, deprecated, message: "1CA v2 over connect() method does not require this parameter, session is created with session proposal namespaces")
     public let methods: [String]?
     public let signatureTypes: [String: [String]]?
     public let ttl: TimeInterval
@@ -103,4 +104,3 @@ extension AuthRequestParams {
     }
 }
 #endif
-
