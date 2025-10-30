@@ -40,8 +40,8 @@ final class SessionProposalInteractor {
         let supportedOptionalTonChains = proposal.optionalNamespaces?["ton"]?.chains ?? []
         let supportedTonChains = supportedRequiredTonChains + supportedOptionalTonChains
 
-        // Combine all supported chains
-        var supportedChains = supportedEIP155Chains + supportedSolanaChains + supportedStacksChains + supportedSuiChains + supportedTonChains
+        // Combine supported chains; add optional groups only when available
+        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains
 
         var supportedAccounts: [Account] = []
         var sessionProperties = [String: String]()
@@ -50,8 +50,9 @@ final class SessionProposalInteractor {
         let eip155Accounts = Array(supportedEIP155Chains).map { Account(blockchain: $0, address: EOAAccount.address)! }
         supportedAccounts.append(contentsOf: eip155Accounts)
 
-        // Add Solana accounts if available
+        // Add Solana accounts if proposed and available
         if let solanaAccount = solanaAccountStorage.getCaip10Account(), !supportedSolanaChains.isEmpty {
+            supportedChains.append(contentsOf: supportedSolanaChains)
             supportedSolanaChains.forEach { chain in
                 if chain.reference == solanaAccount.blockchain.reference,
                    let account = Account(blockchain: chain, address: solanaAccount.address) {
