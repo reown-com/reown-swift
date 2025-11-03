@@ -114,15 +114,24 @@ private extension SessionRequestPresenter {
     }
 
     func computeClearSigningPreview() {
+        let typedDataMethods: Set<String> = [
+            "eth_signTypedData",
+            "eth_signTypedData_v3",
+            "eth_signTypedData_v4"
+        ]
+
+        if typedDataMethods.contains(sessionRequest.method) {
+            formatTypedDataPreview()
+            return
+        }
+
         // Only attempt for Ethereum transaction signing/sending
-        let supportedMethods: Set<String> = ["eth_sendTransaction", "eth_signTransaction"]
-        guard supportedMethods.contains(sessionRequest.method) else { return }
+        let transactionMethods: Set<String> = ["eth_sendTransaction", "eth_signTransaction"]
+        guard transactionMethods.contains(sessionRequest.method) else { return }
         guard let chainIdNumber = UInt64(sessionRequest.chainId.reference) else { return }
         guard let txs = try? sessionRequest.params.get([TxLike].self), let tx = txs.first else { return }
         guard let to = tx.to, let calldataHex = tx.data else { return }
 
-
-        // From YttriumUtilsWrapper UniFFI
         do {
             let displayModel = try clearSigningFormat(
                 chainId: chainIdNumber,
@@ -141,6 +150,46 @@ private extension SessionRequestPresenter {
             errorMessage = error.localizedDescription
             showError = true
         }
+    }
+
+    func formatTypedDataPreview() {
+        guard let typedDataJson = extractTypedDataPayload() else { return }
+
+        do {
+            let displayModel = try clearSigningFormatTyped(typedDataJson: typedDataJson)
+
+            clearSigningIntent = displayModel.intent
+            clearSigningItems = displayModel.items.map { ($0.label, $0.value) }
+            clearSigningWarnings = displayModel.warnings
+            clearSigningRawSelector = nil
+            clearSigningRawArgs = []
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+        }
+    }
+
+    func extractTypedDataPayload() -> String? {
+        if let params = try? sessionRequest.params.get([String].self), params.count >= 2 {
+            let payload = params[1]
+            if payload.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                return payload
+            }
+        }
+
+        if let params = try? sessionRequest.params.get([AnyCodable].self), params.count >= 2 {
+            let typed = params[1]
+            if let payload = typed.value as? String {
+                return payload
+            } else if let payloadObject = typed.value as? [String: Any] {
+                if let data = try? JSONSerialization.data(withJSONObject: payloadObject, options: [.sortedKeys]),
+                   let jsonString = String(data: data, encoding: .utf8) {
+                    return jsonString
+                }
+            }
+        }
+
+        return nil
     }
 }
 
