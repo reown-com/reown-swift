@@ -30,7 +30,7 @@ struct ETHSigner {
     }
 
     private static let evmSigningClient: EvmSigningClient = {
-        let metadata = PulseMetadata(
+        let metadata = YttriumUtils.PulseMetadata(
             url: nil,
             bundleId: Bundle.main.bundleIdentifier ?? "",
             sdkVersion: "reown-swift-\(EnvironmentInfo.sdkName)",

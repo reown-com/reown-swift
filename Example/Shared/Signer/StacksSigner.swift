@@ -56,9 +56,9 @@ final class StacksSigner {
     private let stacksClient: StacksClient
     
     init() {
-        let pulseMetadata = PulseMetadata(
+        let pulseMetadata = YttriumUtils.PulseMetadata(
             url: nil,
-            bundleId: Bundle.main.bundleIdentifier ?? "",
+            bundleId: Bundle.main.bundleIdentifier,
             sdkVersion: "reown-swift-\(EnvironmentInfo.sdkName)",
             sdkPlatform: "mobile"
         )
