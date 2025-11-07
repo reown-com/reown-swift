@@ -35,6 +35,9 @@ inputs:
   js-client-api-host:
     description: 'JS Client Api Host'
     required: false
+  artifact-download-token:
+    description: 'Token with access to download DerivedData artifacts'
+    required: false
 
 
 runs:
@@ -47,6 +50,7 @@ runs:
           name: main-derivedData
           workflow: build_artifacts.yml
           repo: 'reown-com/reown-swift'
+          github_token: ${{ inputs.artifact-download-token != '' && inputs.artifact-download-token || github.token }}
           if_no_artifact_found: warn
 
     - name: Untar DerivedDataCache
