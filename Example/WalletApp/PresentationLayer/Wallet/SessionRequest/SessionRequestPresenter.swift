@@ -125,6 +125,7 @@ private extension SessionRequestPresenter {
             return
         }
 
+        print(sessionRequest)
         // Only attempt for Ethereum transaction signing/sending
         let transactionMethods: Set<String> = ["eth_sendTransaction", "eth_signTransaction"]
         guard transactionMethods.contains(sessionRequest.method) else { return }
