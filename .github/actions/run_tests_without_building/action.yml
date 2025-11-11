@@ -48,7 +48,8 @@ runs:
       run: |
         echo "=== Composite Action Debug ==="
         echo "Input type value: '${{ inputs.type }}'"
-        echo "Type length: ${#{{ inputs.type }}}"
+        TYPE="${{ inputs.type }}"
+        echo "Type length: ${#TYPE}"
         echo "============================="
     
     - name: Download artifact
