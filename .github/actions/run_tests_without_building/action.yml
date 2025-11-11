@@ -35,27 +35,20 @@ inputs:
   js-client-api-host:
     description: 'JS Client Api Host'
     required: false
-  artifact-download-token:
-    description: 'Token with access to download DerivedData artifacts'
-    required: false
-
 
 runs:
   using: "composite"
   steps:
-    - name: Download artifact
-      id: download-artifact
-      uses: dawidd6/action-download-artifact@v2
-      with:
-          name: main-derivedData
-          workflow: build_artifacts.yml
-          repo: 'reown-com/reown-swift'
-          github_token: ${{ inputs.artifact-download-token != '' && inputs.artifact-download-token || github.token }}
-          if_no_artifact_found: warn
-
     - name: Untar DerivedDataCache
       shell: bash
-      run: test -f products.tar && tar xPpf products.tar || echo "No artifacts to untar"
+      run: |
+        echo "Checking for products.tar..."
+        test -f products.tar && tar xPpf products.tar || echo "No artifacts to untar"
+        echo "Untar step completed"
+
+    - name: Show test type
+      shell: bash
+      run: echo "Running tests for type '${{ inputs.type }}'"
 
     # Package Unit tests
     - name: Run tests
@@ -121,3 +114,4 @@ runs:
         name: ${{ inputs.type }} test_results
         path: ./artifacts.zip
         if-no-files-found: warn
+
