@@ -43,6 +43,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Debug - Show inputs received
+      shell: bash
+      run: |
+        echo "=== Composite Action Debug ==="
+        echo "Input type value: '${{ inputs.type }}'"
+        echo "Type length: ${#{{ inputs.type }}}"
+        echo "============================="
+    
     - name: Download artifact
       id: download-artifact
       uses: dawidd6/action-download-artifact@v2
@@ -56,6 +64,26 @@ runs:
     - name: Untar DerivedDataCache
       shell: bash
       run: test -f products.tar && tar xPpf products.tar || echo "No artifacts to untar"
+
+    - name: Debug - Test condition evaluation
+      shell: bash
+      run: |
+        echo "=== Condition Matching Debug ==="
+        TYPE="${{ inputs.type }}"
+        echo "TYPE variable: '$TYPE'"
+        
+        if [ "$TYPE" == "smoke-tests" ]; then
+          echo "✅ Bash: Matches 'smoke-tests'"
+        elif [ "$TYPE" == "relay-tests" ]; then
+          echo "✅ Bash: Matches 'relay-tests'"
+        elif [ "$TYPE" == "unit-tests" ]; then
+          echo "✅ Bash: Matches 'unit-tests'"
+        elif [ "$TYPE" == "integration-tests" ]; then
+          echo "✅ Bash: Matches 'integration-tests'"
+        else
+          echo "❌ Bash: No match for '$TYPE'"
+        fi
+        echo "================================"
 
     # Package Unit tests
     - name: Run tests
