@@ -113,29 +113,77 @@ private extension SessionRequestPresenter {
         let data: String?
     }
 
+    enum ClearSigningContext {
+        case typedData(json: String)
+        case transaction(chainId: UInt64, tx: TxLike)
+    }
+
+    struct SessionRequestEnvelope: Codable {
+        struct InnerRequest: Codable {
+            let method: String
+            let params: [AnyCodable]
+        }
+
+        let chainId: String?
+        let request: InnerRequest
+    }
+
     func computeClearSigningPreview() {
+        guard let context = resolveClearSigningContext() else { return }
+
+        switch context {
+        case .typedData(let json):
+            renderTypedDataPreview(typedDataJson: json)
+        case .transaction(let chainId, let tx):
+            renderTransactionPreview(chainId: chainId, transaction: tx)
+        }
+    }
+
+    func resolveClearSigningContext() -> ClearSigningContext? {
         let typedDataMethods: Set<String> = [
             "eth_signTypedData",
             "eth_signTypedData_v3",
             "eth_signTypedData_v4"
         ]
+        let transactionMethods: Set<String> = ["eth_sendTransaction", "eth_signTransaction"]
 
-        if typedDataMethods.contains(sessionRequest.method) {
-            formatTypedDataPreview()
-            return
+        if typedDataMethods.contains(sessionRequest.method),
+           let payload = extractTypedDataPayload(from: sessionRequest.params) {
+            return .typedData(json: payload)
         }
 
-        print(sessionRequest)
-        // Only attempt for Ethereum transaction signing/sending
-        let transactionMethods: Set<String> = ["eth_sendTransaction", "eth_signTransaction"]
-        guard transactionMethods.contains(sessionRequest.method) else { return }
-        guard let chainIdNumber = UInt64(sessionRequest.chainId.reference) else { return }
-        guard let txs = try? sessionRequest.params.get([TxLike].self), let tx = txs.first else { return }
-        guard let to = tx.to, let calldataHex = tx.data else { return }
+        if transactionMethods.contains(sessionRequest.method),
+           let chainIdNumber = UInt64(sessionRequest.chainId.reference),
+           let tx = extractTransaction(from: sessionRequest.params) {
+            return .transaction(chainId: chainIdNumber, tx: tx)
+        }
+
+        if sessionRequest.method == "wc_sessionRequest",
+           let envelope = decodeSessionRequestEnvelope(from: sessionRequest.params) {
+            let innerMethod = envelope.request.method
+            let chainReference = envelope.chainId ?? sessionRequest.chainId.reference
+
+            if typedDataMethods.contains(innerMethod),
+               let payload = extractTypedDataPayload(from: envelope.request.params) {
+                return .typedData(json: payload)
+            }
+
+            if transactionMethods.contains(innerMethod),
+               let chainIdNumber = parseChainId(from: chainReference),
+               let tx = extractTransaction(from: envelope.request.params) {
+                return .transaction(chainId: chainIdNumber, tx: tx)
+            }
+        }
+
+        return nil
+    }
+
+    func renderTransactionPreview(chainId: UInt64, transaction: TxLike) {
+        guard let to = transaction.to, let calldataHex = transaction.data else { return }
 
         do {
             let displayModel = try clearSigningFormat(
-                chainId: chainIdNumber,
+                chainId: chainId,
                 to: to,
                 calldataHex: calldataHex
             )
@@ -146,6 +194,9 @@ private extension SessionRequestPresenter {
             if let raw = displayModel.raw {
                 clearSigningRawSelector = raw.selector
                 clearSigningRawArgs = raw.args
+            } else {
+                clearSigningRawSelector = nil
+                clearSigningRawArgs = []
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -153,9 +204,7 @@ private extension SessionRequestPresenter {
         }
     }
 
-    func formatTypedDataPreview() {
-        guard let typedDataJson = extractTypedDataPayload() else { return }
-
+    func renderTypedDataPreview(typedDataJson: String) {
         do {
             let displayModel = try clearSigningFormatTyped(typedDataJson: typedDataJson)
 
@@ -170,24 +219,84 @@ private extension SessionRequestPresenter {
         }
     }
 
-    func extractTypedDataPayload() -> String? {
-        if let params = try? sessionRequest.params.get([String].self), params.count >= 2 {
-            let payload = params[1]
-            if payload.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                return payload
-            }
+    func decodeSessionRequestEnvelope(from params: AnyCodable) -> SessionRequestEnvelope? {
+        if let rawString = params.value as? String,
+           let data = rawString.data(using: .utf8) {
+            return try? JSONDecoder().decode(SessionRequestEnvelope.self, from: data)
         }
 
-        if let params = try? sessionRequest.params.get([AnyCodable].self), params.count >= 2 {
-            let typed = params[1]
-            if let payload = typed.value as? String {
-                return payload
-            } else if let payloadObject = typed.value as? [String: Any] {
-                if let data = try? JSONSerialization.data(withJSONObject: payloadObject, options: [.sortedKeys]),
-                   let jsonString = String(data: data, encoding: .utf8) {
-                    return jsonString
-                }
-            }
+        if let dictionary = params.value as? [String: Any],
+           JSONSerialization.isValidJSONObject(dictionary),
+           let data = try? JSONSerialization.data(withJSONObject: dictionary, options: [.sortedKeys]) {
+            return try? JSONDecoder().decode(SessionRequestEnvelope.self, from: data)
+        }
+
+        return try? params.get(SessionRequestEnvelope.self)
+    }
+
+    func parseChainId(from caip2: String?) -> UInt64? {
+        guard let caip2 = caip2 else { return nil }
+        let components = caip2.split(separator: ":")
+        guard let reference = components.last else { return nil }
+        return UInt64(reference)
+    }
+
+    func extractTransaction(from params: AnyCodable) -> TxLike? {
+        guard let txs = try? params.get([TxLike].self) else { return nil }
+        return txs.first
+    }
+
+    func extractTransaction(from params: [AnyCodable]) -> TxLike? {
+        let rawValues = params.map { $0.value }
+        guard JSONSerialization.isValidJSONObject(rawValues),
+              let data = try? JSONSerialization.data(withJSONObject: rawValues, options: []) else { return nil }
+        let txs = try? JSONDecoder().decode([TxLike].self, from: data)
+        return txs?.first
+    }
+
+    func extractTypedDataPayload(from params: AnyCodable) -> String? {
+        if let stringArray = try? params.get([String].self), stringArray.count >= 2 {
+            return sanitizeTypedDataPayload(stringArray[1])
+        }
+
+        if let anyArray = try? params.get([AnyCodable].self) {
+            return extractTypedDataPayload(from: anyArray)
+        }
+
+        return nil
+    }
+
+    func extractTypedDataPayload(from params: [AnyCodable]) -> String? {
+        guard params.count >= 2 else { return nil }
+        return coerceJSON(from: params[1].value)
+    }
+
+    func sanitizeTypedDataPayload(_ payload: String) -> String? {
+        let trimmed = payload.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    func coerceJSON(from value: Any) -> String? {
+        if let stringValue = value as? String {
+            return sanitizeTypedDataPayload(stringValue)
+        }
+
+        if let dictionary = value as? [String: Any],
+           JSONSerialization.isValidJSONObject(dictionary),
+           let data = try? JSONSerialization.data(withJSONObject: dictionary, options: [.sortedKeys]),
+           let jsonString = String(data: data, encoding: .utf8) {
+            return jsonString
+        }
+
+        if let array = value as? [Any],
+           JSONSerialization.isValidJSONObject(array),
+           let data = try? JSONSerialization.data(withJSONObject: array, options: [.sortedKeys]),
+           let jsonString = String(data: data, encoding: .utf8) {
+            return jsonString
+        }
+
+        if let anyCodable = value as? AnyCodable {
+            return sanitizeTypedDataPayload(anyCodable.stringRepresentation)
         }
 
         return nil
