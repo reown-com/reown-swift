@@ -82,7 +82,7 @@ struct SessionRequestView: View {
                                 EmptyView()
                             }
 
-                            if presenter.clearSigningIntent != nil || !presenter.clearSigningItems.isEmpty || presenter.clearSigningRawSelector != nil {
+                            if presenter.clearSigningIntent != nil || presenter.clearSigningInterpolatedIntent != nil || !presenter.clearSigningItems.isEmpty || presenter.clearSigningRawSelector != nil {
                                 intentSectionView()
                             }
 
@@ -179,7 +179,15 @@ struct SessionRequestView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        if !presenter.clearSigningItems.isEmpty {
+                        if let summary = presenter.clearSigningInterpolatedIntent {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(summary)
+                                    .foregroundColor(.grey8)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        } else if !presenter.clearSigningItems.isEmpty {
                             ForEach(0..<presenter.clearSigningItems.count, id: \.self) { idx in
                                 let item = presenter.clearSigningItems[idx]
                                 VStack(alignment: .leading, spacing: 4) {

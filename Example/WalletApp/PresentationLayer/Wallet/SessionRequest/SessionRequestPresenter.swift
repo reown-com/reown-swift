@@ -9,6 +9,15 @@ final class SessionRequestPresenter: ObservableObject {
     private let interactor: SessionRequestInteractor
     private let router: SessionRequestRouter
     private let importAccount: ImportAccount
+    private let typedDataMethods: Set<String> = [
+        "eth_signTypedData",
+        "eth_signTypedData_v3",
+        "eth_signTypedData_v4"
+    ]
+    private let transactionMethods: Set<String> = [
+        "eth_sendTransaction",
+        "eth_signTransaction"
+    ]
     
     let sessionRequest: Request
     let session: Session?
@@ -17,21 +26,26 @@ final class SessionRequestPresenter: ObservableObject {
     // Clear signing (EIP-7730) display model
     @Published var clearSigningIntent: String?
     @Published var clearSigningItems: [(label: String, value: String)] = []
+    @Published var clearSigningInterpolatedIntent: String?
     @Published var clearSigningWarnings: [String] = []
     @Published var clearSigningRawSelector: String?
     @Published var clearSigningRawArgs: [String] = []
 
     var message: String {
-        guard let messages = try? sessionRequest.params.get([String].self),
-              let firstMessage = messages.first else {
-            return String(describing: sessionRequest.params.value)
+        if let typedPayload = resolveTypedDataPayloadForDisplay() {
+            return prettyPrintedJSON(from: typedPayload) ?? typedPayload
         }
-        
-        // Attempt to decode the message if it's hex-encoded
-        let decodedMessage = String(data: Data(hex: firstMessage), encoding: .utf8)
 
-        // Return the decoded message if available, else return the original message
-        return decodedMessage?.isEmpty == false ? decodedMessage! : firstMessage
+        if let messages = try? sessionRequest.params.get([String].self),
+           let firstMessage = messages.first {
+            if let decodedMessage = String(data: Data(hex: firstMessage), encoding: .utf8),
+               !decodedMessage.isEmpty {
+                return decodedMessage
+            }
+            return firstMessage
+        }
+
+        return String(describing: sessionRequest.params.value)
     }
 
     
@@ -129,6 +143,7 @@ private extension SessionRequestPresenter {
     }
 
     func computeClearSigningPreview() {
+        clearSigningInterpolatedIntent = nil
         guard let context = resolveClearSigningContext() else { return }
 
         switch context {
@@ -140,13 +155,6 @@ private extension SessionRequestPresenter {
     }
 
     func resolveClearSigningContext() -> ClearSigningContext? {
-        let typedDataMethods: Set<String> = [
-            "eth_signTypedData",
-            "eth_signTypedData_v3",
-            "eth_signTypedData_v4"
-        ]
-        let transactionMethods: Set<String> = ["eth_sendTransaction", "eth_signTransaction"]
-
         if typedDataMethods.contains(sessionRequest.method),
            let payload = extractTypedDataPayload(from: sessionRequest.params) {
             return .typedData(json: payload)
@@ -189,6 +197,7 @@ private extension SessionRequestPresenter {
             )
 
             clearSigningIntent = displayModel.intent
+            clearSigningInterpolatedIntent = displayModel.interpolatedIntent
             clearSigningItems = displayModel.items.map { ($0.label, $0.value) }
             clearSigningWarnings = displayModel.warnings
             if let raw = displayModel.raw {
@@ -209,6 +218,7 @@ private extension SessionRequestPresenter {
             let displayModel = try clearSigningFormatTyped(typedDataJson: typedDataJson)
 
             clearSigningIntent = displayModel.intent
+            clearSigningInterpolatedIntent = displayModel.interpolatedIntent
             clearSigningItems = displayModel.items.map { ($0.label, $0.value) }
             clearSigningWarnings = displayModel.warnings
             clearSigningRawSelector = nil
@@ -299,6 +309,33 @@ private extension SessionRequestPresenter {
             return sanitizeTypedDataPayload(anyCodable.stringRepresentation)
         }
 
+        return nil
+    }
+
+    func resolveTypedDataPayloadForDisplay() -> String? {
+        if typedDataMethods.contains(sessionRequest.method),
+           let payload = extractTypedDataPayload(from: sessionRequest.params) {
+            return payload
+        }
+
+        if sessionRequest.method == "wc_sessionRequest",
+           let envelope = decodeSessionRequestEnvelope(from: sessionRequest.params),
+           typedDataMethods.contains(envelope.request.method),
+           let payload = extractTypedDataPayload(from: envelope.request.params) {
+            return payload
+        }
+
+        return nil
+    }
+
+    func prettyPrintedJSON(from text: String) -> String? {
+        guard let data = text.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) else {
+            return nil
+        }
+        if let pretty = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted]) {
+            return String(data: pretty, encoding: .utf8)
+        }
         return nil
     }
 }
