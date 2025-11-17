@@ -21,18 +21,6 @@ public typealias SignWithXFormatter = SIWEFromCacaoPayloadFormatter
 /// Previously SIWEFromCacaoPayloadFormatter - now supports Sign with X (CAIP-122)
 public struct SIWEFromCacaoPayloadFormatter: SignWithXFormatting {
 
-    /// Errors for unsupported blockchain namespaces
-    public enum Errors: Error, LocalizedError {
-        case unsupportedNamespace(String)
-        
-        public var errorDescription: String? {
-            switch self {
-            case .unsupportedNamespace(let namespace):
-                return "Unsupported blockchain namespace: \(namespace). Only eip155, bip122, and solana are supported."
-            }
-        }
-    }
-
     public init() {}
 
     public func formatMessage(from payload: CacaoPayload, includeRecapInTheStatement: Bool) throws -> String {
@@ -43,7 +31,7 @@ public struct SIWEFromCacaoPayloadFormatter: SignWithXFormatting {
         let namespace = account.namespace
 
         // Determine chain-specific account type for CAIP-122
-        let accountType = try getAccountType(for: namespace)
+        let accountType = getAccountType(for: namespace)
         
         // Directly use the statement from payload, add a newline if it exists
         let statementLine = payload.statement.flatMap { "\n\($0)" } ?? ""
@@ -64,7 +52,7 @@ public struct SIWEFromCacaoPayloadFormatter: SignWithXFormatting {
     }
 
     // CAIP-122: Map chain namespace to account type
-    private func getAccountType(for namespace: String) throws -> String {
+    private func getAccountType(for namespace: String) -> String {
         switch namespace {
         case "eip155":
             return "Ethereum"
@@ -73,8 +61,8 @@ public struct SIWEFromCacaoPayloadFormatter: SignWithXFormatting {
         case "solana":
             return "Solana"
         default:
-            // Only support the three specified chain types
-            throw Errors.unsupportedNamespace(namespace)
+            // Support any namespace by capitalizing it
+            return namespace.capitalized
         }
     }
 

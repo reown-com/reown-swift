@@ -81,16 +81,27 @@ class SIWEFromCacaoPayloadFormatterTests: XCTestCase {
         XCTAssertEqual(message, expectedMessage)
     }
 
-    func testFormatMessageUnsupportedChain() throws {
-        let unsupportedAccount = Account("cosmos:cosmoshub-4:cosmos1abcdefghijklmnopqrstuvwxyz0123456789")!
-        let cacaoPayload = try CacaoPayloadBuilder.makeCacaoPayload(authPayload: AuthPayload.stub(), account: unsupportedAccount)
-        
-        XCTAssertThrowsError(try sut.formatMessage(from: cacaoPayload)) { error in
-            XCTAssertTrue(error is SIWEFromCacaoPayloadFormatter.Errors)
-            if let unsupportedError = error as? SIWEFromCacaoPayloadFormatter.Errors {
-                XCTAssertEqual(unsupportedError.localizedDescription, "Unsupported blockchain namespace: cosmos. Only eip155, bip122, and solana are supported.")
-            }
-        }
+    func testFormatMessageWithAnyNamespace() throws {
+        let cosmosAccount = Account("cosmos:cosmoshub-4:cosmos1abcdefghijklmnopqrstuvwxyz0123456789")!
+        let expectedMessage =
+            """
+            service.invalid wants you to sign in with your Cosmos account:
+            cosmos1abcdefghijklmnopqrstuvwxyz0123456789
+
+            I accept the ServiceOrg Terms of Service: https://service.invalid/tos
+
+            URI: https://service.invalid/login
+            Version: 1
+            Chain ID: cosmoshub-4
+            Nonce: 32891756
+            Issued At: 2021-09-30T16:25:24Z
+            Resources:
+            - ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/
+            - https://example.com/my-web2-claim.json
+            """
+        let cacaoPayload = try CacaoPayloadBuilder.makeCacaoPayload(authPayload: AuthPayload.stub(), account: cosmosAccount)
+        let message = try sut.formatMessage(from: cacaoPayload)
+        XCTAssertEqual(message, expectedMessage)
     }
 
     // MARK: - Existing Tests (Updated for Ethereum)
