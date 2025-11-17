@@ -48,7 +48,9 @@ public class WalletKitClient {
     ///
     /// Event is emited on proposer and responder client when both communicating peers have successfully established a session.
     public var sessionSettlePublisher: AnyPublisher<Session, Never> {
-        signClient.sessionSettlePublisher.eraseToAnyPublisher()
+        signClient.sessionSettlePublisher
+            .map(\.session)
+            .eraseToAnyPublisher()
     }
     
     /// Publisher that sends deleted session topic
@@ -125,8 +127,9 @@ public class WalletKitClient {
     /// - Parameters:
     ///   - proposalId: Session Proposal id
     ///   - namespaces: namespaces for given session, needs to contain at least required namespaces proposed by dApp.
-    public func approve(proposalId: String, namespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil) async throws -> Session {
-        try await signClient.approve(proposalId: proposalId, namespaces: namespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties)
+    ///   - proposalRequestsResponses: optional authentication responses for session proposals containing authentication requests
+    public func approve(proposalId: String, namespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil, proposalRequestsResponses: ProposalRequestsResponses? = nil) async throws -> Session {
+        try await signClient.approve(proposalId: proposalId, namespaces: namespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties, proposalRequestsResponses: proposalRequestsResponses)
     }
 
     /// For the wallet to reject a session proposal.
@@ -298,4 +301,3 @@ extension WalletKitClient {
     }
 }
 #endif
-

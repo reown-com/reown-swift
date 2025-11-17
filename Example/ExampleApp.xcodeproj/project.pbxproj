@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		440AEAB02DA909F8000A9A85 /* LinkModeTopicsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */; };
+		4455FB8F2EB2383100A585E9 /* AuthSignatureVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4455FB8E2EB2383100A585E9 /* AuthSignatureVerifier.swift */; };
 		44650A3D2E93F775004F2144 /* TonAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44650A3C2E93F775004F2144 /* TonAccountStorage.swift */; };
 		44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44650A3E2E951D71004F2144 /* TonSigner.swift */; };
 		446A306B2DE8375E0024781A /* SolanaAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */; };
@@ -345,6 +346,7 @@
 
 /* Begin PBXFileReference section */
 		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
+		4455FB8E2EB2383100A585E9 /* AuthSignatureVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSignatureVerifier.swift; sourceTree = "<group>"; };
 		44650A3C2E93F775004F2144 /* TonAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonAccountStorage.swift; sourceTree = "<group>"; };
 		44650A3E2E951D71004F2144 /* TonSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonSigner.swift; sourceTree = "<group>"; };
 		446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolanaAccountStorage.swift; sourceTree = "<group>"; };
@@ -1430,6 +1432,7 @@
 				C5BE01EE2AF6C9DF0064FC88 /* SignModule.swift */,
 				C5BE01ED2AF6C9DF0064FC88 /* SignPresenter.swift */,
 				C5BE01F12AF6C9DF0064FC88 /* SignRouter.swift */,
+				4455FB8E2EB2383100A585E9 /* AuthSignatureVerifier.swift */,
 				C5BE01EF2AF6C9DF0064FC88 /* SignInteractor.swift */,
 				C5B4C4C32AF11C8B00B4274A /* SignView.swift */,
 			);
@@ -1955,6 +1958,7 @@
 				C5BE01FB2AF6CB270064FC88 /* SignRouter.swift in Sources */,
 				C5BE01F72AF6CB250064FC88 /* SignModule.swift in Sources */,
 				C5BE01FA2AF6CB270064FC88 /* SignPresenter.swift in Sources */,
+				4455FB8F2EB2383100A585E9 /* AuthSignatureVerifier.swift in Sources */,
 				846E35A82C006C5600E63DF4 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

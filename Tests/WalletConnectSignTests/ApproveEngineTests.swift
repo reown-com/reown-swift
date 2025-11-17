@@ -104,7 +104,7 @@ final class ApproveEngineTests: XCTestCase {
         let sessionTopic = String.generateTopic()
         cryptoMock.setAgreementSecret(AgreementKeys.stub(), topic: sessionTopic)
         var didCallBackOnSessionApproved = false
-        engine.onSessionSettle = { _ in
+        engine.onSessionSettle = { _, _ in
             didCallBackOnSessionApproved = true
         }
         sessionTopicToProposal.set(SessionProposal.stub().publicRepresentation(pairingTopic: ""), forKey: sessionTopic)

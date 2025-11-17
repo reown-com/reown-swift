@@ -5,17 +5,20 @@ final class AppProposeService {
     private let networkingInteractor: NetworkInteracting
     private let kms: KeyManagementServiceProtocol
     private let logger: ConsoleLogging
+    private let iatProvader: IATProvider
 
     init(
         metadata: AppMetadata,
         networkingInteractor: NetworkInteracting,
         kms: KeyManagementServiceProtocol,
-        logger: ConsoleLogging
+        logger: ConsoleLogging,
+        iatProvader: IATProvider
     ) {
         self.metadata = metadata
         self.networkingInteractor = networkingInteractor
         self.kms = kms
         self.logger = logger
+        self.iatProvader = iatProvader
     }
 
     func propose(
@@ -24,7 +27,9 @@ final class AppProposeService {
         optionalNamespaces: [String: ProposalNamespace]? = nil,
         sessionProperties: [String: String]? = nil,
         scopedProperties: [String: String]? = nil,
-        relay: RelayProtocolOptions
+        relay: RelayProtocolOptions,
+        authentication: [AuthRequestParams]? = nil,
+        walletPay: WalletPayParams? = nil
     ) async throws {
         logger.debug("Propose Session on topic: \(pairingTopic)")
         
@@ -46,13 +51,21 @@ final class AppProposeService {
             publicKey: publicKey.hexRepresentation,
             metadata: metadata)
         
+        // Build AuthPayload objects from AuthRequestParams if authentication is provided
+        let authPayloads: [AuthPayload]? = authentication?.map { params in
+            AuthPayload(requestParams: params, iat: iatProvader.iat)
+        }
+        
+        let requests = authPayloads != nil ? ProposalRequests(authentication: authPayloads!) : nil
+        
         let proposal = SessionProposal(
             relays: [relay],
             proposer: proposer,
             requiredNamespaces: [:], // Empty required namespaces as per the solution
             optionalNamespaces: mergedOptionalNamespaces,
             sessionProperties: sessionProperties,
-            scopedProperties: scopedProperties
+            scopedProperties: scopedProperties,
+            requests: requests
         )
         
         
