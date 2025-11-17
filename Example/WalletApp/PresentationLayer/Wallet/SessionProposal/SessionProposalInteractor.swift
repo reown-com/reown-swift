@@ -53,12 +53,9 @@ final class SessionProposalInteractor {
         // Add Solana accounts if proposed and available
         if let solanaAccount = solanaAccountStorage.getCaip10Account(), !supportedSolanaChains.isEmpty {
             supportedChains.append(contentsOf: supportedSolanaChains)
-            supportedSolanaChains.forEach { chain in
-                if chain.reference == solanaAccount.blockchain.reference,
-                   let account = Account(blockchain: chain, address: solanaAccount.address) {
-                    supportedAccounts.append(account)
-                }
-            }
+            // Use the same Solana address for all requested Solana chains
+            let solanaAccounts = Array(supportedSolanaChains).map { Account(blockchain: $0, address: solanaAccount.address)! }
+            supportedAccounts.append(contentsOf: solanaAccounts)
         }
 
         // Add Stacks accounts if available

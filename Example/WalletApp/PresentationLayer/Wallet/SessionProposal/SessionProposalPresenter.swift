@@ -197,9 +197,8 @@ private extension SessionProposalPresenter {
         }
 
         if chain.namespace.caseInsensitiveCompare("solana") == .orderedSame,
-           let solanaAccount = solanaAccountStorage.getCaip10Account(),
-           solanaAccount.blockchain == chain {
-            return solanaAccount
+           let solanaAccount = solanaAccountStorage.getCaip10Account() {
+            return Account(blockchain: chain, address: solanaAccount.address)
         }
 
         return nil
@@ -209,10 +208,9 @@ private extension SessionProposalPresenter {
         let evmChains = requestedChains.filter { $0.namespace.caseInsensitiveCompare("eip155") == .orderedSame }
         var supported = Set(evmChains)
 
-        if let solanaAccount = solanaAccountStorage.getCaip10Account() {
+        if solanaAccountStorage.getCaip10Account() != nil {
             let solanaChains = requestedChains.filter { chain in
-                chain.namespace.caseInsensitiveCompare("solana") == .orderedSame &&
-                chain.reference == solanaAccount.reference
+                chain.namespace.caseInsensitiveCompare("solana") == .orderedSame
             }
             supported.formUnion(solanaChains)
         }
