@@ -1,10 +1,11 @@
 import Foundation
 
 import ReownWalletKit
+import WalletConnectSign
 import ReownRouter
 
 final class SessionProposalInteractor {
-    func approve(proposal: Session.Proposal, EOAAccount: Account) async throws -> Bool {
+    func approve(proposal: Session.Proposal, EOAAccount: Account, proposalRequestsResponses: ProposalRequestsResponses? = nil) async throws -> Bool {
         // Following properties are used to support all the required and optional namespaces for the testing purposes
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
         let supportedEvents = Set(proposal.requiredNamespaces.flatMap { $0.value.events } + (proposal.optionalNamespaces?.flatMap { $0.value.events } ?? []))
@@ -12,11 +13,17 @@ final class SessionProposalInteractor {
         let stacksAccountStorage = StacksAccountStorage()
         let suiAccountStorage = SuiAccountStorage()
         let tonAccountStorage = TonAccountStorage()
+        let solanaAccountStorage = SolanaAccountStorage()
 
         // Handle EIP155 chains
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
         var supportedEIP155Chains = supportedRequiredChains + supportedOptionalChains
+
+        // Handle Solana chains
+        let supportedRequiredSolanaChains = proposal.requiredNamespaces["solana"]?.chains ?? []
+        let supportedOptionalSolanaChains = proposal.optionalNamespaces?["solana"]?.chains ?? []
+        let supportedSolanaChains = supportedRequiredSolanaChains + supportedOptionalSolanaChains
 
         // Handle Stacks chains
         let supportedRequiredStacksChains = proposal.requiredNamespaces["stacks"]?.chains ?? []
@@ -33,7 +40,7 @@ final class SessionProposalInteractor {
         let supportedOptionalTonChains = proposal.optionalNamespaces?["ton"]?.chains ?? []
         let supportedTonChains = supportedRequiredTonChains + supportedOptionalTonChains
 
-        // Combine all supported chains
+        // Combine supported chains; add optional groups only when available
         var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains
 
         var supportedAccounts: [Account] = []
@@ -42,6 +49,14 @@ final class SessionProposalInteractor {
         // Add EIP155 accounts
         let eip155Accounts = Array(supportedEIP155Chains).map { Account(blockchain: $0, address: EOAAccount.address)! }
         supportedAccounts.append(contentsOf: eip155Accounts)
+
+        // Add Solana accounts if proposed and available
+        if let solanaAccount = solanaAccountStorage.getCaip10Account(), !supportedSolanaChains.isEmpty {
+            supportedChains.append(contentsOf: supportedSolanaChains)
+            // Use the same Solana address for all requested Solana chains
+            let solanaAccounts = Array(supportedSolanaChains).map { Account(blockchain: $0, address: solanaAccount.address)! }
+            supportedAccounts.append(contentsOf: solanaAccounts)
+        }
 
         // Add Stacks accounts if available
         if !supportedStacksChains.isEmpty {
@@ -110,7 +125,7 @@ final class SessionProposalInteractor {
             return false
         }
 
-        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties)
+        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties, proposalRequestsResponses: proposalRequestsResponses)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
             return false
@@ -156,4 +171,3 @@ final class SessionProposalInteractor {
         return sessionProperties
     }
 }
-

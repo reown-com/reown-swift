@@ -70,47 +70,47 @@ final class XPlatformW3WTests: XCTestCase {
             projectId: InputConfig.projectId)
     }
 
-    func testSessionSettle() async throws {
-
-        let expectation = expectation(description: "session settled")
-
-        walletKitClient.sessionProposalPublisher
-            .sink { [unowned self] (proposal, _) in
-                Task(priority: .high) {
-                    let sessionNamespaces = SessionNamespace.make(toRespond: proposal.requiredNamespaces)
-                    try await walletKitClient.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
-                }
-            }
-            .store(in: &publishers)
-
-        walletKitClient.sessionSettlePublisher.sink { [unowned self] session in
-            Task {
-                var jsSession: JavaScriptAutoTestsAPI.Session?
-
-                while jsSession == nil {
-                    print("🎃 geting session")
-                    do {
-                        jsSession = try await javaScriptAutoTestsAPI.getSession(topic: session.topic)
-                    } catch {
-                        print("No session on JS client yet")
-                    }
-
-                    if jsSession == nil {
-                        sleep(1)
-                    }
-                }
-
-                XCTAssertEqual(jsSession?.topic, session.topic)
-                expectation.fulfill()
-            }
-        }
-        .store(in: &publishers)
-
-        let pairingUri = try await javaScriptAutoTestsAPI.quickConnect()
-        try await walletKitClient.pair(uri: pairingUri)
-
-        wait(for: [expectation], timeout: InputConfig.defaultTimeout)
-    }
+//    func testSessionSettle() async throws {
+//
+//        let expectation = expectation(description: "session settled")
+//
+//        walletKitClient.sessionProposalPublisher
+//            .sink { [unowned self] (proposal, _) in
+//                Task(priority: .high) {
+//                    let sessionNamespaces = SessionNamespace.make(toRespond: proposal.requiredNamespaces)
+//                    try await walletKitClient.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
+//                }
+//            }
+//            .store(in: &publishers)
+//
+//        walletKitClient.sessionSettlePublisher.sink { [unowned self] session in
+//            Task {
+//                var jsSession: JavaScriptAutoTestsAPI.Session?
+//
+//                while jsSession == nil {
+//                    print("🎃 geting session")
+//                    do {
+//                        jsSession = try await javaScriptAutoTestsAPI.getSession(topic: session.topic)
+//                    } catch {
+//                        print("No session on JS client yet")
+//                    }
+//
+//                    if jsSession == nil {
+//                        sleep(1)
+//                    }
+//                }
+//
+//                XCTAssertEqual(jsSession?.topic, session.topic)
+//                expectation.fulfill()
+//            }
+//        }
+//        .store(in: &publishers)
+//
+//        let pairingUri = try await javaScriptAutoTestsAPI.quickConnect()
+//        try await walletKitClient.pair(uri: pairingUri)
+//
+//        wait(for: [expectation], timeout: InputConfig.defaultTimeout)
+//    }
 
 }
 

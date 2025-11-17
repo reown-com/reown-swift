@@ -22,6 +22,7 @@ final class SignPresenter: ObservableObject {
     private let router: SignRouter
 
     private var session: Session?
+    private let authSignatureVerifier = AuthSignatureVerifier()
     
     private var subscriptions = Set<AnyCancellable>()
 
@@ -57,7 +58,8 @@ final class SignPresenter: ObservableObject {
             do {
                 ActivityIndicatorManager.shared.start()
                 walletConnectUri = try await Sign.instance.connect(
-                    namespaces: Proposal.namespaces
+                    namespaces: Proposal.namespaces,
+                    authentication: [.stub()]
                 )
                 ActivityIndicatorManager.shared.stop()
                 router.presentNewPairing(walletConnectUri: walletConnectUri!)
@@ -74,6 +76,41 @@ final class SignPresenter: ObservableObject {
                 ActivityIndicatorManager.shared.start()
                 let uri = try await Sign.instance.authenticate(.stub())
                 walletConnectUri = uri
+                ActivityIndicatorManager.shared.stop()
+                router.presentNewPairing(walletConnectUri: walletConnectUri!)
+            } catch {
+                ActivityIndicatorManager.shared.stop()
+            }
+        }
+    }
+
+    // COMMENTED OUT - WalletPay disabled
+//    @MainActor
+//    func connectWalletWithWalletPay() {
+//        Task {
+//            do {
+//                ActivityIndicatorManager.shared.start()
+//                walletConnectUri = try await Sign.instance.connect(
+//                    namespaces: Proposal.namespaces,
+//                    walletPay: .stub()
+//                )
+//                ActivityIndicatorManager.shared.stop()
+//                router.presentNewPairing(walletConnectUri: walletConnectUri!)
+//            } catch {
+//                ActivityIndicatorManager.shared.stop()
+//            }
+//        }
+//    }
+
+    @MainActor
+    func connectWalletWith1CAV2() {
+        Task {
+            do {
+                ActivityIndicatorManager.shared.start()
+                walletConnectUri = try await Sign.instance.connect(
+                    namespaces: Proposal.namespaces,
+                    authentication: [AuthRequestParams.stub(chains: ["eip155:1", "eip155:137"], methods: nil)]
+                )
                 ActivityIndicatorManager.shared.stop()
                 router.presentNewPairing(walletConnectUri: walletConnectUri!)
             } catch {
@@ -160,7 +197,50 @@ extension SignPresenter {
 
         Sign.instance.sessionSettlePublisher
             .receive(on: DispatchQueue.main)
-            .sink { [unowned self] _ in
+            .sink { [unowned self] session, responses in
+                if let authResponses = responses?.authentication {
+                    print("DApp: Session settled with \(authResponses.count) authentication responses")
+                    
+                    // Verify authentication signatures individually
+                    Task {
+                        var verifiedCount = 0
+                        var verificationErrors: [String] = []
+                        var verifiedChains: [String] = []
+                        
+                        for (index, authObject) in authResponses.enumerated() {
+                            do {
+                                try await authSignatureVerifier.recoverAndVerifySignature(authObject: authObject)
+                                verifiedCount += 1
+                                
+                                // Extract chain from the issuer (did:pkh:chainId:address)
+                                if let account = try? DIDPKH(did: authObject.p.iss).account {
+                                    verifiedChains.append(account.blockchainIdentifier)
+                                }
+                                
+                                print("DApp: Verified auth response \(index + 1) from: \(authObject.p.iss)")
+                            } catch {
+                                let errorMsg = "Auth \(index + 1) failed: \(error.localizedDescription)"
+                                verificationErrors.append(errorMsg)
+                                print("DApp: \(errorMsg)")
+                            }
+                        }
+                        
+                        // Display verification results with chain information
+                        let totalCount = authResponses.count
+                        let chainsText = verifiedChains.isEmpty ? "" : " on chains: \(verifiedChains.joined(separator: ", "))"
+                        
+                        if verifiedCount == totalCount {
+                            AlertPresenter.present(message: "Verified \(verifiedCount) of \(totalCount) signatures\(chainsText)", type: .success)
+                        } else {
+                            let errorDetails = verificationErrors.joined(separator: "\n")
+                            AlertPresenter.present(message: "⚠️ Verified only \(verifiedCount) of \(totalCount) signatures\(chainsText)\n\(errorDetails)", type: .warning)
+                        }
+                        
+                        print("DApp: Verification complete - \(verifiedCount)/\(totalCount) signatures verified on chains: \(verifiedChains.joined(separator: ", "))")
+                    }
+                } else {
+                    print("DApp: Session settled without authentication responses")
+                }
                 self.getSession()
             }
             .store(in: &subscriptions)
@@ -265,3 +345,30 @@ extension AuthRequestParams {
     }
 }
 
+// MARK: - WalletPay request stub (COMMENTED OUT - WalletPay disabled)
+//extension WalletPayParams {
+//    static func stub(
+//        version: String = "1.0",
+//        orderId: String? = "order_12345_test",
+//        expiry: UInt64 = UInt64(Date().timeIntervalSince1970) + 3600 // 1 hour from now
+//    ) -> WalletPayParams {
+//        let usdcPayment = PaymentOption(
+//            asset: "USDC",
+//            amount: "0x1BC16D674EC80000", // 2 USDC in hex
+//            recipient: "0x742d35Cc6634C0532925a3b8D400e4e7c61B1234"
+//        )
+//
+//        let usdtPayment = PaymentOption(
+//            asset: "USDT",
+//            amount: "0x1BC16D674EC80000", // 2 USDT in hex (same value as USDC)
+//            recipient: "0x742d35Cc6634C0532925a3b8D400e4e7c61B1234"
+//        )
+//
+//        return WalletPayParams(
+//            version: version,
+//            orderId: orderId,
+//            acceptedPayments: [usdcPayment, usdtPayment],
+//            expiry: expiry
+//        )
+//    }
+//}

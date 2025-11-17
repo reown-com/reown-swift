@@ -19,6 +19,7 @@ internal enum SessionType {
         let sessionProperties: [String: String]?
         let scopedProperties: [String: String]?
         let expiry: Int64
+        let proposalRequestsResponses: ProposalRequestsResponses?
     }
 
     struct UpdateParams: Codable, Equatable {

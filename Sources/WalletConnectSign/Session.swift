@@ -16,6 +16,7 @@ public struct Session: Codable {
     public static var defaultTimeToLive: Int64 {
         WCSession.defaultTimeToLive
     }
+
     
     public init(
         topic: String,
@@ -48,6 +49,8 @@ extension Session {
         public let optionalNamespaces: [String: ProposalNamespace]?
         public let sessionProperties: [String: String]?
         public let scopedProperties: [String: String]?
+        public let requests: ProposalRequests?
+
 
         // TODO: Refactor internal objects to manage only needed data
         internal let proposal: SessionProposal
@@ -64,7 +67,8 @@ extension Session {
             optionalNamespaces: [String: ProposalNamespace]?,
             sessionProperties: [String: String]?,
             scopedProperties: [String: String]?,
-            proposal: SessionProposal
+            proposal: SessionProposal,
+            requests: ProposalRequests?
         ) {
             self.id = id
             self.pairingTopic = pairingTopic
@@ -74,6 +78,7 @@ extension Session {
             self.sessionProperties = sessionProperties
             self.scopedProperties = scopedProperties
             self.proposal = proposal
+            self.requests = requests
         }
     }
 

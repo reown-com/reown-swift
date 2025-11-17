@@ -24,7 +24,9 @@ public class AppKitClient {
     ///
     /// Event is emited on proposer and responder client when both communicating peers have successfully established a session.
     public var sessionSettlePublisher: AnyPublisher<Session, Never> {
-        signClient.sessionSettlePublisher.eraseToAnyPublisher()
+        signClient.sessionSettlePublisher
+            .map(\.session)
+            .eraseToAnyPublisher()
     }
     
     /// Publisher that sends session proposal that has been rejected
@@ -349,8 +351,8 @@ public class AppKitClient {
     private func setUpConnectionEvents() {
         analyticsService.track(.MODAL_LOADED)
 
-        signClient.sessionSettlePublisher.sink { [unowned self] session in
-            self.analyticsService.track(.CONNECT_SUCCESS(method: analyticsService.method, name: session.peer.name))
+        signClient.sessionSettlePublisher.sink { [unowned self] payload in
+            self.analyticsService.track(.CONNECT_SUCCESS(method: analyticsService.method, name: payload.session.peer.name))
         }.store(in: &disposeBag)
 
 

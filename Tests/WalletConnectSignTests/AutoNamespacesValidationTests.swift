@@ -1055,7 +1055,7 @@ fileprivate extension Session.Proposal {
             optionalNamespaces: optionalNamespaces,
             sessionProperties: nil,
             scopedProperties: nil,
-            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:])
+            proposal: SessionProposal(relays: [], proposer: Participant(publicKey: "", metadata: AppMetadata.stub()), requiredNamespaces: [:]), requests: nil
         )
     }
 }
