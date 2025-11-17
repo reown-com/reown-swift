@@ -28,8 +28,8 @@ final class AppProposeService {
         sessionProperties: [String: String]? = nil,
         scopedProperties: [String: String]? = nil,
         relay: RelayProtocolOptions,
-        authentication: [AuthRequestParams]? = nil,
-        walletPay: WalletPayParams? = nil
+        authentication: [AuthRequestParams]? = nil
+        // walletPay: WalletPayParams? = nil  // COMMENTED OUT - WalletPay disabled
     ) async throws {
         logger.debug("Propose Session on topic: \(pairingTopic)")
         

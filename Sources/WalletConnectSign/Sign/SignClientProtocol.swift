@@ -20,7 +20,7 @@ public protocol SignClientProtocol {
 
     func request(params: Request) async throws
     func approve(proposalId: String, namespaces: [String: SessionNamespace], sessionProperties: [String: String]?, scopedProperties: [String: String]?, proposalRequestsResponses: ProposalRequestsResponses?) async throws -> Session
-    @available(*, deprecated, message: "Use connect(namespaces:sessionProperties:scopedProperties:authentication:walletPay:) and pass authentication params instead.")
+    @available(*, deprecated, message: "Use connect(namespaces:sessionProperties:scopedProperties:authentication:) and pass authentication params instead.")
     func authenticate(_ params: AuthRequestParams, walletUniversalLink: String?) async throws -> WalletConnectURI?
     func rejectSession(proposalId: String, reason: RejectionReason) async throws
     func rejectSession(requestId: RPCID) async throws

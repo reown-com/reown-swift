@@ -285,8 +285,8 @@ public final class SignClient: SignClientProtocol {
         namespaces: [String: ProposalNamespace],
         sessionProperties: [String: String]? = nil,
         scopedProperties: [String: String]? = nil,
-        authentication: [AuthRequestParams]? = nil,
-        walletPay: WalletPayParams? = nil
+        authentication: [AuthRequestParams]? = nil
+        // walletPay: WalletPayParams? = nil  // COMMENTED OUT - WalletPay disabled
     ) async throws -> WalletConnectURI {
         logger.debug("Connecting Application")
         let pairingURI = try await pairingClient.create()
@@ -297,8 +297,8 @@ public final class SignClient: SignClientProtocol {
             sessionProperties: sessionProperties,
             scopedProperties: scopedProperties,
             relay: RelayProtocolOptions(protocol: "irn", data: nil),
-            authentication: authentication,
-            walletPay: walletPay
+            authentication: authentication
+            // walletPay: walletPay  // COMMENTED OUT - WalletPay disabled
         )
         return pairingURI
     }
@@ -334,7 +334,7 @@ public final class SignClient: SignClientProtocol {
     //---------------------------------------AUTH-----------------------------------
 
     /// For a dApp to propose an authenticated session to a wallet.
-    @available(*, deprecated, message: "Use connect(namespaces:sessionProperties:scopedProperties:authentication:walletPay:) and pass authentication params instead.")
+    @available(*, deprecated, message: "Use connect(namespaces:sessionProperties:scopedProperties:authentication:) and pass authentication params instead.")
     public func authenticate(
         _ params: AuthRequestParams,
         walletUniversalLink: String? = nil
