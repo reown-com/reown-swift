@@ -38,19 +38,69 @@ final class PaymentInteractor {
     func sign(rpc: PaymentRPC) async throws -> String {
         if rpc.rpc.method == "eth_signTypedData_v4" {
             if rpc.rpc.params.count > 1 {
-                let jsonData = try JSONEncoder().encode(rpc.rpc.params[1])
+                let param = rpc.rpc.params[1]
+                let jsonData = try JSONEncoder().encode(param)
+                
                 if let jsonString = String(data: jsonData, encoding: .utf8) {
                     // Use EvmSigningClient for typed data signing
-                    let result = try await Self.evmSigningClient.signTypedData(
+                    let signatureHex = try await Self.evmSigningClient.signTypedData(
                         jsonData: jsonString,
                         signer: account.privateKey
                     )
-                    return result
+                    
+                    // Parse the signature and construct the authorization object
+                    // Signature from Yttrium is 0x + 65 bytes (r, s, v)
+                    // v is usually 27 or 28 (or + chainId * 2 + 35, but standard permit uses 27/28)
+                    // The server expects an object: { from, to, value, validAfter, validBefore, nonce, v, r, s }
+                    
+                    // Extract message fields from param
+                    // We need to decode param to get the 'message' part
+                    struct TypedDataParam: Codable {
+                        let message: AuthorizationMessage
+                    }
+                    
+                    struct AuthorizationMessage: Codable {
+                        let from: String
+                        let to: String
+                        let value: String // BigInt string
+                        let validAfter: Int
+                        let validBefore: Int
+                        let nonce: String
+                    }
+                    
+                    guard let typedData = try? param.get(TypedDataParam.self) else {
+                        throw Errors.signingFailed
+                    }
+                    
+                    // Parse signature
+                    let r = String(signatureHex.dropFirst(2).prefix(64))
+                    let s = String(signatureHex.dropFirst(2).dropFirst(64).prefix(64))
+                    let vHex = String(signatureHex.dropFirst(2).dropFirst(128))
+                    
+                    guard let vInt = Int(vHex, radix: 16) else {
+                        throw Errors.signingFailed
+                    }
+                    
+                    let msg = typedData.message
+                    
+                    let authObject: [String: Any] = [
+                        "from": msg.from,
+                        "to": msg.to,
+                        "value": msg.value,
+                        "validAfter": msg.validAfter,
+                        "validBefore": msg.validBefore,
+                        "nonce": msg.nonce,
+                        "v": vInt,
+                        "r": "0x" + r,
+                        "s": "0x" + s
+                    ]
+                    
+                    let authJsonData = try JSONSerialization.data(withJSONObject: authObject)
+                    return String(data: authJsonData, encoding: .utf8) ?? ""
                 }
             }
             throw Errors.signingFailed
         } else if rpc.rpc.method == "eth_sendTransaction" {
-            // Use EvmSigningClient for transactions as requested
              guard let firstParam = rpc.rpc.params.first,
                    let txParams = try? firstParam.get(EthSendTransactionParams.self) else {
                  throw Errors.invalidTransactionParams
