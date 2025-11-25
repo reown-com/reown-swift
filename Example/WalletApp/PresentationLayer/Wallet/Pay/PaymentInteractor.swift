@@ -57,7 +57,7 @@ final class PaymentInteractor {
              }
             
             let transactionParams = SignAndSendParams(
-                chainId: "8453", // Base Chain ID
+                chainId: "84532", // Base Sepolia Chain ID
                 from: txParams.from ?? account.account.address,
                 to: txParams.to,
                 value: txParams.value ?? "0x0",
