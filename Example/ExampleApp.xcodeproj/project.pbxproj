@@ -15,6 +15,13 @@
 		446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306C2DE8405A0024781A /* SuiAccountStorage.swift */; };
 		446A74DD2E49F64800319C63 /* WalletConnectNotify in Frameworks */ = {isa = PBXBuildFile; productRef = 446A74DC2E49F64800319C63 /* WalletConnectNotify */; };
 		44713AA02E46420A00E3027A /* YttriumUtilsWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 44713A9F2E46420A00E3027A /* YttriumUtilsWrapper */; };
+		44783B9D2ED5F6290056AB20 /* PaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44783B9C2ED5F6290056AB20 /* PaymentView.swift */; };
+		44783B9E2ED5F6290056AB20 /* PaymentPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44783B9A2ED5F6290056AB20 /* PaymentPresenter.swift */; };
+		44783B9F2ED5F6290056AB20 /* PaymentInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44783B982ED5F6290056AB20 /* PaymentInteractor.swift */; };
+		44783BA02ED5F6290056AB20 /* PaymentModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44783B992ED5F6290056AB20 /* PaymentModule.swift */; };
+		44783BA12ED5F6290056AB20 /* PaymentRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44783B9B2ED5F6290056AB20 /* PaymentRouter.swift */; };
+		44783BA42ED5F6970056AB20 /* PaymentAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44783BA22ED5F6970056AB20 /* PaymentAPI.swift */; };
+		44783BA52ED5F6970056AB20 /* PaymentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44783BA32ED5F6970056AB20 /* PaymentService.swift */; };
 		44BA5CCD2E4C8BB50074A01E /* URLExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44BA5CCC2E4C8BB50074A01E /* URLExtension.swift */; };
 		44D89A112DF183C800056A7B /* SuiSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A102DF183C800056A7B /* SuiSigner.swift */; };
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
@@ -351,6 +358,13 @@
 		44650A3E2E951D71004F2144 /* TonSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonSigner.swift; sourceTree = "<group>"; };
 		446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolanaAccountStorage.swift; sourceTree = "<group>"; };
 		446A306C2DE8405A0024781A /* SuiAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiAccountStorage.swift; sourceTree = "<group>"; };
+		44783B982ED5F6290056AB20 /* PaymentInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentInteractor.swift; sourceTree = "<group>"; };
+		44783B992ED5F6290056AB20 /* PaymentModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentModule.swift; sourceTree = "<group>"; };
+		44783B9A2ED5F6290056AB20 /* PaymentPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentPresenter.swift; sourceTree = "<group>"; };
+		44783B9B2ED5F6290056AB20 /* PaymentRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentRouter.swift; sourceTree = "<group>"; };
+		44783B9C2ED5F6290056AB20 /* PaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentView.swift; sourceTree = "<group>"; };
+		44783BA22ED5F6970056AB20 /* PaymentAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentAPI.swift; sourceTree = "<group>"; };
+		44783BA32ED5F6970056AB20 /* PaymentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentService.swift; sourceTree = "<group>"; };
 		44BA5CCC2E4C8BB50074A01E /* URLExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLExtension.swift; sourceTree = "<group>"; };
 		44D89A102DF183C800056A7B /* SuiSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiSigner.swift; sourceTree = "<group>"; };
 		44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsWalletAgainstAppKitWeb.swift; sourceTree = "<group>"; };
@@ -696,6 +710,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		44783B972ED5F6190056AB20 /* Pay */ = {
+			isa = PBXGroup;
+			children = (
+				44783B982ED5F6290056AB20 /* PaymentInteractor.swift */,
+				44783B992ED5F6290056AB20 /* PaymentModule.swift */,
+				44783B9A2ED5F6290056AB20 /* PaymentPresenter.swift */,
+				44783BA22ED5F6970056AB20 /* PaymentAPI.swift */,
+				44783BA32ED5F6970056AB20 /* PaymentService.swift */,
+				44783B9B2ED5F6290056AB20 /* PaymentRouter.swift */,
+				44783B9C2ED5F6290056AB20 /* PaymentView.swift */,
+			);
+			path = Pay;
+			sourceTree = "<group>";
+		};
 		764E1D3326F8D3FC00A1FB15 = {
 			isa = PBXGroup;
 			children = (
@@ -1230,6 +1258,7 @@
 		C56EE229293F5668004840D1 /* Wallet */ = {
 			isa = PBXGroup;
 			children = (
+				44783B972ED5F6190056AB20 /* Pay */,
 				84B73D282D9161F900EC1793 /* SendEthereum */,
 				C5FFEA742ADD8942007282A2 /* Browser */,
 				A50D53BB2ABA053600A4FD8B /* NotifySettings */,
@@ -2046,6 +2075,11 @@
 				A5A0844029D2F626000B9B17 /* DefaultCryptoProvider.swift in Sources */,
 				847BD1DD2989494F00076C90 /* TabPage.swift in Sources */,
 				A50D53C42ABA055700A4FD8B /* NotifyPreferencesInteractor.swift in Sources */,
+				44783B9D2ED5F6290056AB20 /* PaymentView.swift in Sources */,
+				44783B9E2ED5F6290056AB20 /* PaymentPresenter.swift in Sources */,
+				44783B9F2ED5F6290056AB20 /* PaymentInteractor.swift in Sources */,
+				44783BA02ED5F6290056AB20 /* PaymentModule.swift in Sources */,
+				44783BA12ED5F6290056AB20 /* PaymentRouter.swift in Sources */,
 				A50D53C22ABA055700A4FD8B /* NotifyPreferencesPresenter.swift in Sources */,
 				C55D348B295DD8CA0004314A /* PasteUriRouter.swift in Sources */,
 				847BD1E4298A806800076C90 /* NotificationsModule.swift in Sources */,
@@ -2097,6 +2131,8 @@
 				C5B2F6F729705293000DBA0E /* SessionRequestRouter.swift in Sources */,
 				84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */,
 				C56EE24F293F566D004840D1 /* WalletView.swift in Sources */,
+				44783BA42ED5F6970056AB20 /* PaymentAPI.swift in Sources */,
+				44783BA52ED5F6970056AB20 /* PaymentService.swift in Sources */,
 				C55D34B22965FB750004314A /* SessionProposalView.swift in Sources */,
 				44650A3D2E93F775004F2144 /* TonAccountStorage.swift in Sources */,
 				C56EE248293F566D004840D1 /* ScanQR.swift in Sources */,

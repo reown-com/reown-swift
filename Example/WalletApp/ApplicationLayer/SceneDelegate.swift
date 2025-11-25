@@ -85,6 +85,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         guard let context = URLContexts.first else { return }
         
         let url = context.url
+        
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           url.host == "walletconnectpay",
+           let queryItems = components.queryItems,
+           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+            
+            handlePayment(paymentId: paymentId)
+            return
+        }
 
         do {
             let uri = try WalletConnectURI(urlContext: context)
@@ -172,5 +181,23 @@ private extension SceneDelegate {
         }
         
         return queryItems.first(where: { $0.name == "topic" })?.value
+    }
+    
+    private func handlePayment(paymentId: String) {
+        guard let account = AccountStorage(defaults: .standard).importAccount else {
+            AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
+            return
+        }
+        
+        guard let topController = window?.rootViewController?.topController else {
+            return
+        }
+        
+        let paymentVC = PaymentModule.create(app: app, paymentId: paymentId, importAccount: account)
+        // Wrap in NavigationController if needed, or present directly.
+        // SceneViewController usually handles navigation bar if embedded.
+        // Presenting modally usually needs a wrapper if you want a navbar.
+        // But PaymentView seems simple.
+        topController.present(paymentVC, animated: true)
     }
 }
