@@ -31,10 +31,18 @@ enum PaymentAPI: HTTPService {
         case .getPaymentInfo:
             return nil
         case .buildPayment(let paymentId, let address):
-            let body = ["paymentId": paymentId, "address": address]
+            struct BuildPaymentBody: Codable {
+                let paymentId: String
+                let address: String
+            }
+            let body = BuildPaymentBody(paymentId: paymentId, address: address)
             return try? JSONEncoder().encode(body)
         case .submit(let paymentId, let signature):
-            let body = ["paymentId": paymentId, "signature": signature]
+            struct SubmitPaymentBody: Codable {
+                let paymentId: String
+                let signature: String
+            }
+            let body = SubmitPaymentBody(paymentId: paymentId, signature: signature)
             return try? JSONEncoder().encode(body)
         }
     }
@@ -44,11 +52,11 @@ enum PaymentAPI: HTTPService {
     }
 
     var additionalHeaderFields: [String : String]? {
-        return ["Content-Type": "application/json"]
+        // Content-Type is already added by HTTPService.resolve
+        return nil
     }
 
     var scheme: String {
         return "https"
     }
 }
-

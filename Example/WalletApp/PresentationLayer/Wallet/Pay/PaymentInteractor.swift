@@ -37,21 +37,20 @@ final class PaymentInteractor {
     
     func sign(rpc: PaymentRPC) async throws -> String {
         if rpc.rpc.method == "eth_signTypedData_v4" {
-            // Currently using ETHSigner (which might have mock implementation).
-            let signer = ETHSigner(importAccount: account)
             if rpc.rpc.params.count > 1 {
-                let result = signer.signTypedData(rpc.rpc.params[1])
-                if let signature = result.value as? String {
-                    return signature
+                let jsonData = try JSONEncoder().encode(rpc.rpc.params[1])
+                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    // Use EvmSigningClient for typed data signing
+                    let result = try await Self.evmSigningClient.signTypedData(
+                        jsonData: jsonString,
+                        signer: account.privateKey
+                    )
+                    return result
                 }
             }
             throw Errors.signingFailed
         } else if rpc.rpc.method == "eth_sendTransaction" {
             // Use EvmSigningClient for transactions as requested
-            // rpc.rpc.params is [AnyCodable].
-            // AnyCodable wraps the array of parameters if it was decoded as such, 
-            // but here rpc.rpc.params IS the array.
-            
              guard let firstParam = rpc.rpc.params.first,
                    let txParams = try? firstParam.get(EthSendTransactionParams.self) else {
                  throw Errors.invalidTransactionParams

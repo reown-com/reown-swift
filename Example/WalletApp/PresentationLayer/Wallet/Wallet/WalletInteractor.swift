@@ -27,8 +27,22 @@ final class WalletInteractor {
     
     func createPayment(merchantId: String, refId: String, amount: Int, currency: String) async throws -> String {
         let httpClient = HTTPNetworkClient(host: "pay-mvp-core-worker.walletconnect-v1-bridge.workers.dev")
-        let body = ["merchantId": merchantId, "refId": refId, "amount": amount, "currency": currency] as [String : Any]
-        let data = try JSONSerialization.data(withJSONObject: body)
+        
+        // Define a struct for the body to ensure proper encoding
+        struct PaymentBody: Codable {
+            let merchantId: String
+            let refId: String
+            let amount: Int
+            let currency: String
+        }
+        
+        let bodyStruct = PaymentBody(merchantId: merchantId, refId: refId, amount: amount, currency: currency)
+        let data = try JSONEncoder().encode(bodyStruct)
+        
+        // Log request details
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("Payment Create Request Body: \(jsonString)")
+        }
         
         struct StartResponse: Codable {
             let paymentId: String
@@ -41,11 +55,18 @@ final class WalletInteractor {
             var method: HTTPMethod { .post }
             var body: Data? { bodyData }
             var queryParameters: [String : String]? { nil }
-            var additionalHeaderFields: [String : String]? { ["Content-Type": "application/json"] }
+            // Removing explicit Content-Type header here as HTTPService.resolve automatically adds it
+            // and having duplicates or incorrect casing might be an issue for some servers.
+            // However, checking HTTPService.resolve, it ADDS it.
+            // Let's try NOT overriding it in additionalHeaderFields since resolve adds it.
+            var additionalHeaderFields: [String : String]? { nil }
             var scheme: String { "https" }
         }
         
-        let response = try await httpClient.request(StartResponse.self, at: StartPaymentAPI(bodyData: data))
+        let api = StartPaymentAPI(bodyData: data)
+        print("Sending request to host: pay-mvp-core-worker.walletconnect-v1-bridge.workers.dev path: \(api.path)")
+        
+        let response = try await httpClient.request(StartResponse.self, at: api)
         return response.paymentId
     }
 }
