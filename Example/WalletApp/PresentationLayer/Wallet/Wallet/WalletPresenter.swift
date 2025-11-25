@@ -80,6 +80,31 @@ final class WalletPresenter: ObservableObject {
     func sendEthereum() {
         router.presentSendEthereum(importAccount: importAccount)
     }
+    
+    func onRequestPayment() {
+        Task {
+            do {
+                // 1. Create payment (mimicking merchant)
+                let paymentId = try await interactor.createPayment(
+                    merchantId: "MID-TEST-001",
+                    refId: "order-\(Int.random(in: 1...10000))",
+                    amount: 10000,
+                    currency: "USD"
+                )
+                
+                // 2. Trigger Wallet Payment Flow
+                await MainActor.run {
+                    PaymentModule.create(app: app, paymentId: paymentId, importAccount: importAccount)
+                        .present(from: router.viewController)
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                    self.showError.toggle()
+                }
+            }
+        }
+    }
 
     func onScanUri() {
         router.presentScan { [weak self] uriString in
@@ -184,4 +209,3 @@ extension WalletPresenter.Errors {
         }
     }
 }
-

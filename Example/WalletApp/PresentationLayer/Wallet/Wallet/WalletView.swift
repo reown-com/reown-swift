@@ -119,6 +119,19 @@ struct WalletView: View {
                                     .frame(width: 56, height: 56)
                             }
                             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                            
+                            Button {
+                                presenter.onRequestPayment()
+                            } label: {
+                                Image(systemName: "creditcard.fill")
+                                    .resizable()
+                                    .foregroundColor(.white)
+                                    .frame(width: 30, height: 24)
+                                    .padding(16)
+                                    .background(Color.blue100)
+                                    .cornerRadius(28)
+                            }
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                         }
                         .padding(.horizontal, 20)
                     }
