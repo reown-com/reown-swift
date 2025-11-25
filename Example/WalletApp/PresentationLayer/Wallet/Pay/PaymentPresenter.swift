@@ -33,11 +33,21 @@ final class PaymentPresenter: ObservableObject {
     func pay() async {
         isLoading = true
         do {
+            print("[PaymentPresenter] Building payment for paymentId: \(paymentId)")
             let rpc = try await interactor.buildPayment(paymentId: paymentId)
+            print("[PaymentPresenter] RPC response: \(rpc)")
+            
+            print("[PaymentPresenter] Signing RPC...")
             let signature = try await interactor.sign(rpc: rpc)
+            print("[PaymentPresenter] Signature/Authorization: \(signature)")
+            
+            print("[PaymentPresenter] Submitting payment...")
             try await interactor.submit(paymentId: paymentId, signature: signature)
+            print("[PaymentPresenter] Payment submitted successfully!")
+            
             showSuccess = true
         } catch {
+            print("[PaymentPresenter] Error: \(error)")
             self.error = error.localizedDescription
         }
         isLoading = false
@@ -45,6 +55,11 @@ final class PaymentPresenter: ObservableObject {
     
     func dismiss() {
         router.dismiss()
+    }
+    
+    @MainActor
+    func clearError() {
+        error = nil
     }
 }
 

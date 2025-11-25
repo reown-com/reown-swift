@@ -36,7 +36,35 @@ final class PaymentService {
     }
 
     func submit(paymentId: String, signature: String) async throws {
-        _ = try await httpClient.request(EmptyResponse.self, at: PaymentAPI.submit(paymentId: paymentId, signature: signature))
+        print("[PaymentService] Submitting to /submit endpoint")
+        print("[PaymentService] paymentId: \(paymentId)")
+        print("[PaymentService] signature (authorization): \(signature)")
+        
+        let api = PaymentAPI.submit(paymentId: paymentId, signature: signature)
+        if let body = api.body, let bodyString = String(data: body, encoding: .utf8) {
+            print("[PaymentService] Request body: \(bodyString)")
+        }
+        
+        // Make request manually to log response
+        guard let request = api.resolve(for: "pay-mvp-core-worker.walletconnect-v1-bridge.workers.dev") else {
+            throw NSError(domain: "PaymentService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create request"])
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("[PaymentService] Response status code: \(httpResponse.statusCode)")
+        }
+        
+        let responseString = String(data: data, encoding: .utf8) ?? "Unable to decode response"
+        print("[PaymentService] Response body: \(responseString)")
+        
+        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            throw NSError(domain: "PaymentService", code: statusCode, userInfo: [NSLocalizedDescriptionKey: "Submit failed with status \(statusCode): \(responseString)"])
+        }
+        
+        print("[PaymentService] Submit successful!")
     }
 }
 
