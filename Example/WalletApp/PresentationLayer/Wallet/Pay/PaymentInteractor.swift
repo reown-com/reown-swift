@@ -48,7 +48,12 @@ final class PaymentInteractor {
             throw Errors.signingFailed
         } else if rpc.rpc.method == "eth_sendTransaction" {
             // Use EvmSigningClient for transactions as requested
-             guard let txParams = try? rpc.rpc.params.get([EthSendTransactionParams].self).first else {
+            // rpc.rpc.params is [AnyCodable].
+            // AnyCodable wraps the array of parameters if it was decoded as such, 
+            // but here rpc.rpc.params IS the array.
+            
+             guard let firstParam = rpc.rpc.params.first,
+                   let txParams = try? firstParam.get(EthSendTransactionParams.self) else {
                  throw Errors.invalidTransactionParams
              }
             

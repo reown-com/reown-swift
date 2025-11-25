@@ -48,3 +48,16 @@ final class PaymentPresenter: ObservableObject {
     }
 }
 
+extension PaymentPresenter: SceneViewModel {
+    var sceneTitle: String? {
+        return "Payment"
+    }
+
+    var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
+        return .always
+    }
+    
+    var preferredStatusBarStyle: UIStatusBarStyle {
+        return .default
+    }
+}
