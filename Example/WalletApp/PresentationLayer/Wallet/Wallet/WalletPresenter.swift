@@ -86,7 +86,7 @@ final class WalletPresenter: ObservableObject {
             do {
                 // 1. Create payment (mimicking merchant)
                 let paymentId = try await interactor.createPayment(
-                    merchantId: "MID-TEST-001",
+                    merchantId: "test_merchant_111",
                     refId: "order-\(Int.random(in: 1...10000))",
                     amount: 10,
                     currency: "USD"
