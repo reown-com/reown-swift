@@ -92,12 +92,12 @@ let package = Package(
     targets: [
         .target(
             name: "WalletConnectSign",
-            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events", "YttriumWrapper"],
+            dependencies: ["WalletConnectPairing", "WalletConnectVerify", "WalletConnectSigner", "Events"],
             path: "Sources/WalletConnectSign",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "ReownWalletKit",
-            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify", "YttriumWrapper"],
+            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
             path: "Sources/ReownWalletKit",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
@@ -205,7 +205,7 @@ let package = Package(
             dependencies: ["WalletConnectPairing", "TestingUtils"]),
         .testTarget(
             name: "NotifyTests",
-            dependencies: ["WalletConnectNotify", "TestingUtils", "YttriumWrapper"]),
+            dependencies: ["WalletConnectNotify", "TestingUtils"]),
         .testTarget(
             name: "RelayerTests",
             dependencies: ["WalletConnectRelay", "WalletConnectUtils", "TestingUtils"]),
@@ -234,4 +234,3 @@ let package = Package(
     ],
     swiftLanguageVersions: [.v5]
 )
-
