@@ -15,6 +15,7 @@
 		446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306C2DE8405A0024781A /* SuiAccountStorage.swift */; };
 		446A74DD2E49F64800319C63 /* WalletConnectNotify in Frameworks */ = {isa = PBXBuildFile; productRef = 446A74DC2E49F64800319C63 /* WalletConnectNotify */; };
 		44713AA02E46420A00E3027A /* YttriumUtilsWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 44713A9F2E46420A00E3027A /* YttriumUtilsWrapper */; };
+		44783BA72EE0BA550056AB20 /* YttriumWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 44783BA62EE0BA550056AB20 /* YttriumWrapper */; };
 		44BA5CCD2E4C8BB50074A01E /* URLExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44BA5CCC2E4C8BB50074A01E /* URLExtension.swift */; };
 		44D89A112DF183C800056A7B /* SuiSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A102DF183C800056A7B /* SuiSigner.swift */; };
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
@@ -626,6 +627,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44783BA72EE0BA550056AB20 /* YttriumWrapper in Frameworks */,
 				8448F1D427E4726F0000B866 /* WalletConnect in Frameworks */,
 				8421447B2C80A2B8004FF494 /* ReownAppKit in Frameworks */,
 				A5B6C0F12A6EAB0800927332 /* WalletConnectNotify in Frameworks */,
@@ -1633,6 +1635,7 @@
 				84943C7A2A9BA206007EBAC2 /* Mixpanel */,
 				8486EDD22B4F2EA6008E53C3 /* SwiftMessages */,
 				8421447A2C80A2B8004FF494 /* ReownAppKit */,
+				44783BA62EE0BA550056AB20 /* YttriumWrapper */,
 			);
 			productName = DApp;
 			productReference = 84CE641C27981DED00142511 /* DApp.app */;
@@ -2950,6 +2953,10 @@
 		44713A9F2E46420A00E3027A /* YttriumUtilsWrapper */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = YttriumUtilsWrapper;
+		};
+		44783BA62EE0BA550056AB20 /* YttriumWrapper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = YttriumWrapper;
 		};
 		8421447A2C80A2B8004FF494 /* ReownAppKit */ = {
 			isa = XCSwiftPackageProductDependency;

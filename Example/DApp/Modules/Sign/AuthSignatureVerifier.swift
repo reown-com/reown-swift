@@ -2,7 +2,7 @@ import Foundation
 import WalletConnectSign
 import WalletConnectSigner
 import WalletConnectUtils
-import Yttrium
+import YttriumWrapper
 
 final class AuthSignatureVerifier {
     
