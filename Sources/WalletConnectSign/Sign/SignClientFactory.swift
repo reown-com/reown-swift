@@ -101,11 +101,8 @@ public struct SignClientFactory {
 
         //Auth
         let authResponseTopicRecordsStore = CodableStore<AuthResponseTopicRecord>(defaults: keyValueStorage, identifier: SignStorageIdentifiers.authResponseTopicRecord.rawValue)
-        let messageFormatter = SIWEFromCacaoPayloadFormatter()
         let appRequestService = SessionAuthRequestService(networkingInteractor: networkingClient, kms: kms, appMetadata: metadata, logger: logger, iatProvader: iatProvider, authResponseTopicRecordsStore: authResponseTopicRecordsStore)
 
-        let messageVerifierFactory = MessageVerifierFactory(crypto: crypto)
-        let signatureVerifier = messageVerifierFactory.create(projectId: projectId)
         let sessionNameSpaceBuilder = SessionNamespaceBuilder(logger: logger)
 
         let serializer = Serializer(kms: kms, logger: logger)
@@ -115,12 +112,12 @@ public struct SignClientFactory {
         let linkModeLinksStore = CodableStore<Bool>(defaults: keyValueStorage, identifier: SignStorageIdentifiers.linkModeLinks.rawValue)
 
         let supportLinkMode = metadata.redirect?.linkMode ?? false
-        let appRespondSubscriber = AuthResponseSubscriber(networkingInteractor: networkingClient, logger: logger, rpcHistory: rpcHistory, signatureVerifier: signatureVerifier, pairingRegisterer: pairingClient, kms: kms, sessionStore: sessionStore, messageFormatter: messageFormatter, sessionNamespaceBuilder: sessionNameSpaceBuilder, authResponseTopicRecordsStore: authResponseTopicRecordsStore, linkEnvelopesDispatcher: linkEnvelopesDispatcher, linkModeLinksStore: linkModeLinksStore, pairingStore: pairingStore, supportLinkMode: supportLinkMode, eventsClient: eventsClient)
+        let appRespondSubscriber = AuthResponseSubscriber(networkingInteractor: networkingClient, logger: logger, rpcHistory: rpcHistory, pairingRegisterer: pairingClient, kms: kms, sessionStore: sessionStore, sessionNamespaceBuilder: sessionNameSpaceBuilder, authResponseTopicRecordsStore: authResponseTopicRecordsStore, linkEnvelopesDispatcher: linkEnvelopesDispatcher, linkModeLinksStore: linkModeLinksStore, pairingStore: pairingStore, supportLinkMode: supportLinkMode, eventsClient: eventsClient)
 
         let walletErrorResponder = WalletErrorResponder(networkingInteractor: networkingClient, logger: logger, kms: kms, rpcHistory: rpcHistory, linkEnvelopesDispatcher: linkEnvelopesDispatcher, eventsClient: eventsClient)
         let authRequestSubscriber = AuthRequestSubscriber(networkingInteractor: networkingClient, logger: logger, kms: kms, walletErrorResponder: walletErrorResponder, pairingRegisterer: pairingClient, verifyClient: verifyClient, verifyContextStore: verifyContextStore, pairingStore: pairingStore)
 
-        let approveSessionAuthenticateUtil = ApproveSessionAuthenticateUtil(logger: logger, kms: kms, rpcHistory: rpcHistory, signatureVerifier: signatureVerifier, messageFormatter: messageFormatter, sessionStore: sessionStore, sessionNamespaceBuilder: sessionNameSpaceBuilder, networkingInteractor: networkingClient, verifyContextStore: verifyContextStore, verifyClient: verifyClient)
+        let approveSessionAuthenticateUtil = ApproveSessionAuthenticateUtil(logger: logger, kms: kms, rpcHistory: rpcHistory, sessionStore: sessionStore, sessionNamespaceBuilder: sessionNameSpaceBuilder, networkingInteractor: networkingClient, verifyContextStore: verifyContextStore, verifyClient: verifyClient)
 
         let pendingRequestsProvider = PendingRequestsProvider(rpcHistory: rpcHistory, verifyContextStore: verifyContextStore)
         let authResponseTopicResubscriptionService = AuthResponseTopicResubscriptionService(networkingInteractor: networkingClient, logger: logger, authResponseTopicRecordsStore: authResponseTopicRecordsStore)
@@ -180,8 +177,7 @@ public struct SignClientFactory {
             linkSessionRequestSubscriber: linkSessionRequestSubscriber,
             sessionResponderDispatcher: sessionResponderDispatcher,
             linkSessionRequestResponseSubscriber: linkSessionRequestResponseSubscriber,
-            authenticateTransportTypeSwitcher: authenticateTransportTypeSwitcher,
-            messageVerifier: signatureVerifier
+            authenticateTransportTypeSwitcher: authenticateTransportTypeSwitcher
         )
         return client
     }

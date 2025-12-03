@@ -36,7 +36,6 @@ actor LinkSessionAuthenticateResponder {
 
     func respond(requestId: RPCID, auths: [Cacao]) async throws -> (Session?, String) {
         logger.debug("responding session authenticate")
-        try await util.recoverAndVerifySignature(cacaos: auths)
         let (sessionAuthenticateRequestParams, pairingTopic) = try util.getsessionAuthenticateRequestParams(requestId: requestId)
         let (responseTopic, responseKeys) = try util.generateAgreementKeys(requestParams: sessionAuthenticateRequestParams)
 

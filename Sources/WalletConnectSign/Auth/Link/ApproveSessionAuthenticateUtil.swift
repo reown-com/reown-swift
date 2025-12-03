@@ -7,8 +7,6 @@ class ApproveSessionAuthenticateUtil {
     }
 
     private let kms: KeyManagementService
-    private let messageFormatter: SIWEFromCacaoFormatting
-    private let signatureVerifier: MessageVerifier
     private let networkingInteractor: NetworkInteracting
     private let rpcHistory: RPCHistory
     private let logger: ConsoleLogging
@@ -21,8 +19,6 @@ class ApproveSessionAuthenticateUtil {
         logger: ConsoleLogging,
         kms: KeyManagementService,
         rpcHistory: RPCHistory,
-        signatureVerifier: MessageVerifier,
-        messageFormatter: SIWEFromCacaoFormatting,
         sessionStore: WCSessionStorage,
         sessionNamespaceBuilder: SessionNamespaceBuilder,
         networkingInteractor: NetworkInteracting,
@@ -34,8 +30,6 @@ class ApproveSessionAuthenticateUtil {
         self.rpcHistory = rpcHistory
         self.sessionStore = sessionStore
         self.sessionNamespaceBuilder = sessionNamespaceBuilder
-        self.signatureVerifier = signatureVerifier
-        self.messageFormatter = messageFormatter
         self.networkingInteractor = networkingInteractor
         self.verifyContextStore = verifyContextStore
         self.verifyClient = verifyClient
@@ -129,28 +123,6 @@ class ApproveSessionAuthenticateUtil {
             return verifyClient.createVerifyContext(origin: nil, domain: domain, isScam: false, isVerified: nil)
         }
         return context
-    }
-
-
-    func recoverAndVerifySignature(cacaos: [Cacao]) async throws {
-        try await cacaos.asyncForEach { [unowned self] cacao in
-            guard
-                let account = try? DIDPKH(did: cacao.p.iss).account,
-                let message = try? messageFormatter.formatMessage(from: cacao.p, includeRecapInTheStatement: true)
-            else {
-                throw AuthError.malformedResponseParams
-            }
-            do {
-                try await signatureVerifier.verify(
-                    signature: cacao.s,
-                    message: message,
-                    account: account
-                )
-            } catch {
-                logger.error("Signature verification failed with: \(error.localizedDescription)")
-                throw AuthError.signatureVerificationFailed
-            }
-        }
     }
 }
 extension ApproveSessionAuthenticateUtil.Errors: LocalizedError {
