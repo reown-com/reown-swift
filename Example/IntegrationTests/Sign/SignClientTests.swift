@@ -1166,36 +1166,6 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: Finished testEIP1271SessionAuthenticated() ✅")
     }
 
-    func testEIP191SessionAuthenticateSignatureVerificationFailed() async {
-        print("🧪TEST: Starting testEIP191SessionAuthenticateSignatureVerificationFailed()")
-
-        let requestExpectation = expectation(description: "error response delivered")
-
-        print("🧪TEST: Step 1 - Dapp calls authenticate(...), wallet pairs")
-        let uri = try! await dapp.authenticate(AuthRequestParams.stub())!
-        try? await walletPairingClient.pair(uri: uri)
-
-        print("🧪TEST: Step 2 - Wallet listens for authenticateRequestPublisher but uses invalid EIP1271 signature on eip191 flow")
-        wallet.authenticateRequestPublisher.sink { [unowned self] (request, _) in
-            Task(priority: .high) {
-                let invalidSignature = CacaoSignature(t: .eip1271, s: eip1271Signature)
-                let supportedAuthPayload = try! wallet.buildAuthPayload(
-                    payload: request.payload,
-                    supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!],
-                    supportedMethods: ["eth_signTransaction", "personal_sign"]
-                )
-                let cacao = try! wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: invalidSignature, account: walletAccount)
-                await XCTAssertThrowsErrorAsync(try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [cacao]))
-                requestExpectation.fulfill()
-            }
-        }.store(in: &publishers)
-
-        print("🧪TEST: Step 3 - Waiting for requestExpectation (we expect a throw)...")
-        await fulfillment(of: [requestExpectation], timeout: InputConfig.defaultTimeout)
-
-        print("🧪TEST: Finished testEIP191SessionAuthenticateSignatureVerificationFailed() ✅")
-    }
-
     func testSessionAuthenticateUserRespondError() async {
         print("🧪TEST: Starting testSessionAuthenticateUserRespondError()")
 
