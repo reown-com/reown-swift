@@ -247,33 +247,16 @@ class Web3ModalViewModel: ObservableObject {
                 switch response.result {
                 case .response(let result):
                     guard let signature = try? result.get(String.self),
-                          let siweMessage = self?.store.siweMessage,
-                          let account = self?.store.account?.account() else { return }
+                          let siweMessage = self?.store.siweMessage else { return }
 
-                    Task { [weak self] in
-                        do {
-                            try await Sign.instance.verifySIWE(signature: signature, message: siweMessage, address: account.address, chainId: account.blockchainIdentifier)
+                    // Note: Signature verification is now the responsibility of the consuming app.
+                    // The app should verify the signature before trusting it using Yttrium's Erc6492Client.
+                    AppKit.instance.SIWEAuthenticationPublisherSubject.send(.success((siweMessage, signature)))
 
-                            guard let self = self else { return }
-
-                            AppKit.instance.SIWEAuthenticationPublisherSubject.send(.success((siweMessage, signature)))
-
-                            DispatchQueue.main.async {
-                                self.router.setRoute(Router.AccountSubpage.profile)
-                                self.store.isModalShown = false
-                            }
-                        } catch {
-                            guard let self = self else { return }
-
-                            AppKit.instance.SIWEAuthenticationPublisherSubject.send(Result.failure(
-                                .messageVerificationFailed))
-                            DispatchQueue.main.async {
-                                self.store.toast = .init(style: .error, message: error.localizedDescription)
-                                guard let topic = self.store.session?.topic else { return }
-                                Task {try await AppKit.instance.disconnect(topic: topic)}
-
-                            }
-                        }
+                    DispatchQueue.main.async {
+                        guard let self = self else { return }
+                        self.router.setRoute(Router.AccountSubpage.profile)
+                        self.store.isModalShown = false
                     }
                 case .error(let error):
                     DispatchQueue.main.async {
