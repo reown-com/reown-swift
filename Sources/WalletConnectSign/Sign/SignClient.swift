@@ -115,6 +115,10 @@ public final class SignClient: SignClientProtocol {
     /// App should subscribe for events in order to receive CACAO object with a signature matching authentication request.
     ///
     /// Emited result may be an error.
+    ///
+    /// - Important: Starting from version 2.0, signature verification is the responsibility of the dApp.
+    /// The SDK no longer automatically verifies CACAO signatures. You should verify the signatures
+    /// before trusting the session using the Yttrium library's `Erc6492Client`.
     public var authResponsePublisher: AnyPublisher<(id: RPCID, result: Result<(Session?, [Cacao]), AuthError>), Never> {
         authResposeSubscriber.authResponsePublisher
     }
@@ -192,7 +196,6 @@ public final class SignClient: SignClientProtocol {
     private let linkSessionRequestSubscriber: LinkSessionRequestSubscriber
     private let sessionResponderDispatcher: SessionResponderDispatcher
     private let linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber
-    private let messageVerifier: MessageVerifier
 
     private var publishers = Set<AnyCancellable>()
 
@@ -230,8 +233,7 @@ public final class SignClient: SignClientProtocol {
          linkSessionRequestSubscriber: LinkSessionRequestSubscriber,
          sessionResponderDispatcher: SessionResponderDispatcher,
          linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber,
-         authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher,
-         messageVerifier: MessageVerifier
+         authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher
     ) {
         self.logger = logger
         self.networkingClient = networkingClient
@@ -266,7 +268,6 @@ public final class SignClient: SignClientProtocol {
         self.sessionResponderDispatcher = sessionResponderDispatcher
         self.linkSessionRequestResponseSubscriber = linkSessionRequestResponseSubscriber
         self.authenticateTransportTypeSwitcher = authenticateTransportTypeSwitcher
-        self.messageVerifier = messageVerifier
 
         setUpConnectionObserving()
         setUpEnginesCallbacks()
@@ -402,13 +403,6 @@ public final class SignClient: SignClientProtocol {
         return try SignWithXFormatter().formatMessage(from: cacaoPayload)
     }
 
-    public func verifySIWE(signature: String, message: String, address: String, chainId: String) async throws {
-        try await messageVerifier.verify(signature: signature, message: message, address: address, chainId: chainId)
-    }
-
-    /// For a dApp to verify authentication signature from proposal response
-    /// - Parameters:
-    ///   - authObject: AuthObject (CACAO) to verify
     //-----------------------------------------------------------------------------------
 
     /// For a wallet to approve a session proposal.

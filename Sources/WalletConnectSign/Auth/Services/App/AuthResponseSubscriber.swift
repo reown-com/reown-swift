@@ -6,8 +6,6 @@ class AuthResponseSubscriber {
     private let linkEnvelopesDispatcher: LinkEnvelopesDispatcher
     private let logger: ConsoleLogging
     private let rpcHistory: RPCHistory
-    private let signatureVerifier: MessageVerifier
-    private let messageFormatter: SIWEFromCacaoFormatting
     private let pairingRegisterer: PairingRegisterer
     private var publishers = [AnyCancellable]()
     private let sessionStore: WCSessionStorage
@@ -26,11 +24,9 @@ class AuthResponseSubscriber {
     init(networkingInteractor: NetworkInteracting,
          logger: ConsoleLogging,
          rpcHistory: RPCHistory,
-         signatureVerifier: MessageVerifier,
          pairingRegisterer: PairingRegisterer,
          kms: KeyManagementServiceProtocol,
          sessionStore: WCSessionStorage,
-         messageFormatter: SIWEFromCacaoFormatting,
          sessionNamespaceBuilder: SessionNamespaceBuilder,
          authResponseTopicRecordsStore: CodableStore<AuthResponseTopicRecord>,
          linkEnvelopesDispatcher: LinkEnvelopesDispatcher,
@@ -44,8 +40,6 @@ class AuthResponseSubscriber {
         self.rpcHistory = rpcHistory
         self.kms = kms
         self.sessionStore = sessionStore
-        self.signatureVerifier = signatureVerifier
-        self.messageFormatter = messageFormatter
         self.pairingRegisterer = pairingRegisterer
         self.sessionNamespaceBuilder = sessionNamespaceBuilder
         self.authResponseTopicRecordsStore = authResponseTopicRecordsStore
@@ -81,16 +75,14 @@ class AuthResponseSubscriber {
                 let requestId = payload.id
                 let cacaos = payload.response.cacaos
 
-                Task {
-                    do {
-                        try await recoverAndVerifySignature(cacaos: cacaos)
-                    } catch {
-                        authResponsePublisherSubject.send((requestId, .failure(error as! AuthError)))
-                        return
-                    }
+                // Note: Signature verification is now the responsibility of the dApp.
+                // The dApp should verify the CACAOs before trusting the session.
+                do {
                     let session = try createSession(from: payload.response, selfParticipant: payload.request.requester, pairingTopic: pairingTopic, transportType: transportType)
-
                     authResponsePublisherSubject.send((requestId, .success((session, cacaos))))
+                } catch {
+                    logger.error("Failed to create session: \(error.localizedDescription)")
+                    authResponsePublisherSubject.send((requestId, .failure(.malformedResponseParams)))
                 }
 
             }.store(in: &publishers)
@@ -117,40 +109,17 @@ class AuthResponseSubscriber {
                 let requestId = payload.id
                 let cacaos = payload.response.cacaos
 
-                Task {
-                    do {
-                        try await recoverAndVerifySignature(cacaos: cacaos)
-                    } catch {
-                        authResponsePublisherSubject.send((requestId, .failure(error as! AuthError)))
-                        return
-                    }
+                // Note: Signature verification is now the responsibility of the dApp.
+                // The dApp should verify the CACAOs before trusting the session.
+                do {
                     let session = try createSession(from: payload.response, selfParticipant: payload.request.requester, pairingTopic: pairingTopic, transportType: .linkMode)
-
                     authResponsePublisherSubject.send((requestId, .success((session, cacaos))))
+                } catch {
+                    logger.error("Failed to create session: \(error.localizedDescription)")
+                    authResponsePublisherSubject.send((requestId, .failure(.malformedResponseParams)))
                 }
 
             }.store(in: &publishers)
-    }
-
-    private func recoverAndVerifySignature(cacaos: [Cacao]) async throws {
-        try await cacaos.asyncForEach { [unowned self] cacao in
-            guard
-                let account = try? DIDPKH(did: cacao.p.iss).account,
-                let message = try? messageFormatter.formatMessage(from: cacao.p, includeRecapInTheStatement: true)
-            else {
-                throw AuthError.malformedResponseParams
-            }
-            do {
-                try await signatureVerifier.verify(
-                    signature: cacao.s,
-                    message: message,
-                    account: account
-                )
-            } catch {
-                logger.error("Signature verification failed with: \(error.localizedDescription)")
-                throw AuthError.signatureVerificationFailed
-            }
-        }
     }
 
     private func getTransportTypeUpgradeIfPossible(peerMetadata: AppMetadata, requestId: RPCID) -> WCSession.TransportType {
@@ -236,4 +205,3 @@ class AuthResponseSubscriber {
         kms.deleteSymmetricKey(for: pairingTopic)
     }
 }
-
