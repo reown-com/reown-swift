@@ -48,7 +48,9 @@ runs:
 
     - name: Show test type
       shell: bash
-      run: echo "Running tests for type '${{ inputs.type }}'"
+      env:
+        TEST_TYPE: ${{ inputs.type }}
+      run: echo "Running tests for type '$TEST_TYPE'"
 
     # Package Unit tests
     - name: Run tests
@@ -60,30 +62,59 @@ runs:
     - name: Run integration tests
       if: inputs.type == 'integration-tests'
       shell: bash
-      run: make integration_tests RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }} CAST_HOST=${{ inputs.notify-endpoint }} EXPLORER_HOST=${{ inputs.explorer-endpoint }} GM_DAPP_PROJECT_ID=${{ inputs.gm-dapp-project-id }} GM_DAPP_PROJECT_SECRET=${{ inputs.gm-dapp-project-secret }} GM_DAPP_HOST=${{ inputs.gm-dapp-host }} JS_CLIENT_API_HOST=${{ inputs.js-client-api-host }}
+      env:
+        RELAY_HOST: ${{ inputs.relay-endpoint }}
+        PROJECT_ID: ${{ inputs.project-id }}
+        CAST_HOST: ${{ inputs.notify-endpoint }}
+        EXPLORER_HOST: ${{ inputs.explorer-endpoint }}
+        GM_DAPP_PROJECT_ID: ${{ inputs.gm-dapp-project-id }}
+        GM_DAPP_PROJECT_SECRET: ${{ inputs.gm-dapp-project-secret }}
+        GM_DAPP_HOST: ${{ inputs.gm-dapp-host }}
+        JS_CLIENT_API_HOST: ${{ inputs.js-client-api-host }}
+      run: make integration_tests RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID" CAST_HOST="$CAST_HOST" EXPLORER_HOST="$EXPLORER_HOST" GM_DAPP_PROJECT_ID="$GM_DAPP_PROJECT_ID" GM_DAPP_PROJECT_SECRET="$GM_DAPP_PROJECT_SECRET" GM_DAPP_HOST="$GM_DAPP_HOST" JS_CLIENT_API_HOST="$JS_CLIENT_API_HOST"
 
     # Relay Integration tests
     - name: Run Relay integration tests
       if: inputs.type == 'relay-tests'
       shell: bash
-      run: make relay_tests RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }} CAST_HOST=${{ inputs.notify-endpoint }} EXPLORER_HOST=${{ inputs.explorer-endpoint }}
+      env:
+        RELAY_HOST: ${{ inputs.relay-endpoint }}
+        PROJECT_ID: ${{ inputs.project-id }}
+        CAST_HOST: ${{ inputs.notify-endpoint }}
+        EXPLORER_HOST: ${{ inputs.explorer-endpoint }}
+      run: make relay_tests RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID" CAST_HOST="$CAST_HOST" EXPLORER_HOST="$EXPLORER_HOST"
 
     # Smoke tests
     - name: Run smoke tests
       if: inputs.type == 'smoke-tests'
       shell: bash
-      run: make smoke_tests RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }}
+      env:
+        RELAY_HOST: ${{ inputs.relay-endpoint }}
+        PROJECT_ID: ${{ inputs.project-id }}
+      run: make smoke_tests RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID"
 
     # Notify tests
     - name: Run notify tests
       if: inputs.type == 'notify-tests'
       shell: bash
-      run: make notify_tests RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }} CAST_HOST=${{ inputs.notify-endpoint }} EXPLORER_HOST=${{ inputs.explorer-endpoint }} GM_DAPP_PROJECT_ID=${{ inputs.gm-dapp-project-id }} GM_DAPP_PROJECT_SECRET=${{ inputs.gm-dapp-project-secret }} GM_DAPP_HOST=${{ inputs.gm-dapp-host }}
+      env:
+        RELAY_HOST: ${{ inputs.relay-endpoint }}
+        PROJECT_ID: ${{ inputs.project-id }}
+        CAST_HOST: ${{ inputs.notify-endpoint }}
+        EXPLORER_HOST: ${{ inputs.explorer-endpoint }}
+        GM_DAPP_PROJECT_ID: ${{ inputs.gm-dapp-project-id }}
+        GM_DAPP_PROJECT_SECRET: ${{ inputs.gm-dapp-project-secret }}
+        GM_DAPP_HOST: ${{ inputs.gm-dapp-host }}
+      run: make notify_tests RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID" CAST_HOST="$CAST_HOST" EXPLORER_HOST="$EXPLORER_HOST" GM_DAPP_PROJECT_ID="$GM_DAPP_PROJECT_ID" GM_DAPP_PROJECT_SECRET="$GM_DAPP_PROJECT_SECRET" GM_DAPP_HOST="$GM_DAPP_HOST"
 
     - name: Run x-platform protocol tests
       if: inputs.type == 'x-platform-protocol-tests'
       shell: bash
-      run: make x_platform_protocol_tests RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }} JS_CLIENT_API_HOST=${{ inputs.js-client-api-host }}
+      env:
+        RELAY_HOST: ${{ inputs.relay-endpoint }}
+        PROJECT_ID: ${{ inputs.project-id }}
+        JS_CLIENT_API_HOST: ${{ inputs.js-client-api-host }}
+      run: make x_platform_protocol_tests RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID" JS_CLIENT_API_HOST="$JS_CLIENT_API_HOST"
 
     # Slack notification for failing smoke and relay tests
     - name: Slack Notification for Failure
