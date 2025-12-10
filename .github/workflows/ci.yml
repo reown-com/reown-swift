@@ -6,6 +6,11 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+  checks: write
+  actions: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.ref_name }}
   cancel-in-progress: ${{ github.event_name == 'pull_request_target' }}

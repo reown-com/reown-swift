@@ -15,6 +15,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Create temporary directory for artifacts
+      shell: bash
+      run: mkdir -p ${{ runner.temp }}/artifacts
+
     - name: Download pre-built artifacts from main
       id: download-artifact
       uses: dawidd6/action-download-artifact@v6
@@ -22,11 +26,25 @@ jobs:
           name: main-derivedData
           workflow: build_artifacts.yml
           repo: 'reown-com/reown-swift'
+          path: ${{ runner.temp }}/artifacts
           if_no_artifact_found: warn
 
-    - name: Untar DerivedDataCache
+    - name: Verify and extract DerivedDataCache
       shell: bash
-      run: test -f products.tar && tar xPpf products.tar || echo "No artifacts to untar"
+      run: |
+        ARTIFACT_PATH="${{ runner.temp }}/artifacts/products.tar"
+        if [ -f "$ARTIFACT_PATH" ]; then
+          # Verify the tar file only contains expected paths (DerivedDataCache)
+          if tar -tf "$ARTIFACT_PATH" | grep -qvE '^(DerivedDataCache|SourcePackagesCache)/'; then
+            echo "Error: Artifact contains unexpected files outside of DerivedDataCache/SourcePackagesCache"
+            exit 1
+          fi
+          # Extract to workspace after validation (without -P to prevent absolute path extraction)
+          tar -xf "$ARTIFACT_PATH"
+          echo "Artifacts extracted successfully"
+        else
+          echo "No artifacts to untar"
+        fi
 
     - uses: actions/cache@v3
       with:
