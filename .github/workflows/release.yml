@@ -11,6 +11,9 @@ on:
         - WalletApp
         - Showcase
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: macos-latest-xlarge
