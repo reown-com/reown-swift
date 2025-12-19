@@ -1,5 +1,11 @@
 import Foundation
 
+// MARK: - Pay API Configuration
+// Base URL for WalletConnect Pay API
+enum PayAPIConfig {
+    static let baseURL = "https://api.pay.walletconnect.com"
+}
+
 // MARK: - Mock Data Models
 // These types will be replaced with types generated from pay client via uniffi
 

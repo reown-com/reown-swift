@@ -24,12 +24,13 @@ final class PayPresenter: ObservableObject {
     @Published var selectedAsset: PaymentAsset?
     @Published var selectedNetwork: PaymentNetwork?
     
-    // Mock payment ID - in real implementation this would come from a deep link or QR code
-    private let paymentId = "mock-payment-id"
+    // Payment ID from deep link or test flow
+    private let paymentId: String
     
-    init(interactor: PayInteractor, router: PayRouter) {
+    init(interactor: PayInteractor, router: PayRouter, paymentId: String? = nil) {
         self.interactor = interactor
         self.router = router
+        self.paymentId = paymentId ?? "mock-payment-id"
         loadPaymentOptions()
     }
     
