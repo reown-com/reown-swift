@@ -81,6 +81,10 @@ final class WalletPresenter: ObservableObject {
         router.presentSendEthereum(importAccount: importAccount)
     }
 
+    func onTestPay() {
+        router.presentPay()
+    }
+
     func onScanUri() {
         router.presentScan { [weak self] uriString in
             do {

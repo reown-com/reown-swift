@@ -72,8 +72,18 @@ struct WalletView: View {
                         
                         HStack(spacing: 20) {
                             Spacer()
+
+                            // Test Pay Flow button
+                            Button {
+                                presenter.onTestPay()
+                            } label: {
+                                Image(systemName: "creditcard.fill")
+                                    .resizable()
+                                    .frame(width: 40, height: 28)
+                                    .foregroundColor(.blue100)
+                            }
                             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            Spacer()
+                            .accessibilityIdentifier("testPay")
 
                             // Chain abstraction transfers button commented out
                             /*

@@ -193,6 +193,15 @@
 		C55D348B295DD8CA0004314A /* PasteUriRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3486295DD8CA0004314A /* PasteUriRouter.swift */; };
 		C55D348C295DD8CA0004314A /* PasteUriInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3487295DD8CA0004314A /* PasteUriInteractor.swift */; };
 		C55D348D295DD8CA0004314A /* PasteUriView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3488295DD8CA0004314A /* PasteUriView.swift */; };
+		PAY0000012EE1000000000001 /* PayModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000001 /* PayModule.swift */; };
+		PAY0000012EE1000000000002 /* PayPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000002 /* PayPresenter.swift */; };
+		PAY0000012EE1000000000003 /* PayRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000003 /* PayRouter.swift */; };
+		PAY0000012EE1000000000004 /* PayInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000004 /* PayInteractor.swift */; };
+		PAY0000012EE1000000000005 /* PayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000005 /* PayService.swift */; };
+		PAY0000012EE1000000000006 /* PayContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000006 /* PayContainerView.swift */; };
+		PAY0000012EE1000000000007 /* PayIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000007 /* PayIntroView.swift */; };
+		PAY0000012EE1000000000008 /* PayNameInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000008 /* PayNameInputView.swift */; };
+		PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000009 /* PayConfirmView.swift */; };
 		C55D3493295DFA750004314A /* WelcomeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348E295DFA750004314A /* WelcomeModule.swift */; };
 		C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348F295DFA750004314A /* WelcomePresenter.swift */; };
 		C55D3495295DFA750004314A /* WelcomeRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3490295DFA750004314A /* WelcomeRouter.swift */; };
@@ -507,6 +516,15 @@
 		C55D3486295DD8CA0004314A /* PasteUriRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriRouter.swift; sourceTree = "<group>"; };
 		C55D3487295DD8CA0004314A /* PasteUriInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriInteractor.swift; sourceTree = "<group>"; };
 		C55D3488295DD8CA0004314A /* PasteUriView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000001 /* PayModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayModule.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000002 /* PayPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayPresenter.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000003 /* PayRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayRouter.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000004 /* PayInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayInteractor.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000005 /* PayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayService.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000006 /* PayContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayContainerView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000007 /* PayIntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayIntroView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000008 /* PayNameInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNameInputView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000009 /* PayConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmView.swift; sourceTree = "<group>"; };
 		C55D348E295DFA750004314A /* WelcomeModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeModule.swift; sourceTree = "<group>"; };
 		C55D348F295DFA750004314A /* WelcomePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomePresenter.swift; sourceTree = "<group>"; };
 		C55D3490295DFA750004314A /* WelcomeRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeRouter.swift; sourceTree = "<group>"; };
@@ -1176,6 +1194,22 @@
 			path = PasteUri;
 			sourceTree = "<group>";
 		};
+		PAY0000032EE1000000000000 /* Pay */ = {
+			isa = PBXGroup;
+			children = (
+				PAY0000022EE1000000000001 /* PayModule.swift */,
+				PAY0000022EE1000000000002 /* PayPresenter.swift */,
+				PAY0000022EE1000000000003 /* PayRouter.swift */,
+				PAY0000022EE1000000000004 /* PayInteractor.swift */,
+				PAY0000022EE1000000000005 /* PayService.swift */,
+				PAY0000022EE1000000000006 /* PayContainerView.swift */,
+				PAY0000022EE1000000000007 /* PayIntroView.swift */,
+				PAY0000022EE1000000000008 /* PayNameInputView.swift */,
+				PAY0000022EE1000000000009 /* PayConfirmView.swift */,
+			);
+			path = Pay;
+			sourceTree = "<group>";
+		};
 		C55D3474295DCB850004314A /* AuthRequest */ = {
 			isa = PBXGroup;
 			children = (
@@ -1249,6 +1283,7 @@
 				84B815592991217F00FAD54E /* PushMessages */,
 				84D88C802CE751EE003A6C16 /* CATransactionModal */,
 				84AEF0172D3DD8D3006E43E5 /* SendStableCoin */,
+				PAY0000032EE1000000000000 /* Pay */,
 			);
 			path = Wallet;
 			sourceTree = "<group>";
@@ -2123,6 +2158,15 @@
 				C56EE28C293F5757004840D1 /* Configurator.swift in Sources */,
 				C5FFEA782ADD896E007282A2 /* BrowserPresenter.swift in Sources */,
 				C55D3489295DD8CA0004314A /* PasteUriModule.swift in Sources */,
+				PAY0000012EE1000000000001 /* PayModule.swift in Sources */,
+				PAY0000012EE1000000000002 /* PayPresenter.swift in Sources */,
+				PAY0000012EE1000000000003 /* PayRouter.swift in Sources */,
+				PAY0000012EE1000000000004 /* PayInteractor.swift in Sources */,
+				PAY0000012EE1000000000005 /* PayService.swift in Sources */,
+				PAY0000012EE1000000000006 /* PayContainerView.swift in Sources */,
+				PAY0000012EE1000000000007 /* PayIntroView.swift in Sources */,
+				PAY0000012EE1000000000008 /* PayNameInputView.swift in Sources */,
+				PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */,
 				44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */,
 				C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */,
 				C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */,

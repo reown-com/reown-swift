@@ -49,6 +49,11 @@ final class WalletRouter {
 //            .present(from: viewController)
     }
 
+    func presentPay() {
+        PayModule.create(app: app)
+            .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+    }
+
     func dismiss() {
         viewController.navigationController?.dismiss()
     }
