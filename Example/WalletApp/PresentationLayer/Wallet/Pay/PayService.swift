@@ -103,7 +103,7 @@ final class MockPayService: PayServiceProtocol {
                     assetName: "USD Coin",
                     assetSymbol: "USDC",
                     decimals: 6,
-                    iconUrl: "https://assets.coingecko.com/coins/images/6319/small/usdc.png",
+                    iconUrl: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
                     networkName: "Base",
                     balance: 35000,
                     price: 1.0
@@ -113,7 +113,7 @@ final class MockPayService: PayServiceProtocol {
                     assetName: "Tether USD",
                     assetSymbol: "USDT",
                     decimals: 6,
-                    iconUrl: "https://assets.coingecko.com/coins/images/325/small/Tether.png",
+                    iconUrl: "https://cryptologos.cc/logos/tether-usdt-logo.png",
                     networkName: "Base",
                     balance: 15000,
                     price: 1.0
@@ -123,7 +123,7 @@ final class MockPayService: PayServiceProtocol {
                     assetName: "Ethereum",
                     assetSymbol: "ETH",
                     decimals: 18,
-                    iconUrl: "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+                    iconUrl: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
                     networkName: "Base",
                     balance: 10.5,
                     price: 3500
@@ -133,19 +133,19 @@ final class MockPayService: PayServiceProtocol {
                 PaymentNetwork(
                     id: "base",
                     name: "Base",
-                    iconUrl: "https://assets.coingecko.com/coins/images/29003/small/base.png",
+                    iconUrl: "https://raw.githubusercontent.com/base-org/brand-kit/main/logo/symbol/Base_Symbol_Blue.png",
                     chainId: "8453"
                 ),
                 PaymentNetwork(
                     id: "optimism",
                     name: "Optimism",
-                    iconUrl: "https://assets.coingecko.com/coins/images/25244/small/optimism.png",
+                    iconUrl: "https://cryptologos.cc/logos/optimism-ethereum-op-logo.png",
                     chainId: "10"
                 ),
                 PaymentNetwork(
                     id: "arbitrum",
                     name: "Arbitrum",
-                    iconUrl: "https://assets.coingecko.com/coins/images/16547/small/arbitrum.png",
+                    iconUrl: "https://cryptologos.cc/logos/arbitrum-arb-logo.png",
                     chainId: "42161"
                 )
             ]

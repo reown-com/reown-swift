@@ -4,35 +4,36 @@ struct PayContainerView: View {
     @EnvironmentObject var presenter: PayPresenter
     
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.6)
-                .edgesIgnoringSafeArea(.all)
-            
-            VStack {
-                Spacer()
+        GeometryReader { geometry in
+            ZStack {
+                Color.black.opacity(0.6)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        // Dismiss keyboard when tapping background
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
                 
-                Group {
+                VStack {
+                    Spacer()
+                    
                     switch presenter.currentStep {
                     case .intro:
                         PayIntroView()
+                            .environmentObject(presenter)
                     case .nameInput:
                         PayNameInputView()
+                            .environmentObject(presenter)
                     case .confirmation:
                         PayConfirmView()
+                            .environmentObject(presenter)
                     }
                 }
-                .environmentObject(presenter)
-                .transition(.asymmetric(
-                    insertion: .move(edge: .trailing).combined(with: .opacity),
-                    removal: .move(edge: .leading).combined(with: .opacity)
-                ))
-                .animation(.easeInOut(duration: 0.3), value: presenter.currentStep)
             }
         }
         .alert(presenter.errorMessage, isPresented: $presenter.showError) {
             Button("OK", role: .cancel) {}
         }
-        .edgesIgnoringSafeArea(.all)
+        .ignoresSafeArea(.container, edges: [.top, .horizontal])
     }
 }
 

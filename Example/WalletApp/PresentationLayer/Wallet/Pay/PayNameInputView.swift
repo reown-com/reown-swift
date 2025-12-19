@@ -86,6 +86,10 @@ struct PayNameInputView: View {
                             .stroke(focusedField == .firstName ? Color.blue100 : Color.clear, lineWidth: 2)
                     )
                     .focused($focusedField, equals: .firstName)
+                    .submitLabel(.next)
+                    .onSubmit {
+                        focusedField = .lastName
+                    }
                 
                 // Last name field
                 TextField("Last name", text: $presenter.userInfo.lastName)
@@ -99,14 +103,21 @@ struct PayNameInputView: View {
                             .stroke(focusedField == .lastName ? Color.blue100 : Color.clear, lineWidth: 2)
                     )
                     .focused($focusedField, equals: .lastName)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        if isFormValid {
+                            presenter.submitUserInfo()
+                        }
+                    }
             }
             .padding(.top, 24)
             
             Spacer()
-                .frame(minHeight: 20, maxHeight: 60)
+                .frame(minHeight: 20, maxHeight: 40)
             
             // Continue button
             Button(action: {
+                focusedField = nil
                 presenter.submitUserInfo()
             }) {
                 if presenter.isLoading {
@@ -137,7 +148,6 @@ struct PayNameInputView: View {
         .background(Color.whiteBackground)
         .cornerRadius(34)
         .padding(.horizontal, 10)
-        .padding(.bottom, 10)
         .onAppear {
             focusedField = .firstName
         }
