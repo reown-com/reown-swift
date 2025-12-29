@@ -3,6 +3,7 @@ import UIKit
 import ReownWalletKit
 import WalletConnectSign
 import WalletConnectPay
+import Commons
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
     var window: UIWindow?
@@ -220,7 +221,7 @@ private extension SceneDelegate {
         let paymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
         
         // Get accounts in CAIP-10 format
-        let accounts = ["eip155:1:\(account.address)"]
+        let accounts = [account.account.absoluteString]
         
         // Create signer using the imported account
         let signer = DefaultPaymentSigner(account: account)
@@ -251,6 +252,7 @@ final class DefaultPaymentSigner: PaymentSigner {
         // Parse the typed data from params and sign using the account's private key
         // The params is a JSON string containing the typed data
         let signer = ETHSigner(importAccount: account)
-        return try signer.signTypedData(params)
+        let result = signer.signTypedData(AnyCodable(params))
+        return result.value as? String ?? ""
     }
 }

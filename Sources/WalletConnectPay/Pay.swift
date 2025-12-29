@@ -1,6 +1,5 @@
 import Foundation
-import YttriumWrapper
-import Yttrium
+@_exported import YttriumWrapper
 
 /// WalletConnectPay - Payment SDK for WalletConnect
 ///
@@ -65,7 +64,7 @@ public class WalletConnectPay {
     }
 }
 
-// Typealias for the Yttrium WalletConnectPay to avoid naming conflict
+// Typealias for the Yttrium WalletConnectPay to avoid naming conflict with our wrapper
 public typealias YttriumPayClient = Yttrium.WalletConnectPay
 
 /// PayClient - Wrapper around Yttrium WalletConnectPay
