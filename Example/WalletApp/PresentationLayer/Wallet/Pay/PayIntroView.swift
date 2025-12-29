@@ -1,4 +1,5 @@
 import SwiftUI
+import WalletConnectPay
 
 struct PayIntroView: View {
     @EnvironmentObject var presenter: PayPresenter
@@ -31,38 +32,36 @@ struct PayIntroView: View {
                         .font(.system(size: 15, weight: .medium, design: .rounded))
                 }
                 .frame(height: 300)
-            } else if let options = presenter.paymentOptions {
+            } else if let info = presenter.paymentInfo {
                 // Merchant icon
-                AsyncImage(url: URL(string: options.merchant.iconUrl)) { phase in
-                    if let image = phase.image {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } else {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.grey95)
-                            Text(String(options.merchant.name.prefix(1)))
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(.grey8)
+                if let iconUrl = info.merchant.iconUrl {
+                    AsyncImage(url: URL(string: iconUrl)) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                        } else {
+                            merchantPlaceholder(name: info.merchant.name)
                         }
                     }
+                    .frame(width: 64, height: 64)
+                    .cornerRadius(12)
+                    .padding(.top, 16)
+                } else {
+                    merchantPlaceholder(name: info.merchant.name)
+                        .frame(width: 64, height: 64)
+                        .padding(.top, 16)
                 }
-                .frame(width: 64, height: 64)
-                .cornerRadius(12)
-                .padding(.top, 16)
                 
                 // Payment title
                 HStack(spacing: 6) {
-                    Text("Pay \(options.formattedAmount) to \(options.merchant.name)")
+                    Text("Pay \(info.formattedAmount) to \(info.merchant.name)")
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundColor(.grey8)
                     
-                    if options.merchant.isVerified {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(.blue)
-                    }
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.blue)
                 }
                 .padding(.top, 16)
                 
@@ -107,6 +106,17 @@ struct PayIntroView: View {
                         .cornerRadius(16)
                 }
                 .padding(.top, 24)
+            } else {
+                // No payment info available
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 48))
+                        .foregroundColor(.grey50)
+                    Text("Unable to load payment details")
+                        .foregroundColor(.grey50)
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                }
+                .frame(height: 300)
             }
         }
         .padding(.horizontal, 20)
@@ -115,6 +125,16 @@ struct PayIntroView: View {
         .cornerRadius(34)
         .padding(.horizontal, 10)
         .padding(.bottom, 10)
+    }
+    
+    private func merchantPlaceholder(name: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.grey95)
+            Text(String(name.prefix(1)))
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.grey8)
+        }
     }
 }
 

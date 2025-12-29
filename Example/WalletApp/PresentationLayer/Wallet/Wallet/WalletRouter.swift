@@ -49,9 +49,19 @@ final class WalletRouter {
 //            .present(from: viewController)
     }
 
-    func presentPay() {
-        PayModule.create(app: app)
-            .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+    func presentPay(importAccount: ImportAccount) {
+        // Test payment link - in production this would come from deep link or QR code
+        let testPaymentLink = "https://pay.walletconnect.com/p/test-payment-id"
+        let accounts = ["eip155:1:\(importAccount.address)"]
+        let signer = DefaultPaymentSigner(account: importAccount)
+        
+        PayModule.create(
+            app: app,
+            paymentLink: testPaymentLink,
+            accounts: accounts,
+            signer: signer
+        )
+        .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
     }
 
     func dismiss() {

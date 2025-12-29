@@ -86,7 +86,10 @@ let package = Package(
             targets: ["YttriumWrapper"]),
         .library(
             name: "YttriumUtilsWrapper",
-            targets: ["YttriumUtilsWrapper"]) 
+            targets: ["YttriumUtilsWrapper"]),
+        .library(
+            name: "WalletConnectPay",
+            targets: ["WalletConnectPay"])
     ],
     dependencies: dependencies,
     targets: [
@@ -197,6 +200,10 @@ let package = Package(
         ),
         yttriumTarget,
         yttriumUtilsTarget,
+        .target(
+            name: "WalletConnectPay",
+            dependencies: ["YttriumWrapper"],
+            path: "Sources/WalletConnectPay"),
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),

@@ -2,6 +2,7 @@ import SafariServices
 import UIKit
 import ReownWalletKit
 import WalletConnectSign
+import WalletConnectPay
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
     var window: UIWindow?
@@ -187,7 +188,8 @@ private extension SceneDelegate {
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
-
+        // Configure Pay client
+        WalletConnectPay.configure(projectId: InputConfig.projectId)
     }
 
     // Helper method to extract topic from URL
@@ -208,9 +210,47 @@ private extension SceneDelegate {
             return
         }
         
-        let paymentVC = PayModule.create(app: app, paymentId: paymentId)
+        // Get wallet account from storage
+        guard let account = AccountStorage(defaults: .standard).importAccount else {
+            AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
+            return
+        }
+        
+        // Build payment link from paymentId
+        let paymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
+        
+        // Get accounts in CAIP-10 format
+        let accounts = ["eip155:1:\(account.address)"]
+        
+        // Create signer using the imported account
+        let signer = DefaultPaymentSigner(account: account)
+        
+        let paymentVC = PayModule.create(
+            app: app,
+            paymentLink: paymentLink,
+            accounts: accounts,
+            signer: signer
+        )
         paymentVC.modalPresentationStyle = .overCurrentContext
         paymentVC.view.backgroundColor = .clear
         topController.present(paymentVC, animated: true)
+    }
+}
+
+// MARK: - Default Payment Signer
+
+/// Default implementation of PaymentSigner using the imported account
+final class DefaultPaymentSigner: PaymentSigner {
+    private let account: ImportAccount
+    
+    init(account: ImportAccount) {
+        self.account = account
+    }
+    
+    func signTypedData(chainId: String, params: String) async throws -> String {
+        // Parse the typed data from params and sign using the account's private key
+        // The params is a JSON string containing the typed data
+        let signer = ETHSigner(importAccount: account)
+        return try signer.signTypedData(params)
     }
 }

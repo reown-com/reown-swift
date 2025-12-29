@@ -1,4 +1,5 @@
 import SwiftUI
+import WalletConnectPay
 
 struct PayNameInputView: View {
     @EnvironmentObject var presenter: PayPresenter
@@ -75,7 +76,7 @@ struct PayNameInputView: View {
             // Input fields
             VStack(spacing: 12) {
                 // First name field
-                TextField("First name", text: $presenter.userInfo.firstName)
+                TextField("First name", text: $presenter.firstName)
                     .font(.system(size: 16, weight: .regular, design: .rounded))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
@@ -92,7 +93,7 @@ struct PayNameInputView: View {
                     }
                 
                 // Last name field
-                TextField("Last name", text: $presenter.userInfo.lastName)
+                TextField("Last name", text: $presenter.lastName)
                     .font(.system(size: 16, weight: .regular, design: .rounded))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
@@ -154,13 +155,13 @@ struct PayNameInputView: View {
     }
     
     private var isFormValid: Bool {
-        !presenter.userInfo.firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !presenter.userInfo.lastName.trimmingCharacters(in: .whitespaces).isEmpty
+        !presenter.firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !presenter.lastName.trimmingCharacters(in: .whitespaces).isEmpty
     }
     
     private var initials: String {
-        let first = presenter.userInfo.firstName.first.map(String.init) ?? ""
-        let last = presenter.userInfo.lastName.first.map(String.init) ?? ""
+        let first = presenter.firstName.first.map(String.init) ?? ""
+        let last = presenter.lastName.first.map(String.init) ?? ""
         return (first + last).uppercased()
     }
 }

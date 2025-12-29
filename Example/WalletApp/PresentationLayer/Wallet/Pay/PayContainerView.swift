@@ -1,4 +1,5 @@
 import SwiftUI
+import WalletConnectPay
 
 struct PayContainerView: View {
     @EnvironmentObject var presenter: PayPresenter
