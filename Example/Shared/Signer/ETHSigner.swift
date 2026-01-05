@@ -65,15 +65,18 @@ struct ETHSigner {
         
         // Try to get params as String first
         if let paramsString = try? params.get(String.self) {
+            print("[ETHSigner] signTypedData params (String): \(paramsString.prefix(300))...")
             return try await signer.signTypedDataFromParams(paramsString)
         }
         
         // Try to get data representation and convert to JSON string
         if let jsonData = try? params.getDataRepresentation(),
            let jsonString = String(data: jsonData, encoding: .utf8) {
+            print("[ETHSigner] signTypedData params (Data): \(jsonString.prefix(300))...")
             return try await signer.signTypedDataFromParams(jsonString)
         }
         
+        print("[ETHSigner] signTypedData: Could not extract params")
         throw SignTypedDataSigner.SignTypedDataError.invalidParams
     }
 
