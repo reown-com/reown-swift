@@ -76,6 +76,9 @@ public class PayClient {
     
     init(config: SdkConfig) {
         self.client = YttriumPayClient(config: config)
+        #if DEBUG
+        self.client.debug(enabled: true)
+        #endif
     }
     
     // MARK: - Public Methods

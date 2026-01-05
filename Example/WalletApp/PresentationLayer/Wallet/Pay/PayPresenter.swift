@@ -65,6 +65,7 @@ final class PayPresenter: ObservableObject {
                 )
                 self.paymentOptionsResponse = response
                 // Select first option by default
+                print(response)
                 self.selectedOption = response.options.first
                 self.isLoading = false
             } catch {
