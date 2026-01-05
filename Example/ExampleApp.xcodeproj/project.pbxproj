@@ -194,6 +194,10 @@
 		C55D348B295DD8CA0004314A /* PasteUriRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3486295DD8CA0004314A /* PasteUriRouter.swift */; };
 		C55D348C295DD8CA0004314A /* PasteUriInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3487295DD8CA0004314A /* PasteUriInteractor.swift */; };
 		C55D348D295DD8CA0004314A /* PasteUriView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3488295DD8CA0004314A /* PasteUriView.swift */; };
+		PASTEPAY0001000000000001 /* PastePaymentLinkModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */; };
+		PASTEPAY0001000000000002 /* PastePaymentLinkPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */; };
+		PASTEPAY0001000000000003 /* PastePaymentLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */; };
+		PASTEPAY0001000000000004 /* PastePaymentLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */; };
 		C55D3493295DFA750004314A /* WelcomeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348E295DFA750004314A /* WelcomeModule.swift */; };
 		C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348F295DFA750004314A /* WelcomePresenter.swift */; };
 		C55D3495295DFA750004314A /* WelcomeRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3490295DFA750004314A /* WelcomeRouter.swift */; };
@@ -516,6 +520,10 @@
 		C55D3486295DD8CA0004314A /* PasteUriRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriRouter.swift; sourceTree = "<group>"; };
 		C55D3487295DD8CA0004314A /* PasteUriInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriInteractor.swift; sourceTree = "<group>"; };
 		C55D3488295DD8CA0004314A /* PasteUriView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriView.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkModule.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkPresenter.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkRouter.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkView.swift; sourceTree = "<group>"; };
 		C55D348E295DFA750004314A /* WelcomeModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeModule.swift; sourceTree = "<group>"; };
 		C55D348F295DFA750004314A /* WelcomePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomePresenter.swift; sourceTree = "<group>"; };
 		C55D3490295DFA750004314A /* WelcomeRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeRouter.swift; sourceTree = "<group>"; };
@@ -1194,6 +1202,17 @@
 			path = PasteUri;
 			sourceTree = "<group>";
 		};
+		PASTEPAY0003000000000000 /* PastePaymentLink */ = {
+			isa = PBXGroup;
+			children = (
+				PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */,
+				PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */,
+				PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */,
+				PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */,
+			);
+			path = PastePaymentLink;
+			sourceTree = "<group>";
+		};
 		C55D3474295DCB850004314A /* AuthRequest */ = {
 			isa = PBXGroup;
 			children = (
@@ -1260,6 +1279,7 @@
 				C55D349E2965FAC30004314A /* SessionProposal */,
 				C5B2F6F029705111000DBA0E /* SessionRequest */,
 				C55D3471295DC5F60004314A /* PasteUri */,
+				PASTEPAY0003000000000000 /* PastePaymentLink */,
 				C5F32A2A2954812900A6476E /* ConnectionDetails */,
 				C56EE236293F566A004840D1 /* Scan */,
 				C56EE22A293F5668004840D1 /* Wallet */,
@@ -2193,6 +2213,10 @@
 				8487A9482A83AD680003D5AF /* LoggingService.swift in Sources */,
 				84D88C822CE7525F003A6C16 /* CATransactionPresenter.swift in Sources */,
 				C55D348D295DD8CA0004314A /* PasteUriView.swift in Sources */,
+				PASTEPAY0001000000000001 /* PastePaymentLinkModule.swift in Sources */,
+				PASTEPAY0001000000000002 /* PastePaymentLinkPresenter.swift in Sources */,
+				PASTEPAY0001000000000003 /* PastePaymentLinkRouter.swift in Sources */,
+				PASTEPAY0001000000000004 /* PastePaymentLinkView.swift in Sources */,
 				C5F32A2C2954814200A6476E /* ConnectionDetailsModule.swift in Sources */,
 				C56EE249293F566D004840D1 /* ScanInteractor.swift in Sources */,
 				C56EE28A293F5757004840D1 /* AppDelegate.swift in Sources */,

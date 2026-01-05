@@ -141,11 +141,6 @@ final class PayPresenter: ObservableObject {
                             // Handle other RPC methods as needed
                             print("Unsupported RPC method: \(rpcAction.method)")
                         }
-                        
-                    case .build(let buildAction):
-                        // Handle build actions (transaction building/signing)
-                        // This would involve building and signing transactions
-                        print("Build action received: \(buildAction)")
                     }
                 }
                 

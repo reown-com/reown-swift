@@ -82,7 +82,7 @@ final class WalletPresenter: ObservableObject {
     }
 
     func onTestPay() {
-        router.presentPay(importAccount: importAccount)
+        router.presentPastePaymentLink(importAccount: importAccount)
     }
 
     func onScanUri() {

@@ -49,15 +49,25 @@ final class WalletRouter {
 //            .present(from: viewController)
     }
 
-    func presentPay(importAccount: ImportAccount) {
-        // Test payment link - in production this would come from deep link or QR code
-        let testPaymentLink = "https://pay.walletconnect.com/p/test-payment-id"
+    func presentPastePaymentLink(importAccount: ImportAccount) {
+        let pasteVC = PastePaymentLinkModule.create(app: app) { [weak self] paymentLink in
+            // Dismiss the paste screen first, then present pay flow
+            UIApplication.currentWindow.rootViewController?.dismiss(animated: true) {
+                self?.startPayFlow(paymentLink: paymentLink, importAccount: importAccount)
+            }
+        } onError: { error in
+            print("Payment link error: \(error.localizedDescription)")
+        }
+        pasteVC.presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+    }
+    
+    private func startPayFlow(paymentLink: String, importAccount: ImportAccount) {
         let accounts = [importAccount.account.absoluteString]
         let signer = DefaultPaymentSigner(account: importAccount)
         
         PayModule.create(
             app: app,
-            paymentLink: testPaymentLink,
+            paymentLink: paymentLink,
             accounts: accounts,
             signer: signer
         )
