@@ -134,60 +134,19 @@ final class PayPresenter: ObservableObject {
                 for action in actions {
                     switch action {
                     case .walletRpc(let rpcAction):
-                        // Handle wallet RPC actions (e.g., eth_signTypedData_v4 for permits)
                         let authorizationJson = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
-                        print("[PayPresenter] Full authorization JSON: \(authorizationJson)")
-                        
-                        // Extract signature from authorization JSON
-                        // The authorization JSON contains: from, to, value, validAfter, validBefore, nonce, v, r, s
                         let signature = try extractSignatureFromAuthorization(authorizationJson)
-                        print("[PayPresenter] Extracted signature: \(signature)")
-                        
-                        let resultData = WalletRpcResultData(method: rpcAction.method, data: [signature])
-                        resultItems.append(.walletRpc(resultData))
+                        resultItems.append(.walletRpc(WalletRpcResultData(method: rpcAction.method, data: [signature])))
                         
                     case .collectData(let collectAction):
-                        // Handle collect data actions (e.g., travel rule data collection)
-                        var fields: [CollectDataFieldResult] = []
-                        for field in collectAction.fields {
-                            // Match field by id/name and provide the collected value
-                            let value: String
-                            let fieldId = field.id.lowercased()
-                            let fieldName = field.name.lowercased()
-                            
-                            print("[PayPresenter] Processing collect data field: id=\(field.id), name=\(field.name), required=\(field.required)")
-                            
-                            if fieldId == "firstname" || fieldName.contains("first") {
-                                value = firstName.isEmpty ? "John" : firstName  // Use placeholder if empty
-                            } else if fieldId == "lastname" || fieldName.contains("last") {
-                                value = lastName.isEmpty ? "Doe" : lastName  // Use placeholder if empty
-                            } else if fieldId == "dob" || fieldName.contains("birth") || fieldName.contains("dob") {
-                                // TODO: Add proper date of birth collection UI
-                                // For testing, use a placeholder date
-                                value = "1990-01-01"
-                            } else {
-                                // For other fields, use empty string
-                                print("[PayPresenter] Unknown field: \(field.id), using empty value")
-                                value = ""
-                            }
-                            print("[PayPresenter] Field \(field.id) = '\(value)'")
-                            fields.append(CollectDataFieldResult(id: field.id, value: value))
+                        let fields = collectAction.fields.map { field -> CollectDataFieldResult in
+                            let value = resolveFieldValue(for: field)
+                            return CollectDataFieldResult(id: field.id, value: value)
                         }
-                        let resultData = CollectDataResultData(fields: fields)
-                        resultItems.append(.collectData(resultData))
+                        resultItems.append(.collectData(CollectDataResultData(fields: fields)))
                     }
                 }
                 
-                // 3. Confirm payment with results
-                print("[PayPresenter] Sending \(resultItems.count) results:")
-                for (index, item) in resultItems.enumerated() {
-                    switch item {
-                    case .walletRpc(let data):
-                        print("  [\(index)] walletRpc: method=\(data.method)")
-                    case .collectData(let data):
-                        print("  [\(index)] collectData: \(data.fields.count) fields")
-                    }
-                }
                 let result = try await WalletConnectPay.instance.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
@@ -212,6 +171,21 @@ final class PayPresenter: ObservableObject {
     }
     
     // MARK: - Private Methods
+    
+    private func resolveFieldValue(for field: CollectDataField) -> String {
+        let fieldId = field.id.lowercased()
+        let fieldName = field.name.lowercased()
+        
+        if fieldId == "firstname" || fieldName.contains("first") {
+            return firstName.isEmpty ? "John" : firstName
+        } else if fieldId == "lastname" || fieldName.contains("last") {
+            return lastName.isEmpty ? "Doe" : lastName
+        } else if fieldId == "dob" || fieldName.contains("birth") {
+            // TODO: Add date of birth collection UI
+            return "1990-01-01"
+        }
+        return ""
+    }
     
     private func extractPaymentId(from link: String) -> String {
         // Extract payment ID from the payment link
@@ -239,47 +213,26 @@ final class PayPresenter: ObservableObject {
     }
     
     /// Extract hex signature from ERC-3009 authorization JSON
-    /// The authorization contains: from, to, value, validAfter, validBefore, nonce, v, r, s
-    /// Returns signature in format: 0x{r}{s}{v}
     private func extractSignatureFromAuthorization(_ authorizationJson: String) throws -> String {
-        guard let data = authorizationJson.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            print("[PayPresenter] Failed to parse authorization JSON")
-            throw PaymentError.invalidSignature
-        }
-        
-        print("[PayPresenter] Authorization JSON keys: \(json.keys.sorted())")
-        print("[PayPresenter] v=\(String(describing: json["v"])), r=\(String(describing: json["r"])), s=\(String(describing: json["s"]))")
-        
-        guard let r = json["r"] as? String,
-              let s = json["s"] as? String,
-              let v = json["v"] as? Int else {
-            print("[PayPresenter] Failed to extract v, r, s from authorization")
-            print("[PayPresenter] v type: \(type(of: json["v"] ?? "nil")), r type: \(type(of: json["r"] ?? "nil")), s type: \(type(of: json["s"] ?? "nil"))")
-            throw PaymentError.invalidSignature
-        }
-        
-        print("[PayPresenter] Extracted v=\(v), r=\(r), s=\(s)")
-        
-        // Remove 0x prefix if present
-        let rHex = r.hasPrefix("0x") ? String(r.dropFirst(2)) : r
-        let sHex = s.hasPrefix("0x") ? String(s.dropFirst(2)) : s
-        let vHex = String(format: "%02x", v)
-        
-        print("[PayPresenter] Building signature: r(\(rHex.count) chars) + s(\(sHex.count) chars) + v(\(vHex))")
-        
+        let auth = try JSONDecoder().decode(Erc3009AuthorizationResponse.self, from: Data(authorizationJson.utf8))
+        let rHex = auth.r.stripHexPrefix()
+        let sHex = auth.s.stripHexPrefix()
+        let vHex = String(format: "%02x", auth.v)
         return "0x\(rHex)\(sHex)\(vHex)"
     }
-    
-    enum PaymentError: Error, LocalizedError {
-        case invalidSignature
-        
-        var errorDescription: String? {
-            switch self {
-            case .invalidSignature:
-                return "Invalid signature format"
-            }
-        }
+}
+
+// MARK: - Response Types
+
+private struct Erc3009AuthorizationResponse: Decodable {
+    let v: Int
+    let r: String
+    let s: String
+}
+
+private extension String {
+    func stripHexPrefix() -> String {
+        hasPrefix("0x") ? String(dropFirst(2)) : self
     }
 }
 
