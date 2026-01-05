@@ -24,8 +24,14 @@ struct PayContainerView: View {
                     case .nameInput:
                         PayNameInputView()
                             .environmentObject(presenter)
+                    case .dateOfBirth:
+                        PayDateOfBirthView()
+                            .environmentObject(presenter)
                     case .confirmation:
                         PayConfirmView()
+                            .environmentObject(presenter)
+                    case .success:
+                        PaySuccessView()
                             .environmentObject(presenter)
                     }
                 }

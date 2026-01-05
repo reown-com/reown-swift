@@ -6,7 +6,9 @@ import Commons
 enum PayFlowStep: Int, CaseIterable {
     case intro = 0
     case nameInput = 1
-    case confirmation = 2
+    case dateOfBirth = 2
+    case confirmation = 3
+    case success = 4
 }
 
 final class PayPresenter: ObservableObject {
@@ -25,9 +27,17 @@ final class PayPresenter: ObservableObject {
     @Published var selectedOption: PaymentOption?
     @Published var requiredActions: [Action] = []
     
-    // User info for travel rule (kept for future use)
+    // User info for travel rule
     @Published var firstName: String = ""
     @Published var lastName: String = ""
+    @Published var dateOfBirth: Date = {
+        // Default to 1990-01-01
+        var components = DateComponents()
+        components.year = 1990
+        components.month = 1
+        components.day = 1
+        return Calendar.current.date(from: components) ?? Date()
+    }()
     
     // Payment link from deep link
     private let paymentLink: String
@@ -88,10 +98,18 @@ final class PayPresenter: ObservableObject {
             showError = true
             return
         }
-        
-        // Travel rule info will be used in confirmPayment later
-        // For now, just move to confirmation
+        currentStep = .dateOfBirth
+    }
+    
+    func submitDateOfBirth() {
         currentStep = .confirmation
+    }
+    
+    /// Format date of birth as YYYY-MM-DD for API
+    var formattedDateOfBirth: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: dateOfBirth)
     }
     
     func goBack() {
@@ -156,7 +174,7 @@ final class PayPresenter: ObservableObject {
                 
                 print("Payment confirmed: \(result)")
                 self.isLoading = false
-                self.dismiss()
+                self.currentStep = .success
                 
             } catch {
                 self.errorMessage = error.localizedDescription
@@ -177,12 +195,11 @@ final class PayPresenter: ObservableObject {
         let fieldName = field.name.lowercased()
         
         if fieldId == "firstname" || fieldName.contains("first") {
-            return firstName.isEmpty ? "John" : firstName
+            return firstName
         } else if fieldId == "lastname" || fieldName.contains("last") {
-            return lastName.isEmpty ? "Doe" : lastName
+            return lastName
         } else if fieldId == "dob" || fieldName.contains("birth") {
-            // TODO: Add date of birth collection UI
-            return "1990-01-01"
+            return formattedDateOfBirth
         }
         return ""
     }
