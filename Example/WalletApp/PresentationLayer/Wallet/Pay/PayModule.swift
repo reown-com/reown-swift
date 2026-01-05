@@ -6,14 +6,14 @@ final class PayModule {
         app: Application,
         paymentLink: String,
         accounts: [String],
-        signer: PaymentSigner
+        importAccount: ImportAccount
     ) -> UIViewController {
         let router = PayRouter(app: app)
         let presenter = PayPresenter(
             router: router,
             paymentLink: paymentLink,
             accounts: accounts,
-            signer: signer
+            importAccount: importAccount
         )
         let view = PayContainerView().environmentObject(presenter)
         let viewController = SceneViewController(viewModel: presenter, content: view)

@@ -69,13 +69,12 @@ final class WalletRouter {
             "eip155:137:\(address)",    // Polygon
             "eip155:8453:\(address)"    // Base
         ]
-        let signer = DefaultPaymentSigner(account: importAccount)
         
         PayModule.create(
             app: app,
             paymentLink: paymentLink,
             accounts: accounts,
-            signer: signer
+            importAccount: importAccount
         )
         .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
     }

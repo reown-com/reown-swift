@@ -248,6 +248,7 @@
 		C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B2F6F22970511B000DBA0E /* SessionRequestPresenter.swift */; };
 		C5B2F6FA29705293000DBA0E /* SessionRequestInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B2F6F42970511B000DBA0E /* SessionRequestInteractor.swift */; };
 		C5B2F6FB297055B0000DBA0E /* ETHSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57E71A5291CF76400325797 /* ETHSigner.swift */; };
+		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
 		C5B2F6FC297055B0000DBA0E /* SOLSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57E71A7291CF8A500325797 /* SOLSigner.swift */; };
 		C5B2F6FD297055B0000DBA0E /* Signer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F568C1279582D200D0A289 /* Signer.swift */; };
 		C5B2F7052970573D000DBA0E /* SolanaSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5B2F7042970573D000DBA0E /* SolanaSwift */; };
@@ -479,6 +480,7 @@
 		A56AC8F12AD88A5A001C8FAA /* Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence.swift; sourceTree = "<group>"; };
 		A57879702A4EDC8100F8D10B /* TextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldView.swift; sourceTree = "<group>"; };
 		A57E71A5291CF76400325797 /* ETHSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETHSigner.swift; sourceTree = "<group>"; };
+		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
 		A57E71A7291CF8A500325797 /* SOLSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOLSigner.swift; sourceTree = "<group>"; };
 		A58A1ECB29BF458600A82A20 /* ENSResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ENSResolverTests.swift; sourceTree = "<group>"; };
 		A59CF4F5292F83D50031A42F /* DefaultSignerFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultSignerFactory.swift; sourceTree = "<group>"; };
@@ -1058,6 +1060,7 @@
 				44EF89722E015D6B0025778F /* StacksSigner.swift */,
 				44D89A102DF183C800056A7B /* SuiSigner.swift */,
 				A57E71A5291CF76400325797 /* ETHSigner.swift */,
+				SIGNTD0002000000000001 /* SignTypedDataSigner.swift */,
 				A57E71A7291CF8A500325797 /* SOLSigner.swift */,
 				44650A3E2E951D71004F2144 /* TonSigner.swift */,
 			);
@@ -2198,6 +2201,7 @@
 				84AEF0162D3DD8CA006E43E5 /* SendStableCoinView.swift in Sources */,
 				84D88C7F2CE751E7003A6C16 /* CATransactionView.swift in Sources */,
 				C5B2F6FB297055B0000DBA0E /* ETHSigner.swift in Sources */,
+				SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */,
 				C56EE274293F56D7004840D1 /* SceneViewController.swift in Sources */,
 				A5D610D42AB35BED00C20083 /* FailableDecodable.swift in Sources */,
 				A56AC8F22AD88A5A001C8FAA /* Sequence.swift in Sources */,

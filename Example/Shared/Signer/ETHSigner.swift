@@ -57,9 +57,24 @@ struct ETHSigner {
         return result
     }
 
-    func signTypedData(_ params: AnyCodable) -> AnyCodable {
-        let result = "0x4355c47d63924e8a72e509b65029052eb6c299d53a04e167c5775fd466751c9d07299936d304c153f6443dfa05f40ff007d72911b6f72307f996231605b915621c"
-        return AnyCodable(result)
+    /// Sign EIP-712 typed data using SignTypedDataSigner
+    /// - Parameter params: AnyCodable containing the params (typically [address, typedDataJson])
+    /// - Returns: The signature as a hex string
+    func signTypedData(_ params: AnyCodable) async throws -> String {
+        let signer = SignTypedDataSigner(privateKey: importAccount.privateKey)
+        
+        // Try to get params as String first
+        if let paramsString = try? params.get(String.self) {
+            return try await signer.signTypedDataFromParams(paramsString)
+        }
+        
+        // Try to get data representation and convert to JSON string
+        if let jsonData = try? params.getDataRepresentation(),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return try await signer.signTypedDataFromParams(jsonString)
+        }
+        
+        throw SignTypedDataSigner.SignTypedDataError.invalidParams
     }
 
     func sendTransaction(_ params: AnyCodable) throws -> AnyCodable {

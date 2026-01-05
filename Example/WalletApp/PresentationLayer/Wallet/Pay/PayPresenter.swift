@@ -1,6 +1,7 @@
 import UIKit
 import Combine
 import WalletConnectPay
+import Commons
 
 enum PayFlowStep: Int, CaseIterable {
     case intro = 0
@@ -10,7 +11,7 @@ enum PayFlowStep: Int, CaseIterable {
 
 final class PayPresenter: ObservableObject {
     private let router: PayRouter
-    private let signer: PaymentSigner
+    private let importAccount: ImportAccount
     private var disposeBag = Set<AnyCancellable>()
     
     // Flow state
@@ -44,11 +45,11 @@ final class PayPresenter: ObservableObject {
         paymentOptionsResponse?.options ?? []
     }
     
-    init(router: PayRouter, paymentLink: String, accounts: [String], signer: PaymentSigner) {
+    init(router: PayRouter, paymentLink: String, accounts: [String], importAccount: ImportAccount) {
         self.router = router
         self.paymentLink = paymentLink
         self.accounts = accounts
-        self.signer = signer
+        self.importAccount = importAccount
         loadPaymentOptions()
     }
     
@@ -128,14 +129,13 @@ final class PayPresenter: ObservableObject {
                 // 2. Process all required actions
                 var resultItems: [ConfirmPaymentResultItem] = []
                 
+                let ethSigner = ETHSigner(importAccount: importAccount)
+                
                 for action in actions {
                     switch action {
                     case .walletRpc(let rpcAction):
                         // Handle wallet RPC actions (e.g., eth_signTypedData_v4 for permits)
-                        let signature = try await signer.signTypedData(
-                            chainId: rpcAction.chainId,
-                            params: rpcAction.params
-                        )
+                        let signature = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
                         let resultData = WalletRpcResultData(method: rpcAction.method, data: [signature])
                         resultItems.append(.walletRpc(resultData))
                         
@@ -189,12 +189,18 @@ final class PayPresenter: ObservableObject {
     
     private func extractPaymentId(from link: String) -> String {
         // Extract payment ID from the payment link
-        // Format: https://pay.walletconnect.com/p/<payment-id>
-        // or walletapp://walletconnectpay?paymentId=<id>
+        // Formats:
+        // - https://pay.walletconnect.com/p/<payment-id>
+        // - https://...?pid=<payment-id>
+        // - walletapp://walletconnectpay?paymentId=<id>
         if let url = URL(string: link),
            let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
             // Check for paymentId query parameter
             if let paymentId = components.queryItems?.first(where: { $0.name == "paymentId" })?.value {
+                return paymentId
+            }
+            // Check for pid query parameter (dev environment)
+            if let paymentId = components.queryItems?.first(where: { $0.name == "pid" })?.value {
                 return paymentId
             }
             // Check for path component
@@ -216,17 +222,4 @@ extension PayPresenter: SceneViewModel {
     var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
         return .never
     }
-}
-
-// MARK: - Payment Signer Protocol
-
-/// Protocol for signing payment-related messages
-/// Implement this protocol to provide signing capabilities for your wallet
-protocol PaymentSigner {
-    /// Sign typed data (EIP-712)
-    /// - Parameters:
-    ///   - chainId: The chain ID in CAIP-2 format (e.g., "eip155:1")
-    ///   - params: JSON string containing the typed data to sign
-    /// - Returns: The signature as a hex string
-    func signTypedData(chainId: String, params: String) async throws -> String
 }

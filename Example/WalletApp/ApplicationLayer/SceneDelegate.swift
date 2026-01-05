@@ -230,14 +230,11 @@ private extension SceneDelegate {
             "eip155:8453:\(address)"    // Base
         ]
         
-        // Create signer using the imported account
-        let signer = DefaultPaymentSigner(account: account)
-        
         let paymentVC = PayModule.create(
             app: app,
             paymentLink: paymentLink,
             accounts: accounts,
-            signer: signer
+            importAccount: account
         )
         paymentVC.modalPresentationStyle = .overCurrentContext
         paymentVC.view.backgroundColor = .clear
@@ -245,21 +242,3 @@ private extension SceneDelegate {
     }
 }
 
-// MARK: - Default Payment Signer
-
-/// Default implementation of PaymentSigner using the imported account
-final class DefaultPaymentSigner: PaymentSigner {
-    private let account: ImportAccount
-    
-    init(account: ImportAccount) {
-        self.account = account
-    }
-    
-    func signTypedData(chainId: String, params: String) async throws -> String {
-        // Parse the typed data from params and sign using the account's private key
-        // The params is a JSON string containing the typed data
-        let signer = ETHSigner(importAccount: account)
-        let result = signer.signTypedData(AnyCodable(params))
-        return result.value as? String ?? ""
-    }
-}
