@@ -36,10 +36,11 @@ The `WalletConnectPay` package wraps the Yttrium pay client and provides:
 5. **Sign actions** → For `eth_signTypedData_v4` actions, sign the typed data
 6. **`WalletConnectPay.instance.confirmPayment`** → Submit signatures and confirm payment
 
-## Signing Flow
+## Action Types
 
-Required actions:
+Required actions (`Action` enum):
 - **`walletRpc`** - RPC actions like `eth_signTypedData_v4` for permit signing
+- **`collectData`** - Data collection actions (e.g., first name, last name for travel rule)
 
 The `PaymentSigner` protocol defines the signing interface:
 
@@ -91,11 +92,14 @@ xcrun simctl openurl booted "walletapp://walletconnectpay?paymentId=test-123"
 The following types from Yttrium are used directly (no FFI wrappers needed):
 
 - `PaymentOptionsResponse` - Response from getPaymentOptions
-- `PaymentOption` - Individual payment option
+- `PaymentOption` - Individual payment option with `actions: [Action]`
 - `PaymentInfo` - Payment details (amount, merchant, status)
-- `RequiredAction` - Action to perform (walletRpc or build)
+- `Action` - Action to perform (`walletRpc` or `collectData`)
 - `WalletRpcAction` - RPC action with method and params
-- `SignatureResult` / `SignatureValue` - Signature for confirmPayment
+- `CollectDataAction` - Data collection action with fields
+- `ConfirmPaymentResultItem` - Result item (`walletRpc` or `collectData`)
+- `WalletRpcResultData` - RPC result with method and data array
+- `CollectDataResultData` - Collected data fields
 - `ConfirmPaymentResultResponse` - Confirmation result
 - `SdkConfig` - Configuration for WalletConnectPay client
 

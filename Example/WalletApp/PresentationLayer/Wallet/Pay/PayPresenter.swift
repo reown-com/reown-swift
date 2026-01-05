@@ -22,7 +22,7 @@ final class PayPresenter: ObservableObject {
     // Payment data
     @Published var paymentOptionsResponse: PaymentOptionsResponse?
     @Published var selectedOption: PaymentOption?
-    @Published var requiredActions: [RequiredAction] = []
+    @Published var requiredActions: [Action] = []
     
     // User info for travel rule (kept for future use)
     @Published var firstName: String = ""
@@ -124,31 +124,47 @@ final class PayPresenter: ObservableObject {
                 )
                 self.requiredActions = actions
                 
-                // 2. Sign all required actions
-                var signatureResults: [SignatureResult] = []
+                // 2. Process all required actions
+                var resultItems: [ConfirmPaymentResultItem] = []
                 
                 for action in actions {
                     switch action {
                     case .walletRpc(let rpcAction):
                         // Handle wallet RPC actions (e.g., eth_signTypedData_v4 for permits)
-                        if rpcAction.method == "eth_signTypedData_v4" {
-                            let signature = try await signer.signTypedData(
-                                chainId: rpcAction.chainId,
-                                params: rpcAction.params
-                            )
-                            signatureResults.append(SignatureResult(signature: SignatureValue(value: signature)))
-                        } else {
-                            // Handle other RPC methods as needed
-                            print("Unsupported RPC method: \(rpcAction.method)")
+                        let signature = try await signer.signTypedData(
+                            chainId: rpcAction.chainId,
+                            params: rpcAction.params
+                        )
+                        let resultData = WalletRpcResultData(method: rpcAction.method, data: [signature])
+                        resultItems.append(.walletRpc(resultData))
+                        
+                    case .collectData(let collectAction):
+                        // Handle collect data actions (e.g., travel rule name collection)
+                        var fields: [CollectDataFieldResult] = []
+                        for field in collectAction.fields {
+                            // Match field by name/id and provide the collected value
+                            let value: String
+                            let fieldName = field.name.lowercased()
+                            if fieldName.contains("first") {
+                                value = firstName
+                            } else if fieldName.contains("last") {
+                                value = lastName
+                            } else {
+                                // For other fields, use empty string or handle as needed
+                                value = ""
+                            }
+                            fields.append(CollectDataFieldResult(id: field.id, value: value))
                         }
+                        let resultData = CollectDataResultData(fields: fields)
+                        resultItems.append(.collectData(resultData))
                     }
                 }
                 
-                // 3. Confirm payment with signatures
+                // 3. Confirm payment with results
                 let result = try await WalletConnectPay.instance.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
-                    results: signatureResults,
+                    results: resultItems,
                     maxPollMs: 60000
                 )
                 

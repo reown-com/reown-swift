@@ -109,7 +109,7 @@ public class PayClient {
     /// Returns the list of actions that need to be performed to complete the payment.
     /// Actions can be:
     /// - `walletRpc`: Requires wallet to sign a message (e.g., eth_signTypedData_v4 for permits)
-    /// - `build`: Requires building and signing a transaction
+    /// - `collectData`: Requires collecting user data (e.g., name for travel rule)
     ///
     /// - Parameters:
     ///   - paymentId: The payment ID from payment options
@@ -119,7 +119,7 @@ public class PayClient {
     public func getRequiredPaymentActions(
         paymentId: String,
         optionId: String
-    ) async throws -> [RequiredAction] {
+    ) async throws -> [Action] {
         try await client.getRequiredPaymentActions(
             paymentId: paymentId,
             optionId: optionId
@@ -134,19 +134,19 @@ public class PayClient {
     /// Before calling this method:
     /// 1. Call `getRequiredPaymentActions` to get the actions
     /// 2. For each `walletRpc` action with method `eth_signTypedData_v4`, sign the typed data
-    /// 3. Collect all signatures as `SignatureResult` array
+    /// 3. Collect all results as `ConfirmPaymentResultItem` array
     ///
     /// - Parameters:
     ///   - paymentId: The payment ID
     ///   - optionId: The selected payment option ID
-    ///   - results: Array of signature results from signing the required actions
+    ///   - results: Array of result items from completing the required actions
     ///   - maxPollMs: Optional max polling time in milliseconds (default: 60000)
     /// - Returns: Confirmation response with final payment status
     /// - Throws: `ConfirmPaymentError` if confirmation fails
     public func confirmPayment(
         paymentId: String,
         optionId: String,
-        results: [SignatureResult],
+        results: [ConfirmPaymentResultItem],
         maxPollMs: Int64? = nil
     ) async throws -> ConfirmPaymentResultResponse {
         try await client.confirmPayment(
