@@ -48,15 +48,15 @@ public class WalletConnectPay {
     
     /// Configure the WalletConnectPay client
     /// - Parameters:
-    ///   - projectId: Your WalletConnect project ID
-    ///   - baseUrl: Optional custom base URL (defaults to production)
+    ///   - merchantApiKey: Your WalletConnect Pay merchant API key (starts with "wcp_merchant_")
+    ///   - baseUrl: Optional custom base URL (defaults to production Pay API)
     public static func configure(
-        projectId: String,
-        baseUrl: String = "https://rpc.walletconnect.org"
+        merchantApiKey: String,
+        baseUrl: String = "https://api.pay.walletconnect.com"
     ) {
         WalletConnectPay.config = SdkConfig(
             baseUrl: baseUrl,
-            apiKey: projectId,
+            apiKey: merchantApiKey,
             sdkName: "reown-swift",
             sdkVersion: "1.0.0",
             sdkPlatform: "ios"

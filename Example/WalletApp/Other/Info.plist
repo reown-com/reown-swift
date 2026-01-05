@@ -30,6 +30,8 @@
 	<array>
 		<string>INSendMessageIntent</string>
 	</array>
+	<key>MERCHANT_API_KEY</key>
+	<string>$(MERCHANT_API_KEY)</string>
 	<key>PIMLICO_API_KEY</key>
 	<string>$(PIMLICO_API_KEY)</string>
 	<key>PROJECT_ID</key>

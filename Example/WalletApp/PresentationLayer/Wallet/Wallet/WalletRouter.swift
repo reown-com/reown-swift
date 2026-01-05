@@ -62,7 +62,13 @@ final class WalletRouter {
     }
     
     private func startPayFlow(paymentLink: String, importAccount: ImportAccount) {
-        let accounts = [importAccount.account.absoluteString]
+        // Pass accounts for multiple chains like Kotlin does
+        let address = importAccount.account.address
+        let accounts = [
+            "eip155:1:\(address)",      // Ethereum Mainnet
+            "eip155:137:\(address)",    // Polygon
+            "eip155:8453:\(address)"    // Base
+        ]
         let signer = DefaultPaymentSigner(account: importAccount)
         
         PayModule.create(

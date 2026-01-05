@@ -190,7 +190,9 @@ private extension SceneDelegate {
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
         // Configure Pay client
-        WalletConnectPay.configure(projectId: InputConfig.projectId)
+        if let merchantApiKey = InputConfig.merchantApiKey {
+            WalletConnectPay.configure(merchantApiKey: merchantApiKey)
+        }
     }
 
     // Helper method to extract topic from URL
@@ -220,8 +222,13 @@ private extension SceneDelegate {
         // Build payment link from paymentId
         let paymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
         
-        // Get accounts in CAIP-10 format
-        let accounts = [account.account.absoluteString]
+        // Get accounts in CAIP-10 format for multiple chains
+        let address = account.account.address
+        let accounts = [
+            "eip155:1:\(address)",      // Ethereum Mainnet
+            "eip155:137:\(address)",    // Polygon
+            "eip155:8453:\(address)"    // Base
+        ]
         
         // Create signer using the imported account
         let signer = DefaultPaymentSigner(account: account)
