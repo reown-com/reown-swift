@@ -23,12 +23,25 @@ import Foundation
 ///     optionId: selectedOption.id
 /// )
 ///
-/// // Sign required actions and confirm payment
-/// let results = signActions(actions) // Your signing implementation
+/// // Sign each action and collect signatures
+/// var signatures: [String] = []
+/// for action in actions {
+///     let signature = try await sign(action.walletRpc) // Your signing implementation
+///     signatures.append(signature)
+/// }
+///
+/// // Check if user data collection is required (travel rule)
+/// var collectedData: [CollectDataFieldResult]? = nil
+/// if let collectData = options.collectData {
+///     collectedData = collectUserData(collectData.fields) // Your UI implementation
+/// }
+///
+/// // Confirm payment
 /// let response = try await WalletConnectPay.instance.confirmPayment(
 ///     paymentId: paymentId,
 ///     optionId: optionId,
-///     results: results
+///     signatures: signatures,
+///     collectedData: collectedData
 /// )
 /// ```
 public class WalletConnectPay {
@@ -120,15 +133,15 @@ public class PayClient: Yttrium.Logger {
     
     /// Get required payment actions for a selected option
     ///
-    /// Returns the list of actions that need to be performed to complete the payment.
-    /// Actions can be:
-    /// - `walletRpc`: Requires wallet to sign a message (e.g., eth_signTypedData_v4 for permits)
-    /// - `collectData`: Requires collecting user data (e.g., name for travel rule)
+    /// Returns the list of wallet RPC actions that need to be signed to complete the payment.
+    /// Each action contains a `walletRpc` with method `eth_signTypedData_v4` for permit signing.
+    ///
+    /// Note: User data collection (travel rule) is handled separately via `PaymentOptionsResponse.collectData`
     ///
     /// - Parameters:
     ///   - paymentId: The payment ID from payment options
     ///   - optionId: The selected payment option ID
-    /// - Returns: Array of required actions to perform
+    /// - Returns: Array of wallet RPC actions to sign
     /// - Throws: `GetPaymentRequestError` if the request fails
     public func getRequiredPaymentActions(
         paymentId: String,
@@ -140,33 +153,36 @@ public class PayClient: Yttrium.Logger {
         )
     }
     
-    /// Confirm a payment after signing required actions
+    /// Confirm a payment with wallet RPC signatures
     ///
     /// Submits the signed actions to complete the payment. The method polls for
     /// the final payment status if the initial response is not final.
     ///
     /// Before calling this method:
-    /// 1. Call `getRequiredPaymentActions` to get the actions
-    /// 2. For each `walletRpc` action with method `eth_signTypedData_v4`, sign the typed data
-    /// 3. Collect all results as `ConfirmPaymentResultItem` array
+    /// 1. Call `getRequiredPaymentActions` to get the wallet RPC actions
+    /// 2. For each action with method `eth_signTypedData_v4`, sign the typed data
+    /// 3. Check `PaymentOptionsResponse.collectData` for required user data fields
     ///
     /// - Parameters:
     ///   - paymentId: The payment ID
     ///   - optionId: The selected payment option ID
-    ///   - results: Array of result items from completing the required actions
+    ///   - signatures: Array of hex signatures from signing the wallet RPC actions
+    ///   - collectedData: Optional array of collected user data fields (for travel rule compliance)
     ///   - maxPollMs: Optional max polling time in milliseconds (default: 60000)
     /// - Returns: Confirmation response with final payment status
     /// - Throws: `ConfirmPaymentError` if confirmation fails
     public func confirmPayment(
         paymentId: String,
         optionId: String,
-        results: [ConfirmPaymentResultItem],
+        signatures: [String],
+        collectedData: [CollectDataFieldResult]? = nil,
         maxPollMs: Int64? = nil
     ) async throws -> ConfirmPaymentResultResponse {
         try await client.confirmPayment(
             paymentId: paymentId,
             optionId: optionId,
-            results: results,
+            signatures: signatures,
+            collectedData: collectedData,
             maxPollMs: maxPollMs
         )
     }

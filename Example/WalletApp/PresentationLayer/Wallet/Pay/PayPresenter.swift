@@ -88,8 +88,13 @@ final class PayPresenter: ObservableObject {
     }
     
     func startFlow() {
-        // For now, always assume travel rule is required, go to name input
-        currentStep = .nameInput
+        // Check if travel rule data collection is required
+        if paymentOptionsResponse?.collectData != nil {
+            currentStep = .nameInput
+        } else {
+            // No user data needed, go directly to confirmation
+            currentStep = .confirmation
+        }
     }
     
     func submitUserInfo() {
@@ -144,31 +149,32 @@ final class PayPresenter: ObservableObject {
                 )
                 self.requiredActions = actions
                 
-                // 2. Process all required actions
-                var resultItems: [ConfirmPaymentResultItem] = []
-                
+                // 2. Sign all wallet RPC actions
+                var signatures: [String] = []
                 let ethSigner = ETHSigner(importAccount: importAccount)
                 
                 for action in actions {
-                    switch action {
-                    case .walletRpc(let rpcAction):
-                        let authorizationJson = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
-                        let signature = try extractSignatureFromAuthorization(authorizationJson)
-                        resultItems.append(.walletRpc(WalletRpcResultData(method: rpcAction.method, data: [signature])))
-                        
-                    case .collectData(let collectAction):
-                        let fields = collectAction.fields.map { field -> CollectDataFieldResult in
-                            let value = resolveFieldValue(for: field)
-                            return CollectDataFieldResult(id: field.id, value: value)
-                        }
-                        resultItems.append(.collectData(CollectDataResultData(fields: fields)))
+                    let rpcAction = action.walletRpc
+                    let authorizationJson = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
+                    let signature = try extractSignatureFromAuthorization(authorizationJson)
+                    signatures.append(signature)
+                }
+                
+                // 3. Collect user data if required (travel rule)
+                var collectedData: [CollectDataFieldResult]? = nil
+                if let collectDataAction = paymentOptionsResponse?.collectData {
+                    collectedData = collectDataAction.fields.map { field -> CollectDataFieldResult in
+                        let value = resolveFieldValue(for: field)
+                        return CollectDataFieldResult(id: field.id, value: value)
                     }
                 }
                 
+                // 4. Confirm payment with signatures and collected data
                 let result = try await WalletConnectPay.instance.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
-                    results: resultItems,
+                    signatures: signatures,
+                    collectedData: collectedData,
                     maxPollMs: 60000
                 )
                 

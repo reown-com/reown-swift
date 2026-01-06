@@ -46,8 +46,17 @@ final class SignTypedDataSigner {
         // If it's [address, typedData] array
         if let array = json as? [Any], array.count >= 2 {
             let typedData = array[1]
-            let jsonData = try JSONSerialization.data(withJSONObject: typedData, options: .sortedKeys)
-            return String(data: jsonData, encoding: .utf8) ?? ""
+            
+            // If typedData is already a String (JSON string), return it directly
+            if let typedDataString = typedData as? String {
+                return typedDataString
+            }
+            
+            // If typedData is a dictionary, serialize it
+            if typedData is [String: Any] {
+                let jsonData = try JSONSerialization.data(withJSONObject: typedData, options: .sortedKeys)
+                return String(data: jsonData, encoding: .utf8) ?? ""
+            }
         }
         
         throw SignTypedDataError.invalidParams
