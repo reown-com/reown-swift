@@ -1,5 +1,4 @@
 import Foundation
-import WalletConnectUtils
 @_exported import YttriumWrapper
 
 /// WalletConnectPay - Payment SDK for WalletConnect
@@ -11,9 +10,6 @@ import WalletConnectUtils
 /// ```swift
 /// // Configure the Pay client
 /// WalletConnectPay.configure(apiKey: "your-pay-api-key")
-///
-/// // Enable logging
-/// WalletConnectPay.instance.setLogging(level: .debug)
 ///
 /// // Get payment options
 /// let options = try await WalletConnectPay.instance.getPaymentOptions(
@@ -43,10 +39,11 @@ public class WalletConnectPay {
         guard let config = WalletConnectPay.config else {
             fatalError("Error - you must call WalletConnectPay.configure(apiKey:) before accessing the shared instance.")
         }
-        return PayClient(config: config)
+        return PayClient(config: config, logging: WalletConnectPay.loggingEnabled)
     }()
     
     private static var config: SdkConfig?
+    private static var loggingEnabled: Bool = false
     
     private init() {}
     
@@ -54,9 +51,11 @@ public class WalletConnectPay {
     /// - Parameters:
     ///   - apiKey: Your WalletConnect Pay API key
     ///   - baseUrl: Optional custom base URL (defaults to production Pay API)
+    ///   - logging: Enable debug logging (defaults to false)
     public static func configure(
         apiKey: String,
-        baseUrl: String = "https://api.pay.walletconnect.com"
+        baseUrl: String = "https://api.pay.walletconnect.com",
+        logging: Bool = false
     ) {
         WalletConnectPay.config = SdkConfig(
             baseUrl: baseUrl,
@@ -65,6 +64,7 @@ public class WalletConnectPay {
             sdkVersion: "1.0.0",
             sdkPlatform: "ios"
         )
+        WalletConnectPay.loggingEnabled = logging
     }
 }
 
@@ -74,22 +74,24 @@ public typealias YttriumPayClient = Yttrium.WalletConnectPay
 /// PayClient - Wrapper around Yttrium WalletConnectPay
 ///
 /// Provides typed Swift methods for interacting with the WalletConnect Pay API.
-public class PayClient {
+public class PayClient: Yttrium.Logger {
     
     private let client: YttriumPayClient
-    private let logger: ConsoleLogger
+    private let loggingEnabled: Bool
     
-    init(config: SdkConfig) {
+    init(config: SdkConfig, logging: Bool) {
         self.client = YttriumPayClient(config: config)
-        self.logger = ConsoleLogger(prefix: "💳", loggingLevel: .off)
+        self.loggingEnabled = logging
+        
+        // Register self as logger - this keeps the logger alive as long as PayClient lives
+        registerLogger(logger: self)
     }
     
-    // MARK: - Public Methods
+    // MARK: - Logger Protocol
     
-    /// Set the logging level for WalletConnectPay
-    /// - Parameter level: The logging level (.off, .error, .warn, .debug)
-    public func setLogging(level: LoggingLevel) {
-        logger.setLogging(level: level)
+    public func log(message: String) {
+        guard loggingEnabled else { return }
+        print("💳 [WalletConnectPay] \(message)")
     }
     
     /// Get payment options for a payment link
@@ -170,17 +172,3 @@ public class PayClient {
     }
 }
 
-// MARK: - Yttrium Logger Bridge
-
-/// Bridge between yttrium's Logger protocol and WalletConnect's ConsoleLogger
-private class PayLogger: Yttrium.Logger {
-    private let consoleLogger: ConsoleLogger
-    
-    init(consoleLogger: ConsoleLogger) {
-        self.consoleLogger = consoleLogger
-    }
-    
-    func log(message: String) {
-        consoleLogger.debug(message)
-    }
-}
