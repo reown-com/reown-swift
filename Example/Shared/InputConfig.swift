@@ -21,8 +21,8 @@ struct InputConfig {
         return config(for: "PIMLICO_API_KEY")
     }
 
-    static var merchantApiKey: String? {
-        return config(for: "MERCHANT_API_KEY")
+    static var payApiKey: String? {
+        return config(for: "PAY_API_KEY")
     }
 
     private static func config(for key: String) -> String? {

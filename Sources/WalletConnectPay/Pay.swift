@@ -1,4 +1,5 @@
 import Foundation
+import WalletConnectUtils
 @_exported import YttriumWrapper
 
 /// WalletConnectPay - Payment SDK for WalletConnect
@@ -9,7 +10,10 @@ import Foundation
 /// ## Usage
 /// ```swift
 /// // Configure the Pay client
-/// WalletConnectPay.configure(projectId: "your-project-id")
+/// WalletConnectPay.configure(apiKey: "your-pay-api-key")
+///
+/// // Enable logging
+/// WalletConnectPay.instance.setLogging(level: .debug)
 ///
 /// // Get payment options
 /// let options = try await WalletConnectPay.instance.getPaymentOptions(
@@ -34,10 +38,10 @@ import Foundation
 public class WalletConnectPay {
     
     /// Shared WalletConnectPay client instance
-    /// - Important: Call `WalletConnectPay.configure(projectId:)` before accessing this property
+    /// - Important: Call `WalletConnectPay.configure(apiKey:)` before accessing this property
     public static var instance: PayClient = {
         guard let config = WalletConnectPay.config else {
-            fatalError("Error - you must call WalletConnectPay.configure(projectId:) before accessing the shared instance.")
+            fatalError("Error - you must call WalletConnectPay.configure(apiKey:) before accessing the shared instance.")
         }
         return PayClient(config: config)
     }()
@@ -48,15 +52,15 @@ public class WalletConnectPay {
     
     /// Configure the WalletConnectPay client
     /// - Parameters:
-    ///   - merchantApiKey: Your WalletConnect Pay merchant API key (starts with "wcp_merchant_")
+    ///   - apiKey: Your WalletConnect Pay API key
     ///   - baseUrl: Optional custom base URL (defaults to production Pay API)
     public static func configure(
-        merchantApiKey: String,
+        apiKey: String,
         baseUrl: String = "https://api.pay.walletconnect.com"
     ) {
         WalletConnectPay.config = SdkConfig(
             baseUrl: baseUrl,
-            apiKey: merchantApiKey,
+            apiKey: apiKey,
             sdkName: "reown-swift",
             sdkVersion: "1.0.0",
             sdkPlatform: "ios"
@@ -73,15 +77,27 @@ public typealias YttriumPayClient = Yttrium.WalletConnectPay
 public class PayClient {
     
     private let client: YttriumPayClient
+    private let logger: ConsoleLogger
+    private static var loggerRegistered = false
     
     init(config: SdkConfig) {
         self.client = YttriumPayClient(config: config)
-        #if DEBUG
-        self.client.debug(enabled: true)
-        #endif
+        self.logger = ConsoleLogger(prefix: "💳", loggingLevel: .off)
+        
+        // Register yttrium logger once
+        if !PayClient.loggerRegistered {
+            registerLogger(logger: PayLogger(consoleLogger: logger))
+            PayClient.loggerRegistered = true
+        }
     }
     
     // MARK: - Public Methods
+    
+    /// Set the logging level for WalletConnectPay
+    /// - Parameter level: The logging level (.off, .error, .warn, .debug)
+    public func setLogging(level: LoggingLevel) {
+        logger.setLogging(level: level)
+    }
     
     /// Get payment options for a payment link
     ///
@@ -158,5 +174,20 @@ public class PayClient {
             results: results,
             maxPollMs: maxPollMs
         )
+    }
+}
+
+// MARK: - Yttrium Logger Bridge
+
+/// Bridge between yttrium's Logger protocol and WalletConnect's ConsoleLogger
+private class PayLogger: Yttrium.Logger {
+    private let consoleLogger: ConsoleLogger
+    
+    init(consoleLogger: ConsoleLogger) {
+        self.consoleLogger = consoleLogger
+    }
+    
+    func log(message: String) {
+        consoleLogger.debug(message)
     }
 }

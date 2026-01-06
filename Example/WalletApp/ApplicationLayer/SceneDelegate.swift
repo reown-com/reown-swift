@@ -190,8 +190,8 @@ private extension SceneDelegate {
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
         // Configure Pay client
-        if let merchantApiKey = InputConfig.merchantApiKey {
-            WalletConnectPay.configure(merchantApiKey: merchantApiKey)
+        if let payApiKey = InputConfig.payApiKey {
+            WalletConnectPay.configure(apiKey: payApiKey)
         }
     }
 
