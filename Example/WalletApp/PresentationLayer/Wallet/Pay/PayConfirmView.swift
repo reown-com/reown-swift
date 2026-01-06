@@ -106,11 +106,35 @@ struct PayConfirmView: View {
                                         .font(.system(size: 15, weight: .medium, design: .rounded))
                                         .foregroundColor(.grey8)
                                     
+                                    // Token icon
+                                    TokenIcon(iconUrl: option.amount.display.iconUrl, symbol: option.amount.display.assetSymbol, size: 24)
+                                    
                                     Image(systemName: "chevron.up.chevron.down")
                                         .font(.system(size: 12))
                                         .foregroundColor(.grey50)
                                 }
                             }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, 16)
+                    
+                    // Network row
+                    if let option = presenter.selectedOption,
+                       let networkName = option.amount.display.networkName {
+                        HStack {
+                            Text("Network")
+                                .font(.system(size: 15, weight: .regular, design: .rounded))
+                                .foregroundColor(.grey50)
+                            
+                            Spacer()
+                            
+                            Text(networkName)
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                                .foregroundColor(.grey8)
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
@@ -214,14 +238,23 @@ struct OptionPickerSheet: View {
                     onSelect(option)
                 }) {
                     HStack(spacing: 12) {
+                        // Token icon
+                        TokenIcon(iconUrl: option.amount.display.iconUrl, symbol: option.amount.display.assetSymbol, size: 40)
+                        
                         VStack(alignment: .leading, spacing: 2) {
                             Text(option.amount.display.assetName)
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.primary)
                             
-                            Text("\(option.amount.display.assetSymbol)")
-                                .font(.system(size: 13))
-                                .foregroundColor(.secondary)
+                            if let networkName = option.amount.display.networkName {
+                                Text("on \(networkName)")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text(option.amount.display.assetSymbol)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         
                         Spacer()
@@ -241,6 +274,49 @@ struct OptionPickerSheet: View {
             .navigationTitle("Select Payment Option")
             .navigationBarTitleDisplayMode(.inline)
         }
+    }
+}
+
+// MARK: - Token Icon Component
+
+struct TokenIcon: View {
+    let iconUrl: String?
+    let symbol: String
+    let size: CGFloat
+    
+    var body: some View {
+        if let iconUrl = iconUrl, let url = URL(string: iconUrl) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                case .failure:
+                    tokenPlaceholder
+                case .empty:
+                    ProgressView()
+                        .frame(width: size, height: size)
+                @unknown default:
+                    tokenPlaceholder
+                }
+            }
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+        } else {
+            tokenPlaceholder
+        }
+    }
+    
+    private var tokenPlaceholder: some View {
+        ZStack {
+            Circle()
+                .fill(Color.grey95)
+            Text(String(symbol.prefix(1)))
+                .font(.system(size: size * 0.4, weight: .bold))
+                .foregroundColor(.grey50)
+        }
+        .frame(width: size, height: size)
     }
 }
 
