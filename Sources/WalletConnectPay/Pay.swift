@@ -78,17 +78,10 @@ public class PayClient {
     
     private let client: YttriumPayClient
     private let logger: ConsoleLogger
-    private static var loggerRegistered = false
     
     init(config: SdkConfig) {
         self.client = YttriumPayClient(config: config)
         self.logger = ConsoleLogger(prefix: "💳", loggingLevel: .off)
-        
-        // Register yttrium logger once
-        if !PayClient.loggerRegistered {
-            registerLogger(logger: PayLogger(consoleLogger: logger))
-            PayClient.loggerRegistered = true
-        }
     }
     
     // MARK: - Public Methods

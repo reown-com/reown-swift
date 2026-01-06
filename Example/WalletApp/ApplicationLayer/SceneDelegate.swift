@@ -192,7 +192,6 @@ private extension SceneDelegate {
         // Configure Pay client
         if let payApiKey = InputConfig.payApiKey {
             WalletConnectPay.configure(apiKey: payApiKey)
-            WalletConnectPay.instance.setLogging(level: .debug)
         }
     }
 
