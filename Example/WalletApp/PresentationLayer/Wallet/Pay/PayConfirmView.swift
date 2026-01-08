@@ -151,18 +151,11 @@ struct PayConfirmView: View {
                 Button(action: {
                     presenter.confirmPayment()
                 }) {
-                    if presenter.isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                    } else {
-                        Text("Pay \(info.formattedAmount)")
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(.white)
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .padding(.vertical, 16)
-                    }
+                    Text("Pay \(info.formattedAmount)")
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(.white)
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .padding(.vertical, 16)
                 }
                 .background(
                     LinearGradient(
@@ -172,7 +165,6 @@ struct PayConfirmView: View {
                     )
                 )
                 .cornerRadius(16)
-                .disabled(presenter.isLoading)
             }
         }
         .padding(.horizontal, 20)

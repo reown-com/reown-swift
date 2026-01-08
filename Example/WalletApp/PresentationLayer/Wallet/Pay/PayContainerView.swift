@@ -30,6 +30,9 @@ struct PayContainerView: View {
                     case .confirmation:
                         PayConfirmView()
                             .environmentObject(presenter)
+                    case .confirming:
+                        PayConfirmingView()
+                            .environmentObject(presenter)
                     case .success:
                         PaySuccessView()
                             .environmentObject(presenter)

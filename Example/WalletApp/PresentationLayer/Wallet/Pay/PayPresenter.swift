@@ -8,7 +8,8 @@ enum PayFlowStep: Int, CaseIterable {
     case nameInput = 1
     case dateOfBirth = 2
     case confirmation = 3
-    case success = 4
+    case confirming = 4  // Loading state while payment is being processed
+    case success = 5
 }
 
 final class PayPresenter: ObservableObject {
@@ -144,7 +145,9 @@ final class PayPresenter: ObservableObject {
             return
         }
         
-        isLoading = true
+        // Switch to confirming state immediately
+        currentStep = .confirming
+        
         Task { @MainActor in
             do {
                 // 1. Get required actions for the selected option
@@ -185,13 +188,13 @@ final class PayPresenter: ObservableObject {
                 )
                 
                 print("Payment confirmed: \(result)")
-                self.isLoading = false
                 self.currentStep = .success
                 
             } catch {
                 self.errorMessage = error.localizedDescription
                 self.showError = true
-                self.isLoading = false
+                // Go back to confirmation on error
+                self.currentStep = .confirmation
             }
         }
     }

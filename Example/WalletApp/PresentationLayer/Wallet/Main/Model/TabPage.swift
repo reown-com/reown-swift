@@ -1,12 +1,15 @@
 import UIKit
 
 enum TabPage: CaseIterable {
+    case balances
     case wallet
     case notifications
     case settings
 
     var title: String {
         switch self {
+        case .balances:
+            return "Balances"
         case .wallet:
             return "Connections"
         case .notifications:
@@ -18,6 +21,8 @@ enum TabPage: CaseIterable {
 
     var icon: UIImage {
         switch self {
+        case .balances:
+            return UIImage(systemName: "dollarsign.circle.fill")!
         case .wallet:
             return UIImage(named: "connections_tab")!
         case .notifications:
@@ -32,6 +37,6 @@ enum TabPage: CaseIterable {
     }
 
     static var enabledTabs: [TabPage] {
-        return [.wallet, .notifications, .settings]
+        return [.balances, .wallet, .notifications, .settings]
     }
 }
