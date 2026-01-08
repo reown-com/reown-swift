@@ -61,7 +61,7 @@ final class WalletRouter {
         pasteVC.presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
     }
     
-    private func startPayFlow(paymentLink: String, importAccount: ImportAccount) {
+    func startPayFlow(paymentLink: String, importAccount: ImportAccount) {
         // Pass accounts for multiple chains like Kotlin does
         let address = importAccount.account.address
         let accounts = [

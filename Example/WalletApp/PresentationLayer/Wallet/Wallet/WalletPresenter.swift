@@ -59,14 +59,7 @@ final class WalletPresenter: ObservableObject {
 
     func onPasteUri() {
         router.presentPaste { [weak self] uriString in
-            do {
-                let uri = try WalletConnectURI(uriString: uriString)
-                print("URI: \(uri)")
-                self?.pair(uri: uri)
-            } catch {
-                self?.errorMessage = error.localizedDescription
-                self?.showError.toggle()
-            }
+            self?.handleScannedOrPastedUri(uriString)
         } onError: { [weak self] error in
             print(error.localizedDescription)
             self?.router.dismiss()
@@ -87,15 +80,8 @@ final class WalletPresenter: ObservableObject {
 
     func onScanUri() {
         router.presentScan { [weak self] uriString in
-            do {
-                let uri = try WalletConnectURI(uriString: uriString)
-                print("URI: \(uri)")
-                self?.pair(uri: uri)
-                self?.router.dismiss()
-            } catch {
-                self?.errorMessage = error.localizedDescription
-                self?.showError.toggle()
-            }
+            self?.router.dismiss()
+            self?.handleScannedOrPastedUri(uriString)
         } onError: { [weak self] error in
             print(error.localizedDescription)
             self?.router.dismiss()
@@ -140,6 +126,35 @@ extension WalletPresenter {
         sessions = interactor.getSessions()
         
         pairFromDapp()
+    }
+    
+    /// Handle scanned or pasted URI - detect if it's a Pay URL or WalletConnect pairing URI
+    private func handleScannedOrPastedUri(_ uriString: String) {
+        // Check if it's a WalletConnect Pay URL
+        if isPaymentLink(uriString) {
+            print("Detected WalletConnect Pay URL: \(uriString)")
+            router.startPayFlow(paymentLink: uriString, importAccount: importAccount)
+            return
+        }
+        
+        // Otherwise, try to parse as WalletConnect pairing URI
+        do {
+            let uri = try WalletConnectURI(uriString: uriString)
+            print("URI: \(uri)")
+            pair(uri: uri)
+        } catch {
+            errorMessage = error.localizedDescription
+            showError.toggle()
+        }
+    }
+    
+    /// Check if the string is a WalletConnect Pay payment link
+    private func isPaymentLink(_ urlString: String) -> Bool {
+        guard let url = URL(string: urlString),
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return false
+        }
+        return components.queryItems?.contains(where: { $0.name == "pid" }) == true
     }
     
     private func pair(uri: WalletConnectURI) {
