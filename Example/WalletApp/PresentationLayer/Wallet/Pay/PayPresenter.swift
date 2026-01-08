@@ -76,7 +76,9 @@ final class PayPresenter: ObservableObject {
                 )
                 self.paymentOptionsResponse = response
                 // Select first option by default
-                print(response)
+                print("💳 [Pay] getPaymentOptions response: \(response)")
+                print("💳 [Pay] collectData: \(String(describing: response.collectData))")
+                print("💳 [Pay] collectData fields: \(String(describing: response.collectData?.fields))")
                 self.selectedOption = response.options.first
                 self.isLoading = false
             } catch {
@@ -89,7 +91,11 @@ final class PayPresenter: ObservableObject {
     
     func startFlow() {
         // Check if travel rule data collection is required
-        if paymentOptionsResponse?.collectData != nil {
+        let collectData = paymentOptionsResponse?.collectData
+        print("💳 [Pay] startFlow - collectData: \(String(describing: collectData))")
+        print("💳 [Pay] startFlow - paymentOptionsResponse: \(String(describing: paymentOptionsResponse))")
+        
+        if collectData != nil {
             currentStep = .nameInput
         } else {
             // No user data needed, go directly to confirmation
