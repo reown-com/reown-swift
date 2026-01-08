@@ -194,10 +194,6 @@
 		C55D348B295DD8CA0004314A /* PasteUriRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3486295DD8CA0004314A /* PasteUriRouter.swift */; };
 		C55D348C295DD8CA0004314A /* PasteUriInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3487295DD8CA0004314A /* PasteUriInteractor.swift */; };
 		C55D348D295DD8CA0004314A /* PasteUriView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3488295DD8CA0004314A /* PasteUriView.swift */; };
-		PASTEPAY0001000000000001 /* PastePaymentLinkModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */; };
-		PASTEPAY0001000000000002 /* PastePaymentLinkPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */; };
-		PASTEPAY0001000000000003 /* PastePaymentLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */; };
-		PASTEPAY0001000000000004 /* PastePaymentLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */; };
 		C55D3493295DFA750004314A /* WelcomeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348E295DFA750004314A /* WelcomeModule.swift */; };
 		C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348F295DFA750004314A /* WelcomePresenter.swift */; };
 		C55D3495295DFA750004314A /* WelcomeRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3490295DFA750004314A /* WelcomeRouter.swift */; };
@@ -248,7 +244,6 @@
 		C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B2F6F22970511B000DBA0E /* SessionRequestPresenter.swift */; };
 		C5B2F6FA29705293000DBA0E /* SessionRequestInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B2F6F42970511B000DBA0E /* SessionRequestInteractor.swift */; };
 		C5B2F6FB297055B0000DBA0E /* ETHSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57E71A5291CF76400325797 /* ETHSigner.swift */; };
-		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
 		C5B2F6FC297055B0000DBA0E /* SOLSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57E71A7291CF8A500325797 /* SOLSigner.swift */; };
 		C5B2F6FD297055B0000DBA0E /* Signer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F568C1279582D200D0A289 /* Signer.swift */; };
 		C5B2F7052970573D000DBA0E /* SolanaSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5B2F7042970573D000DBA0E /* SolanaSwift */; };
@@ -297,6 +292,10 @@
 		CF1A594D29E5876600AAC16B /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF1A594429E5876600AAC16B /* App.swift */; };
 		CF6704DF29E59DDC003326A4 /* XCUIElementQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6704DE29E59DDC003326A4 /* XCUIElementQuery.swift */; };
 		CF6704E129E5A014003326A4 /* XCTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6704E029E5A014003326A4 /* XCTestCase.swift */; };
+		PASTEPAY0001000000000001 /* PastePaymentLinkModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */; };
+		PASTEPAY0001000000000002 /* PastePaymentLinkPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */; };
+		PASTEPAY0001000000000003 /* PastePaymentLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */; };
+		PASTEPAY0001000000000004 /* PastePaymentLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */; };
 		PAY0000012EE1000000000001 /* PayModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000001 /* PayModule.swift */; };
 		PAY0000012EE1000000000002 /* PayPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000002 /* PayPresenter.swift */; };
 		PAY0000012EE1000000000003 /* PayRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000003 /* PayRouter.swift */; };
@@ -307,6 +306,7 @@
 		PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000009 /* PayConfirmView.swift */; };
 		PAY0000012EE100000000000A /* PayDateOfBirthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000A /* PayDateOfBirthView.swift */; };
 		PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000B /* PaySuccessView.swift */; };
+		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -482,7 +482,6 @@
 		A56AC8F12AD88A5A001C8FAA /* Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence.swift; sourceTree = "<group>"; };
 		A57879702A4EDC8100F8D10B /* TextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldView.swift; sourceTree = "<group>"; };
 		A57E71A5291CF76400325797 /* ETHSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETHSigner.swift; sourceTree = "<group>"; };
-		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
 		A57E71A7291CF8A500325797 /* SOLSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOLSigner.swift; sourceTree = "<group>"; };
 		A58A1ECB29BF458600A82A20 /* ENSResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ENSResolverTests.swift; sourceTree = "<group>"; };
 		A59CF4F5292F83D50031A42F /* DefaultSignerFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultSignerFactory.swift; sourceTree = "<group>"; };
@@ -524,10 +523,6 @@
 		C55D3486295DD8CA0004314A /* PasteUriRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriRouter.swift; sourceTree = "<group>"; };
 		C55D3487295DD8CA0004314A /* PasteUriInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriInteractor.swift; sourceTree = "<group>"; };
 		C55D3488295DD8CA0004314A /* PasteUriView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUriView.swift; sourceTree = "<group>"; };
-		PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkModule.swift; sourceTree = "<group>"; };
-		PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkPresenter.swift; sourceTree = "<group>"; };
-		PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkRouter.swift; sourceTree = "<group>"; };
-		PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkView.swift; sourceTree = "<group>"; };
 		C55D348E295DFA750004314A /* WelcomeModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeModule.swift; sourceTree = "<group>"; };
 		C55D348F295DFA750004314A /* WelcomePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomePresenter.swift; sourceTree = "<group>"; };
 		C55D3490295DFA750004314A /* WelcomeRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeRouter.swift; sourceTree = "<group>"; };
@@ -618,6 +613,10 @@
 		CF6704E029E5A014003326A4 /* XCTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTestCase.swift; sourceTree = "<group>"; };
 		CF79389D29EDD9DC00441B4F /* RelayIntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RelayIntegrationTests.xctestplan; sourceTree = "<group>"; };
 		CFF161B82A69719F00004342 /* WalletConnect-Package.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "WalletConnect-Package.xctestplan"; sourceTree = "<group>"; };
+		PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkModule.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkPresenter.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkRouter.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkView.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000001 /* PayModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayModule.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000002 /* PayPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayPresenter.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000003 /* PayRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayRouter.swift; sourceTree = "<group>"; };
@@ -628,6 +627,7 @@
 		PAY0000022EE1000000000009 /* PayConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000A /* PayDateOfBirthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayDateOfBirthView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000B /* PaySuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaySuccessView.swift; sourceTree = "<group>"; };
+		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1209,17 +1209,6 @@
 			path = PasteUri;
 			sourceTree = "<group>";
 		};
-		PASTEPAY0003000000000000 /* PastePaymentLink */ = {
-			isa = PBXGroup;
-			children = (
-				PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */,
-				PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */,
-				PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */,
-				PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */,
-			);
-			path = PastePaymentLink;
-			sourceTree = "<group>";
-		};
 		C55D3474295DCB850004314A /* AuthRequest */ = {
 			isa = PBXGroup;
 			children = (
@@ -1607,6 +1596,17 @@
 				CF1A594429E5876600AAC16B /* App.swift */,
 			);
 			path = Engine;
+			sourceTree = "<group>";
+		};
+		PASTEPAY0003000000000000 /* PastePaymentLink */ = {
+			isa = PBXGroup;
+			children = (
+				PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */,
+				PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */,
+				PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */,
+				PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */,
+			);
+			path = PastePaymentLink;
 			sourceTree = "<group>";
 		};
 		PAY0000032EE1000000000000 /* Pay */ = {
@@ -2652,11 +2652,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = PNDecryptionService/PNDecryptionServiceRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 184;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W5R8AG9K22;
+				DEVELOPMENT_TEAM = W5R8AG9K22;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PNDecryptionService/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PNDecryptionService;
@@ -2671,7 +2669,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.walletconnect.walletapp.PNDecryptionService;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match AppStore com.walletconnect.walletapp.PNDecryptionService";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
