@@ -9,7 +9,7 @@ import Foundation
 /// ## Usage
 /// ```swift
 /// // Configure the Pay client
-/// WalletConnectPay.configure(apiKey: "your-pay-api-key")
+/// WalletConnectPay.configure(projectId: "your-project-id", apiKey: "your-pay-api-key")
 ///
 /// // Get payment options
 /// let options = try await WalletConnectPay.instance.getPaymentOptions(
@@ -47,10 +47,10 @@ import Foundation
 public class WalletConnectPay {
     
     /// Shared WalletConnectPay client instance
-    /// - Important: Call `WalletConnectPay.configure(apiKey:)` before accessing this property
+    /// - Important: Call `WalletConnectPay.configure(projectId:apiKey:)` before accessing this property
     public static var instance: PayClient = {
         guard let config = WalletConnectPay.config else {
-            fatalError("Error - you must call WalletConnectPay.configure(apiKey:) before accessing the shared instance.")
+            fatalError("Error - you must call WalletConnectPay.configure(projectId:apiKey:) before accessing the shared instance.")
         }
         return PayClient(config: config, logging: WalletConnectPay.loggingEnabled)
     }()
@@ -62,20 +62,24 @@ public class WalletConnectPay {
     
     /// Configure the WalletConnectPay client
     /// - Parameters:
+    ///   - projectId: Your WalletConnect project ID
     ///   - apiKey: Your WalletConnect Pay API key
     ///   - baseUrl: Optional custom base URL (defaults to production Pay API)
     ///   - logging: Enable debug logging (defaults to false)
     public static func configure(
+        projectId: String,
         apiKey: String,
         baseUrl: String = "https://api.pay.walletconnect.com",
         logging: Bool = false
     ) {
         WalletConnectPay.config = SdkConfig(
             baseUrl: baseUrl,
+            projectId: projectId,
             apiKey: apiKey,
             sdkName: "reown-swift",
             sdkVersion: "1.0.0",
-            sdkPlatform: "ios"
+            sdkPlatform: "ios",
+            bundleId: Bundle.main.bundleIdentifier ?? "unknown"
         )
         WalletConnectPay.loggingEnabled = logging
     }

@@ -65,7 +65,7 @@ let yttriumDebug = true  // Use local ../yttrium
 WalletConnectPay is configured in `SceneDelegate.swift`:
 
 ```swift
-WalletConnectPay.configure(projectId: InputConfig.projectId)
+WalletConnectPay.configure(projectId: InputConfig.projectId, apiKey: InputConfig.payApiKey!)
 ```
 
 ## Deep Link Format
