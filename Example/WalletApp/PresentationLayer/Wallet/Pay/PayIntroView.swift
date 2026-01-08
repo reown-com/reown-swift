@@ -32,6 +32,9 @@ struct PayIntroView: View {
                         .font(.system(size: 15, weight: .medium, design: .rounded))
                 }
                 .frame(height: 300)
+            } else if presenter.paymentOptions.isEmpty {
+                // No payment options available
+                noPaymentOptionsView
             } else if let info = presenter.paymentInfo {
                 // Merchant icon
                 if let iconUrl = info.merchant.iconUrl {
@@ -135,6 +138,50 @@ struct PayIntroView: View {
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.grey8)
         }
+    }
+    
+    private var noPaymentOptionsView: some View {
+        VStack(spacing: 20) {
+            // Error icon
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.1))
+                    .frame(width: 64, height: 64)
+                
+                Image(systemName: "exclamationmark")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(.red)
+            }
+            .padding(.top, 40)
+            
+            // Error message
+            Text("No payment options available")
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .foregroundColor(.grey8)
+            
+            Spacer()
+                .frame(height: 20)
+            
+            // Close button
+            Button(action: {
+                presenter.dismiss()
+            }) {
+                Text("Close")
+                    .frame(maxWidth: .infinity)
+                    .foregroundColor(.white)
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.blue100, .blue200]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .cornerRadius(16)
+            }
+        }
+        .frame(minHeight: 250)
     }
 }
 
