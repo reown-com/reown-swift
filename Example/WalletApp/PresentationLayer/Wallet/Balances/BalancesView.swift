@@ -2,10 +2,11 @@ import SwiftUI
 
 struct BalancesView: View {
     @EnvironmentObject var viewModel: BalancesViewModel
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         ZStack {
-            Color.grey100
+            Color(UIColor.systemBackground)
                 .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
@@ -49,15 +50,15 @@ struct BalancesView: View {
         VStack(spacing: 8) {
             Text(viewModel.formattedTotalBalance)
                 .font(.system(size: 48, weight: .bold, design: .rounded))
-                .foregroundColor(.grey8)
+                .foregroundColor(Color(UIColor.label))
             
             Text("Total USDC")
                 .font(.system(size: 16, weight: .medium, design: .rounded))
-                .foregroundColor(.grey50)
+                .foregroundColor(Color(UIColor.secondaryLabel))
             
             Text(viewModel.truncatedAddress)
                 .font(.system(size: 14, weight: .regular, design: .monospaced))
-                .foregroundColor(.grey50)
+                .foregroundColor(Color(UIColor.secondaryLabel))
                 .padding(.top, 4)
         }
         .padding(.vertical, 20)
@@ -71,7 +72,7 @@ struct BalancesView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(chainBalance.chain.rawValue)
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundColor(.grey8)
+                    .foregroundColor(Color(UIColor.label))
                 
                 if let error = chainBalance.error {
                     Text(error)
@@ -90,18 +91,18 @@ struct BalancesView: View {
             } else {
                 Text(chainBalance.formattedBalance)
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundColor(.grey8)
+                    .foregroundColor(Color(UIColor.label))
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.8))
+                .fill(Color(UIColor.secondarySystemBackground))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.grey50.opacity(0.2), lineWidth: 1)
+                .stroke(Color(UIColor.separator).opacity(0.3), lineWidth: 1)
         )
     }
     
