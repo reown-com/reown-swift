@@ -45,7 +45,7 @@ import Foundation
 /// )
 /// ```
 public class WalletConnectPay {
-    
+
     /// Shared WalletConnectPay client instance
     /// - Important: Call `WalletConnectPay.configure(projectId:apiKey:)` before accessing this property
     public static var instance: PayClient = {
@@ -54,10 +54,24 @@ public class WalletConnectPay {
         }
         return PayClient(config: config, logging: WalletConnectPay.loggingEnabled)
     }()
-    
+
     private static var config: SdkConfig?
     private static var loggingEnabled: Bool = false
-    
+
+    private static var packageVersion: String {
+        guard let configURL = Bundle.resourceBundle.url(forResource: "PackageConfig", withExtension: "json") else {
+            fatalError("Unable to find PackageConfig.json in the resource bundle")
+        }
+
+        do {
+            let jsonData = try Data(contentsOf: configURL)
+            let config = try JSONDecoder().decode(PackageConfig.self, from: jsonData)
+            return config.version
+        } catch {
+            fatalError("Failed to load and decode PackageConfig.json: \(error)")
+        }
+    }
+
     private init() {}
     
     /// Configure the WalletConnectPay client
@@ -76,8 +90,8 @@ public class WalletConnectPay {
             baseUrl: baseUrl,
             projectId: projectId,
             apiKey: apiKey,
-            sdkName: "reown-swift",
-            sdkVersion: "1.0.0",
+            sdkName: "swift-walletconnect-pay",
+            sdkVersion: packageVersion,
             sdkPlatform: "ios",
             bundleId: Bundle.main.bundleIdentifier ?? "unknown"
         )

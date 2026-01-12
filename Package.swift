@@ -203,7 +203,8 @@ let package = Package(
         .target(
             name: "WalletConnectPay",
             dependencies: ["YttriumWrapper"],
-            path: "Sources/WalletConnectPay"),
+            path: "Sources/WalletConnectPay",
+            resources: [.copy("PackageConfig.json")]),
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
