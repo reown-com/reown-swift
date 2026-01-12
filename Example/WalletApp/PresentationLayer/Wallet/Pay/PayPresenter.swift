@@ -209,13 +209,23 @@ final class PayPresenter: ObservableObject {
         let fieldId = field.id.lowercased()
         let fieldName = field.name.lowercased()
         
-        if fieldId == "firstname" || fieldName.contains("first") {
+        // Check for full name field first (combined first + last name)
+        if fieldId == "fullname" || fieldId == "full_name" || fieldId == "name" ||
+           fieldName.contains("full name") {
+            return "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
+        }
+        // Individual name fields
+        else if fieldId == "firstname" || fieldId == "first_name" || fieldName.contains("first") {
             return firstName
-        } else if fieldId == "lastname" || fieldName.contains("last") {
+        } else if fieldId == "lastname" || fieldId == "last_name" || fieldName.contains("last") {
             return lastName
-        } else if fieldId == "dob" || fieldName.contains("birth") {
+        }
+        // Date of birth
+        else if fieldId == "dob" || fieldId == "dateofbirth" || fieldId == "date_of_birth" || fieldName.contains("birth") {
             return formattedDateOfBirth
         }
+        
+        print("💳 [Pay] Warning: Unknown field - id: \(field.id), name: \(field.name)")
         return ""
     }
     
