@@ -1,12 +1,6 @@
 import Foundation
 import WalletConnectPay
 
-// MARK: - Pay API Configuration
-// Base URL for WalletConnect Pay API
-enum PayAPIConfig {
-    static let baseURL = "https://rpc.walletconnect.org"
-}
-
 // MARK: - Helper Extensions
 
 extension PaymentInfo {

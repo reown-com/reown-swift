@@ -1,10 +1,10 @@
 import SwiftUI
+import Combine
 
 struct PayConfirmingView: View {
     @EnvironmentObject var presenter: PayPresenter
     @State private var animationPhase: Int = 0
-    
-    private let timer = Timer.publish(every: 0.4, on: .main, in: .common).autoconnect()
+    @State private var timerCancellable: AnyCancellable?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -49,10 +49,18 @@ struct PayConfirmingView: View {
         .cornerRadius(34)
         .padding(.horizontal, 10)
         .padding(.bottom, 10)
-        .onReceive(timer) { _ in
-            withAnimation(.easeInOut(duration: 0.3)) {
-                animationPhase = (animationPhase + 1) % 4
-            }
+        .onAppear {
+            timerCancellable = Timer.publish(every: 0.4, on: .main, in: .common)
+                .autoconnect()
+                .sink { _ in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        animationPhase = (animationPhase + 1) % 4
+                    }
+                }
+        }
+        .onDisappear {
+            timerCancellable?.cancel()
+            timerCancellable = nil
         }
     }
     

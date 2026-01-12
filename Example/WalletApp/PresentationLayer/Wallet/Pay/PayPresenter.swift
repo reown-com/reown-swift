@@ -151,7 +151,7 @@ final class PayPresenter: ObservableObject {
         Task { @MainActor in
             do {
                 // 1. Get required actions for the selected option
-                let paymentId = extractPaymentId(from: paymentLink)
+                let paymentId = try extractPaymentId(from: paymentLink)
                 let actions = try await WalletConnectPay.instance.getRequiredPaymentActions(
                     paymentId: paymentId,
                     optionId: option.id
@@ -229,7 +229,7 @@ final class PayPresenter: ObservableObject {
         return ""
     }
     
-    private func extractPaymentId(from link: String) -> String {
+    private func extractPaymentId(from link: String) throws -> String {
         // Extract payment ID from the payment link
         // Formats:
         // - https://pay.walletconnect.com/p/<payment-id>
@@ -250,8 +250,18 @@ final class PayPresenter: ObservableObject {
                 return lastPathComponent
             }
         }
-        // Fallback: use the whole link as ID
-        return link
+        throw PaymentError.invalidPaymentLink
+    }
+
+    enum PaymentError: LocalizedError {
+        case invalidPaymentLink
+
+        var errorDescription: String? {
+            switch self {
+            case .invalidPaymentLink:
+                return "Invalid payment link. Could not extract payment ID."
+            }
+        }
     }
     
     /// Extract hex signature from ERC-3009 authorization JSON
