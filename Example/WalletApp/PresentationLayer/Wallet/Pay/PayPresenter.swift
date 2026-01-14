@@ -164,8 +164,8 @@ final class PayPresenter: ObservableObject {
                 
                 for action in actions {
                     let rpcAction = action.walletRpc
-                    // SignTypedDataSigner now returns hex signature directly (0x{r}{s}{v})
-                    let signature = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
+                    let authorizationJson = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
+                    let signature = try extractSignatureFromAuthorization(authorizationJson)
                     signatures.append(signature)
                 }
                 
@@ -265,6 +265,29 @@ final class PayPresenter: ObservableObject {
                 return "Invalid payment link. Could not extract payment ID."
             }
         }
+    }
+    
+    /// Extract hex signature from ERC-3009 authorization JSON
+    private func extractSignatureFromAuthorization(_ authorizationJson: String) throws -> String {
+        let auth = try JSONDecoder().decode(Erc3009AuthorizationResponse.self, from: Data(authorizationJson.utf8))
+        let rHex = auth.r.stripHexPrefix()
+        let sHex = auth.s.stripHexPrefix()
+        let vHex = String(format: "%02x", auth.v)
+        return "0x\(rHex)\(sHex)\(vHex)"
+    }
+}
+
+// MARK: - Response Types
+
+private struct Erc3009AuthorizationResponse: Decodable {
+    let v: Int
+    let r: String
+    let s: String
+}
+
+private extension String {
+    func stripHexPrefix() -> String {
+        hasPrefix("0x") ? String(dropFirst(2)) : self
     }
 }
 
