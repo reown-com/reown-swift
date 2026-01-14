@@ -14,8 +14,28 @@ final class SessionRequestPresenter: ObservableObject {
     let validationStatus: VerifyContext.ValidationStatus?
 
     var message: String {
-        guard let messages = try? sessionRequest.params.get([String].self),
-              let firstMessage = messages.first else {
+        guard let messages = try? sessionRequest.params.get([String].self) else {
+            return String(describing: sessionRequest.params.value)
+        }
+
+        // eth_signTypedData_v4: params are [address, typedDataJSON]
+        // Show the typed data (second param), not the address (first param)
+        if sessionRequest.method == "eth_signTypedData" || sessionRequest.method == "eth_signTypedData_v4" {
+            guard messages.count > 1 else {
+                return String(describing: sessionRequest.params.value)
+            }
+            let typedDataJSON = messages[1]
+            // Pretty print the JSON if possible
+            if let data = typedDataJSON.data(using: .utf8),
+               let jsonObject = try? JSONSerialization.jsonObject(with: data),
+               let prettyData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
+               let prettyString = String(data: prettyData, encoding: .utf8) {
+                return prettyString
+            }
+            return typedDataJSON
+        }
+
+        guard let firstMessage = messages.first else {
             return String(describing: sessionRequest.params.value)
         }
 
