@@ -42,6 +42,9 @@ struct BalancesView: View {
         .onAppear {
             viewModel.onAppear()
         }
+        .onDisappear {
+            viewModel.onDisappear()
+        }
     }
     
     // MARK: - Total Balance Header

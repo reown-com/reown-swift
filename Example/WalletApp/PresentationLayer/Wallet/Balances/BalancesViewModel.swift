@@ -29,21 +29,32 @@ struct ChainBalance: Identifiable {
     }
 }
 
+/// Notification posted when a payment is completed successfully
+extension Notification.Name {
+    static let paymentCompleted = Notification.Name("paymentCompleted")
+}
+
 /// ViewModel for the Balances screen
 final class BalancesViewModel: ObservableObject {
-    
+
     // MARK: - Published Properties
-    
+
     @Published var chainBalances: [ChainBalance] = USDCChain.allCases.map { ChainBalance(chain: $0) }
     @Published var isRefreshing: Bool = false
     @Published var showError: Bool = false
     @Published var errorMessage: String = ""
-    
+
     // MARK: - Dependencies
-    
+
     private let app: Application
     private let importAccount: ImportAccount
     weak var viewController: UIViewController?
+
+    // MARK: - Auto-refresh
+
+    private var refreshTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
+    private static let refreshInterval: TimeInterval = 10.0
     
     private static let evmSigningClient: EvmSigningClient = {
         let metadata = PulseMetadata(
@@ -81,21 +92,54 @@ final class BalancesViewModel: ObservableObject {
     }
     
     // MARK: - Init
-    
+
     init(app: Application, importAccount: ImportAccount) {
         self.app = app
         self.importAccount = importAccount
+        subscribeToPaymentCompletion()
     }
-    
+
+    deinit {
+        stopAutoRefresh()
+    }
+
     // MARK: - Public Methods
-    
+
     func onAppear() {
         fetchAllBalances()
+        startAutoRefresh()
     }
-    
+
+    func onDisappear() {
+        stopAutoRefresh()
+    }
+
     func refresh() {
         isRefreshing = true
         fetchAllBalances()
+    }
+
+    // MARK: - Auto-refresh
+
+    private func startAutoRefresh() {
+        stopAutoRefresh()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
+            self?.fetchAllBalances()
+        }
+    }
+
+    private func stopAutoRefresh() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
+
+    private func subscribeToPaymentCompletion() {
+        NotificationCenter.default.publisher(for: .paymentCompleted)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.refresh()
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Navigation Actions

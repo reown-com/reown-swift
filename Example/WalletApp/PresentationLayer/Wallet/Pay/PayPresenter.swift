@@ -189,6 +189,9 @@ final class PayPresenter: ObservableObject {
                 
                 print("Payment confirmed: \(result)")
                 self.currentStep = .success
+
+                // Notify balances screen to refresh
+                NotificationCenter.default.post(name: .paymentCompleted, object: nil)
                 
             } catch {
                 self.errorMessage = error.localizedDescription
