@@ -17,7 +17,7 @@ var dependencies: [Package.Dependency] = [
 if yttriumDebug {
     dependencies.append(.package(path: "../yttrium"))
 } else {
-    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.9.75")))
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.10.1")))
 }
 
 let yttriumTarget = buildYttriumWrapperTarget()
@@ -86,7 +86,10 @@ let package = Package(
             targets: ["YttriumWrapper"]),
         .library(
             name: "YttriumUtilsWrapper",
-            targets: ["YttriumUtilsWrapper"]) 
+            targets: ["YttriumUtilsWrapper"]),
+        .library(
+            name: "WalletConnectPay",
+            targets: ["WalletConnectPay"])
     ],
     dependencies: dependencies,
     targets: [
@@ -197,6 +200,11 @@ let package = Package(
         ),
         yttriumTarget,
         yttriumUtilsTarget,
+        .target(
+            name: "WalletConnectPay",
+            dependencies: ["YttriumWrapper"],
+            path: "Sources/WalletConnectPay",
+            resources: [.copy("PackageConfig.json")]),
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),

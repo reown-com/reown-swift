@@ -16,6 +16,7 @@
 		446A74DD2E49F64800319C63 /* WalletConnectNotify in Frameworks */ = {isa = PBXBuildFile; productRef = 446A74DC2E49F64800319C63 /* WalletConnectNotify */; };
 		44713AA02E46420A00E3027A /* YttriumUtilsWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 44713A9F2E46420A00E3027A /* YttriumUtilsWrapper */; };
 		44783BA72EE0BA550056AB20 /* YttriumWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 44783BA62EE0BA550056AB20 /* YttriumWrapper */; };
+		4494782D2F02E30F00CF35BA /* WalletConnectPay in Frameworks */ = {isa = PBXBuildFile; productRef = 4494782C2F02E30F00CF35BA /* WalletConnectPay */; };
 		44BA5CCD2E4C8BB50074A01E /* URLExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44BA5CCC2E4C8BB50074A01E /* URLExtension.swift */; };
 		44D89A112DF183C800056A7B /* SuiSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A102DF183C800056A7B /* SuiSigner.swift */; };
 		44D89A132DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D89A122DF6FA6600056A7B /* UITestsWalletAgainstAppKitWeb.swift */; };
@@ -291,6 +292,25 @@
 		CF1A594D29E5876600AAC16B /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF1A594429E5876600AAC16B /* App.swift */; };
 		CF6704DF29E59DDC003326A4 /* XCUIElementQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6704DE29E59DDC003326A4 /* XCUIElementQuery.swift */; };
 		CF6704E129E5A014003326A4 /* XCTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6704E029E5A014003326A4 /* XCTestCase.swift */; };
+		PASTEPAY0001000000000001 /* PastePaymentLinkModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */; };
+		PASTEPAY0001000000000002 /* PastePaymentLinkPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */; };
+		PASTEPAY0001000000000003 /* PastePaymentLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */; };
+		PASTEPAY0001000000000004 /* PastePaymentLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */; };
+		BAL0000012EE1000000000001 /* USDCChain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAL0000022EE1000000000001 /* USDCChain.swift */; };
+		BAL0000012EE1000000000002 /* BalancesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAL0000022EE1000000000002 /* BalancesViewModel.swift */; };
+		BAL0000012EE1000000000003 /* BalancesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAL0000022EE1000000000003 /* BalancesView.swift */; };
+		PAY0000012EE1000000000001 /* PayModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000001 /* PayModule.swift */; };
+		PAY0000012EE1000000000002 /* PayPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000002 /* PayPresenter.swift */; };
+		PAY0000012EE1000000000003 /* PayRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000003 /* PayRouter.swift */; };
+		PAY0000012EE1000000000005 /* PayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000005 /* PayService.swift */; };
+		PAY0000012EE1000000000006 /* PayContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000006 /* PayContainerView.swift */; };
+		PAY0000012EE1000000000007 /* PayIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000007 /* PayIntroView.swift */; };
+		PAY0000012EE1000000000008 /* PayNameInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000008 /* PayNameInputView.swift */; };
+		PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000009 /* PayConfirmView.swift */; };
+		PAY0000012EE100000000000A /* PayDateOfBirthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000A /* PayDateOfBirthView.swift */; };
+		PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000B /* PaySuccessView.swift */; };
+		PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000C /* PayConfirmingView.swift */; };
+		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -597,6 +617,25 @@
 		CF6704E029E5A014003326A4 /* XCTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTestCase.swift; sourceTree = "<group>"; };
 		CF79389D29EDD9DC00441B4F /* RelayIntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RelayIntegrationTests.xctestplan; sourceTree = "<group>"; };
 		CFF161B82A69719F00004342 /* WalletConnect-Package.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "WalletConnect-Package.xctestplan"; sourceTree = "<group>"; };
+		PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkModule.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkPresenter.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkRouter.swift; sourceTree = "<group>"; };
+		PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastePaymentLinkView.swift; sourceTree = "<group>"; };
+		BAL0000022EE1000000000001 /* USDCChain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USDCChain.swift; sourceTree = "<group>"; };
+		BAL0000022EE1000000000002 /* BalancesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalancesViewModel.swift; sourceTree = "<group>"; };
+		BAL0000022EE1000000000003 /* BalancesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalancesView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000001 /* PayModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayModule.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000002 /* PayPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayPresenter.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000003 /* PayRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayRouter.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000005 /* PayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayService.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000006 /* PayContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayContainerView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000007 /* PayIntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayIntroView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000008 /* PayNameInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNameInputView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000009 /* PayConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmView.swift; sourceTree = "<group>"; };
+		PAY0000022EE100000000000A /* PayDateOfBirthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayDateOfBirthView.swift; sourceTree = "<group>"; };
+		PAY0000022EE100000000000B /* PaySuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaySuccessView.swift; sourceTree = "<group>"; };
+		PAY0000022EE100000000000C /* PayConfirmingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmingView.swift; sourceTree = "<group>"; };
+		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -679,6 +718,7 @@
 				C5B2F7052970573D000DBA0E /* SolanaSwift in Frameworks */,
 				C56EE255293F569A004840D1 /* Starscream in Frameworks */,
 				84AEC2542B4D43CD00E27A5B /* SwiftMessages in Frameworks */,
+				4494782D2F02E30F00CF35BA /* WalletConnectPay in Frameworks */,
 				44713AA02E46420A00E3027A /* YttriumUtilsWrapper in Frameworks */,
 				446A74DD2E49F64800319C63 /* WalletConnectNotify in Frameworks */,
 				84943C7D2A9BA328007EBAC2 /* Mixpanel in Frameworks */,
@@ -868,6 +908,16 @@
 			path = Push;
 			sourceTree = "<group>";
 		};
+		BAL0000032EE1000000000000 /* Balances */ = {
+			isa = PBXGroup;
+			children = (
+				BAL0000022EE1000000000001 /* USDCChain.swift */,
+				BAL0000022EE1000000000002 /* BalancesViewModel.swift */,
+				BAL0000022EE1000000000003 /* BalancesView.swift */,
+			);
+			path = Balances;
+			sourceTree = "<group>";
+		};
 		84AEF0172D3DD8D3006E43E5 /* SendStableCoin */ = {
 			isa = PBXGroup;
 			children = (
@@ -1032,6 +1082,7 @@
 				44EF89722E015D6B0025778F /* StacksSigner.swift */,
 				44D89A102DF183C800056A7B /* SuiSigner.swift */,
 				A57E71A5291CF76400325797 /* ETHSigner.swift */,
+				SIGNTD0002000000000001 /* SignTypedDataSigner.swift */,
 				A57E71A7291CF8A500325797 /* SOLSigner.swift */,
 				44650A3E2E951D71004F2144 /* TonSigner.swift */,
 			);
@@ -1242,13 +1293,16 @@
 				C55D349E2965FAC30004314A /* SessionProposal */,
 				C5B2F6F029705111000DBA0E /* SessionRequest */,
 				C55D3471295DC5F60004314A /* PasteUri */,
+				PASTEPAY0003000000000000 /* PastePaymentLink */,
 				C5F32A2A2954812900A6476E /* ConnectionDetails */,
 				C56EE236293F566A004840D1 /* Scan */,
 				C56EE22A293F5668004840D1 /* Wallet */,
 				847BD1E9298A807000076C90 /* Notifications */,
 				84B815592991217F00FAD54E /* PushMessages */,
 				84D88C802CE751EE003A6C16 /* CATransactionModal */,
+				BAL0000032EE1000000000000 /* Balances */,
 				84AEF0172D3DD8D3006E43E5 /* SendStableCoin */,
+				PAY0000032EE1000000000000 /* Pay */,
 			);
 			path = Wallet;
 			sourceTree = "<group>";
@@ -1563,6 +1617,35 @@
 			path = Engine;
 			sourceTree = "<group>";
 		};
+		PASTEPAY0003000000000000 /* PastePaymentLink */ = {
+			isa = PBXGroup;
+			children = (
+				PASTEPAY0002000000000001 /* PastePaymentLinkModule.swift */,
+				PASTEPAY0002000000000002 /* PastePaymentLinkPresenter.swift */,
+				PASTEPAY0002000000000003 /* PastePaymentLinkRouter.swift */,
+				PASTEPAY0002000000000004 /* PastePaymentLinkView.swift */,
+			);
+			path = PastePaymentLink;
+			sourceTree = "<group>";
+		};
+		PAY0000032EE1000000000000 /* Pay */ = {
+			isa = PBXGroup;
+			children = (
+				PAY0000022EE1000000000001 /* PayModule.swift */,
+				PAY0000022EE1000000000002 /* PayPresenter.swift */,
+				PAY0000022EE1000000000003 /* PayRouter.swift */,
+				PAY0000022EE1000000000005 /* PayService.swift */,
+				PAY0000022EE1000000000006 /* PayContainerView.swift */,
+				PAY0000022EE1000000000007 /* PayIntroView.swift */,
+				PAY0000022EE1000000000008 /* PayNameInputView.swift */,
+				PAY0000022EE100000000000A /* PayDateOfBirthView.swift */,
+				PAY0000022EE1000000000009 /* PayConfirmView.swift */,
+				PAY0000022EE100000000000B /* PaySuccessView.swift */,
+				PAY0000022EE100000000000C /* PayConfirmingView.swift */,
+			);
+			path = Pay;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1734,6 +1817,7 @@
 				84CA52162C88965C0069BB33 /* ReownRouter */,
 				44713A9F2E46420A00E3027A /* YttriumUtilsWrapper */,
 				446A74DC2E49F64800319C63 /* WalletConnectNotify */,
+				4494782C2F02E30F00CF35BA /* WalletConnectPay */,
 			);
 			productName = ChatWallet;
 			productReference = C56EE21B293F55ED004840D1 /* WalletApp.app */;
@@ -2123,6 +2207,20 @@
 				C56EE28C293F5757004840D1 /* Configurator.swift in Sources */,
 				C5FFEA782ADD896E007282A2 /* BrowserPresenter.swift in Sources */,
 				C55D3489295DD8CA0004314A /* PasteUriModule.swift in Sources */,
+				BAL0000012EE1000000000001 /* USDCChain.swift in Sources */,
+				BAL0000012EE1000000000002 /* BalancesViewModel.swift in Sources */,
+				BAL0000012EE1000000000003 /* BalancesView.swift in Sources */,
+				PAY0000012EE1000000000001 /* PayModule.swift in Sources */,
+				PAY0000012EE1000000000002 /* PayPresenter.swift in Sources */,
+				PAY0000012EE1000000000003 /* PayRouter.swift in Sources */,
+				PAY0000012EE1000000000005 /* PayService.swift in Sources */,
+				PAY0000012EE1000000000006 /* PayContainerView.swift in Sources */,
+				PAY0000012EE1000000000007 /* PayIntroView.swift in Sources */,
+				PAY0000012EE1000000000008 /* PayNameInputView.swift in Sources */,
+				PAY0000012EE100000000000A /* PayDateOfBirthView.swift in Sources */,
+				PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */,
+				PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */,
+				PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */,
 				44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */,
 				C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */,
 				C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */,
@@ -2135,6 +2233,7 @@
 				84AEF0162D3DD8CA006E43E5 /* SendStableCoinView.swift in Sources */,
 				84D88C7F2CE751E7003A6C16 /* CATransactionView.swift in Sources */,
 				C5B2F6FB297055B0000DBA0E /* ETHSigner.swift in Sources */,
+				SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */,
 				C56EE274293F56D7004840D1 /* SceneViewController.swift in Sources */,
 				A5D610D42AB35BED00C20083 /* FailableDecodable.swift in Sources */,
 				A56AC8F22AD88A5A001C8FAA /* Sequence.swift in Sources */,
@@ -2150,6 +2249,10 @@
 				8487A9482A83AD680003D5AF /* LoggingService.swift in Sources */,
 				84D88C822CE7525F003A6C16 /* CATransactionPresenter.swift in Sources */,
 				C55D348D295DD8CA0004314A /* PasteUriView.swift in Sources */,
+				PASTEPAY0001000000000001 /* PastePaymentLinkModule.swift in Sources */,
+				PASTEPAY0001000000000002 /* PastePaymentLinkPresenter.swift in Sources */,
+				PASTEPAY0001000000000003 /* PastePaymentLinkRouter.swift in Sources */,
+				PASTEPAY0001000000000004 /* PastePaymentLinkView.swift in Sources */,
 				C5F32A2C2954814200A6476E /* ConnectionDetailsModule.swift in Sources */,
 				C56EE249293F566D004840D1 /* ScanInteractor.swift in Sources */,
 				C56EE28A293F5757004840D1 /* AppDelegate.swift in Sources */,
@@ -2573,11 +2676,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = PNDecryptionService/PNDecryptionServiceRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 184;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W5R8AG9K22;
+				DEVELOPMENT_TEAM = W5R8AG9K22;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PNDecryptionService/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PNDecryptionService;
@@ -2592,7 +2693,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.walletconnect.walletapp.PNDecryptionService;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match AppStore com.walletconnect.walletapp.PNDecryptionService";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -2951,6 +3051,10 @@
 		44783BA62EE0BA550056AB20 /* YttriumWrapper */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = YttriumWrapper;
+		};
+		4494782C2F02E30F00CF35BA /* WalletConnectPay */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WalletConnectPay;
 		};
 		8421447A2C80A2B8004FF494 /* ReownAppKit */ = {
 			isa = XCSwiftPackageProductDependency;

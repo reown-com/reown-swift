@@ -49,6 +49,36 @@ final class WalletRouter {
 //            .present(from: viewController)
     }
 
+    func presentPastePaymentLink(importAccount: ImportAccount) {
+        let pasteVC = PastePaymentLinkModule.create(app: app) { [weak self] paymentLink in
+            // Dismiss the paste screen first, then present pay flow
+            UIApplication.currentWindow.rootViewController?.dismiss(animated: true) {
+                self?.startPayFlow(paymentLink: paymentLink, importAccount: importAccount)
+            }
+        } onError: { error in
+            print("Payment link error: \(error.localizedDescription)")
+        }
+        pasteVC.presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+    }
+    
+    func startPayFlow(paymentLink: String, importAccount: ImportAccount) {
+        // Pass accounts for multiple chains like Kotlin does
+        let address = importAccount.account.address
+        let accounts = [
+            "eip155:1:\(address)",      // Ethereum Mainnet
+            "eip155:137:\(address)",    // Polygon
+            "eip155:8453:\(address)"    // Base
+        ]
+        
+        PayModule.create(
+            app: app,
+            paymentLink: paymentLink,
+            accounts: accounts,
+            importAccount: importAccount
+        )
+        .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+    }
+
     func dismiss() {
         viewController.navigationController?.dismiss()
     }

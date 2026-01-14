@@ -2,6 +2,8 @@ import SafariServices
 import UIKit
 import ReownWalletKit
 import WalletConnectSign
+import WalletConnectPay
+import Commons
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
     var window: UIWindow?
@@ -53,6 +55,18 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 
         configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
+        
+        // Check for payment deep link on cold start
+        var pendingPaymentId: String?
+        if let urlContext = connectionOptions.urlContexts.first {
+            let url = urlContext.url
+            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+               url.host == "walletconnectpay", //may change
+               let queryItems = components.queryItems,
+               let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+                pendingPaymentId = paymentId
+            }
+        }
 
         // Process connection options
         do {
@@ -79,12 +93,29 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             }
         }
         configurators.configure()
+        
+        // Handle pending payment after configuration is complete
+        if let paymentId = pendingPaymentId {
+            // Delay slightly to ensure UI is ready
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.handlePayment(paymentId: paymentId)
+            }
+        }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let context = URLContexts.first else { return }
         
         let url = context.url
+        
+        // Check for payment deep link
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           url.host == "walletconnectpay",
+           let queryItems = components.queryItems,
+           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+            handlePayment(paymentId: paymentId)
+            return
+        }
 
         do {
             let uri = try WalletConnectURI(urlContext: context)
@@ -158,7 +189,14 @@ private extension SceneDelegate {
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
-
+        // Configure Pay client
+        if let payApiKey = InputConfig.payApiKey {
+            #if DEBUG
+            WalletConnectPay.configure(projectId: InputConfig.projectId, apiKey: payApiKey, logging: true)
+            #else
+            WalletConnectPay.configure(projectId: InputConfig.projectId, apiKey: payApiKey)
+            #endif
+        }
     }
 
     // Helper method to extract topic from URL
@@ -173,4 +211,38 @@ private extension SceneDelegate {
         
         return queryItems.first(where: { $0.name == "topic" })?.value
     }
+    
+    private func handlePayment(paymentId: String) {
+        guard let topController = window?.rootViewController?.topController else {
+            return
+        }
+        
+        // Get wallet account from storage
+        guard let account = AccountStorage(defaults: .standard).importAccount else {
+            AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
+            return
+        }
+        
+        // Build payment link from paymentId
+        let paymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
+        
+        // Get accounts in CAIP-10 format for multiple chains
+        let address = account.account.address
+        let accounts = [
+            "eip155:1:\(address)",      // Ethereum Mainnet
+            "eip155:137:\(address)",    // Polygon
+            "eip155:8453:\(address)"    // Base
+        ]
+        
+        let paymentVC = PayModule.create(
+            app: app,
+            paymentLink: paymentLink,
+            accounts: accounts,
+            importAccount: account
+        )
+        paymentVC.modalPresentationStyle = .overCurrentContext
+        paymentVC.view.backgroundColor = .clear
+        topController.present(paymentVC, animated: true)
+    }
 }
+
