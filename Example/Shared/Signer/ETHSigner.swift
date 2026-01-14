@@ -59,25 +59,46 @@ struct ETHSigner {
 
     /// Sign EIP-712 typed data using SignTypedDataSigner
     /// - Parameter params: AnyCodable containing the params (typically [address, typedDataJson])
-    /// - Returns: The signature as a hex string
+    /// - Returns: The signature as a hex string in format 0x{r}{s}{v}
     func signTypedData(_ params: AnyCodable) async throws -> String {
         let signer = SignTypedDataSigner(privateKey: importAccount.privateKey)
-        
+
+        var signatureJson: String
+
         // Try to get params as String first
         if let paramsString = try? params.get(String.self) {
             print("[ETHSigner] signTypedData params (String): \(paramsString.prefix(300))...")
-            return try await signer.signTypedDataFromParams(paramsString)
+            signatureJson = try await signer.signTypedDataFromParams(paramsString)
         }
-        
         // Try to get data representation and convert to JSON string
-        if let jsonData = try? params.getDataRepresentation(),
+        else if let jsonData = try? params.getDataRepresentation(),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             print("[ETHSigner] signTypedData params (Data): \(jsonString.prefix(300))...")
-            return try await signer.signTypedDataFromParams(jsonString)
+            signatureJson = try await signer.signTypedDataFromParams(jsonString)
+        } else {
+            print("[ETHSigner] signTypedData: Could not extract params")
+            throw SignTypedDataSigner.SignTypedDataError.invalidParams
         }
-        
-        print("[ETHSigner] signTypedData: Could not extract params")
-        throw SignTypedDataSigner.SignTypedDataError.invalidParams
+
+        // Extract and format signature from {v, r, s} JSON to 0x{r}{s}{v} hex
+        return try extractSignatureFromJson(signatureJson)
+    }
+
+    /// Extract hex signature from EIP-712 signature JSON response
+    /// - Parameter signatureJson: JSON string containing {v, r, s}
+    /// - Returns: Formatted signature as 0x{r}{s}{v}
+    private func extractSignatureFromJson(_ signatureJson: String) throws -> String {
+        struct SignatureResponse: Decodable {
+            let v: Int
+            let r: String
+            let s: String
+        }
+
+        let signature = try JSONDecoder().decode(SignatureResponse.self, from: Data(signatureJson.utf8))
+        let rHex = signature.r.hasPrefix("0x") ? String(signature.r.dropFirst(2)) : signature.r
+        let sHex = signature.s.hasPrefix("0x") ? String(signature.s.dropFirst(2)) : signature.s
+        let vHex = String(format: "%02x", signature.v)
+        return "0x\(rHex)\(sHex)\(vHex)"
     }
 
     func sendTransaction(_ params: AnyCodable) throws -> AnyCodable {

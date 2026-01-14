@@ -107,27 +107,49 @@ final class Signer {
         }
 
         // EIP-155 methods
-        if let paramsArray = try? request.params.get([AnyCodable].self),
-           let firstParam = paramsArray.first?.value as? [String: Any],
-           let account = firstParam["from"] as? String {
-            return account
-        }
+        print("[Signer] getRequestedAddress for method: \(request.method)")
 
         if let paramsArray = try? request.params.get([AnyCodable].self) {
-            if request.method == "personal_sign" || request.method == "eth_signTypedData" {
+            print("[Signer] params array count: \(paramsArray.count)")
+
+            // eth_sendTransaction, eth_call - address in "from" field of first param object
+            if let firstParam = paramsArray.first?.value as? [String: Any],
+               let account = firstParam["from"] as? String {
+                print("[Signer] Found address in 'from' field: \(account)")
+                return account
+            }
+
+            // personal_sign: params are [message, address]
+            if request.method == "personal_sign" {
                 if paramsArray.count > 1,
                    let account = paramsArray[1].value as? String {
+                    print("[Signer] personal_sign address at index 1: \(account)")
                     return account
                 }
             }
+
+            // eth_signTypedData, eth_signTypedData_v4: params are [address, typedData]
+            if request.method == "eth_signTypedData" || request.method == "eth_signTypedData_v4" {
+                if let account = paramsArray.first?.value as? String {
+                    print("[Signer] \(request.method) address at index 0: \(account)")
+                    return account
+                }
+                print("[Signer] \(request.method) could not extract address from first param")
+            }
+
+            // wallet_sendCalls: address in "from" field
             if request.method == "wallet_sendCalls" {
                 if let sendCallsParams = paramsArray.first?.value as? [String: Any],
                    let account = sendCallsParams["from"] as? String {
+                    print("[Signer] wallet_sendCalls address: \(account)")
                     return account
                 }
             }
+        } else {
+            print("[Signer] Could not parse params as array")
         }
 
+        print("[Signer] Could not find requested address for method: \(request.method)")
         throw Errors.cantFindRequestedAddress
     }
 }
