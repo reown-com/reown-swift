@@ -55,66 +55,101 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 
         configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
-        
+
         // Check for payment deep link on cold start
-        var pendingPaymentId: String?
+        // New format: walletapp://?uri={pairing_uri}&pay={URL_ENCODED_PAYMENT_LINK}
+        // Legacy format: walletapp://walletconnectpay?paymentId=<id>
+        var pendingPaymentLink: String?
         if let urlContext = connectionOptions.urlContexts.first {
             let url = urlContext.url
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-               url.host == "walletconnectpay", //may change
-               let queryItems = components.queryItems,
-               let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-                pendingPaymentId = paymentId
+               let queryItems = components.queryItems {
+                // Check for new `pay` query parameter (URL-encoded payment link)
+                if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value,
+                   let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
+                    pendingPaymentLink = decodedPaymentLink
+                }
+                // Legacy: Check for walletconnectpay host with paymentId
+                else if url.host == "walletconnectpay",
+                        let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+                    pendingPaymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
+                }
             }
         }
 
-        // Process connection options
-        do {
-            // Attempt to initialize WalletConnectURI from connection options
-            let uri = try WalletConnectURI(connectionOptions: connectionOptions)
-            app.uri = uri
-        } catch {
-            print("Error initializing WalletConnectURI: \(error.localizedDescription)")
-            // Try to handle link mode in case where WalletConnectURI initialization fails
-            if let url = connectionOptions.userActivities.first?.webpageURL {
-                configurators.configure() // Ensure configurators are set up before dispatching
-                
-                // Extract topic from URL
-                if let topic = extractTopicFromURL(url.absoluteString) {
-                    LinkModeTopicsStorage.shared.addTopic(topic)
+        // Process connection options (only if not a pay-only deeplink)
+        // If `pay` param exists but no `uri`, skip pairing
+        let hasPayParam = pendingPaymentLink != nil
+        let hasUriParam = connectionOptions.urlContexts.first.flatMap { context -> Bool in
+            guard let components = URLComponents(url: context.url, resolvingAgainstBaseURL: false),
+                  let queryItems = components.queryItems else { return false }
+            return queryItems.contains(where: { $0.name == "uri" })
+        } ?? false
+
+        if !hasPayParam || hasUriParam {
+            do {
+                // Attempt to initialize WalletConnectURI from connection options
+                let uri = try WalletConnectURI(connectionOptions: connectionOptions)
+                app.uri = uri
+            } catch {
+                print("Error initializing WalletConnectURI: \(error.localizedDescription)")
+                // Try to handle link mode in case where WalletConnectURI initialization fails
+                if let url = connectionOptions.userActivities.first?.webpageURL {
+                    configurators.configure() // Ensure configurators are set up before dispatching
+
+                    // Extract topic from URL
+                    if let topic = extractTopicFromURL(url.absoluteString) {
+                        LinkModeTopicsStorage.shared.addTopic(topic)
+                    }
+
+                    do {
+                        try WalletKit.instance.dispatchEnvelope(url.absoluteString)
+                    } catch {
+                        print("Error dispatching envelope: \(error.localizedDescription)")
+                    }
+                    return
                 }
-                
-                do {
-                    try WalletKit.instance.dispatchEnvelope(url.absoluteString)
-                } catch {
-                    print("Error dispatching envelope: \(error.localizedDescription)")
-                }
-                return
             }
         }
         configurators.configure()
-        
+
         // Handle pending payment after configuration is complete
-        if let paymentId = pendingPaymentId {
+        if let paymentLink = pendingPaymentLink {
             // Delay slightly to ensure UI is ready
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.handlePayment(paymentId: paymentId)
+                self?.handlePaymentLink(paymentLink)
             }
         }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let context = URLContexts.first else { return }
-        
+
         let url = context.url
-        
+
         // Check for payment deep link
+        // New format: walletapp://?uri={pairing_uri}&pay={URL_ENCODED_PAYMENT_LINK}
+        // Legacy format: walletapp://walletconnectpay?paymentId=<id>
         if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-           url.host == "walletconnectpay",
-           let queryItems = components.queryItems,
-           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-            handlePayment(paymentId: paymentId)
-            return
+           let queryItems = components.queryItems {
+            // Check for new `pay` query parameter (URL-encoded payment link)
+            if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value,
+               let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
+                handlePaymentLink(decodedPaymentLink)
+                // If both `pay` and `uri` are present, also handle pairing
+                // This allows backwards compatibility where old wallets use uri for Sign flow
+                if queryItems.contains(where: { $0.name == "uri" }) {
+                    // Continue to pairing flow below
+                } else {
+                    return
+                }
+            }
+            // Legacy: Check for walletconnectpay host with paymentId
+            else if url.host == "walletconnectpay",
+                    let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+                handlePaymentLink("walletapp://walletconnectpay?paymentId=\(paymentId)")
+                return
+            }
         }
 
         do {
@@ -212,20 +247,20 @@ private extension SceneDelegate {
         return queryItems.first(where: { $0.name == "topic" })?.value
     }
     
-    private func handlePayment(paymentId: String) {
+    /// Handle a full payment link URL (new format)
+    /// - Parameter paymentLink: The payment link URL (e.g., "https://pay.walletconnect.com/?pid=pay_123"
+    ///   or legacy "walletapp://walletconnectpay?paymentId=<id>")
+    private func handlePaymentLink(_ paymentLink: String) {
         guard let topController = window?.rootViewController?.topController else {
             return
         }
-        
+
         // Get wallet account from storage
         guard let account = AccountStorage(defaults: .standard).importAccount else {
             AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
             return
         }
-        
-        // Build payment link from paymentId
-        let paymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
-        
+
         // Get accounts in CAIP-10 format for multiple chains
         let address = account.account.address
         let accounts = [
@@ -233,7 +268,7 @@ private extension SceneDelegate {
             "eip155:137:\(address)",    // Polygon
             "eip155:8453:\(address)"    // Base
         ]
-        
+
         let paymentVC = PayModule.create(
             app: app,
             paymentLink: paymentLink,
