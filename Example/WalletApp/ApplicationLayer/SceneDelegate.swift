@@ -62,19 +62,46 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         var pendingPaymentLink: String?
         if let urlContext = connectionOptions.urlContexts.first {
             let url = urlContext.url
-            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-               let queryItems = components.queryItems {
-                // Check for new `pay` query parameter (URL-encoded payment link)
-                if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value,
-                   let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
-                    pendingPaymentLink = decodedPaymentLink
+            print("🔗 [PayDeeplink] Cold start - Received URL: \(url.absoluteString)")
+            print("🔗 [PayDeeplink] URL scheme: \(url.scheme ?? "nil")")
+            print("🔗 [PayDeeplink] URL host: \(url.host ?? "nil")")
+            print("🔗 [PayDeeplink] URL path: \(url.path)")
+            print("🔗 [PayDeeplink] URL query: \(url.query ?? "nil")")
+
+            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                print("🔗 [PayDeeplink] URLComponents created successfully")
+                if let queryItems = components.queryItems {
+                    print("🔗 [PayDeeplink] Query items count: \(queryItems.count)")
+                    for item in queryItems {
+                        print("🔗 [PayDeeplink] Query item: \(item.name) = \(item.value ?? "nil")")
+                    }
+
+                    // Check for new `pay` query parameter (URL-encoded payment link)
+                    if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value {
+                        print("🔗 [PayDeeplink] Found 'pay' param (encoded): \(encodedPaymentLink)")
+                        if let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
+                            print("🔗 [PayDeeplink] Decoded payment link: \(decodedPaymentLink)")
+                            pendingPaymentLink = decodedPaymentLink
+                        } else {
+                            print("🔗 [PayDeeplink] ERROR: Failed to decode payment link")
+                        }
+                    }
+                    // Legacy: Check for walletconnectpay host with paymentId
+                    else if url.host == "walletconnectpay",
+                            let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+                        print("🔗 [PayDeeplink] Legacy format - paymentId: \(paymentId)")
+                        pendingPaymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
+                    } else {
+                        print("🔗 [PayDeeplink] No 'pay' param found, host is: \(url.host ?? "nil")")
+                    }
+                } else {
+                    print("🔗 [PayDeeplink] No query items found")
                 }
-                // Legacy: Check for walletconnectpay host with paymentId
-                else if url.host == "walletconnectpay",
-                        let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-                    pendingPaymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
-                }
+            } else {
+                print("🔗 [PayDeeplink] ERROR: Failed to create URLComponents")
             }
+        } else {
+            print("🔗 [PayDeeplink] Cold start - No URL context")
         }
 
         // Process connection options (only if not a pay-only deeplink)
@@ -86,13 +113,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             return queryItems.contains(where: { $0.name == "uri" })
         } ?? false
 
+        print("🔗 [PayDeeplink] hasPayParam: \(hasPayParam), hasUriParam: \(hasUriParam)")
+        print("🔗 [PayDeeplink] pendingPaymentLink: \(pendingPaymentLink ?? "nil")")
+
         if !hasPayParam || hasUriParam {
             do {
                 // Attempt to initialize WalletConnectURI from connection options
                 let uri = try WalletConnectURI(connectionOptions: connectionOptions)
                 app.uri = uri
+                print("🔗 [PayDeeplink] WalletConnectURI initialized successfully")
             } catch {
-                print("Error initializing WalletConnectURI: \(error.localizedDescription)")
+                print("🔗 [PayDeeplink] Error initializing WalletConnectURI: \(error.localizedDescription)")
                 // Try to handle link mode in case where WalletConnectURI initialization fails
                 if let url = connectionOptions.userActivities.first?.webpageURL {
                     configurators.configure() // Ensure configurators are set up before dispatching
@@ -105,7 +136,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                     do {
                         try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                     } catch {
-                        print("Error dispatching envelope: \(error.localizedDescription)")
+                        print("🔗 [PayDeeplink] Error dispatching envelope: \(error.localizedDescription)")
                     }
                     return
                 }
@@ -115,55 +146,91 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 
         // Handle pending payment after configuration is complete
         if let paymentLink = pendingPaymentLink {
+            print("🔗 [PayDeeplink] Will handle payment link after delay: \(paymentLink)")
             // Delay slightly to ensure UI is ready
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                print("🔗 [PayDeeplink] Now handling payment link: \(paymentLink)")
                 self?.handlePaymentLink(paymentLink)
             }
+        } else {
+            print("🔗 [PayDeeplink] No pending payment link to handle")
         }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let context = URLContexts.first else { return }
+        guard let context = URLContexts.first else {
+            print("🔗 [PayDeeplink] openURLContexts - No context found")
+            return
+        }
 
         let url = context.url
+        print("🔗 [PayDeeplink] openURLContexts - Received URL: \(url.absoluteString)")
+        print("🔗 [PayDeeplink] URL scheme: \(url.scheme ?? "nil")")
+        print("🔗 [PayDeeplink] URL host: \(url.host ?? "nil")")
+        print("🔗 [PayDeeplink] URL path: \(url.path)")
+        print("🔗 [PayDeeplink] URL query: \(url.query ?? "nil")")
 
         // Check for payment deep link
         // New format: walletapp://?uri={pairing_uri}&pay={URL_ENCODED_PAYMENT_LINK}
         // Legacy format: walletapp://walletconnectpay?paymentId=<id>
-        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-           let queryItems = components.queryItems {
-            // Check for new `pay` query parameter (URL-encoded payment link)
-            if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value,
-               let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
-                handlePaymentLink(decodedPaymentLink)
-                // If both `pay` and `uri` are present, also handle pairing
-                // This allows backwards compatibility where old wallets use uri for Sign flow
-                if queryItems.contains(where: { $0.name == "uri" }) {
-                    // Continue to pairing flow below
-                } else {
-                    return
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            print("🔗 [PayDeeplink] URLComponents created successfully")
+            if let queryItems = components.queryItems {
+                print("🔗 [PayDeeplink] Query items count: \(queryItems.count)")
+                for item in queryItems {
+                    print("🔗 [PayDeeplink] Query item: \(item.name) = \(item.value ?? "nil")")
                 }
+
+                // Check for new `pay` query parameter (URL-encoded payment link)
+                if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value {
+                    print("🔗 [PayDeeplink] Found 'pay' param (encoded): \(encodedPaymentLink)")
+                    if let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
+                        print("🔗 [PayDeeplink] Decoded payment link: \(decodedPaymentLink)")
+                        handlePaymentLink(decodedPaymentLink)
+                        // If both `pay` and `uri` are present, also handle pairing
+                        // This allows backwards compatibility where old wallets use uri for Sign flow
+                        if queryItems.contains(where: { $0.name == "uri" }) {
+                            print("🔗 [PayDeeplink] Both 'pay' and 'uri' present, continuing to pairing")
+                            // Continue to pairing flow below
+                        } else {
+                            print("🔗 [PayDeeplink] Only 'pay' param, returning after handling payment")
+                            return
+                        }
+                    } else {
+                        print("🔗 [PayDeeplink] ERROR: Failed to decode payment link")
+                    }
+                }
+                // Legacy: Check for walletconnectpay host with paymentId
+                else if url.host == "walletconnectpay",
+                        let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+                    print("🔗 [PayDeeplink] Legacy format - paymentId: \(paymentId)")
+                    handlePaymentLink("walletapp://walletconnectpay?paymentId=\(paymentId)")
+                    return
+                } else {
+                    print("🔗 [PayDeeplink] No 'pay' param found, proceeding to WalletConnect URI handling")
+                }
+            } else {
+                print("🔗 [PayDeeplink] No query items found")
             }
-            // Legacy: Check for walletconnectpay host with paymentId
-            else if url.host == "walletconnectpay",
-                    let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-                handlePaymentLink("walletapp://walletconnectpay?paymentId=\(paymentId)")
-                return
-            }
+        } else {
+            print("🔗 [PayDeeplink] ERROR: Failed to create URLComponents")
         }
 
         do {
             let uri = try WalletConnectURI(urlContext: context)
+            print("🔗 [PayDeeplink] WalletConnectURI created, pairing...")
             Task {
                 try await WalletKit.instance.pair(uri: uri)
             }
         } catch {
+            print("🔗 [PayDeeplink] WalletConnectURI error: \(error)")
             if case WalletConnectURI.Errors.expired = error {
                 AlertPresenter.present(message: error.localizedDescription, type: .error)
             } else {
                 guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                       let queryItems = components.queryItems,
                       queryItems.contains(where: { $0.name == "wc_ev" }) else {
+                    print("🔗 [PayDeeplink] No wc_ev param, returning")
                     return
                 }
 
@@ -251,15 +318,21 @@ private extension SceneDelegate {
     /// - Parameter paymentLink: The payment link URL (e.g., "https://pay.walletconnect.com/?pid=pay_123"
     ///   or legacy "walletapp://walletconnectpay?paymentId=<id>")
     private func handlePaymentLink(_ paymentLink: String) {
+        print("🔗 [PayDeeplink] handlePaymentLink called with: \(paymentLink)")
+
         guard let topController = window?.rootViewController?.topController else {
+            print("🔗 [PayDeeplink] ERROR: No top controller available")
             return
         }
+        print("🔗 [PayDeeplink] Top controller: \(type(of: topController))")
 
         // Get wallet account from storage
         guard let account = AccountStorage(defaults: .standard).importAccount else {
+            print("🔗 [PayDeeplink] ERROR: No account found in storage")
             AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
             return
         }
+        print("🔗 [PayDeeplink] Account found: \(account.account.address)")
 
         // Get accounts in CAIP-10 format for multiple chains
         let address = account.account.address
@@ -268,7 +341,9 @@ private extension SceneDelegate {
             "eip155:137:\(address)",    // Polygon
             "eip155:8453:\(address)"    // Base
         ]
+        print("🔗 [PayDeeplink] CAIP-10 accounts: \(accounts)")
 
+        print("🔗 [PayDeeplink] Creating PayModule with paymentLink: \(paymentLink)")
         let paymentVC = PayModule.create(
             app: app,
             paymentLink: paymentLink,
@@ -277,7 +352,10 @@ private extension SceneDelegate {
         )
         paymentVC.modalPresentationStyle = .overCurrentContext
         paymentVC.view.backgroundColor = .clear
-        topController.present(paymentVC, animated: true)
+        print("🔗 [PayDeeplink] Presenting PayModule...")
+        topController.present(paymentVC, animated: true) {
+            print("🔗 [PayDeeplink] PayModule presented successfully")
+        }
     }
 }
 
