@@ -106,15 +106,18 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Public Methods
 
     func onAppear() {
+        print("[Balance] onAppear - wallet: \(walletAddress)")
         fetchAllBalances()
         startAutoRefresh()
     }
 
     func onDisappear() {
+        print("[Balance] onDisappear")
         stopAutoRefresh()
     }
 
     func refresh() {
+        print("[Balance] Manual refresh triggered")
         isRefreshing = true
         fetchAllBalances()
     }
@@ -123,12 +126,17 @@ final class BalancesViewModel: ObservableObject {
 
     private func startAutoRefresh() {
         stopAutoRefresh()
+        print("[Balance] Starting auto-refresh timer (interval: \(Self.refreshInterval)s)")
         refreshTimer = Timer.scheduledTimer(withTimeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
+            print("[Balance] Auto-refresh timer fired")
             self?.fetchAllBalances()
         }
     }
 
     private func stopAutoRefresh() {
+        if refreshTimer != nil {
+            print("[Balance] Stopping auto-refresh timer")
+        }
         refreshTimer?.invalidate()
         refreshTimer = nil
     }
@@ -137,6 +145,7 @@ final class BalancesViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: .paymentCompleted)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
+                print("[Balance] Payment completed notification received - refreshing")
                 self?.refresh()
             }
             .store(in: &cancellables)
@@ -182,6 +191,7 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Private Methods
     
     private func fetchAllBalances() {
+        print("[Balance] Starting fetchAllBalances for all chains")
         Task {
             await withTaskGroup(of: (USDCChain, Result<Decimal, Error>).self) { group in
                 for chain in USDCChain.allCases {
@@ -194,16 +204,18 @@ final class BalancesViewModel: ObservableObject {
                         }
                     }
                 }
-                
+
                 for await (chain, result) in group {
                     await MainActor.run {
                         if let index = self.chainBalances.firstIndex(where: { $0.chain == chain }) {
                             switch result {
                             case .success(let balance):
+                                print("[Balance] \(chain.rawValue) updated successfully: \(balance)")
                                 self.chainBalances[index].balance = balance
                                 self.chainBalances[index].isLoading = false
                                 self.chainBalances[index].error = nil
                             case .failure(let error):
+                                print("[Balance] \(chain.rawValue) failed with error: \(error.localizedDescription)")
                                 self.chainBalances[index].isLoading = false
                                 self.chainBalances[index].error = error.localizedDescription
                             }
@@ -211,41 +223,57 @@ final class BalancesViewModel: ObservableObject {
                     }
                 }
             }
-            
+
             await MainActor.run {
+                print("[Balance] fetchAllBalances completed")
                 self.isRefreshing = false
             }
         }
     }
     
     private func fetchBalance(for chain: USDCChain) async throws -> Decimal {
-        let balanceString = try await Self.evmSigningClient.getTokenBalance(
-            chainId: chain.chainId,
-            contractAddress: chain.usdcContractAddress,
-            walletAddress: walletAddress
-        )
-        
-        // Parse hex or decimal string to Decimal
-        // USDC has 6 decimals
-        return parseBalance(balanceString, decimals: 6)
+        print("[Balance] Fetching \(chain.rawValue) - chainId: \(chain.chainId), contract: \(chain.usdcContractAddress), wallet: \(walletAddress)")
+
+        do {
+            let balanceString = try await Self.evmSigningClient.getTokenBalance(
+                chainId: chain.chainId,
+                contractAddress: chain.usdcContractAddress,
+                walletAddress: walletAddress
+            )
+
+            print("[Balance] \(chain.rawValue) raw response: '\(balanceString)'")
+
+            // Parse hex or decimal string to Decimal
+            // USDC has 6 decimals
+            let balance = parseBalance(balanceString, decimals: 6)
+            print("[Balance] \(chain.rawValue) parsed balance: \(balance)")
+            return balance
+        } catch {
+            print("[Balance] \(chain.rawValue) fetch error: \(error)")
+            throw error
+        }
     }
-    
+
     private func parseBalance(_ balanceString: String, decimals: Int) -> Decimal {
         let divisor = pow(Decimal(10), decimals)
-        
+
         // Check if it's a hex string (starts with 0x)
         if balanceString.hasPrefix("0x") {
             let cleanedString = String(balanceString.dropFirst(2))
             if let hexValue = UInt64(cleanedString, radix: 16) {
+                print("[Balance] Parsed hex '\(balanceString)' -> \(hexValue) -> \(Decimal(hexValue) / divisor)")
                 return Decimal(hexValue) / divisor
             }
+            print("[Balance] Failed to parse hex string: '\(balanceString)'")
         }
-        
+
         // Otherwise, parse as decimal string (the Rust API returns decimal strings)
         if let decimalValue = Decimal(string: balanceString) {
+            print("[Balance] Parsed decimal '\(balanceString)' -> \(decimalValue / divisor)")
             return decimalValue / divisor
         }
-        
+
+        print("[Balance] Failed to parse balance string: '\(balanceString)' - returning 0")
         return 0
     }
     
