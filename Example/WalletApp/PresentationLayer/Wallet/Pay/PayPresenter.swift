@@ -139,19 +139,19 @@ final class PayPresenter: ObservableObject {
     
     func confirmPayment() {
         guard let option = selectedOption,
-              let info = paymentInfo else {
+              let paymentId = paymentOptionsResponse?.paymentId else {
             errorMessage = "Please select a payment option"
             showError = true
             return
         }
-        
+
         // Switch to confirming state immediately
         currentStep = .confirming
-        
+
         Task { @MainActor in
             do {
                 // 1. Get required actions for the selected option
-                let paymentId = try extractPaymentId(from: paymentLink)
+                // Use paymentId from getPaymentOptions response (Yttrium already extracted it)
                 let actions = try await WalletConnectPay.instance.getRequiredPaymentActions(
                     paymentId: paymentId,
                     optionId: option.id
@@ -229,41 +229,6 @@ final class PayPresenter: ObservableObject {
         
         print("💳 [Pay] Warning: Unknown field - id: \(field.id), name: \(field.name)")
         return ""
-    }
-    
-    private func extractPaymentId(from link: String) throws -> String {
-        // Extract payment ID from the payment link
-        // Formats:
-        // - https://pay.walletconnect.com/p/<payment-id>
-        // - https://...?pid=<payment-id>
-        // - walletapp://walletconnectpay?paymentId=<id>
-        if let url = URL(string: link),
-           let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-            // Check for paymentId query parameter
-            if let paymentId = components.queryItems?.first(where: { $0.name == "paymentId" })?.value {
-                return paymentId
-            }
-            // Check for pid query parameter (dev environment)
-            if let paymentId = components.queryItems?.first(where: { $0.name == "pid" })?.value {
-                return paymentId
-            }
-            // Check for path component
-            if let lastPathComponent = url.pathComponents.last, !lastPathComponent.isEmpty && lastPathComponent != "/" {
-                return lastPathComponent
-            }
-        }
-        throw PaymentError.invalidPaymentLink
-    }
-
-    enum PaymentError: LocalizedError {
-        case invalidPaymentLink
-
-        var errorDescription: String? {
-            switch self {
-            case .invalidPaymentLink:
-                return "Invalid payment link. Could not extract payment ID."
-            }
-        }
     }
     
 }

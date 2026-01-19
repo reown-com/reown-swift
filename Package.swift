@@ -3,7 +3,7 @@
 import PackageDescription
 
 // Determine if Yttrium should be used in debug (local) mode
-let yttriumDebug = false
+let yttriumDebug = true
 
 
 // Define dependencies array
@@ -17,7 +17,7 @@ var dependencies: [Package.Dependency] = [
 if yttriumDebug {
     dependencies.append(.package(path: "../yttrium"))
 } else {
-    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.10.10")))
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.10.11")))
 }
 
 let yttriumTarget = buildYttriumWrapperTarget()
