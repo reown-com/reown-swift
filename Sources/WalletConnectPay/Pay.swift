@@ -8,8 +8,11 @@ import Foundation
 ///
 /// ## Usage
 /// ```swift
-/// // Configure the Pay client
-/// WalletConnectPay.configure(projectId: "your-project-id", apiKey: "your-pay-api-key")
+/// // Configure the Pay client (using appId - recommended for wallets)
+/// WalletConnectPay.configure(appId: "your-project-id")
+///
+/// // Or with API key
+/// WalletConnectPay.configure(apiKey: "your-pay-api-key")
 ///
 /// // Get payment options
 /// let options = try await WalletConnectPay.instance.getPaymentOptions(
@@ -47,10 +50,10 @@ import Foundation
 public class WalletConnectPay {
 
     /// Shared WalletConnectPay client instance
-    /// - Important: Call `WalletConnectPay.configure(projectId:apiKey:)` before accessing this property
+    /// - Important: Call `WalletConnectPay.configure(apiKey:appId:)` before accessing this property
     public static var instance: PayClient = {
         guard let config = WalletConnectPay.config else {
-            fatalError("Error - you must call WalletConnectPay.configure(projectId:apiKey:) before accessing the shared instance.")
+            fatalError("Error - you must call WalletConnectPay.configure(apiKey:appId:) before accessing the shared instance.")
         }
         return PayClient(config: config, logging: WalletConnectPay.loggingEnabled)
     }()
@@ -76,24 +79,27 @@ public class WalletConnectPay {
     
     /// Configure the WalletConnectPay client
     /// - Parameters:
-    ///   - projectId: Your WalletConnect project ID
-    ///   - apiKey: Your WalletConnect Pay API key
+    ///   - apiKey: Your WalletConnect Pay API key (optional)
+    ///   - appId: Your app identifier, typically your WalletConnect project ID (optional, recommended for wallets)
     ///   - baseUrl: Optional custom base URL (defaults to production Pay API)
     ///   - logging: Enable debug logging (defaults to false)
+    /// - Note: At least one of `apiKey` or `appId` must be provided
     public static func configure(
-        projectId: String,
-        apiKey: String,
+        apiKey: String? = nil,
+        appId: String? = nil,
         baseUrl: String = "https://api.pay.walletconnect.com",
         logging: Bool = false
     ) {
         WalletConnectPay.config = SdkConfig(
             baseUrl: baseUrl,
-            projectId: projectId,
-            apiKey: apiKey,
+            projectId: appId,
             sdkName: "swift-walletconnect-pay",
             sdkVersion: packageVersion,
             sdkPlatform: "ios",
-            bundleId: Bundle.main.bundleIdentifier ?? "unknown"
+            bundleId: Bundle.main.bundleIdentifier ?? "unknown",
+            apiKey: apiKey,
+            appId: appId,
+            clientId: nil
         )
         WalletConnectPay.loggingEnabled = logging
     }

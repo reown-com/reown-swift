@@ -291,14 +291,12 @@ private extension SceneDelegate {
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
 
-        // Configure Pay client
-        if let payApiKey = InputConfig.payApiKey {
-            #if DEBUG
-            WalletConnectPay.configure(projectId: InputConfig.projectId, apiKey: payApiKey, logging: true)
-            #else
-            WalletConnectPay.configure(projectId: InputConfig.projectId, apiKey: payApiKey)
-            #endif
-        }
+        // Configure Pay client using appId (projectId) - recommended for wallets
+        #if DEBUG
+        WalletConnectPay.configure(appId: InputConfig.projectId, logging: true)
+        #else
+        WalletConnectPay.configure(appId: InputConfig.projectId)
+        #endif
     }
 
     // Helper method to extract topic from URL
