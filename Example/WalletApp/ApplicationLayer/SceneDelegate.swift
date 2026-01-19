@@ -77,22 +77,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                     }
 
                     // Check for `uri` parameter which may contain embedded `pay` param
-                    if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value {
-                        print("🔗 [PayDeeplink] Found 'uri' param, checking for embedded 'pay' param")
-                        if let paymentLink = extractPaymentLinkFromWCUri(uriValue) {
-                            print("🔗 [PayDeeplink] Extracted payment link from WC URI: \(paymentLink)")
-                            pendingPaymentLink = paymentLink
-                        }
-                    }
-                    // Check for top-level `pay` query parameter (alternative format)
-                    else if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value {
-                        print("🔗 [PayDeeplink] Found top-level 'pay' param (encoded): \(encodedPaymentLink)")
-                        if let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
-                            print("🔗 [PayDeeplink] Decoded payment link: \(decodedPaymentLink)")
-                            pendingPaymentLink = decodedPaymentLink
-                        } else {
-                            print("🔗 [PayDeeplink] ERROR: Failed to decode payment link")
-                        }
+                    // Pass the full WC URI to Yttrium - it handles extraction internally
+                    if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value,
+                       wcUriContainsPayParam(uriValue) {
+                        print("🔗 [PayDeeplink] Found 'uri' param with embedded 'pay', passing to Yttrium: \(uriValue)")
+                        pendingPaymentLink = uriValue
                     }
                     // Legacy: Check for walletconnectpay host with paymentId
                     else if url.host == "walletconnectpay",
@@ -181,6 +170,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         // Check for payment deep link
         // Format: walletapp://wc?uri={pairing_uri_with_pay_param}
         // The `pay` param is embedded inside the WC URI: wc:topic@2?...&pay={encoded_payment_link}
+        // Yttrium handles extraction of the pay param internally
         // Legacy format: walletapp://walletconnectpay?paymentId=<id>
         if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
             print("🔗 [PayDeeplink] URLComponents created successfully")
@@ -191,26 +181,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                 }
 
                 // Check for `uri` parameter which may contain embedded `pay` param
-                if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value {
-                    print("🔗 [PayDeeplink] Found 'uri' param, checking for embedded 'pay' param")
-                    // Parse the WC URI to extract the `pay` parameter
-                    if let paymentLink = extractPaymentLinkFromWCUri(uriValue) {
-                        print("🔗 [PayDeeplink] Extracted payment link from WC URI: \(paymentLink)")
-                        handlePaymentLink(paymentLink)
-                        // Continue to pairing flow below for backwards compatibility
-                        print("🔗 [PayDeeplink] Continuing to pairing flow...")
-                    }
-                }
-                // Check for top-level `pay` query parameter (alternative format)
-                else if let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value {
-                    print("🔗 [PayDeeplink] Found top-level 'pay' param (encoded): \(encodedPaymentLink)")
-                    if let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding {
-                        print("🔗 [PayDeeplink] Decoded payment link: \(decodedPaymentLink)")
-                        handlePaymentLink(decodedPaymentLink)
-                        return
-                    } else {
-                        print("🔗 [PayDeeplink] ERROR: Failed to decode payment link")
-                    }
+                // Pass the full WC URI to Yttrium - it handles extraction internally
+                if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value,
+                   wcUriContainsPayParam(uriValue) {
+                    print("🔗 [PayDeeplink] Found 'uri' param with embedded 'pay', passing to Yttrium: \(uriValue)")
+                    handlePaymentLink(uriValue)
+                    // Continue to pairing flow below for backwards compatibility
+                    print("🔗 [PayDeeplink] Continuing to pairing flow...")
                 }
                 // Legacy: Check for walletconnectpay host with paymentId
                 else if url.host == "walletconnectpay",
@@ -324,38 +301,13 @@ private extension SceneDelegate {
         return queryItems.first(where: { $0.name == "topic" })?.value
     }
 
-    /// Extract the payment link from a WalletConnect URI that has an embedded `pay` parameter
+    /// Check if a WalletConnect URI contains an embedded `pay` parameter
     /// The URI format is: wc:topic@2?...&pay={encoded_payment_link}
-    private func extractPaymentLinkFromWCUri(_ wcUri: String) -> String? {
-        print("🔗 [PayDeeplink] Extracting payment link from WC URI: \(wcUri)")
-
-        // The WC URI format is: wc:topic@2?query_params
-        // We need to parse the query params to find `pay`
-        // Convert wc: to a parseable URL format
-        let urlString = wcUri.replacingOccurrences(of: "wc:", with: "wc://")
-        guard let url = URL(string: urlString),
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let queryItems = components.queryItems else {
-            print("🔗 [PayDeeplink] Failed to parse WC URI as URL")
-            return nil
-        }
-
-        print("🔗 [PayDeeplink] WC URI query items: \(queryItems.map { "\($0.name)=\($0.value ?? "nil")" })")
-
-        guard let encodedPaymentLink = queryItems.first(where: { $0.name == "pay" })?.value else {
-            print("🔗 [PayDeeplink] No 'pay' param found in WC URI")
-            return nil
-        }
-
-        print("🔗 [PayDeeplink] Found 'pay' in WC URI (encoded): \(encodedPaymentLink)")
-
-        guard let decodedPaymentLink = encodedPaymentLink.removingPercentEncoding else {
-            print("🔗 [PayDeeplink] Failed to decode payment link from WC URI")
-            return nil
-        }
-
-        print("🔗 [PayDeeplink] Decoded payment link: \(decodedPaymentLink)")
-        return decodedPaymentLink
+    private func wcUriContainsPayParam(_ wcUri: String) -> Bool {
+        // Simple check - the WC URI should contain "&pay=" or "?pay="
+        let containsPay = wcUri.contains("&pay=") || wcUri.contains("?pay=")
+        print("🔗 [PayDeeplink] WC URI contains 'pay' param: \(containsPay)")
+        return containsPay
     }
     
     /// Handle a full payment link URL (new format)
