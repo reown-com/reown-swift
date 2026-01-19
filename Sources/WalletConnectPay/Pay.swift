@@ -55,7 +55,11 @@ public class WalletConnectPay {
         guard let config = WalletConnectPay.config else {
             fatalError("Error - you must call WalletConnectPay.configure(apiKey:appId:) before accessing the shared instance.")
         }
-        return PayClient(config: config, logging: WalletConnectPay.loggingEnabled)
+        do {
+            return try PayClient(config: config, logging: WalletConnectPay.loggingEnabled)
+        } catch {
+            fatalError("Error - failed to initialize PayClient: \(error). Ensure at least one of apiKey or appId is provided.")
+        }
     }()
 
     private static var config: SdkConfig?
@@ -116,10 +120,10 @@ public class PayClient: Yttrium.Logger {
     private let client: YttriumPayClient
     private let loggingEnabled: Bool
     
-    init(config: SdkConfig, logging: Bool) {
-        self.client = YttriumPayClient(config: config)
+    init(config: SdkConfig, logging: Bool) throws {
+        self.client = try YttriumPayClient(config: config)
         self.loggingEnabled = logging
-        
+
         // Register self as logger - this keeps the logger alive as long as PayClient lives
         registerLogger(logger: self)
     }
