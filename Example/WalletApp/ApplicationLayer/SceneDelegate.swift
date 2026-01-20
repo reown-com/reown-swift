@@ -130,7 +130,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         // Check for payment deep link and handle if found
         if let paymentLink = extractPaymentLink(from: url) {
             handlePaymentLink(paymentLink)
-            // For legacy format (walletconnectpay host), return early - no pairing needed
+            // For POS scan format (walletconnectpay host), return early - no pairing needed
             if url.host == "walletconnectpay" {
                 return
             }
@@ -241,8 +241,8 @@ private extension SceneDelegate {
 
     /// Extract payment link from a URL if present
     /// Supports two formats:
-    /// - New format: `uri` parameter containing embedded `pay` param (WC URI with pay)
-    /// - Legacy format: `walletconnectpay` host with `paymentId` query param
+    /// - WC URI format: `uri` parameter containing embedded `pay` param
+    /// - POS scan format: `walletconnectpay` host with `paymentId` query param (scanned directly from POS)
     /// - Returns: The payment link string if found, nil otherwise
     private func extractPaymentLink(from url: URL) -> String? {
         print("🔗 [PayDeeplink] Extracting payment link from: \(url.absoluteString)")
@@ -261,10 +261,10 @@ private extension SceneDelegate {
             return uriValue
         }
 
-        // Legacy: Check for walletconnectpay host with paymentId
+        // POS scan format: walletconnectpay host with paymentId (scanned directly from POS)
         if url.host == "walletconnectpay",
            let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-            print("🔗 [PayDeeplink] Legacy format - paymentId: \(paymentId)")
+            print("🔗 [PayDeeplink] POS scan format - paymentId: \(paymentId)")
             return "walletapp://walletconnectpay?paymentId=\(paymentId)"
         }
 
@@ -272,9 +272,9 @@ private extension SceneDelegate {
         return nil
     }
     
-    /// Handle a full payment link URL (new format)
-    /// - Parameter paymentLink: The payment link URL (e.g., "https://pay.walletconnect.com/?pid=pay_123"
-    ///   or legacy "walletapp://walletconnectpay?paymentId=<id>")
+    /// Handle a payment link URL
+    /// - Parameter paymentLink: The payment link URL - either a WC URI with embedded pay param,
+    ///   or POS scan format "walletapp://walletconnectpay?paymentId=<id>"
     private func handlePaymentLink(_ paymentLink: String) {
         print("🔗 [PayDeeplink] handlePaymentLink called with: \(paymentLink)")
 
