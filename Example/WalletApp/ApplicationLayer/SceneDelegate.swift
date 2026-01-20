@@ -2,7 +2,6 @@ import SafariServices
 import UIKit
 import ReownWalletKit
 import WalletConnectSign
-import WalletConnectPay
 import Commons
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
@@ -278,13 +277,10 @@ private extension SceneDelegate {
             redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
         )
 
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
-
-        // Configure Pay client using appId (projectId) - recommended for wallets
         #if DEBUG
-        WalletConnectPay.configure(appId: InputConfig.projectId, logging: true)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey, payLogging: true)
         #else
-        WalletConnectPay.configure(appId: InputConfig.projectId)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
         #endif
     }
 
@@ -302,12 +298,11 @@ private extension SceneDelegate {
     }
 
     /// Check if a WalletConnect URI contains an embedded `pay` parameter
-    /// The URI format is: wc:topic@2?...&pay={encoded_payment_link}
+    /// Uses the unified WalletKit.isPaymentLink() detection
     private func wcUriContainsPayParam(_ wcUri: String) -> Bool {
-        // Simple check - the WC URI should contain "&pay=" or "?pay="
-        let containsPay = wcUri.contains("&pay=") || wcUri.contains("?pay=")
-        print("🔗 [PayDeeplink] WC URI contains 'pay' param: \(containsPay)")
-        return containsPay
+        let isPayLink = WalletKit.isPaymentLink(wcUri)
+        print("🔗 [PayDeeplink] WC URI is payment link: \(isPayLink)")
+        return isPayLink
     }
     
     /// Handle a full payment link URL (new format)

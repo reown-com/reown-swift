@@ -109,16 +109,21 @@ public class WalletKitClient {
     // Namespaces
     // public let ChainAbstraction: ChainAbstractionNamespace
 
+    /// Pay namespace for WalletConnect Pay functionality
+    public let Pay: PayNamespace
+
     init(
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
-        pushClient: PushClientProtocol
+        pushClient: PushClientProtocol,
+        payNamespace: PayNamespace
         // chainAbstractionClient: ChainAbstractionClient,
         // ChainAbstractionNamespace: ChainAbstractionNamespace
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
+        self.Pay = payNamespace
         // self.chainAbstractionClient = chainAbstractionClient
         // self.ChainAbstraction = ChainAbstractionNamespace
     }

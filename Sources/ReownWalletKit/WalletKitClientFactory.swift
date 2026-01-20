@@ -1,4 +1,5 @@
 import Foundation
+import WalletConnectPay
 // import YttriumWrapper
 
 struct WalletKitClientFactory {
@@ -7,7 +8,7 @@ struct WalletKitClientFactory {
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
         config: WalletKit.Config,
-        projectId: String? = nil  
+        projectId: String? = nil
     ) -> WalletKitClient {
         // Chain abstraction client creation commented out
         /*
@@ -32,10 +33,14 @@ struct WalletKitClientFactory {
         let ChainAbstractionNamespace = ChainAbstractionNamespace(chainAbstractionClient: chainAbstractionClient)
         */
 
+        // Create Pay namespace wrapping the already-configured PayClient
+        let payNamespace = PayNamespace(payClient: WalletConnectPay.instance)
+
         return WalletKitClient(
             signClient: signClient,
             pairingClient: pairingClient,
-            pushClient: pushClient
+            pushClient: pushClient,
+            payNamespace: payNamespace
             // chainAbstractionClient: chainAbstractionClient,
             // ChainAbstractionNamespace: ChainAbstractionNamespace
         )

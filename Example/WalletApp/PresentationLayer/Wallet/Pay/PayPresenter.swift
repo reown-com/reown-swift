@@ -1,6 +1,6 @@
 import UIKit
 import Combine
-import WalletConnectPay
+import ReownWalletKit
 import Commons
 
 enum PayFlowStep: Int, CaseIterable {
@@ -70,7 +70,7 @@ final class PayPresenter: ObservableObject {
         isLoading = true
         Task { @MainActor in
             do {
-                let response = try await WalletConnectPay.instance.getPaymentOptions(
+                let response = try await WalletKit.instance.Pay.getPaymentOptions(
                     paymentLink: paymentLink,
                     accounts: accounts,
                     includePaymentInfo: true
@@ -152,7 +152,7 @@ final class PayPresenter: ObservableObject {
             do {
                 // 1. Get required actions for the selected option
                 // Use paymentId from getPaymentOptions response (Yttrium already extracted it)
-                let actions = try await WalletConnectPay.instance.getRequiredPaymentActions(
+                let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
                     paymentId: paymentId,
                     optionId: option.id
                 )
@@ -178,7 +178,7 @@ final class PayPresenter: ObservableObject {
                 }
                 
                 // 4. Confirm payment with signatures and collected data
-                let result = try await WalletConnectPay.instance.confirmPayment(
+                let result = try await WalletKit.instance.Pay.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
                     signatures: signatures,
