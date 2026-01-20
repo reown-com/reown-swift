@@ -131,12 +131,12 @@ extension WalletPresenter {
     /// Handle scanned or pasted URI - detect if it's a Pay URL or WalletConnect pairing URI
     private func handleScannedOrPastedUri(_ uriString: String) {
         // Check if it's a WalletConnect Pay URL
-        if isPaymentLink(uriString) {
+        if WalletKit.isPaymentLink(uriString) {
             print("Detected WalletConnect Pay URL: \(uriString)")
             router.startPayFlow(paymentLink: uriString, importAccount: importAccount)
             return
         }
-        
+
         // Otherwise, try to parse as WalletConnect pairing URI
         do {
             let uri = try WalletConnectURI(uriString: uriString)
@@ -146,15 +146,6 @@ extension WalletPresenter {
             errorMessage = error.localizedDescription
             showError.toggle()
         }
-    }
-    
-    /// Check if the string is a WalletConnect Pay payment link
-    private func isPaymentLink(_ urlString: String) -> Bool {
-        guard let url = URL(string: urlString),
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            return false
-        }
-        return components.queryItems?.contains(where: { $0.name == "pid" }) == true
     }
     
     private func pair(uri: WalletConnectURI) {

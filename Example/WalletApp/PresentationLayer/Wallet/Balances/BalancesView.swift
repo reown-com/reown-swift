@@ -76,7 +76,7 @@ struct BalancesView: View {
                 Text(chainBalance.chain.rawValue)
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
                     .foregroundColor(Color(UIColor.label))
-                
+
                 if let error = chainBalance.error {
                     Text(error)
                         .font(.system(size: 12, weight: .regular, design: .rounded))
@@ -84,11 +84,11 @@ struct BalancesView: View {
                         .lineLimit(1)
                 }
             }
-            
+
             Spacer()
-            
-            // Balance
-            if chainBalance.isLoading {
+
+            // Balance - use single loading state from ViewModel
+            if viewModel.isLoading {
                 ProgressView()
                     .scaleEffect(0.8)
             } else {

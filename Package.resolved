@@ -60,8 +60,8 @@
         "repositoryURL": "https://github.com/reown-com/yttrium",
         "state": {
           "branch": null,
-          "revision": "d3374d4f1440104fadc6815f3f560c950eaba279",
-          "version": "0.10.1"
+          "revision": "e0720b2ed4881abd6aa449919bf60f808476ceb1",
+          "version": "0.10.15"
         }
       }
     ]
