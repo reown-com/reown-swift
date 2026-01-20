@@ -56,46 +56,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
 
         // Check for payment deep link on cold start
-        // New format: walletapp://?uri={pairing_uri}&pay={URL_ENCODED_PAYMENT_LINK}
-        // Legacy format: walletapp://walletconnectpay?paymentId=<id>
         var pendingPaymentLink: String?
         if let urlContext = connectionOptions.urlContexts.first {
             let url = urlContext.url
             print("🔗 [PayDeeplink] Cold start - Received URL: \(url.absoluteString)")
-            print("🔗 [PayDeeplink] URL scheme: \(url.scheme ?? "nil")")
-            print("🔗 [PayDeeplink] URL host: \(url.host ?? "nil")")
-            print("🔗 [PayDeeplink] URL path: \(url.path)")
-            print("🔗 [PayDeeplink] URL query: \(url.query ?? "nil")")
-
-            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                print("🔗 [PayDeeplink] URLComponents created successfully")
-                if let queryItems = components.queryItems {
-                    print("🔗 [PayDeeplink] Query items count: \(queryItems.count)")
-                    for item in queryItems {
-                        print("🔗 [PayDeeplink] Query item: \(item.name) = \(item.value ?? "nil")")
-                    }
-
-                    // Check for `uri` parameter which may contain embedded `pay` param
-                    // Pass the full WC URI to Yttrium - it handles extraction internally
-                    if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value,
-                       wcUriContainsPayParam(uriValue) {
-                        print("🔗 [PayDeeplink] Found 'uri' param with embedded 'pay', passing to Yttrium: \(uriValue)")
-                        pendingPaymentLink = uriValue
-                    }
-                    // Legacy: Check for walletconnectpay host with paymentId
-                    else if url.host == "walletconnectpay",
-                            let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-                        print("🔗 [PayDeeplink] Legacy format - paymentId: \(paymentId)")
-                        pendingPaymentLink = "walletapp://walletconnectpay?paymentId=\(paymentId)"
-                    } else {
-                        print("🔗 [PayDeeplink] No 'pay' param found, host is: \(url.host ?? "nil")")
-                    }
-                } else {
-                    print("🔗 [PayDeeplink] No query items found")
-                }
-            } else {
-                print("🔗 [PayDeeplink] ERROR: Failed to create URLComponents")
-            }
+            pendingPaymentLink = extractPaymentLink(from: url)
         } else {
             print("🔗 [PayDeeplink] Cold start - No URL context")
         }
@@ -161,47 +126,16 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 
         let url = context.url
         print("🔗 [PayDeeplink] openURLContexts - Received URL: \(url.absoluteString)")
-        print("🔗 [PayDeeplink] URL scheme: \(url.scheme ?? "nil")")
-        print("🔗 [PayDeeplink] URL host: \(url.host ?? "nil")")
-        print("🔗 [PayDeeplink] URL path: \(url.path)")
-        print("🔗 [PayDeeplink] URL query: \(url.query ?? "nil")")
 
-        // Check for payment deep link
-        // Format: walletapp://wc?uri={pairing_uri_with_pay_param}
-        // The `pay` param is embedded inside the WC URI: wc:topic@2?...&pay={encoded_payment_link}
-        // Yttrium handles extraction of the pay param internally
-        // Legacy format: walletapp://walletconnectpay?paymentId=<id>
-        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-            print("🔗 [PayDeeplink] URLComponents created successfully")
-            if let queryItems = components.queryItems {
-                print("🔗 [PayDeeplink] Query items count: \(queryItems.count)")
-                for item in queryItems {
-                    print("🔗 [PayDeeplink] Query item: \(item.name) = \(item.value ?? "nil")")
-                }
-
-                // Check for `uri` parameter which may contain embedded `pay` param
-                // Pass the full WC URI to Yttrium - it handles extraction internally
-                if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value,
-                   wcUriContainsPayParam(uriValue) {
-                    print("🔗 [PayDeeplink] Found 'uri' param with embedded 'pay', passing to Yttrium: \(uriValue)")
-                    handlePaymentLink(uriValue)
-                    // Continue to pairing flow below for backwards compatibility
-                    print("🔗 [PayDeeplink] Continuing to pairing flow...")
-                }
-                // Legacy: Check for walletconnectpay host with paymentId
-                else if url.host == "walletconnectpay",
-                        let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-                    print("🔗 [PayDeeplink] Legacy format - paymentId: \(paymentId)")
-                    handlePaymentLink("walletapp://walletconnectpay?paymentId=\(paymentId)")
-                    return
-                } else {
-                    print("🔗 [PayDeeplink] No 'pay' param found, proceeding to WalletConnect URI handling")
-                }
-            } else {
-                print("🔗 [PayDeeplink] No query items found")
+        // Check for payment deep link and handle if found
+        if let paymentLink = extractPaymentLink(from: url) {
+            handlePaymentLink(paymentLink)
+            // For legacy format (walletconnectpay host), return early - no pairing needed
+            if url.host == "walletconnectpay" {
+                return
             }
-        } else {
-            print("🔗 [PayDeeplink] ERROR: Failed to create URLComponents")
+            // For new format (uri with pay param), continue to pairing flow
+            print("🔗 [PayDeeplink] Continuing to pairing flow...")
         }
 
         do {
@@ -303,6 +237,39 @@ private extension SceneDelegate {
         let isPayLink = WalletKit.isPaymentLink(wcUri)
         print("🔗 [PayDeeplink] WC URI is payment link: \(isPayLink)")
         return isPayLink
+    }
+
+    /// Extract payment link from a URL if present
+    /// Supports two formats:
+    /// - New format: `uri` parameter containing embedded `pay` param (WC URI with pay)
+    /// - Legacy format: `walletconnectpay` host with `paymentId` query param
+    /// - Returns: The payment link string if found, nil otherwise
+    private func extractPaymentLink(from url: URL) -> String? {
+        print("🔗 [PayDeeplink] Extracting payment link from: \(url.absoluteString)")
+
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else {
+            print("🔗 [PayDeeplink] No query items found")
+            return nil
+        }
+
+        // Check for `uri` parameter which may contain embedded `pay` param
+        // Pass the full WC URI to Yttrium - it handles extraction internally
+        if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value,
+           wcUriContainsPayParam(uriValue) {
+            print("🔗 [PayDeeplink] Found 'uri' param with embedded 'pay': \(uriValue)")
+            return uriValue
+        }
+
+        // Legacy: Check for walletconnectpay host with paymentId
+        if url.host == "walletconnectpay",
+           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
+            print("🔗 [PayDeeplink] Legacy format - paymentId: \(paymentId)")
+            return "walletapp://walletconnectpay?paymentId=\(paymentId)"
+        }
+
+        print("🔗 [PayDeeplink] No payment link found in URL")
+        return nil
     }
     
     /// Handle a full payment link URL (new format)
