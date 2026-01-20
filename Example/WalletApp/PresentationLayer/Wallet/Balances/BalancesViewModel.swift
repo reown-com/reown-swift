@@ -116,7 +116,6 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Public Methods
 
     func onAppear() {
-        print("[Balance] onAppear - wallet: \(walletAddress)")
         fetchAllBalances()
         startAutoRefresh()
     }
@@ -201,7 +200,6 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Private Methods
     
     private func fetchAllBalances() {
-        print("[Balance] Starting fetchAllBalances via Blockchain API")
         Task {
             do {
                 // Build URL with query parameters
@@ -246,7 +244,6 @@ final class BalancesViewModel: ObservableObject {
                     self.isRefreshing = false
                 }
             } catch {
-                print("[Balance] API fetch error: \(error)")
                 await MainActor.run {
                     // Set error on all chains
                     for index in self.chainBalances.indices {
