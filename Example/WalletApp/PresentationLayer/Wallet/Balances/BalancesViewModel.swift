@@ -1,24 +1,43 @@
 import Foundation
 import Combine
 import SwiftUI
-import YttriumUtilsWrapper
+
+// MARK: - Blockchain API Response Models
+
+struct BalanceAPIResponse: Codable {
+    let balances: [TokenBalance]
+}
+
+struct TokenBalance: Codable {
+    let name: String
+    let symbol: String
+    let chainId: String
+    let address: String?
+    let value: Double
+    let price: Double
+    let quantity: TokenQuantity
+    let iconUrl: String
+}
+
+struct TokenQuantity: Codable {
+    let decimals: String
+    let numeric: String
+}
 
 /// Model representing a chain's USDC balance
 struct ChainBalance: Identifiable {
     let id: String
     let chain: USDCChain
     var balance: Decimal
-    var isLoading: Bool
     var error: String?
-    
-    init(chain: USDCChain, balance: Decimal = 0, isLoading: Bool = true, error: String? = nil) {
+
+    init(chain: USDCChain, balance: Decimal = 0, error: String? = nil) {
         self.id = chain.rawValue
         self.chain = chain
         self.balance = balance
-        self.isLoading = isLoading
         self.error = error
     }
-    
+
     var formattedBalance: String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -40,6 +59,7 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Published Properties
 
     @Published var chainBalances: [ChainBalance] = USDCChain.allCases.map { ChainBalance(chain: $0) }
+    @Published var isLoading: Bool = true
     @Published var isRefreshing: Bool = false
     @Published var showError: Bool = false
     @Published var errorMessage: String = ""
@@ -55,16 +75,6 @@ final class BalancesViewModel: ObservableObject {
     private var refreshTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
     private static let refreshInterval: TimeInterval = 10.0
-    
-    private static let evmSigningClient: EvmSigningClient = {
-        let metadata = PulseMetadata(
-            url: nil,
-            bundleId: Bundle.main.bundleIdentifier ?? "",
-            sdkVersion: "reown-swift-mobile-1.0",
-            sdkPlatform: "mobile"
-        )
-        return EvmSigningClient(projectId: InputConfig.projectId, pulseMetadata: metadata)
-    }()
     
     // MARK: - Computed Properties
     
@@ -191,90 +201,62 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Private Methods
     
     private func fetchAllBalances() {
-        print("[Balance] Starting fetchAllBalances for all chains")
+        print("[Balance] Starting fetchAllBalances via Blockchain API")
         Task {
-            await withTaskGroup(of: (USDCChain, Result<Decimal, Error>).self) { group in
-                for chain in USDCChain.allCases {
-                    group.addTask {
-                        do {
-                            let balance = try await self.fetchBalance(for: chain)
-                            return (chain, .success(balance))
-                        } catch {
-                            return (chain, .failure(error))
-                        }
-                    }
+            do {
+                // Build URL with query parameters
+                var components = URLComponents(string: "https://rpc.walletconnect.org/v1/account/\(walletAddress)/balance")
+                components?.queryItems = [
+                    URLQueryItem(name: "projectId", value: InputConfig.projectId),
+                    URLQueryItem(name: "currency", value: "usd")
+                ]
+
+                guard let url = components?.url else {
+                    throw URLError(.badURL)
                 }
 
-                for await (chain, result) in group {
-                    await MainActor.run {
-                        if let index = self.chainBalances.firstIndex(where: { $0.chain == chain }) {
-                            switch result {
-                            case .success(let balance):
-//                                print("[Balance] \(chain.rawValue) updated successfully: \(balance)")
-                                self.chainBalances[index].balance = balance
-                                self.chainBalances[index].isLoading = false
-                                self.chainBalances[index].error = nil
-                            case .failure(let error):
-//                                print("[Balance] \(chain.rawValue) failed with error: \(error.localizedDescription)")
-                                self.chainBalances[index].isLoading = false
-                                self.chainBalances[index].error = error.localizedDescription
-                            }
+                // Create request with required headers
+                var request = URLRequest(url: url)
+                request.setValue("appkit", forHTTPHeaderField: "x-sdk-type")
+                request.setValue("reown-swift-1.0", forHTTPHeaderField: "x-sdk-version")
+                request.setValue("https://reown.com", forHTTPHeaderField: "Origin")
+
+                // Fetch and decode
+                let (data, _) = try await URLSession.shared.data(for: request)
+                let response = try JSONDecoder().decode(BalanceAPIResponse.self, from: data)
+
+                // Filter for USDC tokens only
+                let usdcBalances = response.balances.filter { $0.symbol == "USDC" }
+
+                // Update chainBalances on main thread
+                await MainActor.run {
+                    for chain in USDCChain.allCases {
+                        if let index = self.chainBalances.firstIndex(where: { $0.chain == chain }),
+                           let apiBalance = usdcBalances.first(where: { $0.chainId == chain.chainId }) {
+                            // Use the pre-calculated USD value from API
+                            self.chainBalances[index].balance = Decimal(apiBalance.value)
+                            self.chainBalances[index].error = nil
+                        } else if let index = self.chainBalances.firstIndex(where: { $0.chain == chain }) {
+                            // No balance found for this chain - set to 0
+                            self.chainBalances[index].balance = 0
+                            self.chainBalances[index].error = nil
                         }
                     }
+                    self.isLoading = false
+                    self.isRefreshing = false
+                }
+            } catch {
+                print("[Balance] API fetch error: \(error)")
+                await MainActor.run {
+                    // Set error on all chains
+                    for index in self.chainBalances.indices {
+                        self.chainBalances[index].error = error.localizedDescription
+                    }
+                    self.isLoading = false
+                    self.isRefreshing = false
                 }
             }
-
-            await MainActor.run {
-//                print("[Balance] fetchAllBalances completed")
-                self.isRefreshing = false
-            }
         }
-    }
-    
-    private func fetchBalance(for chain: USDCChain) async throws -> Decimal {
-//        print("[Balance] Fetching \(chain.rawValue) - chainId: \(chain.chainId), contract: \(chain.usdcContractAddress), wallet: \(walletAddress)")
-
-        do {
-            let balanceString = try await Self.evmSigningClient.getTokenBalance(
-                chainId: chain.chainId,
-                contractAddress: chain.usdcContractAddress,
-                walletAddress: walletAddress
-            )
-
-//            print("[Balance] \(chain.rawValue) raw response: '\(balanceString)'")
-
-            // Parse hex or decimal string to Decimal
-            // USDC has 6 decimals
-            let balance = parseBalance(balanceString, decimals: 6)
-//            print("[Balance] \(chain.rawValue) parsed balance: \(balance)")
-            return balance
-        } catch {
-//            print("[Balance] \(chain.rawValue) fetch error: \(error)")
-            throw error
-        }
-    }
-
-    private func parseBalance(_ balanceString: String, decimals: Int) -> Decimal {
-        let divisor = pow(Decimal(10), decimals)
-
-        // Check if it's a hex string (starts with 0x)
-        if balanceString.hasPrefix("0x") {
-            let cleanedString = String(balanceString.dropFirst(2))
-            if let hexValue = UInt64(cleanedString, radix: 16) {
-//                print("[Balance] Parsed hex '\(balanceString)' -> \(hexValue) -> \(Decimal(hexValue) / divisor)")
-                return Decimal(hexValue) / divisor
-            }
-//            print("[Balance] Failed to parse hex string: '\(balanceString)'")
-        }
-
-        // Otherwise, parse as decimal string (the Rust API returns decimal strings)
-        if let decimalValue = Decimal(string: balanceString) {
-//            print("[Balance] Parsed decimal '\(balanceString)' -> \(decimalValue / divisor)")
-            return decimalValue / divisor
-        }
-
-//        print("[Balance] Failed to parse balance string: '\(balanceString)' - returning 0")
-        return 0
     }
     
     private func handleScannedOrPastedUri(_ uriString: String) {
