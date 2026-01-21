@@ -87,7 +87,7 @@ public struct AnyCodable {
         return string
     }
 
-    private func getDataRepresentation() throws -> Data {
+    public func getDataRepresentation() throws -> Data {
         if let encodeToData = dataEncoding {
             return try encodeToData()
         } else {

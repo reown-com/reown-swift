@@ -32,7 +32,10 @@ runs:
 
     - name: Build for testing
       shell: bash
-      run: make build_all RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }}
+      env:
+        RELAY_HOST: ${{ inputs.relay-endpoint }}
+        PROJECT_ID: ${{ inputs.project-id }}
+      run: make build_all RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID"
 
     - name: Tar DerivedDataCache
       shell: bash

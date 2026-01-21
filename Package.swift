@@ -17,7 +17,7 @@ var dependencies: [Package.Dependency] = [
 if yttriumDebug {
     dependencies.append(.package(path: "../yttrium"))
 } else {
-    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.9.75")))
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.10.16")))
 }
 
 let yttriumTarget = buildYttriumWrapperTarget()
@@ -86,7 +86,10 @@ let package = Package(
             targets: ["YttriumWrapper"]),
         .library(
             name: "YttriumUtilsWrapper",
-            targets: ["YttriumUtilsWrapper"]) 
+            targets: ["YttriumUtilsWrapper"]),
+        .library(
+            name: "WalletConnectPay",
+            targets: ["WalletConnectPay"])
     ],
     dependencies: dependencies,
     targets: [
@@ -97,7 +100,7 @@ let package = Package(
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
             name: "ReownWalletKit",
-            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify"],
+            dependencies: ["WalletConnectSign", "WalletConnectPush", "WalletConnectVerify", "WalletConnectPay"],
             path: "Sources/ReownWalletKit",
             resources: [.process("Resources/PrivacyInfo.xcprivacy")]),
         .target(
@@ -197,6 +200,11 @@ let package = Package(
         ),
         yttriumTarget,
         yttriumUtilsTarget,
+        .target(
+            name: "WalletConnectPay",
+            dependencies: ["YttriumWrapper"],
+            path: "Sources/WalletConnectPay",
+            resources: [.copy("PackageConfig.json")]),
         .testTarget(
             name: "WalletConnectSignTests",
             dependencies: ["WalletConnectSign", "WalletConnectUtils", "TestingUtils", "WalletConnectVerify"]),
@@ -230,7 +238,10 @@ let package = Package(
             dependencies: ["Commons", "TestingUtils"]),
         .testTarget(
             name: "EventsTests",
-            dependencies: ["Events"])
+            dependencies: ["Events"]),
+        .testTarget(
+            name: "ReownWalletKitTests",
+            dependencies: ["ReownWalletKit", "TestingUtils"])
     ],
     swiftLanguageVersions: [.v5]
 )

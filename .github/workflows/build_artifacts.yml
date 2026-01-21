@@ -14,6 +14,10 @@ on:
     branches: 
       - main
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   build:    
     runs-on: macos-latest-xlarge
@@ -31,12 +35,17 @@ jobs:
     - name: Build for testing on workflow_dispatch
       if: ${{ github.event_name == 'workflow_dispatch' }}
       shell: bash
-      run: make build_all RELAY_HOST=${{ inputs.relay-endpoint }} PROJECT_ID=${{ inputs.project-id }}
+      env:
+        RELAY_HOST: ${{ inputs.relay-endpoint }}
+        PROJECT_ID: ${{ inputs.project-id }}
+      run: make build_all RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID"
 
     - name: Build for testing on push
       if: ${{ github.event_name == 'push' }}
       shell: bash
-      run: make build_all RELAY_HOST=relay.walletconnect.com PROJECT_ID=${{ secrets.PROJECT_ID }}
+      env:
+        PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      run: make build_all RELAY_HOST=relay.walletconnect.com PROJECT_ID="$PROJECT_ID"
 
     - name: Tar DerivedDataCache
       shell: bash

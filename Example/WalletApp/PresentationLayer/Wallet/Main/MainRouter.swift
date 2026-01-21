@@ -12,6 +12,14 @@ final class MainRouter {
         self.app = app
     }
 
+    func balancesViewController(importAccount: ImportAccount) -> UIViewController {
+        let viewModel = BalancesViewModel(app: app, importAccount: importAccount)
+        let view = BalancesView().environmentObject(viewModel)
+        let viewController = SceneViewController(viewModel: viewModel, content: view)
+        viewModel.viewController = viewController
+        return viewController.wrapToNavigationController()
+    }
+    
     func walletViewController(importAccount: ImportAccount) -> UIViewController {
         return WalletModule.create(app: app, importAccount: importAccount)
             .wrapToNavigationController()

@@ -25,6 +25,7 @@ final class MainPresenter {
 
     var viewControllers: [UIViewController] {
         return [
+            router.balancesViewController(importAccount: importAccount),
             router.walletViewController(importAccount: importAccount),
             router.notificationsViewController(importAccount: importAccount),
             router.settingsViewController(importAccount: importAccount)

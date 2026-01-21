@@ -69,58 +69,6 @@ struct WalletView: View {
                         }
                         
                         Spacer()
-                        
-                        HStack(spacing: 20) {
-                            Spacer()
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            Spacer()
-
-                            // Chain abstraction transfers button commented out
-                            /*
-                            Button {
-                                presenter.sendStableCoin()
-                            } label: {
-                                Image(systemName: "dollarsign.circle.fill")
-                                    .resizable()
-                                    .frame(width: 40, height: 40)
-                            }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            .accessibilityIdentifier("sendStableCoin")
-                            */
-
-                            // Chain abstraction transfers button commented out
-                            /*
-                            Button {
-                                presenter.sendEthereum()
-                            } label: {
-                                Image(systemName: "paperplane.fill")
-                                    .resizable()
-                                    .frame(width: 40, height: 40)
-                            }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            .accessibilityIdentifier("sendEthereum")
-                            */
-
-                            Button {
-                                presenter.onPasteUri()
-                            } label: {
-                                Image("copy")
-                                    .resizable()
-                                    .frame(width: 56, height: 56)
-                            }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                            .accessibilityIdentifier("copy")
-                            
-                            Button {
-                                presenter.onScanUri()
-                            } label: {
-                                Image("scan")
-                                    .resizable()
-                                    .frame(width: 56, height: 56)
-                            }
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                        }
-                        .padding(.horizontal, 20)
                     }
                 }
             }

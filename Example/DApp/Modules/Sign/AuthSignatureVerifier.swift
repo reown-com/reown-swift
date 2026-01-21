@@ -2,10 +2,9 @@ import Foundation
 import WalletConnectSign
 import WalletConnectSigner
 import WalletConnectUtils
-import YttriumWrapper
 
 final class AuthSignatureVerifier {
-    
+
     enum Errors: LocalizedError {
         case utf8EncodingFailed
         case verificationFailed(message: String)
@@ -19,28 +18,22 @@ final class AuthSignatureVerifier {
             }
         }
     }
-    
+
     private let messageFormatter: SignWithXFormatting
-    private let crypto: CryptoProvider
-    private let projectId: String
     private let logger: ConsoleLogging
 
     init(
         messageFormatter: SignWithXFormatting = SIWEFromCacaoPayloadFormatter(),
-        crypto: CryptoProvider = DefaultCryptoProvider(),
-        projectId: String = InputConfig.projectId,
         logger: ConsoleLogging = ConsoleLogger(prefix: "DAppAuthVerifier", loggingLevel: .warn)
     ) {
         self.messageFormatter = messageFormatter
-        self.crypto = crypto
-        self.projectId = projectId
         self.logger = logger
     }
 
     func recoverAndVerifySignature(authObject: AuthObject) async throws {
         guard
             let account = try? DIDPKH(did: authObject.p.iss).account,
-            let message = try? messageFormatter.formatMessage(from: authObject.p, includeRecapInTheStatement: false)
+            let _ = try? messageFormatter.formatMessage(from: authObject.p, includeRecapInTheStatement: false)
         else {
             throw AuthError.malformedResponseParams
         }
@@ -53,53 +46,9 @@ final class AuthSignatureVerifier {
             return
         }
 
-        do {
-            try await verifySignature(
-                authObject.s.s,
-                message: message,
-                address: account.address,
-                chainId: account.blockchainIdentifier
-            )
-        } catch {
-            logger.error("Signature verification failed with: \(error.localizedDescription)")
-            throw AuthError.signatureVerificationFailed
-        }
-    }
-    
-    // MARK: - Private
-    
-    private func verifySignature(
-        _ signatureString: String,
-        message: String,
-        address: String,
-        chainId: String
-    ) async throws {
-        guard let messageData = message.data(using: .utf8) else {
-            throw Errors.utf8EncodingFailed
-        }
-        let prefixedMessage = messageData.prefixed
-
-        let rpcUrl = "https://rpc.walletconnect.com/v1?chainId=\(chainId)&projectId=\(projectId)"
-        let erc6492Client = Erc6492Client(rpcUrl: rpcUrl)
-        let messageHash = crypto.keccak256(prefixedMessage)
-
-        let result = try await erc6492Client.verifySignature(
-            signature: signatureString,
-            address: address,
-            messageHash: messageHash.toHexString()
-        )
-
-        if result != true {
-            throw Errors.verificationFailed(message: "Signature verification failed.")
-        }
-    }
-}
-
-// MARK: - Data Extension for EIP-191 Message Prefixing
-
-private extension Data {
-    var prefixed: Data {
-        return "\u{19}Ethereum Signed Message:\n\(count)"
-            .data(using: .utf8)! + self
+        // TODO: ERC-6492 signature verification temporarily disabled
+        // Erc6492Client is not available in Yttrium 0.10.1
+        // Re-enable when Yttrium exports Erc6492Client again
+        logger.debug("Skipping ERC-6492 signature verification (not available in current Yttrium version)")
     }
 }

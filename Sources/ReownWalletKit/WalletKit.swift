@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import WalletConnectPay
 
 #if SWIFT_PACKAGE
 public typealias VerifyContext = WalletConnectVerify.VerifyContext
@@ -39,16 +40,35 @@ public class WalletKit {
     /// - Parameters:
     ///   - metadata: App metadata
     ///   - crypto: Auth crypto utils
+    ///   - pushHost: Push notification host
+    ///   - environment: APNS environment
+    ///   - pimlicoApiKey: Optional Pimlico API key
+    ///   - payLogging: Enable Pay SDK debug logging
     static public func configure(
         metadata: AppMetadata,
         crypto: CryptoProvider,
         pushHost: String = "echo.walletconnect.com",
         environment: APNSEnvironment = .production,
-        pimlicoApiKey: String? = nil
+        pimlicoApiKey: String? = nil,
+        payLogging: Bool = false
     ) {
         Pair.configure(metadata: metadata)
         Push.configure(pushHost: pushHost, environment: environment)
         Sign.configure(crypto: crypto)
         WalletKit.config = WalletKit.Config(crypto: crypto, pimlicoApiKey: pimlicoApiKey)
+
+        // Configure Pay SDK using projectId from Networking
+        WalletConnectPay.configure(appId: Networking.projectId, logging: payLogging)
+    }
+
+    /// Check if a string is a WalletConnect Pay payment link
+    ///
+    /// This static method can be called before `WalletKit.configure()` to quickly
+    /// detect if a scanned QR code or deep link is a payment link.
+    ///
+    /// - Parameter string: The string to check (URL, WC URI, or bare payment ID)
+    /// - Returns: `true` if the string appears to be a payment link
+    public static func isPaymentLink(_ string: String) -> Bool {
+        PaymentLinkDetector.isPaymentLink(string)
     }
 }
