@@ -125,11 +125,24 @@ final class PayPresenter: ObservableObject {
     }
     
     func goBack() {
-        let currentIndex = currentStep.rawValue
-        if currentIndex > 0, let previousStep = PayFlowStep(rawValue: currentIndex - 1) {
-            currentStep = previousStep
-        } else {
+        switch currentStep {
+        case .intro:
             dismiss()
+        case .nameInput:
+            currentStep = .intro
+        case .dateOfBirth:
+            currentStep = .nameInput
+        case .confirmation:
+            // If info capture was required, go back to dateOfBirth
+            // Otherwise, go back to intro (skip info capture screens)
+            if paymentOptionsResponse?.collectData != nil {
+                currentStep = .dateOfBirth
+            } else {
+                currentStep = .intro
+            }
+        case .confirming, .success:
+            // Don't allow back navigation from these states
+            break
         }
     }
     
