@@ -3007,9 +3007,9 @@
 		};
 		A561C7FE29DF32CE00DF540D /* XCRemoteSwiftPackageReference "HDWallet" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/WalletConnect/HDWallet";
+			repositoryURL = "https://github.com/kailuo/HDWallet";
 			requirement = {
-				branch = develop;
+				branch = xcode26;
 				kind = branch;
 			};
 		};
