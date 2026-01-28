@@ -32,6 +32,10 @@ struct SettingsView: View {
                     header(title: "TON")
                     row(title: "TON Address", subtitle: viewModel.tonAddress)
                     row(title: "TON Private Key", subtitle: viewModel.tonPrivateKey)
+
+                    header(title: "Tron")
+                    row(title: "Tron Address", subtitle: viewModel.tronAddress)
+                    row(title: "Tron Private Key", subtitle: viewModel.tronPrivateKey)
                 }
                 .padding(.horizontal, 20)
 
