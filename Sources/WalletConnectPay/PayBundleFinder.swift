@@ -3,8 +3,8 @@ import Foundation
 private class PayBundleFinder {}
 
 extension Foundation.Bundle {
-    /// Returns the resource bundle associated with the current Swift module.
-    static var resourceBundle: Bundle = {
+    /// Returns the resource bundle associated with WalletConnectPay module.
+    static var payResourceBundle: Bundle = {
         let bundleName = "reown_WalletConnectPay"
         let candidates = [
             // Bundle should be present here when the package is linked into an App.

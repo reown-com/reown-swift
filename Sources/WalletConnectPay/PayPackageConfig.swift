@@ -1,5 +1,5 @@
 import Foundation
 
-struct PackageConfig: Decodable {
+struct PayPackageConfig: Decodable {
     let version: String
 }
