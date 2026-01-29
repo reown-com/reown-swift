@@ -66,13 +66,13 @@ public class WalletConnectPay {
     private static var loggingEnabled: Bool = false
 
     private static var packageVersion: String {
-        guard let configURL = Bundle.resourceBundle.url(forResource: "PackageConfig", withExtension: "json") else {
+        guard let configURL = Bundle.payResourceBundle.url(forResource: "PackageConfig", withExtension: "json") else {
             fatalError("Unable to find PackageConfig.json in the resource bundle")
         }
 
         do {
             let jsonData = try Data(contentsOf: configURL)
-            let config = try JSONDecoder().decode(PackageConfig.self, from: jsonData)
+            let config = try JSONDecoder().decode(PayPackageConfig.self, from: jsonData)
             return config.version
         } catch {
             fatalError("Failed to load and decode PackageConfig.json: \(error)")
