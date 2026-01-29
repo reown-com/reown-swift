@@ -1,0 +1,33 @@
+RELAY_HOST = relay.walletconnect.com
+
+CAST_HOST = notify.walletconnect.com
+
+EXPLORER_HOST = explorer-api.walletconnect.com
+
+// Uncomment next line and paste your project id. Get this on: https://cloud.walletconnect.com/sign-in
+// PROJECT_ID = YOUR_PROJECT_ID
+
+// Uncomment next line and paste dapp's project id to run all the notify tests
+// GM_DAPP_PROJECT_ID = GM_DAPP_PROJECT_ID
+
+// Uncomment next line and paste dapp's project secret to run all the notify tests
+// GM_DAPP_PROJECT_SECRET = GM_DAPP_PROJECT_SECRET
+
+// Uncomment next line and paste dapp's host to run all the notify tests
+// GM_DAPP_HOST = GM_DAPP_HOST
+
+// Uncomment next line and paste js client's api host to run x-platform tests
+// JS_CLIENT_API_HOST = JS_CLIENT_API_HOST
+
+// WALLETAPP_SENTRY_DSN = WALLETAPP_SENTRY_DSN
+
+// MIXPANEL_TOKEN = MIXPANEL_TOKEN
+
+// pimloco api key
+// PIMLICO_API_KEY = PIMLICO_API_KEY
+
+// BUNDLE_ID_PRESENT_PROJECT_ID = BUNDLE_ID_PRESENT_PROJECT_ID
+
+// BUNDLE_ID_NOT_PRESENT_PROJECT_ID = BUNDLE_ID_NOT_PRESENT_PROJECT_ID
+
+// PAY_API_KEY = PAY_API_KEY

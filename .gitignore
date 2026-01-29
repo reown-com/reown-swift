@@ -20,8 +20,8 @@ fastlane/test_output
 fastlane/README.md
 .env
 
-# Configuration
-Configuration.xcconfig
+# Configuration - local overrides (Configuration.xcconfig is tracked as template)
+Configuration.local.xcconfig
 
 # Cache
 SourcePackagesCache
