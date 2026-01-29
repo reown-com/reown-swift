@@ -41,6 +41,18 @@ final class Signer {
             }
             throw Errors.accountForRequestNotFound
         }
+        // Handle Tron methods
+        if request.method.starts(with: "tron_") {
+            let requestedAddress = try await getRequestedAddress(request)
+            let tronAccountStorage = TronAccountStorage()
+
+            if let tronAddress = tronAccountStorage.getAddress(for: request.chainId),
+               requestedAddress.lowercased() == tronAddress.lowercased() {
+                let tronSigner = TronSigner()
+                return try await tronSigner.sign(request: request)
+            }
+            throw Errors.accountForRequestNotFound
+        }
         // Handle Sui methods
         if request.method.starts(with: "sui_") {
             let requestedAddress = try await getRequestedAddress(request)
@@ -85,6 +97,14 @@ final class Signer {
             let tonAccountStorage = TonAccountStorage()
             if let tonAddress = tonAccountStorage.getAddress(for: request.chainId) {
                 return tonAddress
+            }
+            throw Errors.cantFindRequestedAddress
+        }
+        // Tron methods: read from TronAccountStorage for specific chain
+        if request.method.starts(with: "tron_") {
+            let tronAccountStorage = TronAccountStorage()
+            if let tronAddress = tronAccountStorage.getAddress(for: request.chainId) {
+                return tronAddress
             }
             throw Errors.cantFindRequestedAddress
         }

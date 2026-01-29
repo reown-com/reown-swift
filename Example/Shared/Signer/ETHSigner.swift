@@ -45,11 +45,11 @@ struct ETHSigner {
         if hashToSign.hasPrefix("0x") {
             // Hex-encoded message, remove "0x" and convert
             let messageData = Data(hex: String(hashToSign.dropFirst(2)))
-            dataToSign = messageData.bytes
+            dataToSign = [UInt8](messageData)
         } else {
             // Plain text message, convert directly to data
             let messageData = Data(hashToSign.utf8)
-            dataToSign = messageData.bytes
+            dataToSign = [UInt8](messageData)
         }
 
         let (v, r, s) = try! privateKey.sign(hash: dataToSign)

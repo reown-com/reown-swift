@@ -11,6 +11,8 @@
 		4455FB8F2EB2383100A585E9 /* AuthSignatureVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4455FB8E2EB2383100A585E9 /* AuthSignatureVerifier.swift */; };
 		44650A3D2E93F775004F2144 /* TonAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44650A3C2E93F775004F2144 /* TonAccountStorage.swift */; };
 		44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44650A3E2E951D71004F2144 /* TonSigner.swift */; };
+		44650A412F1E0001004F2144 /* TronAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44650A402F1E0001004F2144 /* TronAccountStorage.swift */; };
+		44650A432F1E0002004F2144 /* TronSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44650A422F1E0002004F2144 /* TronSigner.swift */; };
 		446A306B2DE8375E0024781A /* SolanaAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */; };
 		446A306D2DE8405A0024781A /* SuiAccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446A306C2DE8405A0024781A /* SuiAccountStorage.swift */; };
 		446A74DD2E49F64800319C63 /* WalletConnectNotify in Frameworks */ = {isa = PBXBuildFile; productRef = 446A74DC2E49F64800319C63 /* WalletConnectNotify */; };
@@ -370,6 +372,8 @@
 		4455FB8E2EB2383100A585E9 /* AuthSignatureVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSignatureVerifier.swift; sourceTree = "<group>"; };
 		44650A3C2E93F775004F2144 /* TonAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonAccountStorage.swift; sourceTree = "<group>"; };
 		44650A3E2E951D71004F2144 /* TonSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonSigner.swift; sourceTree = "<group>"; };
+		44650A402F1E0001004F2144 /* TronAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TronAccountStorage.swift; sourceTree = "<group>"; };
+		44650A422F1E0002004F2144 /* TronSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TronSigner.swift; sourceTree = "<group>"; };
 		446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolanaAccountStorage.swift; sourceTree = "<group>"; };
 		446A306C2DE8405A0024781A /* SuiAccountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuiAccountStorage.swift; sourceTree = "<group>"; };
 		44BA5CCC2E4C8BB50074A01E /* URLExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLExtension.swift; sourceTree = "<group>"; };
@@ -1085,6 +1089,7 @@
 				SIGNTD0002000000000001 /* SignTypedDataSigner.swift */,
 				A57E71A7291CF8A500325797 /* SOLSigner.swift */,
 				44650A3E2E951D71004F2144 /* TonSigner.swift */,
+				44650A422F1E0002004F2144 /* TronSigner.swift */,
 			);
 			path = Signer;
 			sourceTree = "<group>";
@@ -1247,6 +1252,7 @@
 				446A306C2DE8405A0024781A /* SuiAccountStorage.swift */,
 				C55D3490295DFA750004314A /* WelcomeRouter.swift */,
 				44650A3C2E93F775004F2144 /* TonAccountStorage.swift */,
+				44650A402F1E0001004F2144 /* TronAccountStorage.swift */,
 				C55D3491295DFA750004314A /* WelcomeInteractor.swift */,
 				446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */,
 				C55D3492295DFA750004314A /* WelcomeView.swift */,
@@ -2186,6 +2192,7 @@
 				C56EE24F293F566D004840D1 /* WalletView.swift in Sources */,
 				C55D34B22965FB750004314A /* SessionProposalView.swift in Sources */,
 				44650A3D2E93F775004F2144 /* TonAccountStorage.swift in Sources */,
+				44650A412F1E0001004F2144 /* TronAccountStorage.swift in Sources */,
 				C56EE248293F566D004840D1 /* ScanQR.swift in Sources */,
 				847BD1EB298A87AB00076C90 /* SubscriptionsViewModel.swift in Sources */,
 				C55D349B2965BC2F0004314A /* TagsView.swift in Sources */,
@@ -2222,6 +2229,7 @@
 				PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */,
 				PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */,
 				44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */,
+				44650A432F1E0002004F2144 /* TronSigner.swift in Sources */,
 				C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */,
 				C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */,
 				A57879712A4EDC8100F8D10B /* TextFieldView.swift in Sources */,
@@ -3007,9 +3015,9 @@
 		};
 		A561C7FE29DF32CE00DF540D /* XCRemoteSwiftPackageReference "HDWallet" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/WalletConnect/HDWallet";
+			repositoryURL = "https://github.com/kailuo/HDWallet";
 			requirement = {
-				branch = develop;
+				branch = xcode26;
 				kind = branch;
 			};
 		};

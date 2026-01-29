@@ -17,7 +17,7 @@ var dependencies: [Package.Dependency] = [
 if yttriumDebug {
     dependencies.append(.package(path: "../yttrium"))
 } else {
-    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.10.16")))
+    dependencies.append(.package(url: "https://github.com/reown-com/yttrium", .exact("0.10.25")))
 }
 
 let yttriumTarget = buildYttriumWrapperTarget()
@@ -44,6 +44,7 @@ let package = Package(
     name: "reown",
     platforms: [
         .iOS(.v13),
+        
         .macOS(.v11),
         .tvOS(.v13)
     ],
