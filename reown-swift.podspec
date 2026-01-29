@@ -31,6 +31,11 @@ spec.pod_target_xcconfig = {
     ss.source_files = 'Sources/WalletConnectPay/**/*.{h,m,swift}'
     ss.dependency 'YttriumWrapper', yttrium_version
     ss.dependency 'reown-swift/WalletConnectRelay'
+    ss.resource_bundles = {
+      'reown_WalletConnectPay' => [
+        'Sources/WalletConnectPay/PackageConfig.json'
+      ]
+    }
   end
 
   spec.subspec 'WalletKit' do |ss|
