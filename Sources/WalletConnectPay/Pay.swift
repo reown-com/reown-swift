@@ -110,12 +110,12 @@ public class WalletConnectPay {
 }
 
 // Typealias for the Yttrium WalletConnectPay to avoid naming conflict with our wrapper
-public typealias YttriumPayClient = Yttrium.WalletConnectPay
+public typealias YttriumPayClient = YttriumWrapper.WalletConnectPay
 
 /// PayClient - Wrapper around Yttrium WalletConnectPay
 ///
 /// Provides typed Swift methods for interacting with the WalletConnect Pay API.
-public class PayClient: Yttrium.Logger {
+public class PayClient: YttriumWrapper.Logger {
     
     private let client: YttriumPayClient
     private let loggingEnabled: Bool
