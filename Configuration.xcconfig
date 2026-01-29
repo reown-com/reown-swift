@@ -1,3 +1,6 @@
+// Include local overrides (not tracked by git)
+#include? "Configuration.local.xcconfig"
+
 RELAY_HOST = relay.walletconnect.com
 
 CAST_HOST = notify.walletconnect.com
