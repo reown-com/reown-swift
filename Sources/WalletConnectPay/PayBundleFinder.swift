@@ -1,6 +1,6 @@
 import Foundation
 
-private class BundleFinder {}
+private class PayBundleFinder {}
 
 extension Foundation.Bundle {
     /// Returns the resource bundle associated with the current Swift module.
@@ -10,16 +10,16 @@ extension Foundation.Bundle {
             // Bundle should be present here when the package is linked into an App.
             Bundle.main.resourceURL,
             // Bundle should be present here when the package is linked into a framework.
-            Bundle(for: BundleFinder.self).resourceURL,
+            Bundle(for: PayBundleFinder.self).resourceURL,
             // For command-line tools.
             Bundle.main.bundleURL,
             // Bundle should be present here when running tests.
-            Bundle(for: BundleFinder.self).resourceURL?
+            Bundle(for: PayBundleFinder.self).resourceURL?
                 .deletingLastPathComponent()
                 .deletingLastPathComponent()
                 .deletingLastPathComponent(),
             // Other possibilities
-            Bundle(for: BundleFinder.self).resourceURL?
+            Bundle(for: PayBundleFinder.self).resourceURL?
                 .deletingLastPathComponent()
                 .deletingLastPathComponent(),
         ]
@@ -35,7 +35,7 @@ extension Foundation.Bundle {
         #if SWIFT_PACKAGE
         return Bundle.module
         #else
-        return Bundle(for: BundleFinder.self)
+        return Bundle(for: PayBundleFinder.self)
         #endif
     }()
 }
