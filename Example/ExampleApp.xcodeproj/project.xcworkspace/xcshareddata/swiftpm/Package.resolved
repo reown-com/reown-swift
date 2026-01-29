@@ -30,10 +30,10 @@
       },
       {
         "package": "HDWalletKit",
-        "repositoryURL": "https://github.com/WalletConnect/HDWallet",
+        "repositoryURL": "https://github.com/kailuo/HDWallet",
         "state": {
-          "branch": "develop",
-          "revision": "748a85b1dfe9a2fa592bd9266c5a926e4e1d3f44",
+          "branch": "xcode26",
+          "revision": "3591c59ed2c5bf443495dd706338bc0fd2544068",
           "version": null
         }
       },
@@ -276,8 +276,8 @@
         "repositoryURL": "https://github.com/reown-com/yttrium",
         "state": {
           "branch": null,
-          "revision": "b06eae210d266c71f947377d0662b6501c2f392a",
-          "version": "0.10.16"
+          "revision": "0b15156ae6dc8d853b4c9ad9a98065cb9fe4f397",
+          "version": "0.10.25"
         }
       }
     ]

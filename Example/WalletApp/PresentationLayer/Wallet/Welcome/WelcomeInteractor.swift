@@ -5,13 +5,15 @@ final class WelcomeInteractor {
     private let stacksAccountStorage: StacksAccountStorage
     private let suiAccountStorage: SuiAccountStorage
     private let tonAccountStorage: TonAccountStorage
-    
-    init(accountStorage: AccountStorage, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), stacksAccountStorage: StacksAccountStorage = StacksAccountStorage(), suiAccountStorage: SuiAccountStorage = SuiAccountStorage(), tonAccountStorage: TonAccountStorage = TonAccountStorage()) {
+    private let tronAccountStorage: TronAccountStorage
+
+    init(accountStorage: AccountStorage, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), stacksAccountStorage: StacksAccountStorage = StacksAccountStorage(), suiAccountStorage: SuiAccountStorage = SuiAccountStorage(), tonAccountStorage: TonAccountStorage = TonAccountStorage(), tronAccountStorage: TronAccountStorage = TronAccountStorage()) {
         self.accountStorage = accountStorage
         self.solanaAccountStorage = solanaAccountStorage
         self.stacksAccountStorage = stacksAccountStorage
         self.suiAccountStorage = suiAccountStorage
         self.tonAccountStorage = tonAccountStorage
+        self.tronAccountStorage = tronAccountStorage
     }
 
     func save(importAccount: ImportAccount) {
@@ -48,5 +50,9 @@ final class WelcomeInteractor {
 
     func generateTonAccount() {
         _ = tonAccountStorage.generateAndSaveKeypair()
+    }
+
+    func generateTronAccount() {
+        _ = tronAccountStorage.generateAndSaveKeypair()
     }
 }

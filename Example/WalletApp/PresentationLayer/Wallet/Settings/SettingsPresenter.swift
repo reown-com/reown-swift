@@ -13,9 +13,10 @@ final class SettingsPresenter: ObservableObject {
     private let solanaAccountStorage: SolanaAccountStorage
     private let suiAccountStorage: SuiAccountStorage
     private let tonAccountStorage: TonAccountStorage
+    private let tronAccountStorage: TronAccountStorage
     private var disposeBag = Set<AnyCancellable>()
 
-    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), suiAccountStorage: SuiAccountStorage = SuiAccountStorage(), tonAccountStorage: TonAccountStorage = TonAccountStorage()) {
+    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount, solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(), suiAccountStorage: SuiAccountStorage = SuiAccountStorage(), tonAccountStorage: TonAccountStorage = TonAccountStorage(), tronAccountStorage: TronAccountStorage = TronAccountStorage()) {
         defer { setupInitialState() }
         self.interactor = interactor
         self.router = router
@@ -25,6 +26,7 @@ final class SettingsPresenter: ObservableObject {
         self.solanaAccountStorage = solanaAccountStorage
         self.suiAccountStorage = suiAccountStorage
         self.tonAccountStorage = tonAccountStorage
+        self.tronAccountStorage = tronAccountStorage
     }
 
     var account: String {
@@ -79,6 +81,14 @@ final class SettingsPresenter: ObservableObject {
 
     var tonPrivateKey: String {
         return tonAccountStorage.getPrivateKey() ?? "No TON private key"
+    }
+
+    var tronAddress: String {
+        return tronAccountStorage.getAddress() ?? "No Tron account"
+    }
+
+    var tronPrivateKey: String {
+        return tronAccountStorage.getPrivateKey() ?? "No Tron private key"
     }
 
     var clientId: String {

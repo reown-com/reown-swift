@@ -26,10 +26,11 @@ final class WelcomePresenter: ObservableObject {
         if let stacksWallet = interactor.generateAndSaveStacksWallet() {
             stacksInput = stacksWallet
         }
-        // Generate new Solana, Sui, and TON accounts when creating a new account
+        // Generate new Solana, Sui, TON, and Tron accounts when creating a new account
         interactor.generateSolanaAccount()
         interactor.generateSuiAccount()
         interactor.generateTonAccount()
+        interactor.generateTronAccount()
         importAccount(ImportAccount.new())
     }
 
@@ -73,7 +74,10 @@ final class WelcomePresenter: ObservableObject {
         } else {
             interactor.generateTonAccount()
         }
-        
+
+        // Always generate Tron account (no import UI)
+        interactor.generateTronAccount()
+
         importAccount(account)
     }
 

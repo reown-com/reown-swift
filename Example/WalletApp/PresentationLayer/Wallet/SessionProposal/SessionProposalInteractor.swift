@@ -13,6 +13,7 @@ final class SessionProposalInteractor {
         let stacksAccountStorage = StacksAccountStorage()
         let suiAccountStorage = SuiAccountStorage()
         let tonAccountStorage = TonAccountStorage()
+        let tronAccountStorage = TronAccountStorage()
         let solanaAccountStorage = SolanaAccountStorage()
 
         // Handle EIP155 chains
@@ -40,8 +41,13 @@ final class SessionProposalInteractor {
         let supportedOptionalTonChains = proposal.optionalNamespaces?["ton"]?.chains ?? []
         let supportedTonChains = supportedRequiredTonChains + supportedOptionalTonChains
 
+        // Handle Tron chains
+        let supportedRequiredTronChains = proposal.requiredNamespaces["tron"]?.chains ?? []
+        let supportedOptionalTronChains = proposal.optionalNamespaces?["tron"]?.chains ?? []
+        let supportedTronChains = supportedRequiredTronChains + supportedOptionalTronChains
+
         // Combine supported chains; add optional groups only when available
-        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains
+        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains + supportedTronChains
 
         var supportedAccounts: [Account] = []
         var sessionProperties = [String: String]()
@@ -84,6 +90,19 @@ final class SessionProposalInteractor {
                 }
             }
             supportedAccounts.append(contentsOf: tonAccounts)
+        }
+
+        // Add Tron accounts if available
+        if !supportedTronChains.isEmpty {
+            var tronAccounts: [Account] = []
+            for chain in supportedTronChains {
+                if let tronAccount = tronAccountStorage.getCaip10Account(for: chain) {
+                    tronAccounts.append(tronAccount)
+                }
+            }
+            supportedAccounts.append(contentsOf: tronAccounts)
+            // Add Tron session property for v1 transaction format
+            sessionProperties["tron_method_version"] = "v1"
         }
 
         /* Use only supported values for production. I.e:
