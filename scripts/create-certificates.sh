@@ -28,7 +28,7 @@ if [ -z "$CERTS_REPO" ] || [ -z "$BUNDLE_ID" ] || [ -z "$APPLE_EMAIL" ]; then
   exit 1
 fi
 
-CERTS_GIT_URL="git@github.com:${CERTS_REPO}.git"
+CERTS_GIT_URL="https://github.com/${CERTS_REPO}.git"
 BRANCH_NAME="certs/add-${BUNDLE_ID}-${MATCH_TYPE}"
 
 echo "🔐 Creating certificates for ${BUNDLE_ID}"
@@ -73,7 +73,7 @@ echo "   ✓ Branch created"
 
 # 4. Run fastlane match
 echo "🚀 Running fastlane match ${MATCH_TYPE}..."
-if ! bundle exec fastlane match ${MATCH_TYPE} \
+if ! fastlane match ${MATCH_TYPE} \
   --git_url "${CERTS_GIT_URL}" \
   --git_branch "${BRANCH_NAME}" \
   --username "${APPLE_EMAIL}" \
