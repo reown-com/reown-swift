@@ -1,5 +1,7 @@
 import Foundation
+#if SWIFT_PACKAGE
 import WalletConnectPay
+#endif
 
 /// Pay namespace for WalletKit
 ///
