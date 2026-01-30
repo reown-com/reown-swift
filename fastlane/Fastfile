@@ -80,12 +80,13 @@ platform :ios do
       in_house: false,
     )
     match(
-      readonly: true,
+      readonly: false,
       type: "appstore",
       app_identifier: ENV["MATCH_IDENTIFIERS"],
       git_url: ENV["MATCH_GIT_URL"],
       api_key: api_key,
-      include_all_certificates: true
+      include_all_certificates: true,
+      force_for_new_certificates: true
     )
 
     # Update Xcode project code signing settings to use Match profiles
