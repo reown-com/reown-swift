@@ -114,11 +114,10 @@ platform :ios do
       scheme: ENV["SCHEME"],
       export_method: "app-store",
       export_options: {
-    provisioningProfiles: {
-      "com.walletconnect.walletapp" => "match AppStore com.walletconnect.walletapp",
-      "com.walletconnect.dapp" => "match AppStore com.walletconnect.dapp"
-    }
-  },
+        provisioningProfiles: {
+          ENV["APP_IDENTIFIER"] => profile_name
+        }
+      },
       xcargs: "RELAY_HOST='#{options[:relay_host]}' PROJECT_ID='#{options[:project_id]}' WALLETAPP_SENTRY_DSN='#{options[:sentry_dsn]}' MIXPANEL_TOKEN='#{options[:mixpanel_token]}'"
     )
     upload_to_testflight(
