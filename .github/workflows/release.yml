@@ -6,7 +6,7 @@ on:
       app:
         type: choice
         description: Which sample app to release
-        options: 
+        options:
         - DApp
         - WalletApp
         - Showcase
@@ -20,6 +20,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Setup SSH for Match
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
 
     - uses: actions/cache@v3
       with:
@@ -35,12 +40,10 @@ jobs:
       shell: bash
       env:
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        GH_USER: ${{ secrets.GH_USER }}
         APPLE_ISSUER_ID: ${{ secrets.APPLE_ISSUER_ID }}
         APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
         APPLE_KEY_CONTENT: ${{ secrets.APPLE_KEY_CONTENT }}
         WALLETAPP_SENTRY_DSN: ${{ secrets.WALLETAPP_SENTRY_DSN }}
         MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
       run: |
-        make release APPLE_ID=${{ secrets.APPLE_ID }} TOKEN=$(echo -n $GH_USER:$GH_TOKEN | base64) PROJECT_ID=${{ secrets.RELEASE_PROJECT_ID }} WALLETAPP_SENTRY_DSN=${{ secrets.WALLETAPP_SENTRY_DSN }} MIXPANEL_TOKEN=${{secrets.MIXPANEL_TOKEN}} APP=${{ github.event.inputs.app }}
+        make release APPLE_ID=${{ secrets.APPLE_ID }} PROJECT_ID=${{ secrets.RELEASE_PROJECT_ID }} WALLETAPP_SENTRY_DSN=${{ secrets.WALLETAPP_SENTRY_DSN }} MIXPANEL_TOKEN=${{secrets.MIXPANEL_TOKEN}} APP=${{ github.event.inputs.app }}
