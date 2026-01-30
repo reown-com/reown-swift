@@ -115,7 +115,7 @@ public typealias YttriumPayClient = YttriumWrapper.WalletConnectPay
 /// PayClient - Wrapper around Yttrium WalletConnectPay
 ///
 /// Provides typed Swift methods for interacting with the WalletConnect Pay API.
-public class PayClient: YttriumWrapper.Logger {
+public final class PayClient: YttriumWrapper.Logger {
     
     private let client: YttriumPayClient
     private let loggingEnabled: Bool
