@@ -80,16 +80,26 @@ platform :ios do
       in_house: false,
     )
     match(
-      readonly: false,
+      readonly: true,
       type: "appstore",
       app_identifier: ENV["MATCH_IDENTIFIERS"],
-      git_url: ENV["GIT_URL"],
-      git_basic_authorization: options[:token],
+      git_url: ENV["MATCH_GIT_URL"],
       api_key: api_key,
-      include_all_certificates: true,
-      force_for_new_devices: true,
-      force_for_new_certificates: true
+      include_all_certificates: true
     )
+
+    # Update Xcode project code signing settings to use Match profiles
+    app_identifiers = ENV["MATCH_IDENTIFIERS"].split(",")
+    app_identifiers.each do |bundle_id|
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: "Example/ExampleApp.xcodeproj",
+        bundle_identifier: bundle_id.strip,
+        code_sign_identity: "Apple Distribution",
+        profile_name: "match AppStore #{bundle_id.strip}"
+      )
+    end
+
     number = latest_testflight_build_number(
       app_identifier: ENV["APP_IDENTIFIER"],
       username: options[:username],
