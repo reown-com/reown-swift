@@ -21,6 +21,20 @@ struct PayContainerView: View {
                     case .intro:
                         PayIntroView()
                             .environmentObject(presenter)
+                    case .webviewDataCollection:
+                        if let urlString = presenter.paymentOptionsResponse?.collectData?.url,
+                           let url = URL(string: urlString) {
+                            PayDataCollectionWebView(
+                                url: url,
+                                onComplete: { presenter.onICWebViewComplete() },
+                                onError: { error in presenter.onICWebViewError(error) }
+                            )
+                            .frame(height: 550)
+                            .background(Color.whiteBackground)
+                            .cornerRadius(34)
+                            .padding(.horizontal, 10)
+                            .padding(.bottom, 10)
+                        }
                     case .nameInput:
                         PayNameInputView()
                             .environmentObject(presenter)

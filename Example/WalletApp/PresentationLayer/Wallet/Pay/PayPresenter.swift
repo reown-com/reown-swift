@@ -5,11 +5,12 @@ import Commons
 
 enum PayFlowStep: Int, CaseIterable {
     case intro = 0
-    case nameInput = 1
-    case dateOfBirth = 2
-    case confirmation = 3
-    case confirming = 4  // Loading state while payment is being processed
-    case success = 5
+    case webviewDataCollection = 1  // WebView IC when collectData.url is present
+    case nameInput = 2
+    case dateOfBirth = 3
+    case confirmation = 4
+    case confirming = 5  // Loading state while payment is being processed
+    case success = 6
 }
 
 final class PayPresenter: ObservableObject {
@@ -31,6 +32,10 @@ final class PayPresenter: ObservableObject {
     // User info for travel rule
     @Published var firstName: String = ""
     @Published var lastName: String = ""
+
+    // Payment result info (from confirmPayment response)
+    @Published var paymentResultInfo: ConfirmPaymentResultResponse?
+
     @Published var dateOfBirth: Date = {
         // Default to 1990-01-01
         var components = DateComponents()
@@ -95,13 +100,28 @@ final class PayPresenter: ObservableObject {
         let collectData = paymentOptionsResponse?.collectData
         print("💳 [Pay] startFlow - collectData: \(String(describing: collectData))")
         print("💳 [Pay] startFlow - paymentOptionsResponse: \(String(describing: paymentOptionsResponse))")
-        
-        if collectData != nil {
+
+        if let webviewUrl = collectData?.url, !webviewUrl.isEmpty {
+            // Use WebView for IC (URL from API)
+            currentStep = .webviewDataCollection
+        } else if collectData != nil {
+            // Fallback: Field-by-field collection
             currentStep = .nameInput
         } else {
             // No user data needed, go directly to confirmation
             currentStep = .confirmation
         }
+    }
+
+    /// Called when IC WebView completes successfully
+    func onICWebViewComplete() {
+        currentStep = .confirmation
+    }
+
+    /// Called when IC WebView encounters an error
+    func onICWebViewError(_ error: String) {
+        errorMessage = "Information capture failed: \(error)"
+        showError = true
     }
     
     func submitUserInfo() {
@@ -128,15 +148,22 @@ final class PayPresenter: ObservableObject {
         switch currentStep {
         case .intro:
             dismiss()
+        case .webviewDataCollection:
+            currentStep = .intro
         case .nameInput:
             currentStep = .intro
         case .dateOfBirth:
             currentStep = .nameInput
         case .confirmation:
-            // If info capture was required, go back to dateOfBirth
-            // Otherwise, go back to intro (skip info capture screens)
-            if paymentOptionsResponse?.collectData != nil {
-                currentStep = .dateOfBirth
+            // If info capture was required via WebView, go back to intro
+            // If info capture was required via fields, go back to dateOfBirth
+            // Otherwise, go back to intro
+            if let collectData = paymentOptionsResponse?.collectData {
+                if let webviewUrl = collectData.url, !webviewUrl.isEmpty {
+                    currentStep = .intro
+                } else {
+                    currentStep = .dateOfBirth
+                }
             } else {
                 currentStep = .intro
             }
@@ -182,8 +209,10 @@ final class PayPresenter: ObservableObject {
                 }
                 
                 // 3. Collect user data if required (travel rule)
+                // Skip if data was collected via WebView (url is present)
                 var collectedData: [CollectDataFieldResult]? = nil
-                if let collectDataAction = paymentOptionsResponse?.collectData {
+                if let collectDataAction = paymentOptionsResponse?.collectData,
+                   collectDataAction.url == nil || collectDataAction.url?.isEmpty == true {
                     collectedData = collectDataAction.fields.map { field -> CollectDataFieldResult in
                         let value = resolveFieldValue(for: field)
                         return CollectDataFieldResult(id: field.id, value: value)
@@ -200,6 +229,7 @@ final class PayPresenter: ObservableObject {
                 )
                 
                 print("Payment confirmed: \(result)")
+                self.paymentResultInfo = result
                 self.currentStep = .success
 
                 // Notify balances screen to refresh
