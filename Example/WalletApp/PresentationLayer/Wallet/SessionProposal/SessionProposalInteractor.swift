@@ -90,6 +90,14 @@ final class SessionProposalInteractor {
                 }
             }
             supportedAccounts.append(contentsOf: tonAccounts)
+
+            // Add TON session properties (public key and state init)
+            if let publicKey = tonAccountStorage.getPublicKey() {
+                sessionProperties["ton_getPublicKey"] = publicKey
+            }
+            if let stateInit = tonAccountStorage.getStateInitBoc() {
+                sessionProperties["ton_getStateInit"] = stateInit
+            }
         }
 
         // Add Tron accounts if available
