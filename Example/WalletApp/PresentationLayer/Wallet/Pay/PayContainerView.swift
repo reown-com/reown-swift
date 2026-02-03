@@ -22,8 +22,7 @@ struct PayContainerView: View {
                         PayIntroView()
                             .environmentObject(presenter)
                     case .webviewDataCollection:
-                        if let urlString = presenter.paymentOptionsResponse?.collectData?.url,
-                           let url = URL(string: urlString) {
+                        if let url = presenter.buildICWebViewURL() {
                             PayDataCollectionWebView(
                                 url: url,
                                 onComplete: { presenter.onICWebViewComplete() },

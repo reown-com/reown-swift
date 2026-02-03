@@ -17,6 +17,10 @@ final class PayPresenter: ObservableObject {
     private let router: PayRouter
     private let importAccount: ImportAccount
     private var disposeBag = Set<AnyCancellable>()
+
+    // Hardcoded test user data for IC form prefill (PoC)
+    private static let prefillFullName = "Test User"
+    private static let prefillDob = "1990-01-15"
     
     // Flow state
     @Published var currentStep: PayFlowStep = .intro
@@ -122,6 +126,65 @@ final class PayPresenter: ObservableObject {
     func onICWebViewError(_ error: String) {
         errorMessage = "Information capture failed: \(error)"
         showError = true
+    }
+
+    /// Build IC WebView URL with prefill query parameter
+    func buildICWebViewURL() -> URL? {
+        guard let baseUrlString = paymentOptionsResponse?.collectData?.url,
+              !baseUrlString.isEmpty else {
+            return nil
+        }
+
+        let schema = paymentOptionsResponse?.collectData?.schema
+        guard let prefillParam = buildPrefillParam(schema: schema) else {
+            return URL(string: baseUrlString)
+        }
+
+        guard var components = URLComponents(string: baseUrlString) else {
+            return URL(string: baseUrlString)
+        }
+
+        var queryItems = components.queryItems ?? []
+        queryItems.append(URLQueryItem(name: "prefill", value: prefillParam))
+        components.queryItems = queryItems
+
+        return components.url
+    }
+
+    /// Build Base64-encoded prefill JSON based on schema's required fields
+    private func buildPrefillParam(schema: String?) -> String? {
+        guard let schema = schema else { return nil }
+
+        // Parse schema JSON
+        guard let schemaData = schema.data(using: .utf8),
+              let schemaJson = try? JSONSerialization.jsonObject(with: schemaData) as? [String: Any],
+              let requiredArray = schemaJson["required"] as? [String] else {
+            return nil
+        }
+
+        // Build prefill data based on required fields
+        var prefillData: [String: String] = [:]
+
+        if requiredArray.contains("fullName") {
+            prefillData["fullName"] = Self.prefillFullName
+        }
+
+        if requiredArray.contains("dob") {
+            prefillData["dob"] = Self.prefillDob
+        }
+
+        // Only return if we have data to prefill
+        guard !prefillData.isEmpty else { return nil }
+
+        // Encode to JSON and Base64
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: prefillData),
+              let base64 = jsonData.base64EncodedString()
+                  .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return nil
+        }
+
+        print("💳 [Pay] Built prefill param: \(prefillData) -> \(base64)")
+        return base64
     }
     
     func submitUserInfo() {
