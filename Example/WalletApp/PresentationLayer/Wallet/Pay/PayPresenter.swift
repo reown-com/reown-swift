@@ -81,6 +81,12 @@ final class PayPresenter: ObservableObject {
                 print("💳 [Pay] collectData: \(String(describing: response.collectData))")
                 print("💳 [Pay] collectData fields: \(String(describing: response.collectData?.fields))")
                 self.selectedOption = response.options.first
+
+                // If no data collection required, skip intro and go directly to confirmation
+                if response.collectData == nil {
+                    self.currentStep = .confirmation
+                }
+
                 self.isLoading = false
             } catch {
                 self.errorMessage = error.localizedDescription
@@ -134,11 +140,11 @@ final class PayPresenter: ObservableObject {
             currentStep = .nameInput
         case .confirmation:
             // If info capture was required, go back to dateOfBirth
-            // Otherwise, go back to intro (skip info capture screens)
+            // If no data collection required (intro was skipped), dismiss entirely
             if paymentOptionsResponse?.collectData != nil {
                 currentStep = .dateOfBirth
             } else {
-                currentStep = .intro
+                dismiss()
             }
         case .confirming, .success:
             // Don't allow back navigation from these states
