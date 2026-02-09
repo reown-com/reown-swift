@@ -96,6 +96,12 @@ final class PayPresenter: ObservableObject {
                 print("💳 [Pay] collectData: \(String(describing: response.collectData))")
                 print("💳 [Pay] collectData fields: \(String(describing: response.collectData?.fields))")
                 self.selectedOption = response.options.first
+
+                // If no data collection required, skip intro and go directly to confirmation
+                if response.collectData == nil {
+                    self.currentStep = .confirmation
+                }
+
                 self.isLoading = false
             } catch {
                 self.errorMessage = error.localizedDescription
@@ -245,7 +251,7 @@ final class PayPresenter: ObservableObject {
         case .confirmation:
             // If info capture was required via WebView, go back to WebView
             // If info capture was required via fields, go back to dateOfBirth
-            // Otherwise, go back to intro
+            // If no data collection required (intro was skipped), dismiss entirely
             if let collectData = paymentOptionsResponse?.collectData {
                 if let webviewUrl = collectData.url, !webviewUrl.isEmpty {
                     currentStep = .webviewDataCollection
@@ -253,7 +259,7 @@ final class PayPresenter: ObservableObject {
                     currentStep = .dateOfBirth
                 }
             } else {
-                currentStep = .intro
+                dismiss()
             }
         case .confirming, .success:
             // Don't allow back navigation from these states
