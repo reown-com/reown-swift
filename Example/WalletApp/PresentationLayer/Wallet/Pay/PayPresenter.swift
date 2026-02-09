@@ -18,10 +18,16 @@ final class PayPresenter: ObservableObject {
     private let importAccount: ImportAccount
     private var disposeBag = Set<AnyCancellable>()
 
-    // Hardcoded test user data for IC form prefill (PoC)
-    private static let prefillFullName = "Test User"
-    private static let prefillDob = "1990-01-15"
-    
+    // Default test user data for IC form prefill (PoC)
+    private static let defaultPrefillFullName = "Test User"
+    private static let defaultPrefillDob = "1990-01-15"
+    private static let defaultPrefillPobAddress = "New York, USA"
+
+    // User-entered IC form data (captured from WebView)
+    var icFormFullName: String?
+    var icFormDob: String?
+    var icFormPobAddress: String?
+
     // Flow state
     @Published var currentStep: PayFlowStep = .intro
     @Published var isLoading = false
@@ -128,6 +134,20 @@ final class PayPresenter: ObservableObject {
         showError = true
     }
 
+    /// Called when IC WebView reports form data changes
+    func onICFormDataChanged(fullName: String?, dob: String?, pobAddress: String?) {
+        if let fullName = fullName, !fullName.isEmpty {
+            icFormFullName = fullName
+        }
+        if let dob = dob, !dob.isEmpty {
+            icFormDob = dob
+        }
+        if let pobAddress = pobAddress, !pobAddress.isEmpty {
+            icFormPobAddress = pobAddress
+        }
+        print("💳 [Pay] IC form data updated - fullName: \(icFormFullName ?? "nil"), dob: \(icFormDob ?? "nil"), pobAddress: \(icFormPobAddress ?? "nil")")
+    }
+
     /// Build IC WebView URL with prefill query parameter
     func buildICWebViewURL() -> URL? {
         guard let baseUrlString = paymentOptionsResponse?.collectData?.url,
@@ -163,14 +183,19 @@ final class PayPresenter: ObservableObject {
         }
 
         // Build prefill data based on required fields
+        // Use user-entered values if available, otherwise fall back to defaults
         var prefillData: [String: String] = [:]
 
         if requiredArray.contains("fullName") {
-            prefillData["fullName"] = Self.prefillFullName
+            prefillData["fullName"] = icFormFullName ?? Self.defaultPrefillFullName
         }
 
         if requiredArray.contains("dob") {
-            prefillData["dob"] = Self.prefillDob
+            prefillData["dob"] = icFormDob ?? Self.defaultPrefillDob
+        }
+
+        if requiredArray.contains("pobAddress") {
+            prefillData["pobAddress"] = icFormPobAddress ?? Self.defaultPrefillPobAddress
         }
 
         // Only return if we have data to prefill
@@ -218,12 +243,12 @@ final class PayPresenter: ObservableObject {
         case .dateOfBirth:
             currentStep = .nameInput
         case .confirmation:
-            // If info capture was required via WebView, go back to intro
+            // If info capture was required via WebView, go back to WebView
             // If info capture was required via fields, go back to dateOfBirth
             // Otherwise, go back to intro
             if let collectData = paymentOptionsResponse?.collectData {
                 if let webviewUrl = collectData.url, !webviewUrl.isEmpty {
-                    currentStep = .intro
+                    currentStep = .webviewDataCollection
                 } else {
                     currentStep = .dateOfBirth
                 }

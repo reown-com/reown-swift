@@ -3,19 +3,35 @@ import WebKit
 
 struct PayDataCollectionWebView: View {
     let url: URL
+    let onClose: () -> Void
     let onComplete: () -> Void
     let onError: (String) -> Void
+    let onFormDataChanged: (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void
 
     @State private var isLoading = true
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topTrailing) {
             PayWebViewRepresentable(
                 url: url,
                 isLoading: $isLoading,
                 onComplete: onComplete,
-                onError: onError
+                onError: onError,
+                onFormDataChanged: onFormDataChanged
             )
+
+            // Close button
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.gray)
+                    .frame(width: 28, height: 28)
+                    .background(Color.white.opacity(0.9))
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+            }
+            .padding(.top, 56)
+            .padding(.trailing, 20)
 
             if isLoading {
                 VStack(spacing: 16) {
@@ -37,9 +53,10 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
     @Binding var isLoading: Bool
     let onComplete: () -> Void
     let onError: (String) -> Void
+    let onFormDataChanged: (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(isLoading: $isLoading, onComplete: onComplete, onError: onError)
+        Coordinator(isLoading: $isLoading, onComplete: onComplete, onError: onError, onFormDataChanged: onFormDataChanged)
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -66,11 +83,13 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
         @Binding var isLoading: Bool
         let onComplete: () -> Void
         let onError: (String) -> Void
+        let onFormDataChanged: (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void
 
-        init(isLoading: Binding<Bool>, onComplete: @escaping () -> Void, onError: @escaping (String) -> Void) {
+        init(isLoading: Binding<Bool>, onComplete: @escaping () -> Void, onError: @escaping (String) -> Void, onFormDataChanged: @escaping (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void) {
             self._isLoading = isLoading
             self.onComplete = onComplete
             self.onError = onError
+            self.onFormDataChanged = onFormDataChanged
         }
 
         // JavaScript calls: window.webkit.messageHandlers.payDataCollectionComplete.postMessage({...})
@@ -90,9 +109,14 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
             switch type {
             case "IC_COMPLETE":
                 let success = body["success"] as? Bool ?? false
-                print("💳 [PayWebView] IC_COMPLETE received, success: \(success)")
+                // Extract form data from completion message (same fields as prefill)
+                let fullName = body["fullName"] as? String
+                let dob = body["dob"] as? String
+                let pobAddress = body["pobAddress"] as? String
+                print("💳 [PayWebView] IC_COMPLETE received, success: \(success), fullName: \(fullName ?? "nil"), dob: \(dob ?? "nil"), pobAddress: \(pobAddress ?? "nil")")
                 if success {
                     DispatchQueue.main.async { [weak self] in
+                        self?.onFormDataChanged(fullName, dob, pobAddress)
                         self?.onComplete()
                     }
                 }
@@ -102,11 +126,17 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
                 DispatchQueue.main.async { [weak self] in
                     self?.onError(error)
                 }
-            default:
-                print("💳 [PayWebView] Unknown message type: \(type)")
+            case "IC_FORM_DATA":
+                let fullName = body["fullName"] as? String
+                let dob = body["dob"] as? String
+                let pobAddress = body["pobAddress"] as? String
+                print("💳 [PayWebView] IC_FORM_DATA received - fullName: \(fullName ?? "nil"), dob: \(dob ?? "nil"), pobAddress: \(pobAddress ?? "nil")")
                 DispatchQueue.main.async { [weak self] in
-                    self?.onError("Unknown message type: \(type)")
+                    self?.onFormDataChanged(fullName, dob, pobAddress)
                 }
+            default:
+                // Ignore unknown message types silently (don't treat as error)
+                print("💳 [PayWebView] Unknown message type: \(type)")
             }
         }
 
@@ -146,6 +176,30 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
                 self?.isLoading = false
             }
         }
+
+        // Handle link clicks - open external links in Safari
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.allow)
+                return
+            }
+
+            // Allow initial page load and same-origin navigations
+            if navigationAction.navigationType == .other {
+                decisionHandler(.allow)
+                return
+            }
+
+            // For link clicks, open in Safari
+            if navigationAction.navigationType == .linkActivated {
+                print("💳 [PayWebView] Opening external link in Safari: \(url)")
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+                return
+            }
+
+            decisionHandler(.allow)
+        }
     }
 }
 
@@ -154,8 +208,10 @@ struct PayDataCollectionWebView_Previews: PreviewProvider {
     static var previews: some View {
         PayDataCollectionWebView(
             url: URL(string: "https://example.com")!,
+            onClose: {},
             onComplete: {},
-            onError: { _ in }
+            onError: { _ in },
+            onFormDataChanged: { _, _, _ in }
         )
     }
 }

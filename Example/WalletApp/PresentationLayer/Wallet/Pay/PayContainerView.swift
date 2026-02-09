@@ -25,14 +25,14 @@ struct PayContainerView: View {
                         if let url = presenter.buildICWebViewURL() {
                             PayDataCollectionWebView(
                                 url: url,
+                                onClose: { presenter.goBack() },
                                 onComplete: { presenter.onICWebViewComplete() },
-                                onError: { error in presenter.onICWebViewError(error) }
+                                onError: { error in presenter.onICWebViewError(error) },
+                                onFormDataChanged: { fullName, dob, pobAddress in presenter.onICFormDataChanged(fullName: fullName, dob: dob, pobAddress: pobAddress) }
                             )
-                            .frame(height: 550)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color.whiteBackground)
-                            .cornerRadius(34)
-                            .padding(.horizontal, 10)
-                            .padding(.bottom, 10)
+                            .ignoresSafeArea(edges: .bottom)
                         }
                     case .nameInput:
                         PayNameInputView()
