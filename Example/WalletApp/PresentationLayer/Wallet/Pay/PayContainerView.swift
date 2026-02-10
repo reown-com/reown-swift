@@ -31,7 +31,7 @@ struct PayContainerView: View {
                                 onFormDataChanged: { fullName, dob, pobAddress in presenter.onICFormDataChanged(fullName: fullName, dob: dob, pobAddress: pobAddress) }
                             )
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .padding(.top, 20)
+                            .padding(.top, 50)
                             .background(Color.whiteBackground)
                             .ignoresSafeArea(edges: .bottom)
                         }
