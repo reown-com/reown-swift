@@ -36,37 +36,39 @@ struct PayIntroView: View {
                 // No payment options available
                 noPaymentOptionsView
             } else if let info = presenter.paymentInfo {
-                // Merchant icon
-                if let iconUrl = info.merchant.iconUrl {
-                    AsyncImage(url: URL(string: iconUrl)) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                        } else {
-                            merchantPlaceholder(name: info.merchant.name)
+                // Merchant icon with verified badge
+                ZStack(alignment: .bottomTrailing) {
+                    if let iconUrl = info.merchant.iconUrl {
+                        AsyncImage(url: URL(string: iconUrl)) { phase in
+                            if let image = phase.image {
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } else {
+                                merchantPlaceholder(name: info.merchant.name)
+                            }
                         }
-                    }
-                    .frame(width: 64, height: 64)
-                    .cornerRadius(12)
-                    .padding(.top, 16)
-                } else {
-                    merchantPlaceholder(name: info.merchant.name)
                         .frame(width: 64, height: 64)
-                        .padding(.top, 16)
-                }
-                
-                // Payment title
-                HStack(spacing: 6) {
-                    Text("Pay \(info.formattedAmount) to \(info.merchant.name)")
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(.grey8)
-                    
+                        .cornerRadius(12)
+                    } else {
+                        merchantPlaceholder(name: info.merchant.name)
+                            .frame(width: 64, height: 64)
+                    }
+
+                    // Verified badge
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 14))
+                        .font(.system(size: 20))
                         .foregroundColor(.blue)
+                        .background(Circle().fill(Color.white).frame(width: 16, height: 16))
+                        .offset(x: 4, y: 4)
                 }
                 .padding(.top, 16)
+
+                // Payment title
+                Text("Pay \(info.formattedAmount) to \(info.merchant.name)")
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .foregroundColor(.grey8)
+                    .padding(.top, 16)
                 
                 // Steps
                 VStack(spacing: 16) {
