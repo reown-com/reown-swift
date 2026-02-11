@@ -112,7 +112,6 @@
 		84D88C8A2CF075E9003A6C16 /* CATransactionRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D88C892CF075E9003A6C16 /* CATransactionRouter.swift */; };
 		84DB38F32983CDAE00BFEE37 /* PushRegisterer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DB38F22983CDAE00BFEE37 /* PushRegisterer.swift */; };
 		84E6B84A29787A8000428BAF /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E6B84929787A8000428BAF /* NotificationService.swift */; };
-		84E6B84E29787A8000428BAF /* PNDecryptionService.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 84E6B84729787A8000428BAF /* PNDecryptionService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		84FE684628ACDB4700C893FF /* RequestParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FE684528ACDB4700C893FF /* RequestParams.swift */; };
 		A507BE1A29E8032E0038EF70 /* EIP55Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A507BE1929E8032E0038EF70 /* EIP55Tests.swift */; };
 		A50B6A362B06683800162B01 /* InputConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE25D293F56D6004840D1 /* InputConfig.swift */; };
@@ -312,17 +311,11 @@
 		PAY0000012EE100000000000A /* PayDateOfBirthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000A /* PayDateOfBirthView.swift */; };
 		PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000B /* PaySuccessView.swift */; };
 		PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000C /* PayConfirmingView.swift */; };
+		PAY0000012EE100000000000D /* PayDataCollectionWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */; };
 		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		84E6B84C29787A8000428BAF /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 764E1D3426F8D3FC00A1FB15 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 84E6B84629787A8000428BAF;
-			remoteInfo = PNDecryptionService;
-		};
 		A5A4FC7D2840C5D400BBEC1E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 764E1D3426F8D3FC00A1FB15 /* Project object */;
@@ -353,19 +346,6 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		84E6B85229787A8000428BAF /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				84E6B84E29787A8000428BAF /* PNDecryptionService.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		440AEAAF2DA909F8000A9A85 /* LinkModeTopicsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkModeTopicsStorage.swift; sourceTree = "<group>"; };
@@ -639,6 +619,7 @@
 		PAY0000022EE100000000000A /* PayDateOfBirthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayDateOfBirthView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000B /* PaySuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaySuccessView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000C /* PayConfirmingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmingView.swift; sourceTree = "<group>"; };
+		PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayDataCollectionWebView.swift; sourceTree = "<group>"; };
 		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1648,6 +1629,7 @@
 				PAY0000022EE1000000000009 /* PayConfirmView.swift */,
 				PAY0000022EE100000000000B /* PaySuccessView.swift */,
 				PAY0000022EE100000000000C /* PayConfirmingView.swift */,
+				PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */,
 			);
 			path = Pay;
 			sourceTree = "<group>";
@@ -1802,12 +1784,10 @@
 				C56EE217293F55ED004840D1 /* Sources */,
 				C56EE218293F55ED004840D1 /* Frameworks */,
 				C56EE219293F55ED004840D1 /* Resources */,
-				84E6B85229787A8000428BAF /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				84E6B84D29787A8000428BAF /* PBXTargetDependency */,
 			);
 			name = WalletApp;
 			packageProductDependencies = (
@@ -2228,6 +2208,7 @@
 				PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */,
 				PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */,
 				PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */,
+				PAY0000012EE100000000000D /* PayDataCollectionWebView.swift in Sources */,
 				44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */,
 				44650A432F1E0002004F2144 /* TronSigner.swift in Sources */,
 				C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */,
@@ -2303,11 +2284,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		84E6B84D29787A8000428BAF /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 84E6B84629787A8000428BAF /* PNDecryptionService */;
-			targetProxy = 84E6B84C29787A8000428BAF /* PBXContainerItemProxy */;
-		};
 		A5A4FC7E2840C5D400BBEC1E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 84CE641B27981DED00142511 /* DApp */;

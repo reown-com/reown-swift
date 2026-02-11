@@ -5,18 +5,29 @@ import Commons
 
 enum PayFlowStep: Int, CaseIterable {
     case intro = 0
-    case nameInput = 1
-    case dateOfBirth = 2
-    case confirmation = 3
-    case confirming = 4  // Loading state while payment is being processed
-    case success = 5
+    case webviewDataCollection = 1  // WebView IC when collectData.url is present
+    case nameInput = 2
+    case dateOfBirth = 3
+    case confirmation = 4
+    case confirming = 5  // Loading state while payment is being processed
+    case success = 6
 }
 
 final class PayPresenter: ObservableObject {
     private let router: PayRouter
     private let importAccount: ImportAccount
     private var disposeBag = Set<AnyCancellable>()
-    
+
+    // Default test user data for IC form prefill (PoC)
+    private static let defaultPrefillFullName = "Test User"
+    private static let defaultPrefillDob = "1990-01-15"
+    private static let defaultPrefillPobAddress = "New York, USA"
+
+    // User-entered IC form data (captured from WebView)
+    var icFormFullName: String?
+    var icFormDob: String?
+    var icFormPobAddress: String?
+
     // Flow state
     @Published var currentStep: PayFlowStep = .intro
     @Published var isLoading = false
@@ -31,6 +42,10 @@ final class PayPresenter: ObservableObject {
     // User info for travel rule
     @Published var firstName: String = ""
     @Published var lastName: String = ""
+
+    // Payment result info (from confirmPayment response)
+    @Published var paymentResultInfo: ConfirmPaymentResultResponse?
+
     @Published var dateOfBirth: Date = {
         // Default to 1990-01-01
         var components = DateComponents()
@@ -81,6 +96,12 @@ final class PayPresenter: ObservableObject {
                 print("💳 [Pay] collectData: \(String(describing: response.collectData))")
                 print("💳 [Pay] collectData fields: \(String(describing: response.collectData?.fields))")
                 self.selectedOption = response.options.first
+
+                // If no data collection required, skip intro and go directly to confirmation
+                if response.collectData == nil {
+                    self.currentStep = .confirmation
+                }
+
                 self.isLoading = false
             } catch {
                 self.errorMessage = error.localizedDescription
@@ -95,13 +116,106 @@ final class PayPresenter: ObservableObject {
         let collectData = paymentOptionsResponse?.collectData
         print("💳 [Pay] startFlow - collectData: \(String(describing: collectData))")
         print("💳 [Pay] startFlow - paymentOptionsResponse: \(String(describing: paymentOptionsResponse))")
-        
-        if collectData != nil {
+
+        if let webviewUrl = collectData?.url, !webviewUrl.isEmpty {
+            // Use WebView for IC (URL from API)
+            currentStep = .webviewDataCollection
+        } else if collectData != nil {
+            // Fallback: Field-by-field collection
             currentStep = .nameInput
         } else {
             // No user data needed, go directly to confirmation
             currentStep = .confirmation
         }
+    }
+
+    /// Called when IC WebView completes successfully
+    func onICWebViewComplete() {
+        currentStep = .confirmation
+    }
+
+    /// Called when IC WebView encounters an error
+    func onICWebViewError(_ error: String) {
+        errorMessage = "Information capture failed: \(error)"
+        showError = true
+    }
+
+    /// Called when IC WebView reports form data changes
+    func onICFormDataChanged(fullName: String?, dob: String?, pobAddress: String?) {
+        if let fullName = fullName, !fullName.isEmpty {
+            icFormFullName = fullName
+        }
+        if let dob = dob, !dob.isEmpty {
+            icFormDob = dob
+        }
+        if let pobAddress = pobAddress, !pobAddress.isEmpty {
+            icFormPobAddress = pobAddress
+        }
+        print("💳 [Pay] IC form data updated - fullName: \(icFormFullName ?? "nil"), dob: \(icFormDob ?? "nil"), pobAddress: \(icFormPobAddress ?? "nil")")
+    }
+
+    /// Build IC WebView URL with prefill query parameter
+    func buildICWebViewURL() -> URL? {
+        guard let baseUrlString = paymentOptionsResponse?.collectData?.url,
+              !baseUrlString.isEmpty else {
+            return nil
+        }
+
+        let schema = paymentOptionsResponse?.collectData?.schema
+        guard let prefillParam = buildPrefillParam(schema: schema) else {
+            return URL(string: baseUrlString)
+        }
+
+        guard var components = URLComponents(string: baseUrlString) else {
+            return URL(string: baseUrlString)
+        }
+
+        var queryItems = components.queryItems ?? []
+        queryItems.append(URLQueryItem(name: "prefill", value: prefillParam))
+        components.queryItems = queryItems
+
+        return components.url
+    }
+
+    /// Build Base64-encoded prefill JSON based on schema's required fields
+    private func buildPrefillParam(schema: String?) -> String? {
+        guard let schema = schema else { return nil }
+
+        // Parse schema JSON
+        guard let schemaData = schema.data(using: .utf8),
+              let schemaJson = try? JSONSerialization.jsonObject(with: schemaData) as? [String: Any],
+              let requiredArray = schemaJson["required"] as? [String] else {
+            return nil
+        }
+
+        // Build prefill data based on required fields
+        // Use user-entered values if available, otherwise fall back to defaults
+        var prefillData: [String: String] = [:]
+
+        if requiredArray.contains("fullName") {
+            prefillData["fullName"] = icFormFullName ?? Self.defaultPrefillFullName
+        }
+
+        if requiredArray.contains("dob") {
+            prefillData["dob"] = icFormDob ?? Self.defaultPrefillDob
+        }
+
+        if requiredArray.contains("pobAddress") {
+            prefillData["pobAddress"] = icFormPobAddress ?? Self.defaultPrefillPobAddress
+        }
+
+        // Only return if we have data to prefill
+        guard !prefillData.isEmpty else { return nil }
+
+        // Encode to JSON and Base64
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: prefillData),
+              let base64 = jsonData.base64EncodedString()
+                  .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return nil
+        }
+
+        print("💳 [Pay] Built prefill param: \(prefillData) -> \(base64)")
+        return base64
     }
     
     func submitUserInfo() {
@@ -128,17 +242,24 @@ final class PayPresenter: ObservableObject {
         switch currentStep {
         case .intro:
             dismiss()
+        case .webviewDataCollection:
+            currentStep = .intro
         case .nameInput:
             currentStep = .intro
         case .dateOfBirth:
             currentStep = .nameInput
         case .confirmation:
-            // If info capture was required, go back to dateOfBirth
-            // Otherwise, go back to intro (skip info capture screens)
-            if paymentOptionsResponse?.collectData != nil {
-                currentStep = .dateOfBirth
+            // If info capture was required via WebView, go back to WebView
+            // If info capture was required via fields, go back to dateOfBirth
+            // If no data collection required (intro was skipped), dismiss entirely
+            if let collectData = paymentOptionsResponse?.collectData {
+                if let webviewUrl = collectData.url, !webviewUrl.isEmpty {
+                    currentStep = .webviewDataCollection
+                } else {
+                    currentStep = .dateOfBirth
+                }
             } else {
-                currentStep = .intro
+                dismiss()
             }
         case .confirming, .success:
             // Don't allow back navigation from these states
@@ -182,8 +303,10 @@ final class PayPresenter: ObservableObject {
                 }
                 
                 // 3. Collect user data if required (travel rule)
+                // Skip if data was collected via WebView (url is present)
                 var collectedData: [CollectDataFieldResult]? = nil
-                if let collectDataAction = paymentOptionsResponse?.collectData {
+                if let collectDataAction = paymentOptionsResponse?.collectData,
+                   collectDataAction.url == nil || collectDataAction.url?.isEmpty == true {
                     collectedData = collectDataAction.fields.map { field -> CollectDataFieldResult in
                         let value = resolveFieldValue(for: field)
                         return CollectDataFieldResult(id: field.id, value: value)
@@ -200,6 +323,7 @@ final class PayPresenter: ObservableObject {
                 )
                 
                 print("Payment confirmed: \(result)")
+                self.paymentResultInfo = result
                 self.currentStep = .success
 
                 // Notify balances screen to refresh

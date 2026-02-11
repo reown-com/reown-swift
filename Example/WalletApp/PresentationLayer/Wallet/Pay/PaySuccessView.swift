@@ -1,4 +1,5 @@
 import SwiftUI
+import WalletConnectPay
 
 struct PaySuccessView: View {
     @EnvironmentObject var presenter: PayPresenter
@@ -55,7 +56,34 @@ struct PaySuccessView: View {
                 .foregroundColor(.grey8)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
-            
+
+            // Payment result info (txId and token amount)
+            if let resultInfo = presenter.paymentResultInfo?.info {
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Paid")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(formatTokenAmount(resultInfo.optionAmount))
+                            .fontWeight(.medium)
+                            .foregroundColor(.grey8)
+                    }
+                    HStack {
+                        Text("Transaction")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(truncatedTxId(resultInfo.txId))
+                            .foregroundColor(.blue)
+                    }
+                }
+                .font(.system(size: 14, design: .rounded))
+                .padding()
+                .background(Color.grey95.opacity(0.5))
+                .cornerRadius(12)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+            }
+
             Spacer()
                 .frame(minHeight: 30, maxHeight: 50)
             
@@ -95,6 +123,29 @@ struct PaySuccessView: View {
     /// Formatted payment amount (e.g., "$32,900")
     private var formattedAmount: String {
         presenter.paymentInfo?.formattedAmount ?? "$0.00"
+    }
+
+    /// Format token amount from PaymentResultInfo
+    private func formatTokenAmount(_ amount: PayAmount) -> String {
+        let value = Double(amount.value) ?? 0
+        let decimals = Int(amount.display.decimals)
+        let displayValue = value / pow(10.0, Double(decimals))
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 6
+
+        let formatted = formatter.string(from: NSNumber(value: displayValue)) ?? "\(displayValue)"
+        return "\(formatted) \(amount.display.assetSymbol)"
+    }
+
+    /// Truncate transaction ID for display (first 6 and last 4 characters)
+    private func truncatedTxId(_ txId: String) -> String {
+        guard txId.count > 10 else { return txId }
+        let prefix = String(txId.prefix(6))
+        let suffix = String(txId.suffix(4))
+        return "\(prefix)...\(suffix)"
     }
 }
 

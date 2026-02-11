@@ -70,6 +70,32 @@ class TonAccountStorage {
         guard let address = getAddress(for: resolvedChainId) else { return nil }
         return Account(blockchain: resolvedChainId, address: address)!
     }
+
+    /// Returns the hex-encoded Ed25519 public key derived from the stored private key
+    func getPublicKey() -> String? {
+        guard let sk = getPrivateKey() else { return nil }
+        return derivePublicKeyHex(from: sk)
+    }
+
+    /// Returns the base64-encoded state init BoC (Bag of Cells) for the wallet
+    func getStateInitBoc(for chainId: Blockchain? = nil) -> String? {
+        let resolvedChainId = chainId ?? self.chainId
+        guard let sk = getPrivateKey(), let pk = derivePublicKeyHex(from: sk) else { return nil }
+        do {
+            let cfg = TonClientConfig(networkId: resolvedChainId.absoluteString)
+            let bundleId: String = Bundle.main.bundleIdentifier ?? ""
+            let pulseMetadata = YttriumUtils.PulseMetadata(
+                url: nil,
+                bundleId: bundleId,
+                sdkVersion: "reown-swift-\(EnvironmentInfo.sdkName)",
+                sdkPlatform: "mobile"
+            )
+            let client = TonClient(cfg: cfg, projectId: InputConfig.projectId, pulseMetadata: pulseMetadata)
+            return try client.getStateInitBoc(keypair: Keypair(sk: sk, pk: pk))
+        } catch {
+            return nil
+        }
+    }
 }
 
 private extension TonAccountStorage {

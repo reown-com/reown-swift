@@ -80,16 +80,26 @@ platform :ios do
       in_house: false,
     )
     match(
-      readonly: false,
+      readonly: true,
       type: "appstore",
       app_identifier: ENV["MATCH_IDENTIFIERS"],
-      git_url: ENV["GIT_URL"],
-      git_basic_authorization: options[:token],
+      git_url: ENV["MATCH_GIT_URL"],
       api_key: api_key,
-      include_all_certificates: true,
-      force_for_new_devices: true,
-      force_for_new_certificates: true
+      include_all_certificates: true
     )
+
+    # Get the actual profile name from match (includes timestamp)
+    profile_name = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING][ENV["APP_IDENTIFIER"]]
+
+    # Update Xcode project code signing settings to use Match profiles
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Example/ExampleApp.xcodeproj",
+      bundle_identifier: ENV["APP_IDENTIFIER"],
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name
+    )
+
     number = latest_testflight_build_number(
       app_identifier: ENV["APP_IDENTIFIER"],
       username: options[:username],
@@ -104,12 +114,10 @@ platform :ios do
       scheme: ENV["SCHEME"],
       export_method: "app-store",
       export_options: {
-    provisioningProfiles: {
-      "com.walletconnect.walletapp" => "match AppStore com.walletconnect.walletapp",
-      "com.walletconnect.walletapp.PNDecryptionService" => "match AppStore com.walletconnect.walletapp.PNDecryptionService",
-        "com.walletconnect.dapp" => "match AppStore com.walletconnect.dapp" 
-    }
-  },
+        provisioningProfiles: {
+          ENV["APP_IDENTIFIER"] => profile_name
+        }
+      },
       xcargs: "RELAY_HOST='#{options[:relay_host]}' PROJECT_ID='#{options[:project_id]}' WALLETAPP_SENTRY_DSN='#{options[:sentry_dsn]}' MIXPANEL_TOKEN='#{options[:mixpanel_token]}'"
     )
     upload_to_testflight(

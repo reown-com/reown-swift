@@ -60,4 +60,4 @@ x_platform_protocol_tests:
 	./run_tests.sh --scheme IntegrationTests --testplan XPlatformProtocolTests --project Example/ExampleApp.xcodeproj
 
 release:
-	fastlane release_testflight username:$(APPLE_ID) token:$(TOKEN) relay_host:$(RELAY_HOST) project_id:$(PROJECT_ID) sentry_dsn:$(WALLETAPP_SENTRY_DSN) mixpanel_token:$(MIXPANEL_TOKEN) --env $(APP)
+	fastlane release_testflight username:$(APPLE_ID) relay_host:$(RELAY_HOST) project_id:$(PROJECT_ID) sentry_dsn:$(WALLETAPP_SENTRY_DSN) mixpanel_token:$(MIXPANEL_TOKEN) --env $(APP)
