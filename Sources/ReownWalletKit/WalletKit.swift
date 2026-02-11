@@ -1,6 +1,8 @@
 import Foundation
 import Combine
+#if SWIFT_PACKAGE
 import WalletConnectPay
+#endif
 
 #if SWIFT_PACKAGE
 public typealias VerifyContext = WalletConnectVerify.VerifyContext
