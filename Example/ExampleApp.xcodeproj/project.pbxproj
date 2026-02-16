@@ -305,9 +305,10 @@
 		PAY0000012EE1000000000003 /* PayRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000003 /* PayRouter.swift */; };
 		PAY0000012EE1000000000005 /* PayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000005 /* PayService.swift */; };
 		PAY0000012EE1000000000006 /* PayContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000006 /* PayContainerView.swift */; };
-		PAY0000012EE1000000000007 /* PayIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000007 /* PayIntroView.swift */; };
+		PAY0000012EE100000000000E /* PayOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000E /* PayOptionsView.swift */; };
+		PAY0000012EE100000000000F /* PayWhyInfoRequiredView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000F /* PayWhyInfoRequiredView.swift */; };
+		PAY0000012EE1000000000010 /* PaySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000010 /* PaySummaryView.swift */; };
 		PAY0000012EE1000000000008 /* PayNameInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000008 /* PayNameInputView.swift */; };
-		PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000009 /* PayConfirmView.swift */; };
 		PAY0000012EE100000000000A /* PayDateOfBirthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000A /* PayDateOfBirthView.swift */; };
 		PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000B /* PaySuccessView.swift */; };
 		PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000C /* PayConfirmingView.swift */; };
@@ -613,9 +614,10 @@
 		PAY0000022EE1000000000003 /* PayRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayRouter.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000005 /* PayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayService.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000006 /* PayContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayContainerView.swift; sourceTree = "<group>"; };
-		PAY0000022EE1000000000007 /* PayIntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayIntroView.swift; sourceTree = "<group>"; };
+		PAY0000022EE100000000000E /* PayOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayOptionsView.swift; sourceTree = "<group>"; };
+		PAY0000022EE100000000000F /* PayWhyInfoRequiredView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWhyInfoRequiredView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000010 /* PaySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaySummaryView.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000008 /* PayNameInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNameInputView.swift; sourceTree = "<group>"; };
-		PAY0000022EE1000000000009 /* PayConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000A /* PayDateOfBirthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayDateOfBirthView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000B /* PaySuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaySuccessView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000C /* PayConfirmingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmingView.swift; sourceTree = "<group>"; };
@@ -1623,10 +1625,11 @@
 				PAY0000022EE1000000000003 /* PayRouter.swift */,
 				PAY0000022EE1000000000005 /* PayService.swift */,
 				PAY0000022EE1000000000006 /* PayContainerView.swift */,
-				PAY0000022EE1000000000007 /* PayIntroView.swift */,
+				PAY0000022EE100000000000E /* PayOptionsView.swift */,
+				PAY0000022EE100000000000F /* PayWhyInfoRequiredView.swift */,
+				PAY0000022EE1000000000010 /* PaySummaryView.swift */,
 				PAY0000022EE1000000000008 /* PayNameInputView.swift */,
 				PAY0000022EE100000000000A /* PayDateOfBirthView.swift */,
-				PAY0000022EE1000000000009 /* PayConfirmView.swift */,
 				PAY0000022EE100000000000B /* PaySuccessView.swift */,
 				PAY0000022EE100000000000C /* PayConfirmingView.swift */,
 				PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */,
@@ -2202,10 +2205,11 @@
 				PAY0000012EE1000000000003 /* PayRouter.swift in Sources */,
 				PAY0000012EE1000000000005 /* PayService.swift in Sources */,
 				PAY0000012EE1000000000006 /* PayContainerView.swift in Sources */,
-				PAY0000012EE1000000000007 /* PayIntroView.swift in Sources */,
+				PAY0000012EE100000000000E /* PayOptionsView.swift in Sources */,
+				PAY0000012EE100000000000F /* PayWhyInfoRequiredView.swift in Sources */,
+				PAY0000012EE1000000000010 /* PaySummaryView.swift in Sources */,
 				PAY0000012EE1000000000008 /* PayNameInputView.swift in Sources */,
 				PAY0000012EE100000000000A /* PayDateOfBirthView.swift in Sources */,
-				PAY0000012EE1000000000009 /* PayConfirmView.swift in Sources */,
 				PAY0000012EE100000000000B /* PaySuccessView.swift in Sources */,
 				PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */,
 				PAY0000012EE100000000000D /* PayDataCollectionWebView.swift in Sources */,
