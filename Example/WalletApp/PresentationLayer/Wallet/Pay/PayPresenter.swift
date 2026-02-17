@@ -108,7 +108,8 @@ final class PayPresenter: ObservableObject {
 
     func loadPaymentOptions() {
         isLoading = true
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 let response = try await WalletKit.instance.Pay.getPaymentOptions(
                     paymentLink: paymentLink,
@@ -302,7 +303,8 @@ final class PayPresenter: ObservableObject {
         // Switch to confirming state immediately
         currentStep = .confirming
 
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 // 1. Get required actions for the selected option
                 let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
