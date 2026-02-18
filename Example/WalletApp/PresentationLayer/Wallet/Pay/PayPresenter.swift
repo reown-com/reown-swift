@@ -20,14 +20,14 @@ final class PayPresenter: ObservableObject {
     private var disposeBag = Set<AnyCancellable>()
 
     // Default test user data for IC form prefill (PoC)
-    private static let defaultPrefillFullName = "Test User"
-    private static let defaultPrefillDob = "1990-01-15"
-    private static let defaultPrefillPobAddress = "New York, USA"
-
-    // User-entered IC form data (captured from WebView)
-    var icFormFullName: String?
-    var icFormDob: String?
-    var icFormPobAddress: String?
+//    private static let defaultPrefillFullName = "Test User"
+//    private static let defaultPrefillDob = "1990-01-15"
+//    private static let defaultPrefillPobAddress = "New York, USA"
+//
+//    // User-entered IC form data (captured from WebView)
+//    var icFormFullName: String?
+//    var icFormDob: String?
+//    var icFormPobAddress: String?
 
     // Flow state
     @Published var currentStep: PayFlowStep = .options
@@ -159,16 +159,16 @@ final class PayPresenter: ObservableObject {
 
     /// Called when IC WebView reports form data changes
     func onICFormDataChanged(fullName: String?, dob: String?, pobAddress: String?) {
-        if let fullName = fullName, !fullName.isEmpty {
-            icFormFullName = fullName
-        }
-        if let dob = dob, !dob.isEmpty {
-            icFormDob = dob
-        }
-        if let pobAddress = pobAddress, !pobAddress.isEmpty {
-            icFormPobAddress = pobAddress
-        }
-        print("💳 [Pay] IC form data updated - fullName: \(icFormFullName ?? "nil"), dob: \(icFormDob ?? "nil"), pobAddress: \(icFormPobAddress ?? "nil")")
+//        if let fullName = fullName, !fullName.isEmpty {
+//            icFormFullName = fullName
+//        }
+//        if let dob = dob, !dob.isEmpty {
+//            icFormDob = dob
+//        }
+//        if let pobAddress = pobAddress, !pobAddress.isEmpty {
+//            icFormPobAddress = pobAddress
+//        }
+//        print("💳 [Pay] IC form data updated - fullName: \(icFormFullName ?? "nil"), dob: \(icFormDob ?? "nil"), pobAddress: \(icFormPobAddress ?? "nil")")
     }
 
     /// Build IC WebView URL with prefill query parameter
@@ -178,62 +178,64 @@ final class PayPresenter: ObservableObject {
             return nil
         }
 
-        let schema = collectData?.schema
-        guard let prefillParam = buildPrefillParam(schema: schema) else {
-            return URL(string: baseUrlString)
-        }
+        return URL(string: baseUrlString)
 
-        guard var components = URLComponents(string: baseUrlString) else {
-            return URL(string: baseUrlString)
-        }
-
-        var queryItems = components.queryItems ?? []
-        queryItems.append(URLQueryItem(name: "prefill", value: prefillParam))
-        components.queryItems = queryItems
-
-        return components.url
+//        let schema = collectData?.schema
+//        guard let prefillParam = buildPrefillParam(schema: schema) else {
+//            return URL(string: baseUrlString)
+//        }
+//
+//        guard var components = URLComponents(string: baseUrlString) else {
+//            return URL(string: baseUrlString)
+//        }
+//
+//        var queryItems = components.queryItems ?? []
+//        queryItems.append(URLQueryItem(name: "prefill", value: prefillParam))
+//        components.queryItems = queryItems
+//
+//        return components.url
     }
 
-    /// Build Base64-encoded prefill JSON based on schema's required fields
-    private func buildPrefillParam(schema: String?) -> String? {
-        guard let schema = schema else { return nil }
-
-        // Parse schema JSON
-        guard let schemaData = schema.data(using: .utf8),
-              let schemaJson = try? JSONSerialization.jsonObject(with: schemaData) as? [String: Any],
-              let requiredArray = schemaJson["required"] as? [String] else {
-            return nil
-        }
-
-        // Build prefill data based on required fields
-        // Use user-entered values if available, otherwise fall back to defaults
-        var prefillData: [String: String] = [:]
-
-        if requiredArray.contains("fullName") {
-            prefillData["fullName"] = icFormFullName ?? Self.defaultPrefillFullName
-        }
-
-        if requiredArray.contains("dob") {
-            prefillData["dob"] = icFormDob ?? Self.defaultPrefillDob
-        }
-
-        if requiredArray.contains("pobAddress") {
-            prefillData["pobAddress"] = icFormPobAddress ?? Self.defaultPrefillPobAddress
-        }
-
-        // Only return if we have data to prefill
-        guard !prefillData.isEmpty else { return nil }
-
-        // Encode to JSON and Base64
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: prefillData),
-              let base64 = jsonData.base64EncodedString()
-                  .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return nil
-        }
-
-        print("💳 [Pay] Built prefill param: \(prefillData) -> \(base64)")
-        return base64
-    }
+//    /// Build Base64-encoded prefill JSON based on schema's required fields
+//    private func buildPrefillParam(schema: String?) -> String? {
+//        guard let schema = schema else { return nil }
+//
+//        // Parse schema JSON
+//        guard let schemaData = schema.data(using: .utf8),
+//              let schemaJson = try? JSONSerialization.jsonObject(with: schemaData) as? [String: Any],
+//              let requiredArray = schemaJson["required"] as? [String] else {
+//            return nil
+//        }
+//
+//        // Build prefill data based on required fields
+//        // Use user-entered values if available, otherwise fall back to defaults
+//        var prefillData: [String: String] = [:]
+//
+//        if requiredArray.contains("fullName") {
+//            prefillData["fullName"] = icFormFullName ?? Self.defaultPrefillFullName
+//        }
+//
+//        if requiredArray.contains("dob") {
+//            prefillData["dob"] = icFormDob ?? Self.defaultPrefillDob
+//        }
+//
+//        if requiredArray.contains("pobAddress") {
+//            prefillData["pobAddress"] = icFormPobAddress ?? Self.defaultPrefillPobAddress
+//        }
+//
+//        // Only return if we have data to prefill
+//        guard !prefillData.isEmpty else { return nil }
+//
+//        // Encode to JSON and Base64
+//        guard let jsonData = try? JSONSerialization.data(withJSONObject: prefillData),
+//              let base64 = jsonData.base64EncodedString()
+//                  .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+//            return nil
+//        }
+//
+//        print("💳 [Pay] Built prefill param: \(prefillData) -> \(base64)")
+//        return base64
+//    }
 
     func submitUserInfo() {
         guard !firstName.isEmpty && !lastName.isEmpty else {
