@@ -3,7 +3,7 @@ import WalletConnectPay
 
 struct PayContainerView: View {
     @EnvironmentObject var presenter: PayPresenter
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -13,13 +13,13 @@ struct PayContainerView: View {
                         // Dismiss keyboard when tapping background
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     }
-                
+
                 VStack {
                     Spacer()
-                    
+
                     switch presenter.currentStep {
-                    case .intro:
-                        PayIntroView()
+                    case .options:
+                        PayOptionsView()
                             .environmentObject(presenter)
                     case .webviewDataCollection:
                         if let url = presenter.buildICWebViewURL() {
@@ -41,14 +41,17 @@ struct PayContainerView: View {
                     case .dateOfBirth:
                         PayDateOfBirthView()
                             .environmentObject(presenter)
-                    case .confirmation:
-                        PayConfirmView()
+                    case .summary:
+                        PaySummaryView()
                             .environmentObject(presenter)
                     case .confirming:
                         PayConfirmingView()
                             .environmentObject(presenter)
                     case .success:
                         PaySuccessView()
+                            .environmentObject(presenter)
+                    case .whyInfoRequired:
+                        PayWhyInfoRequiredView()
                             .environmentObject(presenter)
                     }
                 }

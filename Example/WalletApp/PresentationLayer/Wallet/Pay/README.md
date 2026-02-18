@@ -23,9 +23,10 @@ The `WalletConnectPay` package wraps the Yttrium pay client and provides:
 - **`PayRouter.swift`** - Navigation
 - **`PayService.swift`** - Helper extensions for formatting
 - **`PayContainerView.swift`** - Step container
-- **`PayIntroView.swift`** - Screen 104: Payment intro
-- **`PayNameInputView.swift`** - Screen 105: Travel rule name capture
-- **`PayConfirmView.swift`** - Screen 107: Payment confirmation
+- **`PayOptionsView.swift`** - Payment options card list
+- **`PayWhyInfoRequiredView.swift`** - "Why info required?" explanation dialog
+- **`PayNameInputView.swift`** - Travel rule name capture
+- **`PaySummaryView.swift`** - Post-IC payment summary/confirmation
 
 ## Payment Flow
 
