@@ -4,13 +4,14 @@ import ReownWalletKit
 import Commons
 
 enum PayFlowStep: Int, CaseIterable {
-    case intro = 0
-    case webviewDataCollection = 1  // WebView IC when collectData.url is present
+    case options = 0
+    case webviewDataCollection = 1
     case nameInput = 2
     case dateOfBirth = 3
-    case confirmation = 4
-    case confirming = 5  // Loading state while payment is being processed
+    case summary = 4
+    case confirming = 5
     case success = 6
+    case whyInfoRequired = 7
 }
 
 final class PayPresenter: ObservableObject {
@@ -29,16 +30,16 @@ final class PayPresenter: ObservableObject {
     var icFormPobAddress: String?
 
     // Flow state
-    @Published var currentStep: PayFlowStep = .intro
+    @Published var currentStep: PayFlowStep = .options
     @Published var isLoading = false
     @Published var showError = false
     @Published var errorMessage = ""
-    
+
     // Payment data
     @Published var paymentOptionsResponse: PaymentOptionsResponse?
     @Published var selectedOption: PaymentOption?
     @Published var requiredActions: [Action] = []
-    
+
     // User info for travel rule
     @Published var firstName: String = ""
     @Published var lastName: String = ""
@@ -54,23 +55,47 @@ final class PayPresenter: ObservableObject {
         components.day = 1
         return Calendar.current.date(from: components) ?? Date()
     }()
-    
+
     // Payment link from deep link
     private let paymentLink: String
-    
+
     // Wallet accounts for payment options
     private let accounts: [String]
-    
+
     /// Convenience accessor for payment info
     var paymentInfo: PaymentInfo? {
         paymentOptionsResponse?.info
     }
-    
+
     /// Available payment options
     var paymentOptions: [PaymentOption] {
         paymentOptionsResponse?.options ?? []
     }
-    
+
+    /// Convenience accessor for collectData (top-level, applies to all options)
+    /// Note: When Yttrium exposes per-option collectData, switch to selectedOption?.collectData
+    var collectData: CollectDataAction? {
+        paymentOptionsResponse?.collectData
+    }
+
+    /// Whether any option requires information capture
+    var anyOptionRequiresIC: Bool {
+        collectData != nil
+    }
+
+    /// Whether the currently selected option requires information capture
+    var selectedOptionRequiresIC: Bool {
+        collectData != nil
+    }
+
+    /// Button title for the options screen — "Continue" if IC required, "Pay $X" otherwise
+    var optionsButtonTitle: String {
+        if selectedOptionRequiresIC {
+            return "Continue"
+        }
+        return "Pay \(paymentInfo?.formattedAmount ?? "")"
+    }
+
     init(router: PayRouter, paymentLink: String, accounts: [String], importAccount: ImportAccount) {
         self.router = router
         self.paymentLink = paymentLink
@@ -78,12 +103,13 @@ final class PayPresenter: ObservableObject {
         self.importAccount = importAccount
         loadPaymentOptions()
     }
-    
+
     // MARK: - Public Methods
-    
+
     func loadPaymentOptions() {
         isLoading = true
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 let response = try await WalletKit.instance.Pay.getPaymentOptions(
                     paymentLink: paymentLink,
@@ -93,15 +119,8 @@ final class PayPresenter: ObservableObject {
                 self.paymentOptionsResponse = response
                 // Select first option by default
                 print("💳 [Pay] getPaymentOptions response: \(response)")
-                print("💳 [Pay] collectData: \(String(describing: response.collectData))")
-                print("💳 [Pay] collectData fields: \(String(describing: response.collectData?.fields))")
                 self.selectedOption = response.options.first
-
-                // If no data collection required, skip intro and go directly to confirmation
-                if response.collectData == nil {
-                    self.currentStep = .confirmation
-                }
-
+                self.currentStep = .options
                 self.isLoading = false
             } catch {
                 self.errorMessage = error.localizedDescription
@@ -110,28 +129,26 @@ final class PayPresenter: ObservableObject {
             }
         }
     }
-    
-    func startFlow() {
-        // Check if travel rule data collection is required
-        let collectData = paymentOptionsResponse?.collectData
-        print("💳 [Pay] startFlow - collectData: \(String(describing: collectData))")
-        print("💳 [Pay] startFlow - paymentOptionsResponse: \(String(describing: paymentOptionsResponse))")
 
-        if let webviewUrl = collectData?.url, !webviewUrl.isEmpty {
-            // Use WebView for IC (URL from API)
-            currentStep = .webviewDataCollection
-        } else if collectData != nil {
-            // Fallback: Field-by-field collection
-            currentStep = .nameInput
+    /// Called from options screen when user taps the primary button
+    func continueFromOptions() {
+        guard selectedOption != nil else { return }
+
+        if let collectData = collectData {
+            if let url = collectData.url, !url.isEmpty {
+                currentStep = .webviewDataCollection
+            } else {
+                currentStep = .nameInput
+            }
         } else {
-            // No user data needed, go directly to confirmation
-            currentStep = .confirmation
+            // No IC needed — confirm directly (skip summary)
+            confirmPayment()
         }
     }
 
     /// Called when IC WebView completes successfully
     func onICWebViewComplete() {
-        currentStep = .confirmation
+        currentStep = .summary
     }
 
     /// Called when IC WebView encounters an error
@@ -156,12 +173,12 @@ final class PayPresenter: ObservableObject {
 
     /// Build IC WebView URL with prefill query parameter
     func buildICWebViewURL() -> URL? {
-        guard let baseUrlString = paymentOptionsResponse?.collectData?.url,
+        guard let baseUrlString = collectData?.url,
               !baseUrlString.isEmpty else {
             return nil
         }
 
-        let schema = paymentOptionsResponse?.collectData?.schema
+        let schema = collectData?.schema
         guard let prefillParam = buildPrefillParam(schema: schema) else {
             return URL(string: baseUrlString)
         }
@@ -217,7 +234,7 @@ final class PayPresenter: ObservableObject {
         print("💳 [Pay] Built prefill param: \(prefillData) -> \(base64)")
         return base64
     }
-    
+
     func submitUserInfo() {
         guard !firstName.isEmpty && !lastName.isEmpty else {
             errorMessage = "Please enter your first and last name"
@@ -226,51 +243,55 @@ final class PayPresenter: ObservableObject {
         }
         currentStep = .dateOfBirth
     }
-    
+
     func submitDateOfBirth() {
-        currentStep = .confirmation
+        currentStep = .summary
     }
-    
+
     /// Format date of birth as YYYY-MM-DD for API
     var formattedDateOfBirth: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: dateOfBirth)
     }
-    
+
     func goBack() {
         switch currentStep {
-        case .intro:
+        case .options:
             dismiss()
         case .webviewDataCollection:
-            currentStep = .intro
+            currentStep = .options
         case .nameInput:
-            currentStep = .intro
+            currentStep = .options
         case .dateOfBirth:
             currentStep = .nameInput
-        case .confirmation:
-            // If info capture was required via WebView, go back to WebView
-            // If info capture was required via fields, go back to dateOfBirth
-            // If no data collection required (intro was skipped), dismiss entirely
-            if let collectData = paymentOptionsResponse?.collectData {
-                if let webviewUrl = collectData.url, !webviewUrl.isEmpty {
+        case .summary:
+            // Go back to the IC step that preceded summary
+            if let collectData = collectData {
+                if let url = collectData.url, !url.isEmpty {
                     currentStep = .webviewDataCollection
                 } else {
                     currentStep = .dateOfBirth
                 }
             } else {
-                dismiss()
+                currentStep = .options
             }
         case .confirming, .success:
             // Don't allow back navigation from these states
             break
+        case .whyInfoRequired:
+            currentStep = .options
         }
     }
-    
+
+    func showWhyInfoRequiredScreen() {
+        currentStep = .whyInfoRequired
+    }
+
     func selectOption(_ option: PaymentOption) {
         selectedOption = option
     }
-    
+
     func confirmPayment() {
         guard let option = selectedOption,
               let paymentId = paymentOptionsResponse?.paymentId else {
@@ -282,37 +303,37 @@ final class PayPresenter: ObservableObject {
         // Switch to confirming state immediately
         currentStep = .confirming
 
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 // 1. Get required actions for the selected option
-                // Use paymentId from getPaymentOptions response (Yttrium already extracted it)
                 let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
                     paymentId: paymentId,
                     optionId: option.id
                 )
                 self.requiredActions = actions
-                
+
                 // 2. Sign all wallet RPC actions
                 var signatures: [String] = []
                 let ethSigner = ETHSigner(importAccount: importAccount)
-                
+
                 for action in actions {
                     let rpcAction = action.walletRpc
                     let signature = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
                     signatures.append(signature)
                 }
-                
+
                 // 3. Collect user data if required (travel rule)
                 // Skip if data was collected via WebView (url is present)
                 var collectedData: [CollectDataFieldResult]? = nil
-                if let collectDataAction = paymentOptionsResponse?.collectData,
+                if let collectDataAction = self.collectData,
                    collectDataAction.url == nil || collectDataAction.url?.isEmpty == true {
                     collectedData = collectDataAction.fields.map { field -> CollectDataFieldResult in
                         let value = resolveFieldValue(for: field)
                         return CollectDataFieldResult(id: field.id, value: value)
                     }
                 }
-                
+
                 // 4. Confirm payment with signatures and collected data
                 let result = try await WalletKit.instance.Pay.confirmPayment(
                     paymentId: paymentId,
@@ -321,33 +342,37 @@ final class PayPresenter: ObservableObject {
                     collectedData: collectedData,
                     maxPollMs: 60000
                 )
-                
+
                 print("Payment confirmed: \(result)")
                 self.paymentResultInfo = result
                 self.currentStep = .success
 
                 // Notify balances screen to refresh
                 NotificationCenter.default.post(name: .paymentCompleted, object: nil)
-                
+
             } catch {
                 self.errorMessage = error.localizedDescription
                 self.showError = true
-                // Go back to confirmation on error
-                self.currentStep = .confirmation
+                // Go back to summary if IC was done, otherwise back to options
+                if selectedOptionRequiresIC {
+                    self.currentStep = .summary
+                } else {
+                    self.currentStep = .options
+                }
             }
         }
     }
-    
+
     func dismiss() {
         router.dismiss()
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func resolveFieldValue(for field: CollectDataField) -> String {
         let fieldId = field.id.lowercased()
         let fieldName = field.name.lowercased()
-        
+
         // Check for full name field first (combined first + last name)
         if fieldId == "fullname" || fieldId == "full_name" || fieldId == "name" ||
            fieldName.contains("full name") {
@@ -363,11 +388,11 @@ final class PayPresenter: ObservableObject {
         else if fieldId == "dob" || fieldId == "dateofbirth" || fieldId == "date_of_birth" || fieldName.contains("birth") {
             return formattedDateOfBirth
         }
-        
+
         print("💳 [Pay] Warning: Unknown field - id: \(field.id), name: \(field.name)")
         return ""
     }
-    
+
 }
 
 // MARK: - SceneViewModel
@@ -375,7 +400,7 @@ extension PayPresenter: SceneViewModel {
     var sceneTitle: String? {
         return nil
     }
-    
+
     var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
         return .never
     }
