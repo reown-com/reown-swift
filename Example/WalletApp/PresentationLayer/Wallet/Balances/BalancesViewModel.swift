@@ -258,7 +258,7 @@ final class BalancesViewModel: ObservableObject {
     
     private func handleScannedOrPastedUri(_ uriString: String) {
         // Check if it's a WalletConnect Pay URL
-        if isPaymentLink(uriString) {
+        if WalletKit.isPaymentLink(uriString) {
             startPayFlow(paymentLink: uriString)
             return
         }
@@ -271,14 +271,6 @@ final class BalancesViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             showError = true
         }
-    }
-    
-    private func isPaymentLink(_ urlString: String) -> Bool {
-        guard let url = URL(string: urlString),
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            return false
-        }
-        return components.queryItems?.contains(where: { $0.name == "pid" }) == true
     }
     
     private func pair(uri: WalletConnectURI) {
