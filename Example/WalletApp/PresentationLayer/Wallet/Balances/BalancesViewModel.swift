@@ -58,7 +58,9 @@ final class BalancesViewModel: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published var chainBalances: [ChainBalance] = USDCChain.allCases.map { ChainBalance(chain: $0) }
+    @Published var selectedTab: Int = 0
+    @Published var usdcBalances: [ChainBalance] = USDCChain.allCases.map { ChainBalance(chain: $0) }
+    @Published var eurcBalances: [ChainBalance] = USDCChain.eurcChains.map { ChainBalance(chain: $0) }
     @Published var isLoading: Bool = true
     @Published var isRefreshing: Bool = false
     @Published var showError: Bool = false
@@ -78,10 +80,14 @@ final class BalancesViewModel: ObservableObject {
     
     // MARK: - Computed Properties
     
-    var totalBalance: Decimal {
-        chainBalances.reduce(0) { $0 + $1.balance }
+    var displayedBalances: [ChainBalance] {
+        selectedTab == 0 ? usdcBalances : eurcBalances
     }
-    
+
+    var totalBalance: Decimal {
+        displayedBalances.reduce(0) { $0 + $1.balance }
+    }
+
     var formattedTotalBalance: String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -89,6 +95,10 @@ final class BalancesViewModel: ObservableObject {
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSDecimalNumber(decimal: totalBalance)) ?? "$0.00"
+    }
+
+    var tokenLabel: String {
+        selectedTab == 0 ? "USDC" : "EURC"
     }
     
     var walletAddress: String {
@@ -223,31 +233,47 @@ final class BalancesViewModel: ObservableObject {
                 let (data, _) = try await URLSession.shared.data(for: request)
                 let response = try JSONDecoder().decode(BalanceAPIResponse.self, from: data)
 
-                // Filter for USDC tokens only
-                let usdcBalances = response.balances.filter { $0.symbol == "USDC" }
+                // Filter for USDC and EURC tokens
+                let usdcTokens = response.balances.filter { $0.symbol == "USDC" }
+                let eurcTokens = response.balances.filter { $0.symbol == "EURC" }
 
-                // Update chainBalances on main thread
+                // Update balances on main thread
                 await MainActor.run {
+                    // Update USDC balances
                     for chain in USDCChain.allCases {
-                        if let index = self.chainBalances.firstIndex(where: { $0.chain == chain }),
-                           let apiBalance = usdcBalances.first(where: { $0.chainId == chain.chainId }) {
-                            // Use the pre-calculated USD value from API
-                            self.chainBalances[index].balance = Decimal(apiBalance.value)
-                            self.chainBalances[index].error = nil
-                        } else if let index = self.chainBalances.firstIndex(where: { $0.chain == chain }) {
-                            // No balance found for this chain - set to 0
-                            self.chainBalances[index].balance = 0
-                            self.chainBalances[index].error = nil
+                        if let index = self.usdcBalances.firstIndex(where: { $0.chain == chain }),
+                           let apiBalance = usdcTokens.first(where: { $0.chainId == chain.chainId }) {
+                            self.usdcBalances[index].balance = Decimal(apiBalance.value)
+                            self.usdcBalances[index].error = nil
+                        } else if let index = self.usdcBalances.firstIndex(where: { $0.chain == chain }) {
+                            self.usdcBalances[index].balance = 0
+                            self.usdcBalances[index].error = nil
                         }
                     }
+
+                    // Update EURC balances
+                    for chain in USDCChain.eurcChains {
+                        if let index = self.eurcBalances.firstIndex(where: { $0.chain == chain }),
+                           let apiBalance = eurcTokens.first(where: { $0.chainId == chain.chainId }) {
+                            self.eurcBalances[index].balance = Decimal(apiBalance.value)
+                            self.eurcBalances[index].error = nil
+                        } else if let index = self.eurcBalances.firstIndex(where: { $0.chain == chain }) {
+                            self.eurcBalances[index].balance = 0
+                            self.eurcBalances[index].error = nil
+                        }
+                    }
+
                     self.isLoading = false
                     self.isRefreshing = false
                 }
             } catch {
                 await MainActor.run {
                     // Set error on all chains
-                    for index in self.chainBalances.indices {
-                        self.chainBalances[index].error = error.localizedDescription
+                    for index in self.usdcBalances.indices {
+                        self.usdcBalances[index].error = error.localizedDescription
+                    }
+                    for index in self.eurcBalances.indices {
+                        self.eurcBalances[index].error = error.localizedDescription
                     }
                     self.isLoading = false
                     self.isRefreshing = false
@@ -258,7 +284,7 @@ final class BalancesViewModel: ObservableObject {
     
     private func handleScannedOrPastedUri(_ uriString: String) {
         // Check if it's a WalletConnect Pay URL
-        if isPaymentLink(uriString) {
+        if WalletKit.isPaymentLink(uriString) {
             startPayFlow(paymentLink: uriString)
             return
         }
@@ -271,14 +297,6 @@ final class BalancesViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             showError = true
         }
-    }
-    
-    private func isPaymentLink(_ urlString: String) -> Bool {
-        guard let url = URL(string: urlString),
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            return false
-        }
-        return components.queryItems?.contains(where: { $0.name == "pid" }) == true
     }
     
     private func pair(uri: WalletConnectURI) {
