@@ -13,11 +13,20 @@ struct BalancesView: View {
                 // Total Balance Header
                 totalBalanceHeader
                     .padding(.top, 20)
-                
+
+                // Token Tab Picker
+                Picker("Token", selection: $viewModel.selectedTab) {
+                    Text("USDC").tag(0)
+                    Text("EURC").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+
                 // Chain Balances List
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(viewModel.chainBalances) { chainBalance in
+                        ForEach(viewModel.displayedBalances) { chainBalance in
                             chainBalanceRow(chainBalance)
                         }
                     }
@@ -55,7 +64,7 @@ struct BalancesView: View {
                 .font(.system(size: 48, weight: .bold, design: .rounded))
                 .foregroundColor(Color(UIColor.label))
             
-            Text("Total USDC")
+            Text("Total \(viewModel.tokenLabel)")
                 .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundColor(Color(UIColor.secondaryLabel))
             

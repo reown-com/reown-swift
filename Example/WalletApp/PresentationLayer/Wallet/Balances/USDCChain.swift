@@ -6,8 +6,12 @@ enum USDCChain: String, CaseIterable, Identifiable {
     case base = "Base"
     case arbitrum = "Arbitrum"
     case polygon = "Polygon"
-    
+    case optimism = "Optimism"
+
     var id: String { rawValue }
+
+    /// Chains that support EURC
+    static let eurcChains: [USDCChain] = [.ethereum, .base, .optimism]
     
     /// Chain ID in CAIP-2 format (eip155:chainId)
     var chainId: String {
@@ -20,6 +24,8 @@ enum USDCChain: String, CaseIterable, Identifiable {
             return "eip155:42161"
         case .polygon:
             return "eip155:137"
+        case .optimism:
+            return "eip155:10"
         }
     }
     
@@ -34,6 +40,8 @@ enum USDCChain: String, CaseIterable, Identifiable {
             return "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
         case .polygon:
             return "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        case .optimism:
+            return "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
         }
     }
     
@@ -48,6 +56,8 @@ enum USDCChain: String, CaseIterable, Identifiable {
             return "🟠"
         case .polygon:
             return "🟣"
+        case .optimism:
+            return "🔴"
         }
     }
 }
