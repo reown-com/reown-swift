@@ -199,8 +199,8 @@ extension AnyCodable: Decodable, Encodable {
             // ignoring that key
         } else {
             var container = encoder.singleValueContainer()
-            if let boolVal = value as? Bool {
-                try container.encode(boolVal)
+            if let nsNumber = value as? NSNumber, CFGetTypeID(nsNumber) == CFBooleanGetTypeID() {
+                try container.encode(nsNumber.boolValue)
             } else if let intVal = value as? Int {
                 try container.encode(intVal)
             } else if let doubleVal = value as? Double {
