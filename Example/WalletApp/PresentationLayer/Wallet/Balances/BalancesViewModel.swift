@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CoreNFC
 import SwiftUI
 
 // MARK: - Blockchain API Response Models
@@ -128,6 +129,16 @@ final class BalancesViewModel: ObservableObject {
     func onAppear() {
         fetchAllBalances()
         startAutoRefresh()
+        // Auto-start NFC scanning so taps are captured directly by the reader
+        // session instead of Background Tag Reading (which shows a notification).
+        // Skip if a payment is already being presented (e.g. opened from NFC notification).
+        if isNFCAvailable {
+            if NFCPaymentReader.suppressAutoScan {
+                NFCPaymentReader.suppressAutoScan = false
+            } else {
+                onScanNFC()
+            }
+        }
     }
 
     func onDisappear() {
@@ -170,8 +181,28 @@ final class BalancesViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    /// Whether NFC reading is available on this device.
+    var isNFCAvailable: Bool {
+        NFCPaymentReader.isAvailable
+    }
+
     // MARK: - Navigation Actions
-    
+
+    func onScanNFC() {
+        NFCPaymentReader.shared.scan { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let urlString):
+                    self?.handleScannedOrPastedUri(urlString)
+                case .failure(let error):
+                    if case NFCPaymentError.cancelled = error { return }
+                    self?.errorMessage = error.localizedDescription
+                    self?.showError = true
+                }
+            }
+        }
+    }
+
     func onScanUri() {
         guard let viewController = viewController else { return }
         ScanModule.create(app: app, onValue: { [weak self] uriString in
@@ -283,6 +314,15 @@ final class BalancesViewModel: ObservableObject {
     }
     
     private func handleScannedOrPastedUri(_ uriString: String) {
+        // Check for Universal Link with embedded payment URL (NFC HCE mode).
+        // The POS wraps the payment URL as: https://.../wallet?payUrl=<encoded_url>
+        if let url = URL(string: uriString),
+           let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+           let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
+            startPayFlow(paymentLink: payUrl)
+            return
+        }
+
         // Check if it's a WalletConnect Pay URL
         if WalletKit.isPaymentLink(uriString) {
             startPayFlow(paymentLink: uriString)

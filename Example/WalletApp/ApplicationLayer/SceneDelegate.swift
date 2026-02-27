@@ -23,12 +23,21 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
             return
         }
-        
+
+        // Check for NFC-delivered payment URL (Background Tag Reading wraps the
+        // payment link inside the wallet's Universal Link as a `payUrl` parameter).
+        if let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
+            print("🔗 [NFC] Background Tag Reading delivered payment URL: \(payUrl)")
+            NFCPaymentReader.suppressAutoScan = true
+            handlePaymentLink(payUrl, autoPayMode: true)
+            return
+        }
+
         // Extract topic from URL
         if let topic = extractTopicFromURL(url.absoluteString) {
             LinkModeTopicsStorage.shared.addTopic(topic)
         }
-        
+
         do {
             try WalletKit.instance.dispatchEnvelope(url.absoluteString)
         } catch {
@@ -55,6 +64,16 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
 
+        // Check for widget "Tap to Pay" deep link on cold start
+        if let urlContext = connectionOptions.urlContexts.first,
+           urlContext.url.scheme == "walletapp" && urlContext.url.host == "nfc-pay" {
+            configurators.configure()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.triggerNfcScan()
+            }
+            return
+        }
+
         // Check for payment deep link on cold start
         var pendingPaymentLink: String?
         if let urlContext = connectionOptions.urlContexts.first {
@@ -63,6 +82,19 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             pendingPaymentLink = extractPaymentLink(from: url)
         } else {
             print("🔗 [PayDeeplink] Cold start - No URL context")
+        }
+
+        // Check for NFC-delivered Universal Link on cold start (Background Tag Reading).
+        // Universal Links arrive via userActivities, not urlContexts.
+        var isNfcOriginated = false
+        if pendingPaymentLink == nil,
+           let url = connectionOptions.userActivities
+               .first(where: { $0.activityType == NSUserActivityTypeBrowsingWeb })?.webpageURL,
+           let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+           let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
+            print("🔗 [NFC] Cold start - Background Tag Reading payment URL: \(payUrl)")
+            pendingPaymentLink = payUrl
+            isNfcOriginated = true
         }
 
         // Process connection options (only if not a pay-only deeplink)
@@ -108,13 +140,26 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         // Handle pending payment after configuration is complete
         if let paymentLink = pendingPaymentLink {
             print("🔗 [PayDeeplink] Will handle payment link after delay: \(paymentLink)")
+            // Suppress NFC auto-scan — payment modal will be shown instead.
+            // Set BEFORE the UI appears so onAppear() sees it.
+            NFCPaymentReader.suppressAutoScan = true
+            let autoPayForNfc = isNfcOriginated
             // Delay slightly to ensure UI is ready
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                print("🔗 [PayDeeplink] Now handling payment link: \(paymentLink)")
-                self?.handlePaymentLink(paymentLink)
+                print("🔗 [PayDeeplink] Now handling payment link: \(paymentLink), autoPayMode: \(autoPayForNfc)")
+                self?.handlePaymentLink(paymentLink, autoPayMode: autoPayForNfc)
             }
         } else {
             print("🔗 [PayDeeplink] No pending payment link to handle")
+        }
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        // Control Center widget writes a flag to shared UserDefaults
+        let defaults = UserDefaults(suiteName: "group.com.walletconnect.sdk")
+        if defaults?.bool(forKey: "pendingNfcPay") == true {
+            defaults?.removeObject(forKey: "pendingNfcPay")
+            triggerNfcScan()
         }
     }
 
@@ -126,6 +171,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 
         let url = context.url
         print("🔗 [PayDeeplink] openURLContexts - Received URL: \(url.absoluteString)")
+
+        // Handle widget "Tap to Pay" deep link
+        if url.scheme == "walletapp" && url.host == "nfc-pay" {
+            triggerNfcScan()
+            return
+        }
 
         // Check for payment deep link and handle if found
         if let paymentLink = extractPaymentLink(from: url) {
@@ -182,6 +233,37 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 }
 
 private extension SceneDelegate {
+
+    func triggerNfcScan() {
+        NFCPaymentReader.suppressAutoScan = true
+        NFCPaymentReader.shared.scan { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let urlString):
+                    self?.handleScannedPaymentUrl(urlString)
+                case .failure(let error):
+                    if case NFCPaymentError.cancelled = error { return }
+                    AlertPresenter.present(message: error.localizedDescription, type: .error)
+                }
+            }
+        }
+    }
+
+    func handleScannedPaymentUrl(_ urlString: String) {
+        // Check for Universal Link wrapper (payUrl= parameter from Background Tag Reading)
+        if let url = URL(string: urlString),
+           let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+           let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
+            handlePaymentLink(payUrl, autoPayMode: true)
+            return
+        }
+        // Direct payment link
+        if WalletKit.isPaymentLink(urlString) {
+            handlePaymentLink(urlString, autoPayMode: true)
+            return
+        }
+        print("NFC scan returned non-payment URL: \(urlString)")
+    }
 
     func open(notification: UNNotification) {
         let popupTag: Int = 1020
@@ -273,10 +355,12 @@ private extension SceneDelegate {
     }
     
     /// Handle a payment link URL
-    /// - Parameter paymentLink: The payment link URL - either a WC URI with embedded pay param,
-    ///   or POS scan format "walletapp://walletconnectpay?paymentId=<id>"
-    private func handlePaymentLink(_ paymentLink: String) {
-        print("🔗 [PayDeeplink] handlePaymentLink called with: \(paymentLink)")
+    /// - Parameters:
+    ///   - paymentLink: The payment link URL - either a WC URI with embedded pay param,
+    ///     or POS scan format "walletapp://walletconnectpay?paymentId=<id>"
+    ///   - autoPayMode: When true, skip option selection and auto-confirm (NFC tap-to-pay)
+    private func handlePaymentLink(_ paymentLink: String, autoPayMode: Bool = false) {
+        print("🔗 [PayDeeplink] handlePaymentLink called with: \(paymentLink), autoPayMode: \(autoPayMode)")
 
         guard let topController = window?.rootViewController?.topController else {
             print("🔗 [PayDeeplink] ERROR: No top controller available")
@@ -301,12 +385,13 @@ private extension SceneDelegate {
         ]
         print("🔗 [PayDeeplink] CAIP-10 accounts: \(accounts)")
 
-        print("🔗 [PayDeeplink] Creating PayModule with paymentLink: \(paymentLink)")
+        print("🔗 [PayDeeplink] Creating PayModule with paymentLink: \(paymentLink), autoPayMode: \(autoPayMode)")
         let paymentVC = PayModule.create(
             app: app,
             paymentLink: paymentLink,
             accounts: accounts,
-            importAccount: account
+            importAccount: account,
+            autoPayMode: autoPayMode
         )
         paymentVC.modalPresentationStyle = .overCurrentContext
         paymentVC.view.backgroundColor = .clear

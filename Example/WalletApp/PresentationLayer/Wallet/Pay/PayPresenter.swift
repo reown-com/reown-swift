@@ -29,6 +29,10 @@ final class PayPresenter: ObservableObject {
     var icFormDob: String?
     var icFormPobAddress: String?
 
+    // Auto-pay mode: when true, skips option selection and auto-confirms
+    // Used for NFC tap-to-pay (Apple Pay-like UX)
+    let autoPayMode: Bool
+
     // Flow state
     @Published var currentStep: PayFlowStep = .options
     @Published var isLoading = false
@@ -96,11 +100,12 @@ final class PayPresenter: ObservableObject {
         return "Pay \(paymentInfo?.formattedAmount ?? "")"
     }
 
-    init(router: PayRouter, paymentLink: String, accounts: [String], importAccount: ImportAccount) {
+    init(router: PayRouter, paymentLink: String, accounts: [String], importAccount: ImportAccount, autoPayMode: Bool = false) {
         self.router = router
         self.paymentLink = paymentLink
         self.accounts = accounts
         self.importAccount = importAccount
+        self.autoPayMode = autoPayMode
         loadPaymentOptions()
     }
 
@@ -120,8 +125,24 @@ final class PayPresenter: ObservableObject {
                 // Select first option by default
                 print("💳 [Pay] getPaymentOptions response: \(response)")
                 self.selectedOption = response.options.first
-                self.currentStep = .options
                 self.isLoading = false
+
+                // Auto-pay mode: skip UI and confirm immediately if possible
+                if self.autoPayMode {
+                    // Pick first option that doesn't require collectData
+                    let autoOption = response.options.first { opt in
+                        // No collect data at option level or top level
+                        self.collectData == nil
+                    }
+                    if let option = autoOption {
+                        self.selectedOption = option
+                        self.confirmPayment()
+                        return
+                    }
+                    // All options require collectData — fall back to manual flow
+                    print("💳 [Pay] autoPayMode: all options require IC, falling back to manual")
+                }
+                self.currentStep = .options
             } catch {
                 self.errorMessage = error.localizedDescription
                 self.showError = true
@@ -349,6 +370,13 @@ final class PayPresenter: ObservableObject {
 
                 // Notify balances screen to refresh
                 NotificationCenter.default.post(name: .paymentCompleted, object: nil)
+
+                // Auto-dismiss after 3s in auto-pay mode (NFC tap-to-pay)
+                if self.autoPayMode {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                        self?.dismiss()
+                    }
+                }
 
             } catch {
                 self.errorMessage = error.localizedDescription
