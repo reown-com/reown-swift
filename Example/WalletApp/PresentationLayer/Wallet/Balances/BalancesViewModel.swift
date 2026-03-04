@@ -142,12 +142,10 @@ final class BalancesViewModel: ObservableObject {
     }
 
     func onDisappear() {
-//        print("[Balance] onDisappear")
         stopAutoRefresh()
     }
 
     func refresh() {
-//        print("[Balance] Manual refresh triggered")
         isRefreshing = true
         fetchAllBalances()
     }
@@ -156,17 +154,12 @@ final class BalancesViewModel: ObservableObject {
 
     private func startAutoRefresh() {
         stopAutoRefresh()
-//        print("[Balance] Starting auto-refresh timer (interval: \(Self.refreshInterval)s)")
         refreshTimer = Timer.scheduledTimer(withTimeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
-//            print("[Balance] Auto-refresh timer fired")
             self?.fetchAllBalances()
         }
     }
 
     private func stopAutoRefresh() {
-        if refreshTimer != nil {
-//            print("[Balance] Stopping auto-refresh timer")
-        }
         refreshTimer?.invalidate()
         refreshTimer = nil
     }
@@ -175,7 +168,6 @@ final class BalancesViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: .paymentCompleted)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-//                print("[Balance] Payment completed notification received - refreshing")
                 self?.refresh()
             }
             .store(in: &cancellables)
@@ -314,16 +306,7 @@ final class BalancesViewModel: ObservableObject {
     }
     
     private func handleScannedOrPastedUri(_ uriString: String) {
-        // Check for Universal Link with embedded payment URL (NFC HCE mode).
-        // The POS wraps the payment URL as: https://.../wallet?payUrl=<encoded_url>
-        if let url = URL(string: uriString),
-           let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-           let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
-            startPayFlow(paymentLink: payUrl)
-            return
-        }
-
-        // Check if it's a WalletConnect Pay URL
+        // Check if it's a WalletConnect Pay URL (e.g. pay.walletconnect.com)
         if WalletKit.isPaymentLink(uriString) {
             startPayFlow(paymentLink: uriString)
             return
@@ -382,5 +365,3 @@ extension BalancesViewModel: SceneViewModel {
 
 // Import WalletConnectURI and WalletKit
 import ReownWalletKit
-
-

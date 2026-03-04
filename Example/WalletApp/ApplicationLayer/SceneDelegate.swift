@@ -24,12 +24,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             return
         }
 
-        // Check for NFC-delivered payment URL (Background Tag Reading wraps the
-        // payment link inside the wallet's Universal Link as a `payUrl` parameter).
-        if let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
-            print("🔗 [NFC] Background Tag Reading delivered payment URL: \(payUrl)")
+        // Check if the Universal Link is a payment URL (e.g. pay.walletconnect.com).
+        // This handles both NFC Background Tag Reading and regular Universal Link taps.
+        let urlString = url.absoluteString
+        if WalletKit.isPaymentLink(urlString) {
             NFCPaymentReader.suppressAutoScan = true
-            handlePaymentLink(payUrl, autoPayMode: true)
+            handlePaymentLink(urlString)
             return
         }
 
@@ -76,25 +76,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 
         // Check for payment deep link on cold start
         var pendingPaymentLink: String?
-        if let urlContext = connectionOptions.urlContexts.first {
-            let url = urlContext.url
-            print("🔗 [PayDeeplink] Cold start - Received URL: \(url.absoluteString)")
+        if let url = connectionOptions.urlContexts.first?.url {
             pendingPaymentLink = extractPaymentLink(from: url)
-        } else {
-            print("🔗 [PayDeeplink] Cold start - No URL context")
         }
 
-        // Check for NFC-delivered Universal Link on cold start (Background Tag Reading).
+        // Check for payment Universal Link on cold start (e.g. NFC Background Tag Reading).
         // Universal Links arrive via userActivities, not urlContexts.
-        var isNfcOriginated = false
         if pendingPaymentLink == nil,
            let url = connectionOptions.userActivities
                .first(where: { $0.activityType == NSUserActivityTypeBrowsingWeb })?.webpageURL,
-           let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-           let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
-            print("🔗 [NFC] Cold start - Background Tag Reading payment URL: \(payUrl)")
-            pendingPaymentLink = payUrl
-            isNfcOriginated = true
+           WalletKit.isPaymentLink(url.absoluteString) {
+            pendingPaymentLink = url.absoluteString
         }
 
         // Process connection options (only if not a pay-only deeplink)
@@ -106,17 +98,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             return queryItems.contains(where: { $0.name == "uri" })
         } ?? false
 
-        print("🔗 [PayDeeplink] hasPayParam: \(hasPayParam), hasUriParam: \(hasUriParam)")
-        print("🔗 [PayDeeplink] pendingPaymentLink: \(pendingPaymentLink ?? "nil")")
-
         if !hasPayParam || hasUriParam {
             do {
                 // Attempt to initialize WalletConnectURI from connection options
                 let uri = try WalletConnectURI(connectionOptions: connectionOptions)
                 app.uri = uri
-                print("🔗 [PayDeeplink] WalletConnectURI initialized successfully")
             } catch {
-                print("🔗 [PayDeeplink] Error initializing WalletConnectURI: \(error.localizedDescription)")
                 // Try to handle link mode in case where WalletConnectURI initialization fails
                 if let url = connectionOptions.userActivities.first?.webpageURL {
                     configurators.configure() // Ensure configurators are set up before dispatching
@@ -129,7 +116,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                     do {
                         try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                     } catch {
-                        print("🔗 [PayDeeplink] Error dispatching envelope: \(error.localizedDescription)")
+                        print("Error dispatching envelope: \(error.localizedDescription)")
                     }
                     return
                 }
@@ -139,18 +126,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
 
         // Handle pending payment after configuration is complete
         if let paymentLink = pendingPaymentLink {
-            print("🔗 [PayDeeplink] Will handle payment link after delay: \(paymentLink)")
             // Suppress NFC auto-scan — payment modal will be shown instead.
-            // Set BEFORE the UI appears so onAppear() sees it.
             NFCPaymentReader.suppressAutoScan = true
-            let autoPayForNfc = isNfcOriginated
-            // Delay slightly to ensure UI is ready
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                print("🔗 [PayDeeplink] Now handling payment link: \(paymentLink), autoPayMode: \(autoPayForNfc)")
-                self?.handlePaymentLink(paymentLink, autoPayMode: autoPayForNfc)
+                self?.handlePaymentLink(paymentLink)
             }
-        } else {
-            print("🔗 [PayDeeplink] No pending payment link to handle")
         }
     }
 
@@ -164,13 +144,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let context = URLContexts.first else {
-            print("🔗 [PayDeeplink] openURLContexts - No context found")
-            return
-        }
+        guard let context = URLContexts.first else { return }
 
         let url = context.url
-        print("🔗 [PayDeeplink] openURLContexts - Received URL: \(url.absoluteString)")
 
         // Handle widget "Tap to Pay" deep link
         if url.scheme == "walletapp" && url.host == "nfc-pay" {
@@ -186,24 +162,20 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                 return
             }
             // For new format (uri with pay param), continue to pairing flow
-            print("🔗 [PayDeeplink] Continuing to pairing flow...")
         }
 
         do {
             let uri = try WalletConnectURI(urlContext: context)
-            print("🔗 [PayDeeplink] WalletConnectURI created, pairing...")
             Task {
                 try await WalletKit.instance.pair(uri: uri)
             }
         } catch {
-            print("🔗 [PayDeeplink] WalletConnectURI error: \(error)")
             if case WalletConnectURI.Errors.expired = error {
                 AlertPresenter.present(message: error.localizedDescription, type: .error)
             } else {
                 guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                       let queryItems = components.queryItems,
                       queryItems.contains(where: { $0.name == "wc_ev" }) else {
-                    print("🔗 [PayDeeplink] No wc_ev param, returning")
                     return
                 }
 
@@ -250,16 +222,8 @@ private extension SceneDelegate {
     }
 
     func handleScannedPaymentUrl(_ urlString: String) {
-        // Check for Universal Link wrapper (payUrl= parameter from Background Tag Reading)
-        if let url = URL(string: urlString),
-           let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-           let payUrl = components.queryItems?.first(where: { $0.name == "payUrl" })?.value {
-            handlePaymentLink(payUrl, autoPayMode: true)
-            return
-        }
-        // Direct payment link
         if WalletKit.isPaymentLink(urlString) {
-            handlePaymentLink(urlString, autoPayMode: true)
+            handlePaymentLink(urlString)
             return
         }
         print("NFC scan returned non-payment URL: \(urlString)")
@@ -313,92 +277,53 @@ private extension SceneDelegate {
         return queryItems.first(where: { $0.name == "topic" })?.value
     }
 
-    /// Check if a WalletConnect URI contains an embedded `pay` parameter
-    /// Uses the unified WalletKit.isPaymentLink() detection
-    private func wcUriContainsPayParam(_ wcUri: String) -> Bool {
-        let isPayLink = WalletKit.isPaymentLink(wcUri)
-        print("🔗 [PayDeeplink] WC URI is payment link: \(isPayLink)")
-        return isPayLink
-    }
-
-    /// Extract payment link from a URL if present
-    /// Supports two formats:
-    /// - WC URI format: `uri` parameter containing embedded `pay` param
-    /// - POS scan format: `walletconnectpay` host with `paymentId` query param (scanned directly from POS)
-    /// - Returns: The payment link string if found, nil otherwise
+    /// Extract payment link from a URL if present.
+    /// Supports WC URI format (`uri` param with embedded `pay`) and
+    /// POS scan format (`walletconnectpay` host with `paymentId`).
     private func extractPaymentLink(from url: URL) -> String? {
-        print("🔗 [PayDeeplink] Extracting payment link from: \(url.absoluteString)")
-
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let queryItems = components.queryItems else {
-            print("🔗 [PayDeeplink] No query items found")
-            return nil
-        }
+              let queryItems = components.queryItems else { return nil }
 
-        // Check for `uri` parameter which may contain embedded `pay` param
-        // Pass the full WC URI to Yttrium - it handles extraction internally
+        // WC URI with embedded pay param — Yttrium handles extraction
         if let uriValue = queryItems.first(where: { $0.name == "uri" })?.value,
-           wcUriContainsPayParam(uriValue) {
-            print("🔗 [PayDeeplink] Found 'uri' param with embedded 'pay': \(uriValue)")
+           WalletKit.isPaymentLink(uriValue) {
             return uriValue
         }
 
-        // POS scan format: walletconnectpay host with paymentId (scanned directly from POS)
+        // POS scan format: walletconnectpay host with paymentId
         if url.host == "walletconnectpay",
            let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-            print("🔗 [PayDeeplink] POS scan format - paymentId: \(paymentId)")
             return "walletapp://walletconnectpay?paymentId=\(paymentId)"
         }
 
-        print("🔗 [PayDeeplink] No payment link found in URL")
         return nil
     }
     
-    /// Handle a payment link URL
-    /// - Parameters:
-    ///   - paymentLink: The payment link URL - either a WC URI with embedded pay param,
-    ///     or POS scan format "walletapp://walletconnectpay?paymentId=<id>"
-    ///   - autoPayMode: When true, skip option selection and auto-confirm (NFC tap-to-pay)
-    private func handlePaymentLink(_ paymentLink: String, autoPayMode: Bool = false) {
-        print("🔗 [PayDeeplink] handlePaymentLink called with: \(paymentLink), autoPayMode: \(autoPayMode)")
+    /// Present the payment flow for the given payment link.
+    private func handlePaymentLink(_ paymentLink: String) {
+        guard let topController = window?.rootViewController?.topController else { return }
 
-        guard let topController = window?.rootViewController?.topController else {
-            print("🔗 [PayDeeplink] ERROR: No top controller available")
-            return
-        }
-        print("🔗 [PayDeeplink] Top controller: \(type(of: topController))")
-
-        // Get wallet account from storage
         guard let account = AccountStorage(defaults: .standard).importAccount else {
-            print("🔗 [PayDeeplink] ERROR: No account found in storage")
             AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
             return
         }
-        print("🔗 [PayDeeplink] Account found: \(account.account.address)")
 
-        // Get accounts in CAIP-10 format for multiple chains
         let address = account.account.address
         let accounts = [
-            "eip155:1:\(address)",      // Ethereum Mainnet
-            "eip155:137:\(address)",    // Polygon
-            "eip155:8453:\(address)"    // Base
+            "eip155:1:\(address)",
+            "eip155:137:\(address)",
+            "eip155:8453:\(address)"
         ]
-        print("🔗 [PayDeeplink] CAIP-10 accounts: \(accounts)")
 
-        print("🔗 [PayDeeplink] Creating PayModule with paymentLink: \(paymentLink), autoPayMode: \(autoPayMode)")
         let paymentVC = PayModule.create(
             app: app,
             paymentLink: paymentLink,
             accounts: accounts,
-            importAccount: account,
-            autoPayMode: autoPayMode
+            importAccount: account
         )
         paymentVC.modalPresentationStyle = .overCurrentContext
         paymentVC.view.backgroundColor = .clear
-        print("🔗 [PayDeeplink] Presenting PayModule...")
-        topController.present(paymentVC, animated: true) {
-            print("🔗 [PayDeeplink] PayModule presented successfully")
-        }
+        topController.present(paymentVC, animated: true)
     }
 }
 
