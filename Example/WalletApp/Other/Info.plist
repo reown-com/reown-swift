@@ -19,6 +19,8 @@
 	<string>$(CONFIGURATION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NFCReaderUsageDescription</key>
+	<string>This app reads NFC tags to receive payment links from POS terminals.</string>
 	<key>MIXPANEL_TOKEN</key>
 	<string>$(MIXPANEL_TOKEN)</string>
 	<key>NSAppTransportSecurity</key>

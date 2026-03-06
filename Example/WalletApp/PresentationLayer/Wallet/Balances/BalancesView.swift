@@ -123,7 +123,22 @@ struct BalancesView: View {
     private var actionButtons: some View {
         HStack(spacing: 20) {
             Spacer()
-            
+
+            // NFC button
+            if viewModel.isNFCAvailable {
+                Button {
+                    viewModel.onScanNFC()
+                } label: {
+                    Image(systemName: "wave.3.right")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 28, height: 28)
+                        .foregroundColor(.blue100)
+                }
+                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                .accessibilityIdentifier("nfc")
+            }
+
             // Pay button
             Button {
                 viewModel.onTestPay()
@@ -135,7 +150,7 @@ struct BalancesView: View {
             }
             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
             .accessibilityIdentifier("testPay")
-            
+
             // Paste button
             Button {
                 viewModel.onPasteUri()
@@ -146,7 +161,7 @@ struct BalancesView: View {
             }
             .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
             .accessibilityIdentifier("copy")
-            
+
             // Scan button
             Button {
                 viewModel.onScanUri()

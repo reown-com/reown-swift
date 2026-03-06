@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CoreNFC
 import SwiftUI
 
 // MARK: - Blockchain API Response Models
@@ -128,15 +129,23 @@ final class BalancesViewModel: ObservableObject {
     func onAppear() {
         fetchAllBalances()
         startAutoRefresh()
+        // Auto-start NFC scanning so taps are captured directly by the reader
+        // session instead of Background Tag Reading (which shows a notification).
+        // Skip if a payment is already being presented (e.g. opened from NFC notification).
+        if isNFCAvailable {
+            if NFCPaymentReader.suppressAutoScan {
+                NFCPaymentReader.suppressAutoScan = false
+            } else {
+                onScanNFC()
+            }
+        }
     }
 
     func onDisappear() {
-//        print("[Balance] onDisappear")
         stopAutoRefresh()
     }
 
     func refresh() {
-//        print("[Balance] Manual refresh triggered")
         isRefreshing = true
         fetchAllBalances()
     }
@@ -145,17 +154,12 @@ final class BalancesViewModel: ObservableObject {
 
     private func startAutoRefresh() {
         stopAutoRefresh()
-//        print("[Balance] Starting auto-refresh timer (interval: \(Self.refreshInterval)s)")
         refreshTimer = Timer.scheduledTimer(withTimeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
-//            print("[Balance] Auto-refresh timer fired")
             self?.fetchAllBalances()
         }
     }
 
     private func stopAutoRefresh() {
-        if refreshTimer != nil {
-//            print("[Balance] Stopping auto-refresh timer")
-        }
         refreshTimer?.invalidate()
         refreshTimer = nil
     }
@@ -164,14 +168,33 @@ final class BalancesViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: .paymentCompleted)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-//                print("[Balance] Payment completed notification received - refreshing")
                 self?.refresh()
             }
             .store(in: &cancellables)
     }
     
+    /// Whether NFC reading is available on this device.
+    var isNFCAvailable: Bool {
+        NFCPaymentReader.isAvailable
+    }
+
     // MARK: - Navigation Actions
-    
+
+    func onScanNFC() {
+        NFCPaymentReader.shared.scan { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let urlString):
+                    self?.handleScannedOrPastedUri(urlString)
+                case .failure(let error):
+                    if case NFCPaymentError.cancelled = error { return }
+                    self?.errorMessage = error.localizedDescription
+                    self?.showError = true
+                }
+            }
+        }
+    }
+
     func onScanUri() {
         guard let viewController = viewController else { return }
         ScanModule.create(app: app, onValue: { [weak self] uriString in
@@ -283,7 +306,7 @@ final class BalancesViewModel: ObservableObject {
     }
     
     private func handleScannedOrPastedUri(_ uriString: String) {
-        // Check if it's a WalletConnect Pay URL
+        // Check if it's a WalletConnect Pay URL (e.g. pay.walletconnect.com)
         if WalletKit.isPaymentLink(uriString) {
             startPayFlow(paymentLink: uriString)
             return
@@ -342,5 +365,3 @@ extension BalancesViewModel: SceneViewModel {
 
 // Import WalletConnectURI and WalletKit
 import ReownWalletKit
-
-
