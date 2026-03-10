@@ -703,6 +703,7 @@ enum PaymentStatus {
     case processing                    // Payment in progress
     case succeeded                     // Payment completed
     case failed                        // Payment failed
+    case cancelled                     // Payment cancelled
     case expired                       // Payment expired
 }
 ```

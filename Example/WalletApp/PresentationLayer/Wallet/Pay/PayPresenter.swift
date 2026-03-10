@@ -345,7 +345,27 @@ final class PayPresenter: ObservableObject {
 
                 print("Payment confirmed: \(result)")
                 self.paymentResultInfo = result
-                self.currentStep = .success
+
+                switch result.status {
+                case .succeeded, .processing:
+                    self.currentStep = .success
+                case .cancelled:
+                    self.errorMessage = "This payment was cancelled"
+                    self.showError = true
+                    self.currentStep = .options
+                case .failed:
+                    self.errorMessage = "Payment failed"
+                    self.showError = true
+                    self.currentStep = .options
+                case .expired:
+                    self.errorMessage = "Payment expired"
+                    self.showError = true
+                    self.currentStep = .options
+                case .requiresAction:
+                    self.errorMessage = "Additional action required"
+                    self.showError = true
+                    self.currentStep = .options
+                }
 
                 // Notify balances screen to refresh
                 NotificationCenter.default.post(name: .paymentCompleted, object: nil)
