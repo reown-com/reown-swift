@@ -6,87 +6,91 @@ struct SettingsView: View {
     @State private var copyAlert: Bool = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            HeaderView(
-                onPaste: { viewModel.onPasteUri() },
-                onScan: { viewModel.onScanUri() }
-            )
+        ZStack {
+            AppColors.backgroundPrimary
+                .edgesIgnoringSafeArea(.all)
 
-            ScrollView {
-                VStack(spacing: Spacing._3) {
-                    separator()
+            VStack(spacing: 0) {
+                HeaderView(
+                    onPaste: { viewModel.onPasteUri() },
+                    onScan: { viewModel.onScanUri() }
+                )
 
-                    Group {
-                        header(title: "Account")
-                        row(title: "CAIP-10", subtitle: viewModel.account)
-                        row(title: "Private key", subtitle: viewModel.privateKey)
+                ScrollView {
+                    VStack(spacing: Spacing._3) {
+                        separator()
 
-                        header(title: "Stacks")
-                        row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
-                        row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
-                        row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
+                        Group {
+                            header(title: "Account")
+                            row(title: "CAIP-10", subtitle: viewModel.account)
+                            row(title: "Private key", subtitle: viewModel.privateKey)
 
-                        header(title: "Solana")
-                        row(title: "Solana Address", subtitle: viewModel.solanaAddress)
-                        row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
+                            header(title: "Stacks")
+                            row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
+                            row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
+                            row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
 
-                        header(title: "Sui")
-                        row(title: "Sui Address", subtitle: viewModel.suiAddress)
-                        row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
+                            header(title: "Solana")
+                            row(title: "Solana Address", subtitle: viewModel.solanaAddress)
+                            row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
 
-                        header(title: "TON")
-                        row(title: "TON Address", subtitle: viewModel.tonAddress)
-                        row(title: "TON Private Key", subtitle: viewModel.tonPrivateKey)
+                            header(title: "Sui")
+                            row(title: "Sui Address", subtitle: viewModel.suiAddress)
+                            row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
 
-                        header(title: "Tron")
-                        row(title: "Tron Address", subtitle: viewModel.tronAddress)
-                        row(title: "Tron Private Key", subtitle: viewModel.tronPrivateKey)
-                    }
-                    .padding(.horizontal, Spacing._5)
+                            header(title: "TON")
+                            row(title: "TON Address", subtitle: viewModel.tonAddress)
+                            row(title: "TON Private Key", subtitle: viewModel.tonPrivateKey)
 
-                    separator()
-
-                    Group {
-                        header(title: "Device")
-                        row(title: "Client ID", subtitle: viewModel.clientId)
-                    }
-                    .padding(.horizontal, Spacing._5)
-
-                    separator()
-
-                    Group {
-                        Button {
-                            viewModel.browserPressed()
-                        } label: {
-                            Text("Browser")
-                                .appFont(.lg, weight: .medium)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 48)
-                                .background(AppColors.foregroundPrimary)
-                                .cornerRadius(CGFloat(AppRadius._3))
+                            header(title: "Tron")
+                            row(title: "Tron Address", subtitle: viewModel.tronAddress)
+                            row(title: "Tron Private Key", subtitle: viewModel.tronPrivateKey)
                         }
+                        .padding(.horizontal, Spacing._5)
 
-                        AsyncButton {
-                            try await viewModel.logoutPressed()
-                        } label: {
-                            Text("Log out")
-                                .appFont(.lg, weight: .medium)
-                                .foregroundColor(AppColors.textError)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 48)
+                        separator()
+
+                        Group {
+                            header(title: "Device")
+                            row(title: "Client ID", subtitle: viewModel.clientId)
                         }
-                        .overlay(
-                            RoundedRectangle(cornerRadius: CGFloat(AppRadius._3))
-                                .stroke(AppColors.borderError, lineWidth: 1)
-                        )
-                        .padding(.bottom, Spacing._6)
+                        .padding(.horizontal, Spacing._5)
+
+                        separator()
+
+                        Group {
+                            Button {
+                                viewModel.browserPressed()
+                            } label: {
+                                Text("Browser")
+                                    .appFont(.lg, weight: .medium)
+                                    .foregroundColor(AppColors.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 48)
+                                    .background(AppColors.foregroundPrimary)
+                                    .cornerRadius(CGFloat(AppRadius._3))
+                            }
+
+                            AsyncButton {
+                                try await viewModel.logoutPressed()
+                            } label: {
+                                Text("Log out")
+                                    .appFont(.lg, weight: .medium)
+                                    .foregroundColor(AppColors.textError)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 48)
+                            }
+                            .overlay(
+                                RoundedRectangle(cornerRadius: CGFloat(AppRadius._3))
+                                    .stroke(AppColors.borderError, lineWidth: 1)
+                            )
+                            .padding(.bottom, Spacing._6)
+                        }
+                        .padding(.horizontal, Spacing._5)
                     }
-                    .padding(.horizontal, Spacing._5)
                 }
             }
         }
-        .background(AppColors.backgroundPrimary.edgesIgnoringSafeArea(.all))
         .alert("Value copied to clipboard", isPresented: $copyAlert) {
             Button("OK", role: .cancel) { }
         }

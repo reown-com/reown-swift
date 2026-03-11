@@ -18,44 +18,32 @@ final class MainViewController: UITabBarController {
     private func styleTabBar() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-
-        // Background color adapts to light/dark
-        appearance.backgroundColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark
-                ? UIColor(red: 0.125, green: 0.125, blue: 0.125, alpha: 1) // #202020
-                : UIColor.white
-        }
-
-        // Remove default separator
+        appearance.backgroundColor = .appBackgroundPrimary
         appearance.shadowColor = .clear
 
         // Normal state
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont(name: "KHTeka-Regular", size: 10) ?? .systemFont(ofSize: 10),
-            .foregroundColor: UIColor(red: 0.604, green: 0.604, blue: 0.604, alpha: 1) // #9A9A9A
+            .foregroundColor: UIColor.appTextSecondary
         ]
 
         // Selected state
         let selectedAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont(name: "KHTeka-Medium", size: 10) ?? .systemFont(ofSize: 10, weight: .medium),
-            .foregroundColor: UIColor(red: 0.035, green: 0.533, blue: 0.941, alpha: 1) // #0988F0
+            .foregroundColor: UIColor.appAccentPrimary
         ]
 
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = normalAttributes
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = selectedAttributes
-        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(red: 0.604, green: 0.604, blue: 0.604, alpha: 1)
-        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(red: 0.035, green: 0.533, blue: 0.941, alpha: 1)
+        appearance.stackedLayoutAppearance.normal.iconColor = .appTextSecondary
+        appearance.stackedLayoutAppearance.selected.iconColor = .appAccentPrimary
 
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
 
         // Add top border
         let border = UIView()
-        border.backgroundColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark
-                ? UIColor(red: 0.212, green: 0.212, blue: 0.212, alpha: 1) // #363636
-                : UIColor(red: 0.914, green: 0.914, blue: 0.914, alpha: 1) // #E9E9E9
-        }
+        border.backgroundColor = .appBorderPrimary
         border.translatesAutoresizingMaskIntoConstraints = false
         tabBar.addSubview(border)
         NSLayoutConstraint.activate([
@@ -76,11 +64,7 @@ final class MainViewController: UITabBarController {
             item.image = model.icon
             item.isEnabled = TabPage.enabledTabs.contains(model)
             viewController.tabBarItem = item
-            viewController.view.backgroundColor = UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark
-                    ? UIColor(red: 0.125, green: 0.125, blue: 0.125, alpha: 1)
-                    : UIColor.white
-            }
+            viewController.view.backgroundColor = .appBackgroundPrimary
         }
 
         self.viewControllers = viewControllers

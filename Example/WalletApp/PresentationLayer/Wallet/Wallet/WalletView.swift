@@ -79,7 +79,7 @@ struct WalletView: View {
                     }
                 }
             }
-            .padding(.vertical, Spacing._5)
+            .padding(.bottom, Spacing._5)
         }
         .alert(presenter.errorMessage, isPresented: $presenter.showError) {
             Button("OK", role: .cancel) {}
