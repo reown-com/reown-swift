@@ -12,6 +12,7 @@
 		0E140A8DCD1349E28F429421 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2D8CE19361455B9E46709C /* Spacing.swift */; };
 		01C23BC217A942BEAC83B995 /* AppRadius.swift in Sources */ = {isa = PBXBuildFile; fileRef = 031F02C8D611403299617574 /* AppRadius.swift */; };
 		22F562DC158240F0B4E0203E /* AppButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0086530789641B19877C4E8 /* AppButtonStyle.swift */; };
+		HEADER02A1B2C3D4E5F6A7B8C9 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = HEADER01A1B2C3D4E5F6A7B8C9 /* HeaderView.swift */; };
 		4E1B9FB61BBA4CF99D6D747D /* KHTeka-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = EC0405DE1669455C980D6F8A /* KHTeka-Light.otf */; };
 		6E62B8D2E0FB49E8A80B3F5D /* KHTeka-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 975089E8CDD547338CB58DBC /* KHTeka-Regular.otf */; };
 		49CA97C56E7E4FFF80E60BEC /* KHTeka-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = A7165276CF26453DBA71CE75 /* KHTeka-Medium.otf */; };
@@ -338,6 +339,7 @@
 		BD2D8CE19361455B9E46709C /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
 		031F02C8D611403299617574 /* AppRadius.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRadius.swift; sourceTree = "<group>"; };
 		B0086530789641B19877C4E8 /* AppButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppButtonStyle.swift; sourceTree = "<group>"; };
+		HEADER01A1B2C3D4E5F6A7B8C9 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
 		EC0405DE1669455C980D6F8A /* KHTeka-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KHTeka-Light.otf; sourceTree = "<group>"; };
 		975089E8CDD547338CB58DBC /* KHTeka-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KHTeka-Regular.otf; sourceTree = "<group>"; };
 		A7165276CF26453DBA71CE75 /* KHTeka-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KHTeka-Medium.otf; sourceTree = "<group>"; };
@@ -1399,6 +1401,7 @@
 			isa = PBXGroup;
 			children = (
 				C579FEB92AFCDFA6008855EB /* ConnectedSheetView.swift */,
+				HEADER01A1B2C3D4E5F6A7B8C9 /* HeaderView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2113,6 +2116,7 @@
 				0E140A8DCD1349E28F429421 /* Spacing.swift in Sources */,
 				01C23BC217A942BEAC83B995 /* AppRadius.swift in Sources */,
 				22F562DC158240F0B4E0203E /* AppButtonStyle.swift in Sources */,
+				HEADER02A1B2C3D4E5F6A7B8C9 /* HeaderView.swift in Sources */,
 				848BD1DE2D34DF8F007C2AEF /* EOASigner.swift in Sources */,
 				C579FEBA2AFCDFA6008855EB /* ConnectedSheetView.swift in Sources */,
 				C55D3483295DD7140004314A /* AuthRequestView.swift in Sources */,

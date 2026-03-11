@@ -332,11 +332,15 @@ final class BalancesViewModel: ObservableObject {
 
 extension BalancesViewModel: SceneViewModel {
     var sceneTitle: String? {
-        return "Balances"
+        return nil
     }
-    
+
     var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .always
+        return .never
+    }
+
+    var isNavigationBarHidden: Bool {
+        return true
     }
 }
 

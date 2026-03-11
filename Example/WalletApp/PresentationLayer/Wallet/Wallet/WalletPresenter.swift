@@ -178,11 +178,15 @@ extension WalletPresenter {
 // MARK: - SceneViewModel
 extension WalletPresenter: SceneViewModel {
     var sceneTitle: String? {
-        return "Connections"
+        return nil
     }
 
     var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .always
+        return .never
+    }
+
+    var isNavigationBarHidden: Bool {
+        return true
     }
 }
 

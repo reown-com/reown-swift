@@ -1,84 +1,96 @@
 import SwiftUI
 import AsyncButton
-import ReownAppKitUI
 
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
     @State private var copyAlert: Bool = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                separator()
+        VStack(spacing: 0) {
+            HeaderView(
+                onPaste: { viewModel.onPasteUri() },
+                onScan: { viewModel.onScanUri() }
+            )
 
-                Group {
-                    header(title: "Account")
-                    row(title: "CAIP-10", subtitle: viewModel.account)
-                    row(title: "Private key", subtitle: viewModel.privateKey)
+            ScrollView {
+                VStack(spacing: Spacing._3) {
+                    separator()
 
-                    header(title: "Stacks")
-                    row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
-                    row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
-                    row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
+                    Group {
+                        header(title: "Account")
+                        row(title: "CAIP-10", subtitle: viewModel.account)
+                        row(title: "Private key", subtitle: viewModel.privateKey)
 
-                    header(title: "Solana")
-                    row(title: "Solana Address", subtitle: viewModel.solanaAddress)
-                    row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
+                        header(title: "Stacks")
+                        row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
+                        row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
+                        row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
 
-                    header(title: "Sui")
-                    row(title: "Sui Address", subtitle: viewModel.suiAddress)
-                    row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
+                        header(title: "Solana")
+                        row(title: "Solana Address", subtitle: viewModel.solanaAddress)
+                        row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
 
-                    header(title: "TON")
-                    row(title: "TON Address", subtitle: viewModel.tonAddress)
-                    row(title: "TON Private Key", subtitle: viewModel.tonPrivateKey)
+                        header(title: "Sui")
+                        row(title: "Sui Address", subtitle: viewModel.suiAddress)
+                        row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
 
-                    header(title: "Tron")
-                    row(title: "Tron Address", subtitle: viewModel.tronAddress)
-                    row(title: "Tron Private Key", subtitle: viewModel.tronPrivateKey)
-                }
-                .padding(.horizontal, 20)
+                        header(title: "TON")
+                        row(title: "TON Address", subtitle: viewModel.tonAddress)
+                        row(title: "TON Private Key", subtitle: viewModel.tonPrivateKey)
 
-                separator()
-
-                Group {
-                    header(title: "Device")
-                    row(title: "Client ID", subtitle: viewModel.clientId)
-                }
-                .padding(.horizontal, 20)
-
-                separator()
-
-                Group {
-                    Button {
-                        viewModel.browserPressed()
-                    } label: {
-                        Text("Browser")
-                            .frame(maxWidth: .infinity)
+                        header(title: "Tron")
+                        row(title: "Tron Address", subtitle: viewModel.tronAddress)
+                        row(title: "Tron Private Key", subtitle: viewModel.tronPrivateKey)
                     }
-                    .frame(height: 44.0)
+                    .padding(.horizontal, Spacing._5)
 
+                    separator()
 
-                    AsyncButton {
-                        try await viewModel.logoutPressed()
-                    } label: {
-                        Text("Log out")
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity)
+                    Group {
+                        header(title: "Device")
+                        row(title: "Client ID", subtitle: viewModel.clientId)
                     }
-                    .frame(height: 44.0)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Radius.m)
-                            .stroke(Color.red, lineWidth: 1)
-                    )
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, Spacing._5)
+
+                    separator()
+
+                    Group {
+                        Button {
+                            viewModel.browserPressed()
+                        } label: {
+                            Text("Browser")
+                                .appFont(.lg, weight: .medium)
+                                .foregroundColor(AppColors.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 48)
+                                .background(AppColors.foregroundPrimary)
+                                .cornerRadius(CGFloat(AppRadius._3))
+                        }
+
+                        AsyncButton {
+                            try await viewModel.logoutPressed()
+                        } label: {
+                            Text("Log out")
+                                .appFont(.lg, weight: .medium)
+                                .foregroundColor(AppColors.textError)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 48)
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CGFloat(AppRadius._3))
+                                .stroke(AppColors.borderError, lineWidth: 1)
+                        )
+                        .padding(.bottom, Spacing._6)
+                    }
+                    .padding(.horizontal, Spacing._5)
                 }
-                .padding(.horizontal, 20)
             }
         }
+        .background(AppColors.backgroundPrimary.edgesIgnoringSafeArea(.all))
         .alert("Value copied to clipboard", isPresented: $copyAlert) {
             Button("OK", role: .cancel) { }
         }
+        .navigationBarHidden(true)
         .onAppear {
             viewModel.objectWillChange.send()
         }
@@ -87,9 +99,9 @@ struct SettingsView: View {
     func header(title: String) -> some View {
         HStack {
             Text(title)
-                .foregroundColor(.Foreground100)
-                .font(.large700)
-                .padding(.vertical, 6)
+                .foregroundColor(AppColors.textPrimary)
+                .appFont(.xl, weight: .medium)
+                .padding(.vertical, Spacing._05)
             Spacer()
         }
     }
@@ -99,38 +111,41 @@ struct SettingsView: View {
             UIPasteboard.general.string = subtitle
             copyAlert = true
         }) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: Spacing._1) {
+                HStack(spacing: Spacing._05) {
                     Text(title)
                         .multilineTextAlignment(.leading)
-                        .foregroundColor(.Foreground100)
-                        .font(.paragraph700)
+                        .foregroundColor(AppColors.textPrimary)
+                        .appFont(.md, weight: .medium)
 
                     Image("copy_small")
-                        .foregroundColor(.Foreground100)
+                        .foregroundColor(AppColors.iconDefault)
 
                     Spacer()
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 16)
+                .padding(.horizontal, Spacing._3)
+                .padding(.top, Spacing._4)
 
                 Text(subtitle)
                     .multilineTextAlignment(.leading)
-                    .foregroundColor(.Foreground150)
-                    .font(.paragraph500)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 16)
+                    .foregroundColor(AppColors.textSecondary)
+                    .appFont(.md)
+                    .padding(.horizontal, Spacing._3)
+                    .padding(.bottom, Spacing._4)
             }
-            .background(Color.Foreground100.opacity(0.05).cornerRadius(12))
+            .background(
+                RoundedRectangle(cornerRadius: CGFloat(AppRadius._3))
+                    .fill(AppColors.foregroundPrimary)
+            )
         }
         .frame(maxWidth: .infinity)
     }
 
     func separator() -> some View {
         Rectangle()
-            .foregroundColor(.Foreground100.opacity(0.05))
+            .foregroundColor(AppColors.borderPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: 1)
-            .padding(.top, 8)
+            .padding(.top, Spacing._2)
     }
 }
