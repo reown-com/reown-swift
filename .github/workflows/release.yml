@@ -21,6 +21,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Select Xcode 26 (iOS 26 SDK)
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '26'
+
     - name: Setup SSH for Match
       uses: webfactory/ssh-agent@v0.9.0
       with:
