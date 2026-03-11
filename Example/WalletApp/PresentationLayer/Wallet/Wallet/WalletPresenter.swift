@@ -149,7 +149,8 @@ extension WalletPresenter {
     }
     
     private func pair(uri: WalletConnectURI) {
-        Task.detached(priority: .high) { @MainActor [unowned self] in
+        Task(priority: .high) { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 try await self.interactor.pair(uri: uri)
             } catch {

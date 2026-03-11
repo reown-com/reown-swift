@@ -204,7 +204,8 @@ final class BalancesViewModel: ObservableObject {
         } onError: { error in
             print("Payment link error: \(error.localizedDescription)")
         }
-        pasteVC.presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+        guard let rootVC = UIApplication.currentWindow.rootViewController else { return }
+        pasteVC.presentFullScreen(from: rootVC, transparentBackground: true)
     }
     
     // MARK: - Private Methods
@@ -311,20 +312,21 @@ final class BalancesViewModel: ObservableObject {
     }
     
     private func startPayFlow(paymentLink: String) {
+        guard let rootVC = UIApplication.currentWindow.rootViewController else { return }
         let address = importAccount.account.address
         let accounts = [
             "eip155:1:\(address)",
             "eip155:137:\(address)",
             "eip155:8453:\(address)"
         ]
-        
+
         PayModule.create(
             app: app,
             paymentLink: paymentLink,
             accounts: accounts,
             importAccount: importAccount
         )
-        .presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
+        .presentFullScreen(from: rootVC, transparentBackground: true)
     }
 }
 
