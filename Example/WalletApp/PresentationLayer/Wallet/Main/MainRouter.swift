@@ -1,7 +1,6 @@
 import UIKit
 
 import ReownWalletKit
-import WalletConnectNotify
 
 final class MainRouter {
     weak var viewController: UIViewController!
@@ -19,14 +18,9 @@ final class MainRouter {
         viewModel.viewController = viewController
         return viewController.wrapToNavigationController()
     }
-    
+
     func walletViewController(importAccount: ImportAccount) -> UIViewController {
         return WalletModule.create(app: app, importAccount: importAccount)
-            .wrapToNavigationController()
-    }
-
-    func notificationsViewController(importAccount: ImportAccount) -> UIViewController {
-        return NotificationsModule.create(app: app, importAccount: importAccount)
             .wrapToNavigationController()
     }
 

@@ -2,7 +2,6 @@ import Foundation
 import Combine
 
 import ReownWalletKit
-import WalletConnectNotify
 
 final class MainInteractor {
 
