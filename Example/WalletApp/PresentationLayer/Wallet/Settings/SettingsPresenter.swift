@@ -1,6 +1,7 @@
 import UIKit
 import Combine
 import WalletConnectNetworking
+import WalletConnectPairing
 import ReownWalletKit
 
 final class SettingsPresenter: ObservableObject {
@@ -100,6 +101,25 @@ final class SettingsPresenter: ObservableObject {
         router.presentBrowser()
     }
 
+    func onPasteUri() {
+        router.presentPaste { [weak self] uriString in
+            self?.handleScannedOrPastedUri(uriString)
+        } onError: { [weak self] error in
+            print(error.localizedDescription)
+            self?.router.dismiss()
+        }
+    }
+
+    func onScanUri() {
+        router.presentScan { [weak self] uriString in
+            self?.router.dismiss()
+            self?.handleScannedOrPastedUri(uriString)
+        } onError: { [weak self] error in
+            print(error.localizedDescription)
+            self?.router.dismiss()
+        }
+    }
+
     func logoutPressed() async throws {
         accountStorage.importAccount = nil
         try await WalletKit.instance.cleanup()
@@ -112,11 +132,15 @@ final class SettingsPresenter: ObservableObject {
 extension SettingsPresenter: SceneViewModel {
 
     var sceneTitle: String? {
-        return "Settings"
+        return nil
     }
 
     var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .always
+        return .never
+    }
+
+    var isNavigationBarHidden: Bool {
+        return true
     }
 }
 
@@ -126,5 +150,20 @@ private extension SettingsPresenter {
 
     func setupInitialState() {
 
+    }
+
+    func handleScannedOrPastedUri(_ uriString: String) {
+        do {
+            let uri = try WalletConnectURI(uriString: uriString)
+            Task { @MainActor in
+                do {
+                    try await WalletKit.instance.pair(uri: uri)
+                } catch {
+                    print("Pairing error: \(error.localizedDescription)")
+                }
+            }
+        } catch {
+            print("Invalid URI: \(error.localizedDescription)")
+        }
     }
 }

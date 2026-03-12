@@ -3,16 +3,21 @@ import SwiftUI
 struct BalancesView: View {
     @EnvironmentObject var viewModel: BalancesViewModel
     @Environment(\.colorScheme) var colorScheme
-    
+
     var body: some View {
         ZStack {
-            Color(UIColor.systemBackground)
+            AppColors.backgroundPrimary
                 .edgesIgnoringSafeArea(.all)
-            
+
             VStack(spacing: 0) {
+                HeaderView(
+                    onPaste: { viewModel.onPasteUri() },
+                    onScan: { viewModel.onScanUri() }
+                )
+
                 // Total Balance Header
                 totalBalanceHeader
-                    .padding(.top, 20)
+                    .padding(.top, Spacing._5)
 
                 // Token Tab Picker
                 Picker("Token", selection: $viewModel.selectedTab) {
@@ -20,34 +25,50 @@ struct BalancesView: View {
                     Text("EURC").tag(1)
                 }
                 .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
+                .padding(.horizontal, Spacing._5)
+                .padding(.top, Spacing._3)
 
                 // Chain Balances List
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: Spacing._3) {
                         ForEach(viewModel.displayedBalances) { chainBalance in
                             chainBalanceRow(chainBalance)
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
+                    .padding(.horizontal, Spacing._5)
+                    .padding(.top, Spacing._5)
                 }
                 .refreshable {
                     viewModel.refresh()
                 }
-                
+
                 Spacer()
-                
-                // Action Buttons
-                actionButtons
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
+
+                // Pay button
+                Button {
+                    viewModel.onTestPay()
+                } label: {
+                    HStack(spacing: Spacing._2) {
+                        Image(systemName: "creditcard.fill")
+                            .font(.system(size: 16))
+                        Text("Pay")
+                            .appFont(.lg, weight: .medium)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .foregroundColor(AppColors.textInvert)
+                    .background(AppColors.backgroundAccentPrimary)
+                    .cornerRadius(CGFloat(AppRadius._4))
+                }
+                .padding(.horizontal, Spacing._5)
+                .padding(.bottom, Spacing._5)
+                .accessibilityIdentifier("testPay")
             }
         }
         .alert(viewModel.errorMessage, isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         }
+        .navigationBarHidden(true)
         .onAppear {
             viewModel.onAppear()
         }
@@ -55,109 +76,65 @@ struct BalancesView: View {
             viewModel.onDisappear()
         }
     }
-    
+
     // MARK: - Total Balance Header
-    
+
     private var totalBalanceHeader: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Spacing._2) {
             Text(viewModel.formattedTotalBalance)
-                .font(.system(size: 48, weight: .bold, design: .rounded))
-                .foregroundColor(Color(UIColor.label))
-            
+                .appFont(.h1, weight: .medium)
+                .foregroundColor(AppColors.textPrimary)
+
             Text("Total \(viewModel.tokenLabel)")
-                .font(.system(size: 16, weight: .medium, design: .rounded))
-                .foregroundColor(Color(UIColor.secondaryLabel))
-            
+                .appFont(.lg, weight: .medium)
+                .foregroundColor(AppColors.textSecondary)
+
             Text(viewModel.truncatedAddress)
-                .font(.system(size: 14, weight: .regular, design: .monospaced))
-                .foregroundColor(Color(UIColor.secondaryLabel))
-                .padding(.top, 4)
+                .appFont(.md)
+                .foregroundColor(AppColors.textSecondary)
+                .padding(.top, Spacing._1)
         }
-        .padding(.vertical, 20)
+        .padding(.vertical, Spacing._5)
     }
-    
+
     // MARK: - Chain Balance Row
-    
+
     private func chainBalanceRow(_ chainBalance: ChainBalance) -> some View {
-        HStack(spacing: 12) {
-            // Chain name
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: Spacing._3) {
+            VStack(alignment: .leading, spacing: Spacing._05) {
                 Text(chainBalance.chain.rawValue)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color(UIColor.label))
+                    .appFont(.xl, weight: .medium)
+                    .foregroundColor(AppColors.textPrimary)
 
                 if let error = chainBalance.error {
                     Text(error)
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundColor(.red)
+                        .appFont(.sm)
+                        .foregroundColor(AppColors.textError)
                         .lineLimit(1)
                 }
             }
 
             Spacer()
 
-            // Balance - use single loading state from ViewModel
             if viewModel.isLoading {
                 ProgressView()
                     .scaleEffect(0.8)
             } else {
                 Text(chainBalance.formattedBalance)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color(UIColor.label))
+                    .appFont(.xl, weight: .medium)
+                    .foregroundColor(AppColors.textPrimary)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 16)
+        .padding(.horizontal, Spacing._4)
+        .padding(.vertical, Spacing._4)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.secondarySystemBackground))
+            RoundedRectangle(cornerRadius: CGFloat(AppRadius._4))
+                .fill(AppColors.foregroundPrimary)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(UIColor.separator).opacity(0.3), lineWidth: 1)
+            RoundedRectangle(cornerRadius: CGFloat(AppRadius._4))
+                .stroke(AppColors.borderPrimary, lineWidth: 1)
         )
-    }
-    
-    // MARK: - Action Buttons
-    
-    private var actionButtons: some View {
-        HStack(spacing: 20) {
-            Spacer()
-            
-            // Pay button
-            Button {
-                viewModel.onTestPay()
-            } label: {
-                Image(systemName: "creditcard.fill")
-                    .resizable()
-                    .frame(width: 40, height: 28)
-                    .foregroundColor(.blue100)
-            }
-            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-            .accessibilityIdentifier("testPay")
-            
-            // Paste button
-            Button {
-                viewModel.onPasteUri()
-            } label: {
-                Image("copy")
-                    .resizable()
-                    .frame(width: 56, height: 56)
-            }
-            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-            .accessibilityIdentifier("copy")
-            
-            // Scan button
-            Button {
-                viewModel.onScanUri()
-            } label: {
-                Image("scan")
-                    .resizable()
-                    .frame(width: 56, height: 56)
-            }
-            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-            .accessibilityIdentifier("scan")
-        }
     }
 }
 
@@ -168,5 +145,3 @@ struct BalancesView_Previews: PreviewProvider {
     }
 }
 #endif
-
-

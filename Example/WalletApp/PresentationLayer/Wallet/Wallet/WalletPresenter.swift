@@ -149,7 +149,8 @@ extension WalletPresenter {
     }
     
     private func pair(uri: WalletConnectURI) {
-        Task.detached(priority: .high) { @MainActor [unowned self] in
+        Task(priority: .high) { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 try await self.interactor.pair(uri: uri)
             } catch {
@@ -178,11 +179,15 @@ extension WalletPresenter {
 // MARK: - SceneViewModel
 extension WalletPresenter: SceneViewModel {
     var sceneTitle: String? {
-        return "Connections"
+        return nil
     }
 
     var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .always
+        return .never
+    }
+
+    var isNavigationBarHidden: Bool {
+        return true
     }
 }
 

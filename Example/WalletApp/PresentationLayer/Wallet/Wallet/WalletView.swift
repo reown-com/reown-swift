@@ -3,27 +3,32 @@ import ReownWalletKit
 
 struct WalletView: View {
     @EnvironmentObject var presenter: WalletPresenter
-    
+
     var body: some View {
         ZStack {
-            Color.grey100
+            AppColors.backgroundPrimary
                 .edgesIgnoringSafeArea(.all)
-            
-            VStack(alignment: .leading, spacing: 16) {
+
+            VStack(alignment: .leading, spacing: 0) {
+                HeaderView(
+                    onPaste: { presenter.onPasteUri() },
+                    onScan: { presenter.onScanUri() }
+                )
+
                 ZStack {
                     if presenter.sessions.isEmpty {
-                        VStack(spacing: 10) {
+                        VStack(spacing: Spacing._3) {
                             Image("connect-template")
-                            
+
                             Text("Apps you connect with will appear here. To connect scan or paste the code that's displayed in the app.")
-                                .foregroundColor(.grey50)
-                                .font(.system(size: 15, weight: .regular, design: .rounded))
+                                .foregroundColor(AppColors.textSecondary)
+                                .appFont(.lg)
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(4)
                         }
-                        .padding(20)
+                        .padding(Spacing._5)
                     }
-                    
+
                     VStack {
                         ZStack {
                             if !presenter.sessions.isEmpty {
@@ -31,7 +36,8 @@ struct WalletView: View {
                                     ForEach(presenter.sessions, id: \.topic) { session in
                                         connectionView(session: session)
                                             .listRowSeparator(.hidden)
-                                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 16, trailing: 0))
+                                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: Spacing._4, trailing: 0))
+                                            .listRowBackground(Color.clear)
                                     }
                                     .onDelete { indexSet in
                                         Task(priority: .high) {
@@ -40,39 +46,40 @@ struct WalletView: View {
                                     }
                                 }
                                 .listStyle(PlainListStyle())
+                                .scrollContentBackground(.hidden)
                             }
-                            
+
                             if presenter.showPairingLoading {
                                 VStack {
                                     Spacer()
-                                    
+
                                     ZStack {
-                                        RoundedRectangle(cornerRadius: 20).fill(
+                                        RoundedRectangle(cornerRadius: CGFloat(AppRadius._5)).fill(
                                             LinearGradient(
                                                 gradient: Gradient(colors: [
-                                                    .blue100,
-                                                    .blue200
+                                                    AppColors.backgroundAccentPrimary,
+                                                    AppColors.foregroundAccentPrimary90Solid
                                                 ]),
                                                 startPoint: .top, endPoint: .bottom)
                                         )
                                         .blink()
-                                        
+
                                         Text("WalletConnect is pairing...")
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 16, weight: .regular, design: .rounded))
-                                            .padding(.vertical, 10)
-                                            .padding(.horizontal, 15)
+                                            .foregroundColor(AppColors.white)
+                                            .appFont(.lg)
+                                            .padding(.vertical, Spacing._3)
+                                            .padding(.horizontal, Spacing._4)
                                     }
                                     .fixedSize(horizontal: true, vertical: true)
                                 }
                             }
                         }
-                        
+
                         Spacer()
                     }
                 }
             }
-            .padding(.vertical, 20)
+            .padding(.bottom, Spacing._5)
         }
         .alert(presenter.errorMessage, isPresented: $presenter.showError) {
             Button("OK", role: .cancel) {}
@@ -81,75 +88,84 @@ struct WalletView: View {
             ZStack {
                 VStack {
                     Image("connected")
-                    
+
                     Spacer()
                 }
-                
-                VStack(spacing: 8) {
+
+                VStack(spacing: Spacing._2) {
                     Rectangle()
                         .foregroundColor(.clear)
                         .frame(width: 48, height: 4)
-                        .background(Color(red: 0.02, green: 0.17, blue: 0.17).opacity(0.2))
+                        .background(AppColors.textPrimary.opacity(0.2))
                         .cornerRadius(100)
-                        .padding(.top, 8)
-                    
+                        .padding(.top, Spacing._2)
+
                     Text("Connected")
-                        .foregroundColor(.grey8)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundColor(AppColors.textPrimary)
+                        .appFont(.h6, weight: .medium)
                         .padding(.top, 168)
-                    
-                    
+
                     Text("You can go back to your browser now")
-                        .foregroundColor(Color(red: 0.47, green: 0.53, blue: 0.53))
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                    
+                        .foregroundColor(AppColors.textSecondary)
+                        .appFont(.lg, weight: .medium)
+
                     Spacer()
                 }
             }
         }
+        .navigationBarHidden(true)
         .onAppear {
             presenter.onAppear()
         }
     }
-    
+
     private func connectionView(session: Session) -> some View {
         Button {
             presenter.onConnection(session: session)
         } label: {
             VStack {
-                HStack(spacing: 10) {
+                HStack(spacing: Spacing._3) {
                     AsyncImage(url: URL(string: session.peer.icons.first ?? "")) { phase in
                         if let image = phase.image {
                             image
                                 .resizable()
-                                .frame(width: 60, height: 60)
+                                .frame(width: 48, height: 48)
                                 .background(Color.black)
-                                .cornerRadius(30, corners: .allCorners)
+                                .cornerRadius(CGFloat(AppRadius.full), corners: .allCorners)
                         } else {
                             Color.black
-                                .frame(width: 60, height: 60)
-                                .cornerRadius(30, corners: .allCorners)
+                                .frame(width: 48, height: 48)
+                                .cornerRadius(CGFloat(AppRadius.full), corners: .allCorners)
                         }
                     }
-                    .padding(.leading, 20)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
+                    .padding(.leading, Spacing._4)
+
+                    VStack(alignment: .leading, spacing: Spacing._05) {
                         Text(session.peer.name)
-                            .foregroundColor(.grey8)
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        
+                            .foregroundColor(AppColors.textPrimary)
+                            .appFont(.xl, weight: .medium)
+
                         Text(session.peer.url)
-                            .foregroundColor(.grey50)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(AppColors.textSecondary)
+                            .appFont(.md)
                     }
-                    
+
                     Spacer()
-                    
+
                     Image("forward-shevron")
-                        .foregroundColor(.grey8)
-                        .padding(.trailing, 20)
+                        .foregroundColor(AppColors.textPrimary)
+                        .padding(.trailing, Spacing._4)
                 }
             }
+            .padding(.vertical, Spacing._3)
+            .background(
+                RoundedRectangle(cornerRadius: CGFloat(AppRadius._4))
+                    .fill(AppColors.foregroundPrimary)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: CGFloat(AppRadius._4))
+                    .stroke(AppColors.borderPrimary, lineWidth: 1)
+            )
         }
     }
 }

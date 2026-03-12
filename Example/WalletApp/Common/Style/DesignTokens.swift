@@ -82,6 +82,15 @@ enum AppColors {
     static let white = Color(UIColor(hex: 0xFFFFFF))
 }
 
+// MARK: - UIColor Design Tokens
+
+extension UIColor {
+    static let appBackgroundPrimary = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x202020) : UIColor(hex: 0xFFFFFF) }
+    static let appTextSecondary = UIColor(hex: 0x9A9A9A)
+    static let appAccentPrimary = UIColor(hex: 0x0988F0)
+    static let appBorderPrimary = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x363636) : UIColor(hex: 0xE9E9E9) }
+}
+
 // MARK: - UIColor hex initializer
 
 extension UIColor {

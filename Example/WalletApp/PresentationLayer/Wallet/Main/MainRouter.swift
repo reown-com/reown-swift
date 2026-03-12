@@ -16,17 +16,23 @@ final class MainRouter {
         let view = BalancesView().environmentObject(viewModel)
         let viewController = SceneViewController(viewModel: viewModel, content: view)
         viewModel.viewController = viewController
-        return viewController.wrapToNavigationController()
+        let nav = viewController.wrapToNavigationController()
+        nav.setNavigationBarHidden(true, animated: false)
+        return nav
     }
 
     func walletViewController(importAccount: ImportAccount) -> UIViewController {
-        return WalletModule.create(app: app, importAccount: importAccount)
+        let nav = WalletModule.create(app: app, importAccount: importAccount)
             .wrapToNavigationController()
+        nav.setNavigationBarHidden(true, animated: false)
+        return nav
     }
 
     func settingsViewController(importAccount: ImportAccount) -> UIViewController {
-        return SettingsModule.create(app: app, importAccount: importAccount)
+        let nav = SettingsModule.create(app: app, importAccount: importAccount)
             .wrapToNavigationController()
+        nav.setNavigationBarHidden(true, animated: false)
+        return nav
     }
     
     func present(proposal: Session.Proposal, importAccount: ImportAccount, context: VerifyContext?) {
