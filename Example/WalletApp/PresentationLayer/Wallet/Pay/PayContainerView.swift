@@ -34,8 +34,7 @@ struct PayContainerView: View {
                                     url: url,
                                     onClose: { presenter.goBack() },
                                     onComplete: { presenter.onICWebViewComplete() },
-                                    onError: { error in presenter.onICWebViewError(error) },
-                                    onFormDataChanged: { fullName, dob, pobAddress in presenter.onICFormDataChanged(fullName: fullName, dob: dob, pobAddress: pobAddress) }
+                                    onError: { error in presenter.onICWebViewError(error) }
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .padding(.top, 50)
