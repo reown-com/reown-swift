@@ -43,18 +43,22 @@ struct WelcomeView: View {
         }
         .ignoresSafeArea(.keyboard)
         .alert("Import account", isPresented: $importAlert) {
+            TextField("Mnemonic / Seed Phrase", text: $presenter.mnemonicInput)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
             TextField("Ethereum Private Key", text: $presenter.input)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            
+
             TextField("Solana Private Key (optional)", text: $presenter.solanaInput)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            
+
             TextField("Stacks Mnemonic (optional)", text: $presenter.stacksInput)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            
+
             TextField("Sui Private Key (optional)", text: $presenter.suiInput)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -62,9 +66,10 @@ struct WelcomeView: View {
             TextField("TON Private Key (base64 32-byte seed, optional)", text: $presenter.tonPrivateKeyBase64Input)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            
+
             Button("OK", action: presenter.onImport)
-            Button("Cancel", role: .cancel) { 
+            Button("Cancel", role: .cancel) {
+                presenter.mnemonicInput = .empty
                 presenter.input = .empty
                 presenter.solanaInput = .empty
                 presenter.stacksInput = .empty
@@ -72,7 +77,7 @@ struct WelcomeView: View {
                 presenter.tonPrivateKeyBase64Input = .empty
             }
         } message: {
-            Text("Please enter account private keys")
+            Text("Enter a mnemonic phrase or individual private keys")
         }
     }
 

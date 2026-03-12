@@ -20,29 +20,17 @@ struct PayDataCollectionWebView: View {
                 onFormDataChanged: onFormDataChanged
             )
 
-            // Close button
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.gray)
-                    .frame(width: 28, height: 28)
-                    .background(Color.white.opacity(0.9))
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-            }
-            .padding(.top, 56)
-            .padding(.trailing, 20)
+            // Close button — matches other Pay modals
+            PayCloseButton(action: onClose)
+                .padding(.top, Spacing._4)
+                .padding(.trailing, Spacing._5)
 
             if isLoading {
-                VStack(spacing: 16) {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                    Text("Loading...")
-                        .font(.system(size: 14, design: .rounded))
-                        .foregroundColor(.secondary)
+                VStack {
+                    WalletConnectLoadingView(size: 120)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.white)
+                .background(AppColors.backgroundPrimary)
             }
         }
     }
@@ -68,8 +56,8 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
-        webView.backgroundColor = .white
-        webView.scrollView.backgroundColor = .white
+        webView.backgroundColor = UIColor(AppColors.backgroundPrimary)
+        webView.scrollView.backgroundColor = UIColor(AppColors.backgroundPrimary)
         webView.isOpaque = false
 
         print("💳 [PayWebView] Loading URL: \(url)")

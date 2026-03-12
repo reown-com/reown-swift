@@ -28,6 +28,7 @@ extension UIViewController {
             view.backgroundColor = .clear
         }
         modalPresentationStyle = .overCurrentContext
+        modalTransitionStyle = .crossDissolve
         viewController.present(self, animated: true, completion: nil)
     }
 

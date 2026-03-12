@@ -4,14 +4,13 @@ import ReownWalletKit
 import Commons
 
 enum PayFlowStep: Int, CaseIterable {
-    case options = 0
-    case webviewDataCollection = 1
-    case nameInput = 2
-    case dateOfBirth = 3
+    case loading = 0
+    case options = 1
+    case whyInfoRequired = 2
+    case webviewDataCollection = 3
     case summary = 4
     case confirming = 5
-    case success = 6
-    case whyInfoRequired = 7
+    case result = 6
 }
 
 final class PayPresenter: ObservableObject {
@@ -30,31 +29,21 @@ final class PayPresenter: ObservableObject {
     var icFormPobAddress: String?
 
     // Flow state
-    @Published var currentStep: PayFlowStep = .options
-    @Published var isLoading = false
+    @Published var currentStep: PayFlowStep = .loading
     @Published var showError = false
     @Published var errorMessage = ""
+
+    // Result state
+    @Published var resultType: PayResultType = .success
+    @Published var loadingMessage: String = "Preparing your payment..."
 
     // Payment data
     @Published var paymentOptionsResponse: PaymentOptionsResponse?
     @Published var selectedOption: PaymentOption?
     @Published var requiredActions: [Action] = []
 
-    // User info for travel rule
-    @Published var firstName: String = ""
-    @Published var lastName: String = ""
-
     // Payment result info (from confirmPayment response)
     @Published var paymentResultInfo: ConfirmPaymentResultResponse?
-
-    @Published var dateOfBirth: Date = {
-        // Default to 1990-01-01
-        var components = DateComponents()
-        components.year = 1990
-        components.month = 1
-        components.day = 1
-        return Calendar.current.date(from: components) ?? Date()
-    }()
 
     // Payment link from deep link
     private let paymentLink: String
@@ -107,7 +96,8 @@ final class PayPresenter: ObservableObject {
     // MARK: - Public Methods
 
     func loadPaymentOptions() {
-        isLoading = true
+        loadingMessage = "Preparing your payment..."
+        currentStep = .loading
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
@@ -117,15 +107,20 @@ final class PayPresenter: ObservableObject {
                     includePaymentInfo: true
                 )
                 self.paymentOptionsResponse = response
-                // Select first option by default
                 print("💳 [Pay] getPaymentOptions response: \(response)")
-                self.selectedOption = response.options.first
-                self.currentStep = .options
-                self.isLoading = false
+
+                if response.options.isEmpty {
+                    // No payment options — show insufficient funds result
+                    self.resultType = .insufficientFunds
+                    self.currentStep = .result
+                } else {
+                    // Select first option by default
+                    self.selectedOption = response.options.first
+                    self.currentStep = .options
+                }
             } catch {
-                self.errorMessage = error.localizedDescription
-                self.showError = true
-                self.isLoading = false
+                self.resultType = Self.detectErrorType(from: error.localizedDescription)
+                self.currentStep = .result
             }
         }
     }
@@ -134,15 +129,12 @@ final class PayPresenter: ObservableObject {
     func continueFromOptions() {
         guard selectedOption != nil else { return }
 
-        if let collectData = collectData {
-            if let url = collectData.url, !url.isEmpty {
-                currentStep = .webviewDataCollection
-            } else {
-                currentStep = .nameInput
-            }
+        if let collectData = collectData,
+           let url = collectData.url, !url.isEmpty {
+            currentStep = .webviewDataCollection
         } else {
-            // No IC needed — confirm directly (skip summary)
-            confirmPayment()
+            // No IC needed or no webview URL — go to summary
+            currentStep = .summary
         }
     }
 
@@ -194,6 +186,128 @@ final class PayPresenter: ObservableObject {
         return components.url
     }
 
+    func goBack() {
+        switch currentStep {
+        case .loading:
+            dismiss()
+        case .options:
+            dismiss()
+        case .whyInfoRequired:
+            currentStep = .options
+        case .webviewDataCollection:
+            currentStep = .options
+        case .summary:
+            // Go back to the IC step that preceded summary
+            if let collectData = collectData,
+               let url = collectData.url, !url.isEmpty {
+                currentStep = .webviewDataCollection
+            } else {
+                currentStep = .options
+            }
+        case .confirming, .result:
+            // Don't allow back navigation from these states
+            break
+        }
+    }
+
+    func showWhyInfoRequiredScreen() {
+        currentStep = .whyInfoRequired
+    }
+
+    func selectOption(_ option: PaymentOption) {
+        selectedOption = option
+    }
+
+    func confirmPayment() {
+        guard let option = selectedOption,
+              let paymentId = paymentOptionsResponse?.paymentId else {
+            errorMessage = "Please select a payment option"
+            showError = true
+            return
+        }
+
+        // Switch to confirming state
+        loadingMessage = "Confirming your payment..."
+        currentStep = .confirming
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                // 1. Get required actions for the selected option
+                let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
+                    paymentId: paymentId,
+                    optionId: option.id
+                )
+                self.requiredActions = actions
+
+                // 2. Sign all wallet RPC actions
+                var signatures: [String] = []
+                let ethSigner = ETHSigner(importAccount: importAccount)
+
+                for action in actions {
+                    let rpcAction = action.walletRpc
+                    let signature = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
+                    signatures.append(signature)
+                }
+
+                // 3. Confirm payment with signatures
+                let result = try await WalletKit.instance.Pay.confirmPayment(
+                    paymentId: paymentId,
+                    optionId: option.id,
+                    signatures: signatures,
+                    collectedData: nil,
+                    maxPollMs: 60000
+                )
+
+                print("Payment confirmed: \(result)")
+                self.paymentResultInfo = result
+
+                switch result.status {
+                case .succeeded, .processing:
+                    self.resultType = .success
+                case .cancelled:
+                    self.resultType = .generic(message: "This payment was cancelled.")
+                case .failed:
+                    self.resultType = .generic(message: "Payment failed.")
+                case .expired:
+                    self.resultType = .expired
+                case .requiresAction:
+                    self.resultType = .generic(message: "Additional action required.")
+                }
+                self.currentStep = .result
+
+                // Notify balances screen to refresh
+                NotificationCenter.default.post(name: .paymentCompleted, object: nil)
+
+            } catch {
+                self.resultType = Self.detectErrorType(from: error.localizedDescription)
+                self.currentStep = .result
+            }
+        }
+    }
+
+    func dismiss() {
+        router.dismiss()
+    }
+
+    // MARK: - Error Detection (from RN utils.ts)
+
+    static func detectErrorType(from message: String) -> PayResultType {
+        let lowered = message.lowercased()
+        if lowered.contains("insufficient") || lowered.contains("balance") || lowered.contains("funds") {
+            return .insufficientFunds
+        }
+        if lowered.contains("expired") || lowered.contains("timeout") {
+            return .expired
+        }
+        if lowered.contains("not found") || lowered.contains("404") {
+            return .notFound
+        }
+        return .generic(message: message)
+    }
+
+    // MARK: - Private Methods
+
     /// Build Base64-encoded prefill JSON based on schema's required fields
     private func buildPrefillParam(schema: String?) -> String? {
         guard let schema = schema else { return nil }
@@ -233,184 +347,6 @@ final class PayPresenter: ObservableObject {
 
         print("💳 [Pay] Built prefill param: \(prefillData) -> \(base64)")
         return base64
-    }
-
-    func submitUserInfo() {
-        guard !firstName.isEmpty && !lastName.isEmpty else {
-            errorMessage = "Please enter your first and last name"
-            showError = true
-            return
-        }
-        currentStep = .dateOfBirth
-    }
-
-    func submitDateOfBirth() {
-        currentStep = .summary
-    }
-
-    /// Format date of birth as YYYY-MM-DD for API
-    var formattedDateOfBirth: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: dateOfBirth)
-    }
-
-    func goBack() {
-        switch currentStep {
-        case .options:
-            dismiss()
-        case .webviewDataCollection:
-            currentStep = .options
-        case .nameInput:
-            currentStep = .options
-        case .dateOfBirth:
-            currentStep = .nameInput
-        case .summary:
-            // Go back to the IC step that preceded summary
-            if let collectData = collectData {
-                if let url = collectData.url, !url.isEmpty {
-                    currentStep = .webviewDataCollection
-                } else {
-                    currentStep = .dateOfBirth
-                }
-            } else {
-                currentStep = .options
-            }
-        case .confirming, .success:
-            // Don't allow back navigation from these states
-            break
-        case .whyInfoRequired:
-            currentStep = .options
-        }
-    }
-
-    func showWhyInfoRequiredScreen() {
-        currentStep = .whyInfoRequired
-    }
-
-    func selectOption(_ option: PaymentOption) {
-        selectedOption = option
-    }
-
-    func confirmPayment() {
-        guard let option = selectedOption,
-              let paymentId = paymentOptionsResponse?.paymentId else {
-            errorMessage = "Please select a payment option"
-            showError = true
-            return
-        }
-
-        // Switch to confirming state immediately
-        currentStep = .confirming
-
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                // 1. Get required actions for the selected option
-                let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
-                    paymentId: paymentId,
-                    optionId: option.id
-                )
-                self.requiredActions = actions
-
-                // 2. Sign all wallet RPC actions
-                var signatures: [String] = []
-                let ethSigner = ETHSigner(importAccount: importAccount)
-
-                for action in actions {
-                    let rpcAction = action.walletRpc
-                    let signature = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
-                    signatures.append(signature)
-                }
-
-                // 3. Collect user data if required (travel rule)
-                // Skip if data was collected via WebView (url is present)
-                var collectedData: [CollectDataFieldResult]? = nil
-                if let collectDataAction = self.collectData,
-                   collectDataAction.url == nil || collectDataAction.url?.isEmpty == true {
-                    collectedData = collectDataAction.fields.map { field -> CollectDataFieldResult in
-                        let value = resolveFieldValue(for: field)
-                        return CollectDataFieldResult(id: field.id, value: value)
-                    }
-                }
-
-                // 4. Confirm payment with signatures and collected data
-                let result = try await WalletKit.instance.Pay.confirmPayment(
-                    paymentId: paymentId,
-                    optionId: option.id,
-                    signatures: signatures,
-                    collectedData: collectedData,
-                    maxPollMs: 60000
-                )
-
-                print("Payment confirmed: \(result)")
-                self.paymentResultInfo = result
-
-                switch result.status {
-                case .succeeded, .processing:
-                    self.currentStep = .success
-                case .cancelled:
-                    self.errorMessage = "This payment was cancelled"
-                    self.showError = true
-                    self.currentStep = .options
-                case .failed:
-                    self.errorMessage = "Payment failed"
-                    self.showError = true
-                    self.currentStep = .options
-                case .expired:
-                    self.errorMessage = "Payment expired"
-                    self.showError = true
-                    self.currentStep = .options
-                case .requiresAction:
-                    self.errorMessage = "Additional action required"
-                    self.showError = true
-                    self.currentStep = .options
-                }
-
-                // Notify balances screen to refresh
-                NotificationCenter.default.post(name: .paymentCompleted, object: nil)
-
-            } catch {
-                self.errorMessage = error.localizedDescription
-                self.showError = true
-                // Go back to summary if IC was done, otherwise back to options
-                if selectedOptionRequiresIC {
-                    self.currentStep = .summary
-                } else {
-                    self.currentStep = .options
-                }
-            }
-        }
-    }
-
-    func dismiss() {
-        router.dismiss()
-    }
-
-    // MARK: - Private Methods
-
-    private func resolveFieldValue(for field: CollectDataField) -> String {
-        let fieldId = field.id.lowercased()
-        let fieldName = field.name.lowercased()
-
-        // Check for full name field first (combined first + last name)
-        if fieldId == "fullname" || fieldId == "full_name" || fieldId == "name" ||
-           fieldName.contains("full name") {
-            return "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
-        }
-        // Individual name fields
-        else if fieldId == "firstname" || fieldId == "first_name" || fieldName.contains("first") {
-            return firstName
-        } else if fieldId == "lastname" || fieldId == "last_name" || fieldName.contains("last") {
-            return lastName
-        }
-        // Date of birth
-        else if fieldId == "dob" || fieldId == "dateofbirth" || fieldId == "date_of_birth" || fieldName.contains("birth") {
-            return formattedDateOfBirth
-        }
-
-        print("💳 [Pay] Warning: Unknown field - id: \(field.id), name: \(field.name)")
-        return ""
     }
 
 }

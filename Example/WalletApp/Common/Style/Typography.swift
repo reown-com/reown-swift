@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Typography System
 
@@ -27,12 +28,23 @@ enum AppFontWeight {
         case .medium: return "KHTeka-Medium"
         }
     }
+
+    var swiftUIWeight: Font.Weight {
+        switch self {
+        case .light: return .light
+        case .regular: return .regular
+        case .medium: return .medium
+        }
+    }
 }
 
 enum AppFont {
 
     static func font(size: AppTextSize, weight: AppFontWeight = .regular) -> Font {
-        .custom(weight.fontName, size: size.rawValue)
+        if let uiFont = UIFont(name: weight.fontName, size: size.rawValue) {
+            return Font(uiFont)
+        }
+        return .custom(weight.fontName, fixedSize: size.rawValue)
     }
 
     // MARK: Headings
@@ -54,14 +66,14 @@ enum AppFont {
 
 // MARK: - Tracking (letter spacing)
 
-/// Letter spacing percentages matching the design system.
-/// Large headings: -2%, medium headings: -1.5%, body/small: -1%
+/// Letter spacing percentages matching the cross-platform design system (RN Text.tsx).
 enum AppTracking {
     static func value(for size: AppTextSize) -> CGFloat {
         switch size {
-        case .h1, .h2: return size.rawValue * -0.02
-        case .h3, .h4: return size.rawValue * -0.015
-        case .h5, .h6, .xl, .lg, .md, .sm: return size.rawValue * -0.01
+        case .h1, .h2, .h3: return size.rawValue * -0.02
+        case .h4, .h5: return size.rawValue * -0.01
+        case .h6: return size.rawValue * -0.03
+        case .xl, .lg, .md, .sm: return size.rawValue * -0.01
         }
     }
 }

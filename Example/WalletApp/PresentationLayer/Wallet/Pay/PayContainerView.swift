@@ -17,50 +17,52 @@ struct PayContainerView: View {
                 VStack {
                     Spacer()
 
-                    switch presenter.currentStep {
-                    case .options:
-                        PayOptionsView()
-                            .environmentObject(presenter)
-                    case .webviewDataCollection:
-                        if let url = presenter.buildICWebViewURL() {
-                            PayDataCollectionWebView(
-                                url: url,
-                                onClose: { presenter.goBack() },
-                                onComplete: { presenter.onICWebViewComplete() },
-                                onError: { error in presenter.onICWebViewError(error) },
-                                onFormDataChanged: { fullName, dob, pobAddress in presenter.onICFormDataChanged(fullName: fullName, dob: dob, pobAddress: pobAddress) }
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .padding(.top, 50)
-                            .background(Color.whiteBackground)
-                            .ignoresSafeArea(edges: .bottom)
+                    Group {
+                        switch presenter.currentStep {
+                        case .loading:
+                            PayConfirmingView()
+                                .environmentObject(presenter)
+                        case .options:
+                            PayOptionsView()
+                                .environmentObject(presenter)
+                        case .whyInfoRequired:
+                            PayWhyInfoRequiredView()
+                                .environmentObject(presenter)
+                        case .webviewDataCollection:
+                            if let url = presenter.buildICWebViewURL() {
+                                PayDataCollectionWebView(
+                                    url: url,
+                                    onClose: { presenter.goBack() },
+                                    onComplete: { presenter.onICWebViewComplete() },
+                                    onError: { error in presenter.onICWebViewError(error) },
+                                    onFormDataChanged: { fullName, dob, pobAddress in presenter.onICFormDataChanged(fullName: fullName, dob: dob, pobAddress: pobAddress) }
+                                )
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .padding(.top, 50)
+                                .background(AppColors.backgroundPrimary)
+                                .ignoresSafeArea(edges: .bottom)
+                            }
+                        case .summary:
+                            PaySummaryView()
+                                .environmentObject(presenter)
+                        case .confirming:
+                            PayConfirmingView()
+                                .environmentObject(presenter)
+                        case .result:
+                            PayResultView()
+                                .environmentObject(presenter)
                         }
-                    case .nameInput:
-                        PayNameInputView()
-                            .environmentObject(presenter)
-                    case .dateOfBirth:
-                        PayDateOfBirthView()
-                            .environmentObject(presenter)
-                    case .summary:
-                        PaySummaryView()
-                            .environmentObject(presenter)
-                    case .confirming:
-                        PayConfirmingView()
-                            .environmentObject(presenter)
-                    case .success:
-                        PaySuccessView()
-                            .environmentObject(presenter)
-                    case .whyInfoRequired:
-                        PayWhyInfoRequiredView()
-                            .environmentObject(presenter)
                     }
+                    .transition(.opacity)
+                    .id(presenter.currentStep)
                 }
+                .animation(.easeInOut(duration: 0.25), value: presenter.currentStep)
             }
         }
         .alert(presenter.errorMessage, isPresented: $presenter.showError) {
             Button("OK", role: .cancel) {}
         }
-        .ignoresSafeArea(.container, edges: [.top, .horizontal])
+        .ignoresSafeArea()
     }
 }
 
