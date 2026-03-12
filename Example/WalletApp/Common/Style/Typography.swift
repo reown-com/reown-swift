@@ -1,0 +1,86 @@
+import SwiftUI
+
+// MARK: - Typography System
+
+enum AppTextSize: CGFloat {
+    case h1 = 50
+    case h2 = 44
+    case h3 = 38
+    case h4 = 32
+    case h5 = 26
+    case h6 = 20
+    case xl = 18
+    case lg = 16
+    case md = 14
+    case sm = 12
+}
+
+enum AppFontWeight {
+    case light
+    case regular
+    case medium
+
+    var fontName: String {
+        switch self {
+        case .light: return "KHTeka-Light"
+        case .regular: return "KHTeka-Regular"
+        case .medium: return "KHTeka-Medium"
+        }
+    }
+}
+
+enum AppFont {
+
+    static func font(size: AppTextSize, weight: AppFontWeight = .regular) -> Font {
+        .custom(weight.fontName, size: size.rawValue)
+    }
+
+    // MARK: Headings
+
+    static func h1(weight: AppFontWeight = .regular) -> Font { font(size: .h1, weight: weight) }
+    static func h2(weight: AppFontWeight = .regular) -> Font { font(size: .h2, weight: weight) }
+    static func h3(weight: AppFontWeight = .regular) -> Font { font(size: .h3, weight: weight) }
+    static func h4(weight: AppFontWeight = .regular) -> Font { font(size: .h4, weight: weight) }
+    static func h5(weight: AppFontWeight = .regular) -> Font { font(size: .h5, weight: weight) }
+    static func h6(weight: AppFontWeight = .regular) -> Font { font(size: .h6, weight: weight) }
+
+    // MARK: Body
+
+    static func xl(weight: AppFontWeight = .regular) -> Font { font(size: .xl, weight: weight) }
+    static func lg(weight: AppFontWeight = .regular) -> Font { font(size: .lg, weight: weight) }
+    static func md(weight: AppFontWeight = .regular) -> Font { font(size: .md, weight: weight) }
+    static func sm(weight: AppFontWeight = .regular) -> Font { font(size: .sm, weight: weight) }
+}
+
+// MARK: - Tracking (letter spacing)
+
+/// Letter spacing percentages matching the design system.
+/// Large headings: -2%, medium headings: -1.5%, body/small: -1%
+enum AppTracking {
+    static func value(for size: AppTextSize) -> CGFloat {
+        switch size {
+        case .h1, .h2: return size.rawValue * -0.02
+        case .h3, .h4: return size.rawValue * -0.015
+        case .h5, .h6, .xl, .lg, .md, .sm: return size.rawValue * -0.01
+        }
+    }
+}
+
+// MARK: - View Modifier
+
+struct AppFontModifier: ViewModifier {
+    let size: AppTextSize
+    let weight: AppFontWeight
+
+    func body(content: Content) -> some View {
+        content
+            .font(AppFont.font(size: size, weight: weight))
+            .tracking(AppTracking.value(for: size))
+    }
+}
+
+extension View {
+    func appFont(_ size: AppTextSize, weight: AppFontWeight = .regular) -> some View {
+        modifier(AppFontModifier(size: size, weight: weight))
+    }
+}

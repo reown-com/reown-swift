@@ -1,19 +1,16 @@
 import UIKit
 
 enum TabPage: CaseIterable {
-    case balances
-    case wallet
-    case notifications
+    case wallets
+    case connectedApps
     case settings
 
     var title: String {
         switch self {
-        case .balances:
-            return "Balances"
-        case .wallet:
-            return "Connections"
-        case .notifications:
-            return "Inbox"
+        case .wallets:
+            return "Wallets"
+        case .connectedApps:
+            return "Connected Apps"
         case .settings:
             return "Settings"
         }
@@ -21,14 +18,15 @@ enum TabPage: CaseIterable {
 
     var icon: UIImage {
         switch self {
-        case .balances:
-            return UIImage(systemName: "dollarsign.circle.fill")!
-        case .wallet:
-            return UIImage(named: "connections_tab")!
-        case .notifications:
-            return UIImage(named: "inbox_tab")!
+        case .wallets:
+            return UIImage(systemName: "wallet.bifold.fill")
+                ?? UIImage(systemName: "creditcard.fill")!
+        case .connectedApps:
+            return UIImage(systemName: "link.circle.fill")
+                ?? UIImage(named: "connections_tab")!
         case .settings:
-            return UIImage(named: "settings_tab")!
+            return UIImage(systemName: "gearshape.fill")
+                ?? UIImage(named: "settings_tab")!
         }
     }
 
@@ -37,6 +35,6 @@ enum TabPage: CaseIterable {
     }
 
     static var enabledTabs: [TabPage] {
-        return [.balances, .wallet, .notifications, .settings]
+        return [.wallets, .connectedApps, .settings]
     }
 }

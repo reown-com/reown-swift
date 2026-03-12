@@ -44,7 +44,6 @@ struct SettingsView: View {
                 Group {
                     header(title: "Device")
                     row(title: "Client ID", subtitle: viewModel.clientId)
-                    row(title: "Device Token", subtitle: viewModel.deviceToken)
                 }
                 .padding(.horizontal, 20)
 

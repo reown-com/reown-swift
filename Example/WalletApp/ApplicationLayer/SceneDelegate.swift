@@ -1,10 +1,9 @@
-import SafariServices
 import UIKit
 import ReownWalletKit
 import WalletConnectSign
 import Commons
 
-final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
+final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
     private let app = Application()
@@ -48,9 +47,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         // Setup the window
         window = UIWindow(windowScene: windowScene)
         window?.makeKeyAndVisible()
-
-        // Notification center delegate setup
-        UNUserNotificationCenter.current().delegate = self
 
         configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
@@ -171,29 +167,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
     }
 
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        open(notification: notification)
-        return [.sound, .banner, .badge]
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        open(notification: response.notification)
-    }
 }
 
 private extension SceneDelegate {
-
-    func open(notification: UNNotification) {
-        let popupTag: Int = 1020
-        if let url = URL(string: notification.request.content.subtitle),
-           let topController = window?.rootViewController?.topController, topController.view.tag != popupTag
-        {
-            let safari = SFSafariViewController(url: url)
-            safari.modalPresentationStyle = .formSheet
-            safari.view.tag = popupTag
-            window?.rootViewController?.topController.present(safari, animated: true)
-        }
-    }
 
     func configureWalletKitClientIfNeeded() {
         Networking.configure(
@@ -204,7 +180,7 @@ private extension SceneDelegate {
         
 
         let metadata = AppMetadata(
-            name: "Example Wallet",
+            name: "Swift Wallet",
             description: "wallet description",
             url: "example.wallet",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
@@ -212,9 +188,9 @@ private extension SceneDelegate {
         )
 
         #if DEBUG
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey, payLogging: true)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey, payLogging: true)
         #else
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey)
         #endif
     }
 

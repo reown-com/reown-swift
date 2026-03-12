@@ -1,6 +1,5 @@
 import UIKit
 import WalletConnectNetworking
-import WalletConnectNotify
 import ReownWalletKit
 import Combine
 
@@ -17,24 +16,18 @@ final class ConfigurationService {
         Networking.instance.setLogging(level: .off)
 
         let metadata = AppMetadata(
-            name: "Example Wallet",
+            name: "Swift Wallet",
             description: "wallet description",
             url: "example.wallet",
             icons: ["https://avatars.githubusercontent.com/u/37784886"], 
             redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
         )
 
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey)
 
         // Initialize SuiSigner
         SuiSigner.initialize(projectId: InputConfig.projectId)
 
-        Notify.configure(
-            environment: BuildConfiguration.shared.apnsEnvironment,
-            crypto: DefaultCryptoProvider()
-        )
-
-        Notify.instance.setLogging(level: .off)
         Sign.instance.setLogging(level: .off)
         Events.instance.setLogging(level: .off)
 
@@ -81,18 +74,5 @@ final class ConfigurationService {
             AlertPresenter.present(message: "Session Request has expired", type: .warning)
         }.store(in: &publishers)
 
-        Task {
-            do {
-               // let params = try await Notify.instance.prepareRegistration(account: importAccount.account, domain: "com.walletconnect")
-               // let signature = importAccount.onSign(message: params.message)
-//                try await Notify.instance.register(params: params, signature: signature)
-            } catch {
-                DispatchQueue.main.async {
-                    let logMessage = LogMessage(message: "Push Server registration failed with: \(error.localizedDescription)")
-                    ProfilingService.instance.send(logMessage: logMessage)
-                    UIApplication.currentWindow.rootViewController?.showAlert(title: "Register error", error: error)
-                }
-            }
-        }
     }
 }

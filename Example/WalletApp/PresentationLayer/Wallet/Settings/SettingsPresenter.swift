@@ -96,21 +96,13 @@ final class SettingsPresenter: ObservableObject {
         return clientId
     }
 
-    var deviceToken: String {
-        guard let deviceToken = UserDefaults.standard.string(forKey: "deviceToken") else { return .empty }
-        return deviceToken
-    }
-
     func browserPressed() {
         router.presentBrowser()
     }
 
     func logoutPressed() async throws {
-        guard let account = accountStorage.importAccount?.account else { return }
-        try? await interactor.notifyUnregister(account: account)
         accountStorage.importAccount = nil
         try await WalletKit.instance.cleanup()
-        UserDefaults.standard.set(nil, forKey: "deviceToken")
         await router.presentWelcome()
     }
 }
