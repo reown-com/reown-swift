@@ -1,7 +1,7 @@
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "Sources/WalletConnectRelay/PackageConfig.json")))
-yttrium_version = '0.10.20'
+yttrium_version = '0.10.50'
 
 Pod::Spec.new do |spec|
 
