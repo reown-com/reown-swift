@@ -36,6 +36,20 @@ final class SessionProposalPresenter: ObservableObject {
     @Published var errorMessage = "Error"
     @Published var selectedChainIds: Set<String> = []
 
+    var requiredChainIds: Set<String> {
+        var ids = Set<String>()
+        for (key, ns) in sessionProposal.requiredNamespaces {
+            if let blockchains = ns.chains {
+                for bc in blockchains {
+                    ids.insert(bc.absoluteString)
+                }
+            } else {
+                ids.insert(key)
+            }
+        }
+        return ids
+    }
+
     var availableChains: [ChainInfo] {
         var chains: [ChainInfo] = []
         var seen = Set<String>()

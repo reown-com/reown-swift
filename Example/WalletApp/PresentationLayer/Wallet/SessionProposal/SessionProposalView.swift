@@ -28,7 +28,8 @@ struct SessionProposalView: View {
 
                         NetworkSelectorView(
                             chains: presenter.availableChains,
-                            selectedChainIds: $presenter.selectedChainIds
+                            selectedChainIds: $presenter.selectedChainIds,
+                            requiredChainIds: presenter.requiredChainIds
                         )
                     }
                     .padding(.top, Spacing._4)

@@ -9,6 +9,7 @@ struct ChainInfo: Identifiable {
 struct NetworkSelectorView: View {
     let chains: [ChainInfo]
     @Binding var selectedChainIds: Set<String>
+    var requiredChainIds: Set<String> = []
     @State private var isExpanded = false
 
     private var selectedChainIdsOrdered: [String] {
@@ -68,8 +69,10 @@ struct NetworkSelectorView: View {
 
     private func chainRow(chain: ChainInfo) -> some View {
         let isSelected = selectedChainIds.contains(chain.id)
+        let isRequired = requiredChainIds.contains(chain.id)
 
         return Button {
+            guard !(isRequired && isSelected) else { return }
             withAnimation(.easeInOut(duration: 0.15)) {
                 if isSelected {
                     selectedChainIds.remove(chain.id)
