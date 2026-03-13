@@ -40,11 +40,30 @@ enum AppFontWeight {
 
 enum AppFont {
 
+    // Cache fonts to avoid repeated UIFont(name:size:) lookups during scroll
+    private static var fontCache: [String: Font] = [:]
+    private static let cacheLock = NSLock()
+
     static func font(size: AppTextSize, weight: AppFontWeight = .regular) -> Font {
-        if let uiFont = UIFont(name: weight.fontName, size: size.rawValue) {
-            return Font(uiFont)
+        let key = "\(weight.fontName)-\(size.rawValue)"
+        cacheLock.lock()
+        if let cached = fontCache[key] {
+            cacheLock.unlock()
+            return cached
         }
-        return .custom(weight.fontName, fixedSize: size.rawValue)
+        cacheLock.unlock()
+
+        let font: Font
+        if let uiFont = UIFont(name: weight.fontName, size: size.rawValue) {
+            font = Font(uiFont)
+        } else {
+            font = .custom(weight.fontName, fixedSize: size.rawValue)
+        }
+
+        cacheLock.lock()
+        fontCache[key] = font
+        cacheLock.unlock()
+        return font
     }
 
     // MARK: Headings
