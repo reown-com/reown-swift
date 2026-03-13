@@ -46,7 +46,6 @@ final class AuthRequestPresenter: ObservableObject {
         }
     }
 
-    @Published var showSignedSheet = false
     
     private var disposeBag = Set<AnyCancellable>()
     private let solanaAccountStorage = SolanaAccountStorage()
@@ -80,10 +79,9 @@ final class AuthRequestPresenter: ObservableObject {
             /* Redirect */
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
-                router.dismiss()
-            } else {
-                showSignedSheet.toggle()
             }
+            router.dismiss()
+            AlertPresenter.present(message: "Request signed", type: .success)
 
         } catch {
             ActivityIndicatorManager.shared.stop()
@@ -104,10 +102,9 @@ final class AuthRequestPresenter: ObservableObject {
             /* Redirect */
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
-                router.dismiss()
-            } else {
-                showSignedSheet.toggle()
             }
+            router.dismiss()
+            AlertPresenter.present(message: "Request signed", type: .success)
 
         } catch {
             ActivityIndicatorManager.shared.stop()
@@ -136,10 +133,6 @@ final class AuthRequestPresenter: ObservableObject {
         }
     }
     
-    func onSignedSheetDismiss() {
-        router.dismiss()
-    }
-
     private func createAuthObjectForChain(chain: Blockchain) throws -> AuthObject {
         guard let account = resolvedAccount(for: chain) else {
             throw Errors.noCommonChains

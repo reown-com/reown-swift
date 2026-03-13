@@ -12,8 +12,7 @@ struct SettingsView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onPaste: { viewModel.onPasteUri() },
-                    onScan: { viewModel.onScanUri() }
+                    onScan: { viewModel.onScanOptions() }
                 )
 
                 ScrollView {

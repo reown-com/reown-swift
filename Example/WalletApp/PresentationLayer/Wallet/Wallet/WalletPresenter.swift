@@ -57,28 +57,28 @@ final class WalletPresenter: ObservableObject {
         router.presentConnectionDetails(session: session)
     }
 
-    func onPasteUri() {
-        router.presentPaste { [weak self] uriString in
-            self?.handleScannedOrPastedUri(uriString)
-        } onError: { [weak self] error in
-            print(error.localizedDescription)
-            self?.router.dismiss()
-        }
+    func onScanOptions() {
+        router.presentScannerOptions(
+            onScanQR: { [weak self] in
+                self?.router.dismissToPresent {
+                    self?.presentScanCamera()
+                }
+            },
+            onPasteURL: { [weak self] in
+                guard let self else { return }
+                let clipboard = UIPasteboard.general.string ?? ""
+                guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
+                    return
+                }
+                self.router.dismissToPresent {
+                    self.handleScannedOrPastedUri(clipboard)
+                }
+            }
+        )
     }
 
-    func sendStableCoin() {
-        router.presentSendStableCoin(importAccount: importAccount)
-    }
-
-    func sendEthereum() {
-        router.presentSendEthereum(importAccount: importAccount)
-    }
-
-    func onTestPay() {
-        router.presentPastePaymentLink(importAccount: importAccount)
-    }
-
-    func onScanUri() {
+    private func presentScanCamera() {
         router.presentScan { [weak self] uriString in
             self?.router.dismiss()
             self?.handleScannedOrPastedUri(uriString)

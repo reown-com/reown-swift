@@ -201,7 +201,7 @@ final class PayPresenter: ObservableObject {
         }
 
         // Switch to confirming state
-        loadingMessage = "Confirming your payment..."
+        loadingMessage = "Processing your payment..."
         currentStep = .confirming
 
         Task { @MainActor [weak self] in

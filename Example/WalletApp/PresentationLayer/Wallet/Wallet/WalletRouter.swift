@@ -21,11 +21,18 @@ final class WalletRouter {
             .presentFullScreen(from: viewController, transparentBackground: true)
     }
     
-    func presentPaste(onValue: @escaping (String) -> Void, onError: @escaping (Error) -> Void) {
-        PasteUriModule.create(app: app, onValue: onValue, onError: onError)
-            .presentFullScreen(from: viewController, transparentBackground: true)
+    func presentScannerOptions(onScanQR: @escaping () -> Void, onPasteURL: @escaping () -> Void) {
+        let vc = ScannerOptionsModule.create(
+            app: app,
+            onScanQR: onScanQR,
+            onPasteURL: onPasteURL,
+            onClose: { [weak self] in
+                self?.dismissPresented()
+            }
+        )
+        UIApplication.currentWindow.rootViewController?.present(vc, animated: true)
     }
-    
+
     func presentConnectionDetails(session: Session) {
         ConnectionDetailsModule.create(app: app, session: session)
             .push(from: viewController)
@@ -37,30 +44,6 @@ final class WalletRouter {
             .present(from: viewController)
     }
 
-    func presentSendStableCoin(importAccount: ImportAccount) {
-//        SendStableCoinModule.create(app: app, importAccount: importAccount)
-//            .wrapToNavigationController()
-//            .present(from: viewController)
-    }
-
-    func presentSendEthereum(importAccount: ImportAccount) {
-//        SendEthereumModule.create(app: app, importAccount: importAccount)
-//            .wrapToNavigationController()
-//            .present(from: viewController)
-    }
-
-    func presentPastePaymentLink(importAccount: ImportAccount) {
-        let pasteVC = PastePaymentLinkModule.create(app: app) { [weak self] paymentLink in
-            // Dismiss the paste screen first, then present pay flow
-            UIApplication.currentWindow.rootViewController?.dismiss(animated: true) {
-                self?.startPayFlow(paymentLink: paymentLink, importAccount: importAccount)
-            }
-        } onError: { error in
-            print("Payment link error: \(error.localizedDescription)")
-        }
-        pasteVC.presentFullScreen(from: UIApplication.currentWindow.rootViewController!, transparentBackground: true)
-    }
-    
     func startPayFlow(paymentLink: String, importAccount: ImportAccount) {
         // Pass accounts for multiple chains like Kotlin does
         let address = importAccount.account.address
@@ -81,5 +64,17 @@ final class WalletRouter {
 
     func dismiss() {
         viewController.navigationController?.dismiss()
+    }
+
+    func dismissPresented() {
+        UIApplication.currentWindow.rootViewController?.dismiss(animated: true)
+    }
+
+    func dismissToPresent(then completion: @escaping () -> Void) {
+        if let presented = UIApplication.currentWindow.rootViewController?.presentedViewController {
+            presented.dismiss(animated: true, completion: completion)
+        } else {
+            completion()
+        }
     }
 }
