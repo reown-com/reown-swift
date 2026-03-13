@@ -47,11 +47,11 @@ enum AppFont {
     static func font(size: AppTextSize, weight: AppFontWeight = .regular) -> Font {
         let key = "\(weight.fontName)-\(size.rawValue)"
         cacheLock.lock()
+        defer { cacheLock.unlock() }
+
         if let cached = fontCache[key] {
-            cacheLock.unlock()
             return cached
         }
-        cacheLock.unlock()
 
         let font: Font
         if let uiFont = UIFont(name: weight.fontName, size: size.rawValue) {
@@ -60,9 +60,7 @@ enum AppFont {
             font = .custom(weight.fontName, fixedSize: size.rawValue)
         }
 
-        cacheLock.lock()
         fontCache[key] = font
-        cacheLock.unlock()
         return font
     }
 
