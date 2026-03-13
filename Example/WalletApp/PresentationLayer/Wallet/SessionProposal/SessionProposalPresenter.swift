@@ -34,8 +34,56 @@ final class SessionProposalPresenter: ObservableObject {
     
     @Published var showError = false
     @Published var errorMessage = "Error"
-    @Published var showConnectedSheet = false
-    
+    @Published var selectedChainIds: Set<String> = []
+
+    var availableChains: [ChainInfo] {
+        var chains: [ChainInfo] = []
+        var seen = Set<String>()
+
+        func addChains(from namespaces: [String: ProposalNamespace]) {
+            for (key, ns) in namespaces {
+                if let blockchains = ns.chains {
+                    for bc in blockchains {
+                        let id = bc.absoluteString
+                        guard !seen.contains(id) else { continue }
+                        seen.insert(id)
+                        chains.append(ChainInfo(
+                            id: id,
+                            name: chainDisplayName(for: bc),
+                            iconName: nil
+                        ))
+                    }
+                } else {
+                    let id = key
+                    guard !seen.contains(id) else { continue }
+                    seen.insert(id)
+                    chains.append(ChainInfo(id: id, name: key.uppercased(), iconName: nil))
+                }
+            }
+        }
+
+        addChains(from: sessionProposal.requiredNamespaces)
+        if let optional = sessionProposal.optionalNamespaces {
+            addChains(from: optional)
+        }
+        return chains
+    }
+
+    private func chainDisplayName(for blockchain: Blockchain) -> String {
+        if let name = ChainIconProvider.chainName(for: blockchain.absoluteString) {
+            return name
+        }
+        let ns = blockchain.namespace
+        let ref = blockchain.reference
+        // Fallback for unknown chains
+        switch ns.lowercased() {
+        case "eip155": return "EVM (\(ref))"
+        case "mvx": return "MultiversX"
+        case "tezos": return "Tezos"
+        default: return "\(ns):\(ref)"
+        }
+    }
+
     private var disposeBag = Set<AnyCancellable>()
     private let solanaAccountStorage = SolanaAccountStorage()
     private let messageSigner: MessageSigner
@@ -91,9 +139,10 @@ final class SessionProposalPresenter: ObservableObject {
                 }
             }
             
-            let showConnected = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, proposalRequestsResponses: proposalRequestsResponses)
-            showConnected ? showConnectedSheet.toggle() : router.dismiss()
+            _ = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, selectedChainIds: selectedChainIds, proposalRequestsResponses: proposalRequestsResponses)
             ActivityIndicatorManager.shared.stop()
+            router.dismiss()
+            AlertPresenter.present(message: "Connected", type: .success)
         } catch {
             ActivityIndicatorManager.shared.stop()
             errorMessage = error.localizedDescription
@@ -115,10 +164,6 @@ final class SessionProposalPresenter: ObservableObject {
         }
     }
     
-    func onConnectedSheetDismiss() {
-        router.dismiss()
-    }
-
     func dismiss() {
         router.dismiss()
     }
@@ -171,6 +216,9 @@ final class SessionProposalPresenter: ObservableObject {
 // MARK: - Private functions
 private extension SessionProposalPresenter {
     func setupInitialState() {
+        // Pre-select all available chains
+        selectedChainIds = Set(availableChains.map(\.id))
+
         WalletKit.instance.sessionProposalExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] proposal in

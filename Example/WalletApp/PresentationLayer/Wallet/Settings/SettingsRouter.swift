@@ -19,18 +19,37 @@ final class SettingsRouter {
             .push(from: viewController)
     }
 
+    func presentScannerOptions(onScanQR: @escaping () -> Void, onPasteURL: @escaping () -> Void) {
+        let vc = ScannerOptionsModule.create(
+            app: app,
+            onScanQR: onScanQR,
+            onPasteURL: onPasteURL,
+            onClose: { [weak self] in
+                self?.dismissPresented()
+            }
+        )
+        UIApplication.currentWindow.rootViewController?.present(vc, animated: true)
+    }
+
     func presentScan(onValue: @escaping (String) -> Void, onError: @escaping (Error) -> Void) {
         ScanModule.create(app: app, onValue: onValue, onError: onError)
             .wrapToNavigationController()
             .present(from: viewController)
     }
 
-    func presentPaste(onValue: @escaping (String) -> Void, onError: @escaping (Error) -> Void) {
-        PasteUriModule.create(app: app, onValue: onValue, onError: onError)
-            .presentFullScreen(from: viewController, transparentBackground: true)
-    }
-
     func dismiss() {
         viewController.dismiss()
+    }
+
+    func dismissPresented() {
+        UIApplication.currentWindow.rootViewController?.dismiss(animated: true)
+    }
+
+    func dismissToPresent(then completion: @escaping () -> Void) {
+        if let presented = UIApplication.currentWindow.rootViewController?.presentedViewController {
+            presented.dismiss(animated: true, completion: completion)
+        } else {
+            completion()
+        }
     }
 }

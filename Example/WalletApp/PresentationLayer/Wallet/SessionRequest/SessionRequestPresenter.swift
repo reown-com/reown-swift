@@ -49,7 +49,6 @@ final class SessionRequestPresenter: ObservableObject {
     
     @Published var showError = false
     @Published var errorMessage = "Error"
-    @Published var showSignedSheet = false
     
     private var disposeBag = Set<AnyCancellable>()
 
@@ -73,9 +72,10 @@ final class SessionRequestPresenter: ObservableObject {
     func onApprove() async throws {
         do {
             ActivityIndicatorManager.shared.start()
-            let showConnected = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
-            showConnected ? showSignedSheet.toggle() : router.dismiss()
+            _ = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
             ActivityIndicatorManager.shared.stop()
+            router.dismiss()
+            AlertPresenter.present(message: "Request signed", type: .success)
         } catch {
             ActivityIndicatorManager.shared.stop()
             errorMessage = error.localizedDescription
@@ -95,10 +95,6 @@ final class SessionRequestPresenter: ObservableObject {
             errorMessage = error.localizedDescription
             showError.toggle()
         }
-    }
-    
-    func onSignedSheetDismiss() {
-        dismiss()
     }
     
     func dismiss() {

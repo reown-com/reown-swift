@@ -171,8 +171,34 @@ final class BalancesViewModel: ObservableObject {
     }
     
     // MARK: - Navigation Actions
-    
-    func onScanUri() {
+
+    func onScanOptions() {
+        let vc = ScannerOptionsModule.create(
+            app: app,
+            onScanQR: { [weak self] in
+                self?.dismissToPresent {
+                    self?.presentScanCamera()
+                }
+            },
+            onPasteURL: { [weak self] in
+                guard let self else { return }
+                let clipboard = UIPasteboard.general.string ?? ""
+                guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
+                    return
+                }
+                self.dismissToPresent {
+                    self.handleScannedOrPastedUri(clipboard)
+                }
+            },
+            onClose: { [weak self] in
+                self?.dismissPresented()
+            }
+        )
+        UIApplication.currentWindow.rootViewController?.present(vc, animated: true)
+    }
+
+    private func presentScanCamera() {
         guard let viewController = viewController else { return }
         ScanModule.create(app: app, onValue: { [weak self] uriString in
             self?.viewController?.navigationController?.dismiss(animated: true)
@@ -184,28 +210,17 @@ final class BalancesViewModel: ObservableObject {
         .wrapToNavigationController()
         .present(from: viewController)
     }
-    
-    func onPasteUri() {
-        guard let viewController = viewController else { return }
-        PasteUriModule.create(app: app, onValue: { [weak self] uriString in
-            self?.handleScannedOrPastedUri(uriString)
-        }, onError: { [weak self] error in
-            print("Paste error: \(error.localizedDescription)")
-            self?.viewController?.navigationController?.dismiss(animated: true)
-        })
-        .presentFullScreen(from: viewController, transparentBackground: true)
+
+    private func dismissPresented() {
+        UIApplication.currentWindow.rootViewController?.dismiss(animated: true)
     }
-    
-    func onTestPay() {
-        let pasteVC = PastePaymentLinkModule.create(app: app) { [weak self] paymentLink in
-            UIApplication.currentWindow.rootViewController?.dismiss(animated: true) {
-                self?.startPayFlow(paymentLink: paymentLink)
-            }
-        } onError: { error in
-            print("Payment link error: \(error.localizedDescription)")
+
+    private func dismissToPresent(then completion: @escaping () -> Void) {
+        if let presented = UIApplication.currentWindow.rootViewController?.presentedViewController {
+            presented.dismiss(animated: true, completion: completion)
+        } else {
+            completion()
         }
-        guard let rootVC = UIApplication.currentWindow.rootViewController else { return }
-        pasteVC.presentFullScreen(from: rootVC, transparentBackground: true)
     }
     
     // MARK: - Private Methods
