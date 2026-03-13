@@ -16,7 +16,34 @@ struct TokenBalance: Codable {
     let value: Double
     let price: Double
     let quantity: TokenQuantity
-    let iconUrl: String
+    let iconUrl: String?
+
+    init(name: String, symbol: String, chainId: String, address: String?, value: Double, price: Double, quantity: TokenQuantity, iconUrl: String?) {
+        self.name = name
+        self.symbol = symbol
+        self.chainId = chainId
+        self.address = address
+        self.value = value
+        self.price = price
+        self.quantity = quantity
+        self.iconUrl = iconUrl
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        symbol = try container.decode(String.self, forKey: .symbol)
+        chainId = try container.decodeIfPresent(String.self, forKey: .chainId) ?? ""
+        address = try container.decodeIfPresent(String.self, forKey: .address)
+        value = try container.decodeIfPresent(Double.self, forKey: .value) ?? 0
+        price = try container.decodeIfPresent(Double.self, forKey: .price) ?? 0
+        quantity = try container.decodeIfPresent(TokenQuantity.self, forKey: .quantity) ?? TokenQuantity(decimals: "0", numeric: "0")
+        iconUrl = try container.decodeIfPresent(String.self, forKey: .iconUrl)
+    }
+}
+
+extension TokenBalance: Identifiable {
+    var id: String { "\(chainId)-\(symbol)-\(address ?? "native")" }
 }
 
 struct TokenQuantity: Codable {
@@ -48,6 +75,48 @@ struct ChainBalance: Identifiable {
     }
 }
 
+// MARK: - Native Token Defaults
+
+/// Native tokens to always display for EVM addresses, even with zero balance
+private let mainnetNativeTokens: [TokenBalance] = [
+    TokenBalance(
+        name: "Ethereum", symbol: "ETH", chainId: "eip155:1", address: nil,
+        value: 0, price: 0,
+        quantity: TokenQuantity(decimals: "18", numeric: "0"),
+        iconUrl: "https://token-icons.s3.amazonaws.com/eth.png"
+    ),
+    TokenBalance(
+        name: "Polygon", symbol: "POL", chainId: "eip155:137", address: nil,
+        value: 0, price: 0,
+        quantity: TokenQuantity(decimals: "18", numeric: "0"),
+        iconUrl: "https://token-icons.s3.amazonaws.com/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png"
+    ),
+    TokenBalance(
+        name: "BNB", symbol: "BNB", chainId: "eip155:56", address: nil,
+        value: 0, price: 0,
+        quantity: TokenQuantity(decimals: "18", numeric: "0"),
+        iconUrl: "https://token-icons.s3.amazonaws.com/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png"
+    ),
+    TokenBalance(
+        name: "Arbitrum", symbol: "ETH", chainId: "eip155:42161", address: nil,
+        value: 0, price: 0,
+        quantity: TokenQuantity(decimals: "18", numeric: "0"),
+        iconUrl: "https://token-icons.s3.amazonaws.com/eth.png"
+    ),
+    TokenBalance(
+        name: "Base", symbol: "ETH", chainId: "eip155:8453", address: nil,
+        value: 0, price: 0,
+        quantity: TokenQuantity(decimals: "18", numeric: "0"),
+        iconUrl: "https://token-icons.s3.amazonaws.com/eth.png"
+    ),
+    TokenBalance(
+        name: "Optimism", symbol: "ETH", chainId: "eip155:10", address: nil,
+        value: 0, price: 0,
+        quantity: TokenQuantity(decimals: "18", numeric: "0"),
+        iconUrl: "https://token-icons.s3.amazonaws.com/eth.png"
+    ),
+]
+
 /// Notification posted when a payment is completed successfully
 extension Notification.Name {
     static let paymentCompleted = Notification.Name("paymentCompleted")
@@ -61,6 +130,7 @@ final class BalancesViewModel: ObservableObject {
     @Published var selectedTab: Int = 0
     @Published var usdcBalances: [ChainBalance] = USDCChain.allCases.map { ChainBalance(chain: $0) }
     @Published var eurcBalances: [ChainBalance] = USDCChain.eurcChains.map { ChainBalance(chain: $0) }
+    @Published var tokenBalances: [TokenBalance] = []
     @Published var isLoading: Bool = true
     @Published var isRefreshing: Bool = false
     @Published var showError: Bool = false
@@ -135,10 +205,26 @@ final class BalancesViewModel: ObservableObject {
         stopAutoRefresh()
     }
 
-    func refresh() {
-//        print("[Balance] Manual refresh triggered")
+    func refresh() async {
         isRefreshing = true
-        fetchAllBalances()
+        await fetchAllBalancesAsync()
+    }
+
+    func formattedTokenBalance(_ token: TokenBalance) -> String {
+        let numeric = Double(token.quantity.numeric) ?? 0
+        if numeric == 0 { return "0 \(token.symbol)" }
+        if numeric < 0.0001 { return "<0.0001 \(token.symbol)" }
+        if numeric < 1 { return "\(String(format: "%.4f", numeric)) \(token.symbol)" }
+        if numeric < 1000 { return "\(String(format: "%.2f", numeric)) \(token.symbol)" }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        return "\(formatter.string(from: NSNumber(value: numeric)) ?? String(format: "%.2f", numeric)) \(token.symbol)"
+    }
+
+    func copyAddress() {
+        UIPasteboard.general.string = walletAddress
+        AlertPresenter.present(message: "Address copied", type: .success)
     }
 
     // MARK: - Auto-refresh
@@ -164,8 +250,7 @@ final class BalancesViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: .paymentCompleted)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-//                print("[Balance] Payment completed notification received - refreshing")
-                self?.refresh()
+                Task { await self?.refresh() }
             }
             .store(in: &cancellables)
     }
@@ -226,74 +311,107 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Private Methods
     
     private func fetchAllBalances() {
-        Task {
-            do {
-                // Build URL with query parameters
-                var components = URLComponents(string: "https://rpc.walletconnect.org/v1/account/\(walletAddress)/balance")
-                components?.queryItems = [
-                    URLQueryItem(name: "projectId", value: InputConfig.projectId),
-                    URLQueryItem(name: "currency", value: "usd")
-                ]
+        Task { await fetchAllBalancesAsync() }
+    }
 
-                guard let url = components?.url else {
-                    throw URLError(.badURL)
+    private func fetchAllBalancesAsync() async {
+        do {
+            // Build URL with query parameters
+            var components = URLComponents(string: "https://rpc.walletconnect.org/v1/account/\(walletAddress)/balance")
+            components?.queryItems = [
+                URLQueryItem(name: "projectId", value: InputConfig.projectId),
+                URLQueryItem(name: "currency", value: "usd")
+            ]
+
+            guard let url = components?.url else {
+                throw URLError(.badURL)
+            }
+
+            // Create request with required headers
+            var request = URLRequest(url: url)
+            request.setValue("appkit", forHTTPHeaderField: "x-sdk-type")
+            request.setValue("reown-swift-1.0", forHTTPHeaderField: "x-sdk-version")
+            request.setValue("https://reown.com", forHTTPHeaderField: "Origin")
+
+            // Fetch and decode
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let response = try JSONDecoder().decode(BalanceAPIResponse.self, from: data)
+
+            // Filter for USDC and EURC tokens
+            let usdcTokens = response.balances.filter { $0.symbol == "USDC" }
+            let eurcTokens = response.balances.filter { $0.symbol == "EURC" }
+
+            // Merge API balances with native token fallbacks
+            var balanceMap: [String: TokenBalance] = [:]
+            // Start with native token defaults (zero balance)
+            for native in mainnetNativeTokens {
+                balanceMap[native.id] = native
+            }
+            // Override with actual API balances
+            for token in response.balances {
+                balanceMap[token.id] = token
+            }
+            // Sort: tokens with balance first (by value desc), then zero-balance by name
+            let allBalances = balanceMap.values.sorted { a, b in
+                let aVal = a.value
+                let bVal = b.value
+                if aVal != bVal { return aVal > bVal }
+                return a.name < b.name
+            }
+
+            // Update balances on main thread
+            await MainActor.run {
+                // Only update if data actually changed to avoid triggering unnecessary re-renders
+                let newIds = allBalances.map { $0.id }
+                let oldIds = self.tokenBalances.map { $0.id }
+                let newValues = allBalances.map { $0.value }
+                let oldValues = self.tokenBalances.map { $0.value }
+                if newIds != oldIds || newValues != oldValues {
+                    print("[Balance] Updating tokenBalances: \(allBalances.count) items")
+                    self.tokenBalances = allBalances
+                } else {
+                    print("[Balance] No change, skipping UI update")
                 }
 
-                // Create request with required headers
-                var request = URLRequest(url: url)
-                request.setValue("appkit", forHTTPHeaderField: "x-sdk-type")
-                request.setValue("reown-swift-1.0", forHTTPHeaderField: "x-sdk-version")
-                request.setValue("https://reown.com", forHTTPHeaderField: "Origin")
-
-                // Fetch and decode
-                let (data, _) = try await URLSession.shared.data(for: request)
-                let response = try JSONDecoder().decode(BalanceAPIResponse.self, from: data)
-
-                // Filter for USDC and EURC tokens
-                let usdcTokens = response.balances.filter { $0.symbol == "USDC" }
-                let eurcTokens = response.balances.filter { $0.symbol == "EURC" }
-
-                // Update balances on main thread
-                await MainActor.run {
-                    // Update USDC balances
-                    for chain in USDCChain.allCases {
-                        if let index = self.usdcBalances.firstIndex(where: { $0.chain == chain }),
-                           let apiBalance = usdcTokens.first(where: { $0.chainId == chain.chainId }) {
-                            self.usdcBalances[index].balance = Decimal(apiBalance.value)
-                            self.usdcBalances[index].error = nil
-                        } else if let index = self.usdcBalances.firstIndex(where: { $0.chain == chain }) {
-                            self.usdcBalances[index].balance = 0
-                            self.usdcBalances[index].error = nil
-                        }
+                // Update USDC/EURC balances without triggering @Published if unchanged
+                var newUsdc = self.usdcBalances
+                for chain in USDCChain.allCases {
+                    if let index = newUsdc.firstIndex(where: { $0.chain == chain }),
+                       let apiBalance = usdcTokens.first(where: { $0.chainId == chain.chainId }) {
+                        newUsdc[index].balance = Decimal(apiBalance.value)
+                        newUsdc[index].error = nil
+                    } else if let index = newUsdc.firstIndex(where: { $0.chain == chain }) {
+                        newUsdc[index].balance = 0
+                        newUsdc[index].error = nil
                     }
-
-                    // Update EURC balances
-                    for chain in USDCChain.eurcChains {
-                        if let index = self.eurcBalances.firstIndex(where: { $0.chain == chain }),
-                           let apiBalance = eurcTokens.first(where: { $0.chainId == chain.chainId }) {
-                            self.eurcBalances[index].balance = Decimal(apiBalance.value)
-                            self.eurcBalances[index].error = nil
-                        } else if let index = self.eurcBalances.firstIndex(where: { $0.chain == chain }) {
-                            self.eurcBalances[index].balance = 0
-                            self.eurcBalances[index].error = nil
-                        }
-                    }
-
-                    self.isLoading = false
-                    self.isRefreshing = false
                 }
-            } catch {
-                await MainActor.run {
-                    // Set error on all chains
-                    for index in self.usdcBalances.indices {
-                        self.usdcBalances[index].error = error.localizedDescription
-                    }
-                    for index in self.eurcBalances.indices {
-                        self.eurcBalances[index].error = error.localizedDescription
-                    }
-                    self.isLoading = false
-                    self.isRefreshing = false
+                if newUsdc.map({ $0.balance }) != self.usdcBalances.map({ $0.balance }) {
+                    self.usdcBalances = newUsdc
                 }
+
+                var newEurc = self.eurcBalances
+                for chain in USDCChain.eurcChains {
+                    if let index = newEurc.firstIndex(where: { $0.chain == chain }),
+                       let apiBalance = eurcTokens.first(where: { $0.chainId == chain.chainId }) {
+                        newEurc[index].balance = Decimal(apiBalance.value)
+                        newEurc[index].error = nil
+                    } else if let index = newEurc.firstIndex(where: { $0.chain == chain }) {
+                        newEurc[index].balance = 0
+                        newEurc[index].error = nil
+                    }
+                }
+                if newEurc.map({ $0.balance }) != self.eurcBalances.map({ $0.balance }) {
+                    self.eurcBalances = newEurc
+                }
+
+                if self.isLoading { self.isLoading = false }
+                if self.isRefreshing { self.isRefreshing = false }
+            }
+        } catch {
+            await MainActor.run {
+                print("[Balance] Error fetching balances: \(error.localizedDescription)")
+                if self.isLoading { self.isLoading = false }
+                if self.isRefreshing { self.isRefreshing = false }
             }
         }
     }

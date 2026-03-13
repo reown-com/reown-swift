@@ -114,6 +114,21 @@ struct WalletView: View {
                 }
             }
         }
+        .sheet(isPresented: Binding(
+            get: { presenter.selectedSessionForDetail != nil },
+            set: { if !$0 { presenter.selectedSessionForDetail = nil } }
+        )) {
+            if let session = presenter.selectedSessionForDetail {
+                SessionDetailModalView(
+                    session: session,
+                    onDisconnect: { presenter.disconnectSelectedSession() },
+                    onClose: { presenter.selectedSessionForDetail = nil },
+                    isDisconnecting: presenter.isDisconnecting
+                )
+                .presentationDragIndicator(.hidden)
+                .modifier(SessionDetailSheetModifier())
+            }
+        }
         .navigationBarHidden(true)
         .onAppear {
             presenter.onAppear()
@@ -190,6 +205,24 @@ struct WalletView: View {
             }
         }
         return ids
+    }
+}
+
+private struct SessionDetailSheetModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .presentationDetents([.medium, .large])
+            .modifier(SheetBackgroundModifier())
+    }
+}
+
+private struct SheetBackgroundModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.4, *) {
+            content.presentationBackground(AppColors.backgroundPrimary)
+        } else {
+            content
+        }
     }
 }
 

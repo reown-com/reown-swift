@@ -16,7 +16,9 @@ final class WalletPresenter: ObservableObject {
     private var isPairingTimer: Timer?
 
     @Published var sessions = [Session]()
-    
+    @Published var selectedSessionForDetail: Session? = nil
+    @Published var isDisconnecting = false
+
     @Published var showPairingLoading = false {
         didSet {
             handlePairingLoadingChanged()
@@ -54,7 +56,23 @@ final class WalletPresenter: ObservableObject {
     }
     
     func onConnection(session: Session) {
-        router.presentConnectionDetails(session: session)
+        selectedSessionForDetail = session
+    }
+
+    func disconnectSelectedSession() {
+        guard let session = selectedSessionForDetail else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.isDisconnecting = true
+            do {
+                try await self.interactor.disconnectSession(session: session)
+                self.isDisconnecting = false
+                self.selectedSessionForDetail = nil
+            } catch {
+                self.isDisconnecting = false
+                AlertPresenter.present(message: error.localizedDescription, type: .error)
+            }
+        }
     }
 
     func onScanOptions() {

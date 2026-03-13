@@ -213,6 +213,7 @@
 		C56EE24D293F566D004840D1 /* WalletRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE22E293F5669004840D1 /* WalletRouter.swift */; };
 		C56EE24E293F566D004840D1 /* WalletInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE22F293F5669004840D1 /* WalletInteractor.swift */; };
 		C56EE24F293F566D004840D1 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE22B293F5668004840D1 /* WalletView.swift */; };
+		SESSD3TA11000000000000B1 /* SessionDetailModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */; };
 		C56EE250293F566D004840D1 /* ScanTargetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE23D293F566C004840D1 /* ScanTargetView.swift */; };
 		C56EE255293F569A004840D1 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = C56EE254293F569A004840D1 /* Starscream */; };
 		C56EE270293F56D7004840D1 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE26A293F56D6004840D1 /* String.swift */; };
@@ -500,6 +501,7 @@
 		C56EE21B293F55ED004840D1 /* WalletApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C56EE221293F55EE004840D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C56EE22B293F5668004840D1 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
+		SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailModalView.swift; sourceTree = "<group>"; };
 		C56EE22C293F5668004840D1 /* WalletPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletPresenter.swift; sourceTree = "<group>"; };
 		C56EE22D293F5669004840D1 /* WalletModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletModule.swift; sourceTree = "<group>"; };
 		C56EE22E293F5669004840D1 /* WalletRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletRouter.swift; sourceTree = "<group>"; };
@@ -1242,6 +1244,7 @@
 				C56EE22F293F5669004840D1 /* WalletInteractor.swift */,
 				C56EE22C293F5668004840D1 /* WalletPresenter.swift */,
 				C56EE22B293F5668004840D1 /* WalletView.swift */,
+				SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */,
 				SCAN0PT10002000000000002 /* ScannerOptionsModule.swift */,
 			);
 			path = Wallet;
@@ -2138,6 +2141,7 @@
 				C5B2F6F729705293000DBA0E /* SessionRequestRouter.swift in Sources */,
 				84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */,
 				C56EE24F293F566D004840D1 /* WalletView.swift in Sources */,
+				SESSD3TA11000000000000B1 /* SessionDetailModalView.swift in Sources */,
 				C55D34B22965FB750004314A /* SessionProposalView.swift in Sources */,
 				44650A3D2E93F775004F2144 /* TonAccountStorage.swift in Sources */,
 				44650A412F1E0001004F2144 /* TronAccountStorage.swift in Sources */,
