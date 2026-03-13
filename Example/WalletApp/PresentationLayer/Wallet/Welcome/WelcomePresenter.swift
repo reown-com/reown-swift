@@ -1,12 +1,14 @@
 import UIKit
 import WalletConnectNetworking
 import Combine
+import HDWalletKit
 
 final class WelcomePresenter: ObservableObject {
     private let interactor: WelcomeInteractor
     private let router: WelcomeRouter
     private var disposeBag = Set<AnyCancellable>()
 
+    @Published var mnemonicInput: String = .empty
     @Published var input: String = .empty
     @Published var solanaInput: String = .empty
     @Published var stacksInput: String = .empty
@@ -36,7 +38,27 @@ final class WelcomePresenter: ObservableObject {
 
     func onImport() {
         let account: ImportAccount
-        if input.isEmpty {
+
+        // If mnemonic is provided, derive the Ethereum private key from it
+        if !mnemonicInput.isEmpty {
+            let trimmed = mnemonicInput.trimmingCharacters(in: .whitespacesAndNewlines)
+            let seed = Mnemonic.createSeed(mnemonic: trimmed)
+            // BIP44 Ethereum derivation path: m/44'/60'/0'/0/0
+            let masterKey = PrivateKey(seed: seed, coin: .ethereum)
+            let derived = masterKey
+                .derived(at: .hardened(44))
+                .derived(at: .hardened(60))
+                .derived(at: .hardened(0))
+                .derived(at: .notHardened(0))
+                .derived(at: .notHardened(0))
+            let hexKey = derived.raw.toHexString()
+            guard let parsed = ImportAccount(input: hexKey) else {
+                mnemonicInput = .empty
+                return
+            }
+            account = parsed
+            mnemonicInput = .empty
+        } else if input.isEmpty {
             account = ImportAccount.new()
         } else {
             guard let parsed = ImportAccount(input: input) else { return input = .empty }

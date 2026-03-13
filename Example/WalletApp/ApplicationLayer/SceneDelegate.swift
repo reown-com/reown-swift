@@ -285,6 +285,7 @@ private extension SceneDelegate {
             importAccount: account
         )
         paymentVC.modalPresentationStyle = .overCurrentContext
+        paymentVC.modalTransitionStyle = .crossDissolve
         paymentVC.view.backgroundColor = .clear
         print("🔗 [PayDeeplink] Presenting PayModule...")
         topController.present(paymentVC, animated: true) {

@@ -15,7 +15,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             }
             configuration.label
         }
-        .appFont(.lg, weight: .medium)
+        .appFont(.lg)
         .foregroundColor(.white)
         .frame(maxWidth: fullWidth ? .infinity : nil)
         .frame(height: Spacing._11)

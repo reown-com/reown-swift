@@ -22,7 +22,7 @@ enum TabPage: CaseIterable {
             return UIImage(systemName: "wallet.bifold.fill")
                 ?? UIImage(systemName: "creditcard.fill")!
         case .connectedApps:
-            return UIImage(systemName: "link.circle.fill")
+            return UIImage(systemName: "square.stack.3d.up.fill")
                 ?? UIImage(named: "connections_tab")!
         case .settings:
             return UIImage(systemName: "gearshape.fill")

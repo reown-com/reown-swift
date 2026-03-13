@@ -5,61 +5,28 @@ struct PayOptionsView: View {
     @EnvironmentObject var presenter: PayPresenter
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header: "Why info required?" pill (left) + X close (right)
+        PayModalContainer {
+            // Header: ? button (left) + X close (right)
             HStack {
                 if presenter.anyOptionRequiresIC {
-                    Button(action: {
+                    PayQuestionButton(action: {
                         presenter.showWhyInfoRequiredScreen()
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "info.circle")
-                                .font(.system(size: 12, weight: .medium))
-                            Text("Why info required?")
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                        }
-                        .foregroundColor(.grey50)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.grey95.opacity(0.5))
-                        .cornerRadius(12)
-                    }
+                    })
                 }
 
                 Spacer()
 
-                Button(action: {
-                    presenter.dismiss()
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.grey50)
-                        .frame(width: 30, height: 30)
-                        .background(Color.grey95.opacity(0.5))
-                        .clipShape(Circle())
-                }
+                PayCloseButton(action: { presenter.dismiss() })
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
+            .padding(.top, Spacing._5)
 
-            if presenter.isLoading {
-                VStack(spacing: 20) {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                    Text("Loading payment details...")
-                        .foregroundColor(.grey50)
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
-                }
-                .frame(height: 300)
-            } else if presenter.paymentOptions.isEmpty {
-                noPaymentOptionsView
-            } else if let info = presenter.paymentInfo {
-                // Merchant icon with verified badge
+            if let info = presenter.paymentInfo {
+                // Merchant icon (no seal check)
                 MerchantHeader(info: info)
-                    .padding(.top, 16)
+                    .padding(.top, Spacing._5)
 
                 // Payment options list
-                VStack(spacing: 10) {
+                VStack(spacing: Spacing._2) {
                     ForEach(presenter.paymentOptions, id: \.id) { option in
                         PaymentOptionCard(
                             option: option,
@@ -69,88 +36,17 @@ struct PayOptionsView: View {
                         )
                     }
                 }
-                .padding(.top, 20)
+                .padding(.top, Spacing._7)
 
                 // Primary button
-                Button(action: {
-                    presenter.continueFromOptions()
-                }) {
-                    Text(presenter.optionsButtonTitle)
-                        .frame(maxWidth: .infinity)
-                        .foregroundColor(.white)
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.blue100, .blue200]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .cornerRadius(16)
-                }
-                .padding(.top, 16)
-                .disabled(presenter.selectedOption == nil)
-            } else {
-                // No payment info available
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.circle")
-                        .font(.system(size: 48))
-                        .foregroundColor(.grey50)
-                    Text("Unable to load payment details")
-                        .foregroundColor(.grey50)
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
-                }
-                .frame(height: 300)
+                PayPrimaryButton(
+                    title: presenter.optionsButtonTitle,
+                    isEnabled: presenter.selectedOption != nil,
+                    action: { presenter.continueFromOptions() }
+                )
+                .padding(.top, Spacing._5)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 24)
-        .background(Color.whiteBackground)
-        .cornerRadius(34)
-        .padding(.horizontal, 10)
-        .padding(.bottom, 10)
-    }
-
-    private var noPaymentOptionsView: some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color.red.opacity(0.1))
-                    .frame(width: 64, height: 64)
-
-                Image(systemName: "exclamationmark")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(.red)
-            }
-            .padding(.top, 40)
-
-            Text("No payment options available")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                .foregroundColor(.grey8)
-
-            Spacer()
-                .frame(height: 20)
-
-            Button(action: {
-                presenter.dismiss()
-            }) {
-                Text("Close")
-                    .frame(maxWidth: .infinity)
-                    .foregroundColor(.white)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .padding(.vertical, 16)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.blue100, .blue200]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .cornerRadius(16)
-            }
-        }
-        .frame(minHeight: 250)
     }
 }
 
@@ -160,46 +56,42 @@ struct MerchantHeader: View {
     let info: PaymentInfo
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack(alignment: .bottomTrailing) {
-                if let iconUrl = info.merchant.iconUrl {
-                    AsyncImage(url: URL(string: iconUrl)) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                        } else {
-                            merchantPlaceholder(name: info.merchant.name)
-                        }
+        VStack(spacing: Spacing._4) {
+            // Merchant icon — 64x64 with border-radius 16px
+            if let iconUrl = info.merchant.iconUrl {
+                AsyncImage(url: URL(string: iconUrl)) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        merchantPlaceholder(name: info.merchant.name)
                     }
-                    .frame(width: 64, height: 64)
-                    .cornerRadius(12)
-                } else {
-                    merchantPlaceholder(name: info.merchant.name)
-                        .frame(width: 64, height: 64)
                 }
-
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(.blue)
-                    .background(Circle().fill(Color.white).frame(width: 16, height: 16))
-                    .offset(x: 4, y: 4)
+                .frame(width: 64, height: 64)
+                .cornerRadius(AppRadius._4)
+            } else {
+                merchantPlaceholder(name: info.merchant.name)
+                    .frame(width: 64, height: 64)
             }
 
+            // "Pay {amount} to {merchant}" — h6-400, single line, centered
             Text("Pay \(info.formattedAmount) to \(info.merchant.name)")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                .foregroundColor(.grey8)
-                .padding(.top, 16)
+                .appFont(.h6)
+                .foregroundColor(AppColors.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .multilineTextAlignment(.center)
         }
     }
 
     private func merchantPlaceholder(name: String) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.grey95)
+            RoundedRectangle(cornerRadius: AppRadius._4)
+                .fill(AppColors.foregroundTertiary)
             Text(String(name.prefix(1)))
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.grey8)
+                .appFont(.h5, weight: .medium)
+                .foregroundColor(AppColors.textPrimary)
         }
     }
 }
@@ -214,48 +106,35 @@ struct PaymentOptionCard: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 12) {
-                // Token icon with network badge
+            HStack(spacing: Spacing._2) {
+                // Token icon 32x32 with network badge 18x18
                 TokenIconWithNetwork(
                     iconUrl: option.amount.display.iconUrl,
                     networkIconUrl: option.amount.display.networkIconUrl,
                     symbol: option.amount.display.assetSymbol,
-                    size: 40
+                    size: 32,
+                    badgeSize: 18,
+                    isSelected: isSelected
                 )
 
-                // Token amount
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(option.formattedAmount)
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
-                        .foregroundColor(.grey8)
-
-                    if let networkName = option.amount.display.networkName {
-                        Text("on \(networkName)")
-                            .font(.system(size: 13, weight: .regular, design: .rounded))
-                            .foregroundColor(.grey50)
-                    }
-                }
+                // Token amount — lg-400 (16px, 400)
+                Text(option.formattedAmount)
+                    .appFont(.lg)
+                    .foregroundColor(AppColors.textPrimary)
 
                 Spacer()
 
-                // "Info required" badge
+                // "Info required" pill
                 if requiresIC {
-                    Text("Info required")
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundColor(.grey50)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.grey95.opacity(0.5))
-                        .cornerRadius(8)
+                    InfoRequiredPillView(isSelected: isSelected)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(isSelected ? Color.blue100.opacity(0.08) : Color.grey95.opacity(0.3))
-            .cornerRadius(16)
+            .padding(Spacing._5)
+            .background(isSelected ? AppColors.foregroundAccentPrimary10Solid : AppColors.foregroundPrimary)
+            .cornerRadius(AppRadius._4)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.blue100 : Color.clear, lineWidth: 2)
+                RoundedRectangle(cornerRadius: AppRadius._4)
+                    .stroke(isSelected ? AppColors.borderAccentPrimary : Color.clear, lineWidth: 1)
             )
         }
     }
@@ -268,6 +147,9 @@ struct TokenIconWithNetwork: View {
     let networkIconUrl: String?
     let symbol: String
     let size: CGFloat
+    var badgeSize: CGFloat = 16
+    var isSelected: Bool = false
+    var badgeBorderColor: Color?
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -283,12 +165,14 @@ struct TokenIconWithNetwork: View {
                         EmptyView()
                     }
                 }
-                .frame(width: size * 0.4, height: size * 0.4)
+                .frame(width: badgeSize, height: badgeSize)
                 .clipShape(Circle())
-                .background(
+                .overlay(
                     Circle()
-                        .fill(Color.white)
-                        .frame(width: size * 0.45, height: size * 0.45)
+                        .stroke(
+                            badgeBorderColor ?? (isSelected ? AppColors.foregroundAccentPrimary10Solid : AppColors.foregroundSecondary),
+                            lineWidth: 2
+                        )
                 )
                 .offset(x: 2, y: 2)
             }
@@ -330,12 +214,49 @@ struct TokenIcon: View {
     private var tokenPlaceholder: some View {
         ZStack {
             Circle()
-                .fill(Color.grey95)
+                .fill(AppColors.foregroundPrimary)
             Text(String(symbol.prefix(1)))
-                .font(.system(size: size * 0.4, weight: .bold))
-                .foregroundColor(.grey50)
+                .appFont(.md, weight: .medium)
+                .foregroundColor(AppColors.textTertiary)
         }
         .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Info Required Pill (UIKit-backed for reliable font weight)
+
+struct InfoRequiredPill: UIViewRepresentable {
+    let isSelected: Bool
+
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.text = "Info required"
+        label.textAlignment = .center
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return label
+    }
+
+    func updateUIView(_ label: UILabel, context: Context) {
+        label.font = UIFont(name: "KHTeka-Medium", size: 14) ?? .systemFont(ofSize: 14, weight: .medium)
+        let textInvert = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x202020) : UIColor(hex: 0xFFFFFF) }
+        let textPrimary = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xFFFFFF) : UIColor(hex: 0x202020) }
+        label.textColor = isSelected ? textInvert : textPrimary
+    }
+}
+
+// MARK: - Info Required Pill Wrapper
+
+struct InfoRequiredPillView: View {
+    let isSelected: Bool
+
+    var body: some View {
+        InfoRequiredPill(isSelected: isSelected)
+            .fixedSize()
+            .padding(.horizontal, Spacing._2)
+            .padding(.vertical, 6)
+            .background(isSelected ? AppColors.foregroundAccentPrimary90Solid : AppColors.foregroundTertiary)
+            .cornerRadius(AppRadius._2)
     }
 }
 
