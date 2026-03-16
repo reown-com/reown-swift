@@ -11,22 +11,22 @@ struct WalletView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 HeaderView(
-                    onPaste: { presenter.onPasteUri() },
-                    onScan: { presenter.onScanUri() }
+                    onScan: { presenter.onScanOptions() }
                 )
 
                 ZStack {
                     if presenter.sessions.isEmpty {
-                        VStack(spacing: Spacing._3) {
-                            Image("connect-template")
+                        VStack(spacing: Spacing._2) {
+                            Text("No connected apps yet")
+                                .foregroundColor(AppColors.textPrimary)
+                                .appFont(.h6)
 
-                            Text("Apps you connect with will appear here. To connect scan or paste the code that's displayed in the app.")
+                            Text("Scan a WalletConnect QR code to get started.")
                                 .foregroundColor(AppColors.textSecondary)
                                 .appFont(.lg)
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
                         }
-                        .padding(Spacing._5)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
 
                     VStack {
@@ -36,7 +36,7 @@ struct WalletView: View {
                                     ForEach(presenter.sessions, id: \.topic) { session in
                                         connectionView(session: session)
                                             .listRowSeparator(.hidden)
-                                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: Spacing._4, trailing: 0))
+                                            .listRowInsets(EdgeInsets(top: 0, leading: Spacing._5, bottom: Spacing._2, trailing: Spacing._5))
                                             .listRowBackground(Color.clear)
                                     }
                                     .onDelete { indexSet in
@@ -47,6 +47,7 @@ struct WalletView: View {
                                 }
                                 .listStyle(PlainListStyle())
                                 .scrollContentBackground(.hidden)
+                                .padding(.top, Spacing._7)
                             }
 
                             if presenter.showPairingLoading {
@@ -123,50 +124,72 @@ struct WalletView: View {
         Button {
             presenter.onConnection(session: session)
         } label: {
-            VStack {
-                HStack(spacing: Spacing._3) {
-                    AsyncImage(url: URL(string: session.peer.icons.first ?? "")) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .frame(width: 48, height: 48)
-                                .background(Color.black)
-                                .cornerRadius(CGFloat(AppRadius.full), corners: .allCorners)
-                        } else {
-                            Color.black
-                                .frame(width: 48, height: 48)
-                                .cornerRadius(CGFloat(AppRadius.full), corners: .allCorners)
-                        }
+            HStack(spacing: Spacing._4) {
+                // App icon — 42x42, rounded 12px
+                AsyncImage(url: URL(string: session.peer.icons.first ?? "")) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        AppColors.foregroundTertiary
                     }
-                    .padding(.leading, Spacing._4)
+                }
+                .frame(width: 42, height: 42)
+                .cornerRadius(AppRadius._3)
 
-                    VStack(alignment: .leading, spacing: Spacing._05) {
-                        Text(session.peer.name)
-                            .foregroundColor(AppColors.textPrimary)
-                            .appFont(.xl, weight: .medium)
-
-                        Text(session.peer.url)
-                            .foregroundColor(AppColors.textSecondary)
-                            .appFont(.md)
-                    }
-
-                    Spacer()
-
-                    Image("forward-shevron")
+                // Name + domain
+                VStack(alignment: .leading, spacing: Spacing._05) {
+                    Text(session.peer.name)
+                        .appFont(.lg)
                         .foregroundColor(AppColors.textPrimary)
-                        .padding(.trailing, Spacing._4)
+                        .lineLimit(1)
+
+                    Text(formattedDomain(session.peer.url))
+                        .appFont(.lg)
+                        .foregroundColor(AppColors.textSecondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: Spacing._2)
+
+                // Chain icons
+                ChainIconsView(
+                    chainIds: chainIds(from: session),
+                    size: 24,
+                    overlap: 8,
+                    maxVisible: 4
+                )
+            }
+            .padding(Spacing._5)
+            .background(AppColors.foregroundPrimary)
+            .cornerRadius(Spacing._5)
+        }
+    }
+
+    private func formattedDomain(_ urlString: String) -> String {
+        var d = urlString
+        if let url = URL(string: d), let host = url.host {
+            d = host
+        }
+        if d.hasPrefix("www.") {
+            d = String(d.dropFirst(4))
+        }
+        return d
+    }
+
+    private func chainIds(from session: Session) -> [String] {
+        var ids = [String]()
+        var seen = Set<String>()
+        for (_, ns) in session.namespaces {
+            for account in ns.accounts {
+                let chainId = account.blockchain.absoluteString
+                if seen.insert(chainId).inserted {
+                    ids.append(chainId)
                 }
             }
-            .padding(.vertical, Spacing._3)
-            .background(
-                RoundedRectangle(cornerRadius: CGFloat(AppRadius._4))
-                    .fill(AppColors.foregroundPrimary)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: CGFloat(AppRadius._4))
-                    .stroke(AppColors.borderPrimary, lineWidth: 1)
-            )
         }
+        return ids
     }
 }
 

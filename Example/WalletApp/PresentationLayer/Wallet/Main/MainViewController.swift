@@ -41,17 +41,19 @@ final class MainViewController: UITabBarController {
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
 
-        // Add top border
-        let border = UIView()
-        border.backgroundColor = .appBorderPrimary
-        border.translatesAutoresizingMaskIntoConstraints = false
-        tabBar.addSubview(border)
-        NSLayoutConstraint.activate([
-            border.topAnchor.constraint(equalTo: tabBar.topAnchor),
-            border.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor),
-            border.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor),
-            border.heightAnchor.constraint(equalToConstant: 1)
-        ])
+        // Add top border (skip on iOS 26+ where liquid glass provides its own treatment)
+        if #unavailable(iOS 26) {
+            let border = UIView()
+            border.backgroundColor = .appBorderPrimary
+            border.translatesAutoresizingMaskIntoConstraints = false
+            tabBar.addSubview(border)
+            NSLayoutConstraint.activate([
+                border.topAnchor.constraint(equalTo: tabBar.topAnchor),
+                border.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor),
+                border.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor),
+                border.heightAnchor.constraint(equalToConstant: 1)
+            ])
+        }
     }
 
     private func setupTabs() {

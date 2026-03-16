@@ -5,7 +5,7 @@ import WalletConnectSign
 import ReownRouter
 
 final class SessionProposalInteractor {
-    func approve(proposal: Session.Proposal, EOAAccount: Account, proposalRequestsResponses: ProposalRequestsResponses? = nil) async throws -> Bool {
+    func approve(proposal: Session.Proposal, EOAAccount: Account, selectedChainIds: Set<String>? = nil, proposalRequestsResponses: ProposalRequestsResponses? = nil) async throws -> Bool {
         // Following properties are used to support all the required and optional namespaces for the testing purposes
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
         let supportedEvents = Set(proposal.requiredNamespaces.flatMap { $0.value.events } + (proposal.optionalNamespaces?.flatMap { $0.value.events } ?? []))
@@ -16,35 +16,41 @@ final class SessionProposalInteractor {
         let tronAccountStorage = TronAccountStorage()
         let solanaAccountStorage = SolanaAccountStorage()
 
+        // Filter chains by user selection when provided
+        func filterSelected(_ chains: [Blockchain]) -> [Blockchain] {
+            guard let selected = selectedChainIds else { return chains }
+            return chains.filter { selected.contains($0.absoluteString) }
+        }
+
         // Handle EIP155 chains
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedEIP155Chains = supportedRequiredChains + supportedOptionalChains
+        let supportedEIP155Chains = filterSelected(supportedRequiredChains + supportedOptionalChains)
 
         // Handle Solana chains
         let supportedRequiredSolanaChains = proposal.requiredNamespaces["solana"]?.chains ?? []
         let supportedOptionalSolanaChains = proposal.optionalNamespaces?["solana"]?.chains ?? []
-        let supportedSolanaChains = supportedRequiredSolanaChains + supportedOptionalSolanaChains
+        let supportedSolanaChains = filterSelected(supportedRequiredSolanaChains + supportedOptionalSolanaChains)
 
         // Handle Stacks chains
         let supportedRequiredStacksChains = proposal.requiredNamespaces["stacks"]?.chains ?? []
         let supportedOptionalStacksChains = proposal.optionalNamespaces?["stacks"]?.chains ?? []
-        let supportedStacksChains = supportedRequiredStacksChains + supportedOptionalStacksChains
+        let supportedStacksChains = filterSelected(supportedRequiredStacksChains + supportedOptionalStacksChains)
 
         // Handle Sui chains
         let supportedRequiredSuiChains = proposal.requiredNamespaces["sui"]?.chains ?? []
         let supportedOptionalSuiChains = proposal.optionalNamespaces?["sui"]?.chains ?? []
-        let supportedSuiChains = supportedRequiredSuiChains + supportedOptionalSuiChains
+        let supportedSuiChains = filterSelected(supportedRequiredSuiChains + supportedOptionalSuiChains)
 
         // Handle TON chains
         let supportedRequiredTonChains = proposal.requiredNamespaces["ton"]?.chains ?? []
         let supportedOptionalTonChains = proposal.optionalNamespaces?["ton"]?.chains ?? []
-        let supportedTonChains = supportedRequiredTonChains + supportedOptionalTonChains
+        let supportedTonChains = filterSelected(supportedRequiredTonChains + supportedOptionalTonChains)
 
         // Handle Tron chains
         let supportedRequiredTronChains = proposal.requiredNamespaces["tron"]?.chains ?? []
         let supportedOptionalTronChains = proposal.optionalNamespaces?["tron"]?.chains ?? []
-        let supportedTronChains = supportedRequiredTronChains + supportedOptionalTronChains
+        let supportedTronChains = filterSelected(supportedRequiredTronChains + supportedOptionalTronChains)
 
         // Combine supported chains; add optional groups only when available
         var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains + supportedTronChains

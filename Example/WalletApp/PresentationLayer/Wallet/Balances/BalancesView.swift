@@ -11,8 +11,7 @@ struct BalancesView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onPaste: { viewModel.onPasteUri() },
-                    onScan: { viewModel.onScanUri() }
+                    onScan: { viewModel.onScanOptions() }
                 )
 
                 // Total Balance Header
@@ -43,26 +42,6 @@ struct BalancesView: View {
                 }
 
                 Spacer()
-
-                // Pay button
-                Button {
-                    viewModel.onTestPay()
-                } label: {
-                    HStack(spacing: Spacing._2) {
-                        Image(systemName: "creditcard.fill")
-                            .font(.system(size: 16))
-                        Text("Pay")
-                            .appFont(.lg, weight: .medium)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .foregroundColor(AppColors.textInvert)
-                    .background(AppColors.backgroundAccentPrimary)
-                    .cornerRadius(CGFloat(AppRadius._4))
-                }
-                .padding(.horizontal, Spacing._5)
-                .padding(.bottom, Spacing._5)
-                .accessibilityIdentifier("testPay")
             }
         }
         .alert(viewModel.errorMessage, isPresented: $viewModel.showError) {
