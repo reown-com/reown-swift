@@ -11,11 +11,14 @@ struct ApplicationConfigurator: Configurator {
     }
 
     func configure() {
-        if let importAccount = app.accountStorage.importAccount {
-            MainModule.create(app: app, importAccount: importAccount)
-                .present()
+        let importAccount: ImportAccount
+        if let existing = app.accountStorage.importAccount {
+            importAccount = existing
         } else {
-            WelcomeModule.create(app: app).present()
+            let service = WalletGenerationService(accountStorage: app.accountStorage)
+            importAccount = service.generateAllWallets()
         }
+        MainModule.create(app: app, importAccount: importAccount)
+            .present()
     }
 }

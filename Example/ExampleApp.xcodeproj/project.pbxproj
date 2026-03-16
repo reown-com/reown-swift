@@ -150,7 +150,6 @@
 		A573C53929EC365000E3CBFD /* HDWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = A573C53829EC365000E3CBFD /* HDWalletKit */; };
 		A573C53B29EC365800E3CBFD /* HDWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = A573C53A29EC365800E3CBFD /* HDWalletKit */; };
 		A573C53D29EC366500E3CBFD /* HDWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = A573C53C29EC366500E3CBFD /* HDWalletKit */; };
-		A57879712A4EDC8100F8D10B /* TextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57879702A4EDC8100F8D10B /* TextFieldView.swift */; };
 		A57879722A4F225E00F8D10B /* ImportAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5417BBD299BFC3E00B469F3 /* ImportAccount.swift */; };
 		A57879732A4F248200F8D10B /* AccountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C20228287EB34C007E3188 /* AccountStorage.swift */; };
 		A58A1ECC29BF458600A82A20 /* ENSResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A58A1ECB29BF458600A82A20 /* ENSResolverTests.swift */; };
@@ -191,11 +190,6 @@
 		C55D3480295DD7140004314A /* AuthRequestPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D347B295DD7140004314A /* AuthRequestPresenter.swift */; };
 		C55D3481295DD7140004314A /* AuthRequestRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D347C295DD7140004314A /* AuthRequestRouter.swift */; };
 		C55D3483295DD7140004314A /* AuthRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D347E295DD7140004314A /* AuthRequestView.swift */; };
-		C55D3493295DFA750004314A /* WelcomeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348E295DFA750004314A /* WelcomeModule.swift */; };
-		C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D348F295DFA750004314A /* WelcomePresenter.swift */; };
-		C55D3495295DFA750004314A /* WelcomeRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3490295DFA750004314A /* WelcomeRouter.swift */; };
-		C55D3496295DFA750004314A /* WelcomeInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3491295DFA750004314A /* WelcomeInteractor.swift */; };
-		C55D3497295DFA750004314A /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D3492295DFA750004314A /* WelcomeView.swift */; };
 		C55D349B2965BC2F0004314A /* TagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D349A2965BC2F0004314A /* TagsView.swift */; };
 		C55D34AE2965FB750004314A /* SessionProposalModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D34A92965FB750004314A /* SessionProposalModule.swift */; };
 		C55D34AF2965FB750004314A /* SessionProposalPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D34AA2965FB750004314A /* SessionProposalPresenter.swift */; };
@@ -307,6 +301,14 @@
 		PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000C /* PayConfirmingView.swift */; };
 		PAY0000012EE100000000000D /* PayDataCollectionWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */; };
 		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
+		PH6B000100000000000001 /* WalletGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000001 /* WalletGenerationService.swift */; };
+		PH6B000100000000000002 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000002 /* ThemeManager.swift */; };
+		PH6B000100000000000003 /* SettingsCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000003 /* SettingsCardView.swift */; };
+		PH6B000100000000000004 /* SecretPhrasePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000004 /* SecretPhrasePresenter.swift */; };
+		PH6B000100000000000005 /* SecretPhraseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000005 /* SecretPhraseView.swift */; };
+		PH6B000100000000000006 /* SecretPhraseModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000006 /* SecretPhraseModule.swift */; };
+		PH6B000100000000000007 /* ImportWalletPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000007 /* ImportWalletPresenter.swift */; };
+		PH6B000100000000000008 /* ImportWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000008 /* ImportWalletView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -459,7 +461,6 @@
 		A541959D2934BFEF0035AD19 /* EIP191VerifierTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EIP191VerifierTests.swift; sourceTree = "<group>"; };
 		A5629AEF2877F73000094373 /* DefaultSocketFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultSocketFactory.swift; sourceTree = "<group>"; };
 		A56AC8F12AD88A5A001C8FAA /* Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence.swift; sourceTree = "<group>"; };
-		A57879702A4EDC8100F8D10B /* TextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldView.swift; sourceTree = "<group>"; };
 		A57E71A5291CF76400325797 /* ETHSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETHSigner.swift; sourceTree = "<group>"; };
 		A57E71A7291CF8A500325797 /* SOLSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOLSigner.swift; sourceTree = "<group>"; };
 		A58A1ECB29BF458600A82A20 /* ENSResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ENSResolverTests.swift; sourceTree = "<group>"; };
@@ -491,11 +492,6 @@
 		C55D347B295DD7140004314A /* AuthRequestPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRequestPresenter.swift; sourceTree = "<group>"; };
 		C55D347C295DD7140004314A /* AuthRequestRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRequestRouter.swift; sourceTree = "<group>"; };
 		C55D347E295DD7140004314A /* AuthRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRequestView.swift; sourceTree = "<group>"; };
-		C55D348E295DFA750004314A /* WelcomeModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeModule.swift; sourceTree = "<group>"; };
-		C55D348F295DFA750004314A /* WelcomePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomePresenter.swift; sourceTree = "<group>"; };
-		C55D3490295DFA750004314A /* WelcomeRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeRouter.swift; sourceTree = "<group>"; };
-		C55D3491295DFA750004314A /* WelcomeInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeInteractor.swift; sourceTree = "<group>"; };
-		C55D3492295DFA750004314A /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		C55D349A2965BC2F0004314A /* TagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsView.swift; sourceTree = "<group>"; };
 		C55D34A92965FB750004314A /* SessionProposalModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProposalModule.swift; sourceTree = "<group>"; };
 		C55D34AA2965FB750004314A /* SessionProposalPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProposalPresenter.swift; sourceTree = "<group>"; };
@@ -612,6 +608,14 @@
 		PAY0000022EE100000000000C /* PayConfirmingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmingView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayDataCollectionWebView.swift; sourceTree = "<group>"; };
 		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
+		PH6F000100000000000001 /* WalletGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationService.swift; sourceTree = "<group>"; };
+		PH6F000100000000000002 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		PH6F000100000000000003 /* SettingsCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCardView.swift; sourceTree = "<group>"; };
+		PH6F000100000000000004 /* SecretPhrasePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretPhrasePresenter.swift; sourceTree = "<group>"; };
+		PH6F000100000000000005 /* SecretPhraseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretPhraseView.swift; sourceTree = "<group>"; };
+		PH6F000100000000000006 /* SecretPhraseModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretPhraseModule.swift; sourceTree = "<group>"; };
+		PH6F000100000000000007 /* ImportWalletPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportWalletPresenter.swift; sourceTree = "<group>"; };
+		PH6F000100000000000008 /* ImportWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportWalletView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -986,8 +990,29 @@
 				A518119C2A52E83100A52B15 /* SettingsRouter.swift */,
 				A518119D2A52E83100A52B15 /* SettingsInteractor.swift */,
 				A518119E2A52E83100A52B15 /* SettingsView.swift */,
+				PH6G000100000000000001 /* SecretPhrase */,
+				PH6G000100000000000002 /* ImportWallet */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		PH6G000100000000000001 /* SecretPhrase */ = {
+			isa = PBXGroup;
+			children = (
+				PH6F000100000000000004 /* SecretPhrasePresenter.swift */,
+				PH6F000100000000000005 /* SecretPhraseView.swift */,
+				PH6F000100000000000006 /* SecretPhraseModule.swift */,
+			);
+			path = SecretPhrase;
+			sourceTree = "<group>";
+		};
+		PH6G000100000000000002 /* ImportWallet */ = {
+			isa = PBXGroup;
+			children = (
+				PH6F000100000000000007 /* ImportWalletPresenter.swift */,
+				PH6F000100000000000008 /* ImportWalletView.swift */,
+			);
+			path = ImportWallet;
 			sourceTree = "<group>";
 		};
 		A54195992934BFDD0035AD19 /* Signer */ = {
@@ -1008,14 +1033,6 @@
 				A56AC8F12AD88A5A001C8FAA /* Sequence.swift */,
 			);
 			path = Foundation;
-			sourceTree = "<group>";
-		};
-		A578796F2A4EDC6B00F8D10B /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				A57879702A4EDC8100F8D10B /* TextFieldView.swift */,
-			);
-			path = Views;
 			sourceTree = "<group>";
 		};
 		A57E71A4291CF73300325797 /* Signer */ = {
@@ -1096,6 +1113,7 @@
 			isa = PBXGroup;
 			children = (
 				44EF89702E0149360025778F /* StacksAccointStorage.swift */,
+				PH6F000100000000000001 /* WalletGenerationService.swift */,
 				A5D610CC2AB3592F00C20083 /* ListingsSertice */,
 			);
 			path = BusinessLayer;
@@ -1174,16 +1192,10 @@
 		C55D3477295DD4AA0004314A /* Welcome */ = {
 			isa = PBXGroup;
 			children = (
-				A578796F2A4EDC6B00F8D10B /* Views */,
-				C55D348E295DFA750004314A /* WelcomeModule.swift */,
-				C55D348F295DFA750004314A /* WelcomePresenter.swift */,
 				446A306C2DE8405A0024781A /* SuiAccountStorage.swift */,
-				C55D3490295DFA750004314A /* WelcomeRouter.swift */,
 				44650A3C2E93F775004F2144 /* TonAccountStorage.swift */,
 				44650A402F1E0001004F2144 /* TronAccountStorage.swift */,
-				C55D3491295DFA750004314A /* WelcomeInteractor.swift */,
 				446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */,
-				C55D3492295DFA750004314A /* WelcomeView.swift */,
 			);
 			path = Welcome;
 			sourceTree = "<group>";
@@ -1319,6 +1331,7 @@
 				BD2D8CE19361455B9E46709C /* Spacing.swift */,
 				031F02C8D611403299617574 /* AppRadius.swift */,
 				B0086530789641B19877C4E8 /* AppButtonStyle.swift */,
+				PH6F000100000000000002 /* ThemeManager.swift */,
 			);
 			path = Style;
 			sourceTree = "<group>";
@@ -1417,6 +1430,7 @@
 				MC01A1B2C3D4E5F6A7100009 /* ChainIconProvider.swift */,
 				MC01A1B2C3D4E5F6A710000A /* ChainIconsView.swift */,
 				MC01A1B2C3D4E5F6A710000B /* NetworkInfoCardView.swift */,
+				PH6F000100000000000003 /* SettingsCardView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2092,7 +2106,6 @@
 				847BD1DD2989494F00076C90 /* TabPage.swift in Sources */,
 				847BD1D92989492500076C90 /* MainPresenter.swift in Sources */,
 				C5FFEA842ADDAD6D007282A2 /* SafariViewController.swift in Sources */,
-				C55D3497295DFA750004314A /* WelcomeView.swift in Sources */,
 				84B73CAF2D833E6000EC1793 /* SolanaBalancesProvider.swift in Sources */,
 				84B73D302D918B0F00EC1793 /* EthBalanceProvider.swift in Sources */,
 				44EF89732E015D6B0025778F /* StacksSigner.swift in Sources */,
@@ -2111,7 +2124,6 @@
 				C56EE28B293F5757004840D1 /* SceneDelegate.swift in Sources */,
 				C56EE276293F56D7004840D1 /* UIViewController.swift in Sources */,
 				C56EE275293F56D7004840D1 /* InputConfig.swift in Sources */,
-				C55D3493295DFA750004314A /* WelcomeModule.swift in Sources */,
 				C56EE270293F56D7004840D1 /* String.swift in Sources */,
 				A51811A12A52E83100A52B15 /* SettingsRouter.swift in Sources */,
 				C56EE279293F56D7004840D1 /* Color.swift in Sources */,
@@ -2146,7 +2158,6 @@
 				C5B2F6FA29705293000DBA0E /* SessionRequestInteractor.swift in Sources */,
 				C55D34AE2965FB750004314A /* SessionProposalModule.swift in Sources */,
 				C55D34B02965FB750004314A /* SessionProposalRouter.swift in Sources */,
-				C55D3495295DFA750004314A /* WelcomeRouter.swift in Sources */,
 				C5B2F6F729705293000DBA0E /* SessionRequestRouter.swift in Sources */,
 				84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */,
 				C56EE24F293F566D004840D1 /* WalletView.swift in Sources */,
@@ -2189,9 +2200,7 @@
 				PAY0000012EE100000000000D /* PayDataCollectionWebView.swift in Sources */,
 				44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */,
 				44650A432F1E0002004F2144 /* TronSigner.swift in Sources */,
-				C55D3494295DFA750004314A /* WelcomePresenter.swift in Sources */,
 				C5B2F6F929705293000DBA0E /* SessionRequestPresenter.swift in Sources */,
-				A57879712A4EDC8100F8D10B /* TextFieldView.swift in Sources */,
 				84AEF01D2D3DDA0A006E43E5 /* SendStableCoinPresenter.swift in Sources */,
 				44BA5CCD2E4C8BB50074A01E /* URLExtension.swift in Sources */,
 				A5D610CE2AB3594100C20083 /* ListingsAPI.swift in Sources */,
@@ -2203,7 +2212,6 @@
 				A5D610D42AB35BED00C20083 /* FailableDecodable.swift in Sources */,
 				A56AC8F22AD88A5A001C8FAA /* Sequence.swift in Sources */,
 				A50B6A382B06697B00162B01 /* ProfilingService.swift in Sources */,
-				C55D3496295DFA750004314A /* WelcomeInteractor.swift in Sources */,
 				C5B2F6FC297055B0000DBA0E /* SOLSigner.swift in Sources */,
 				A518119F2A52E83100A52B15 /* SettingsModule.swift in Sources */,
 				84D88C842CE754CC003A6C16 /* CATransactionModule.swift in Sources */,
@@ -2229,6 +2237,14 @@
 				A5D610D22AB35B1100C20083 /* Listings.swift in Sources */,
 				A5B4F7C82ABB21190099AF7C /* CacheAsyncImage.swift in Sources */,
 				84D88C8A2CF075E9003A6C16 /* CATransactionRouter.swift in Sources */,
+				PH6B000100000000000001 /* WalletGenerationService.swift in Sources */,
+				PH6B000100000000000002 /* ThemeManager.swift in Sources */,
+				PH6B000100000000000003 /* SettingsCardView.swift in Sources */,
+				PH6B000100000000000004 /* SecretPhrasePresenter.swift in Sources */,
+				PH6B000100000000000005 /* SecretPhraseView.swift in Sources */,
+				PH6B000100000000000006 /* SecretPhraseModule.swift in Sources */,
+				PH6B000100000000000007 /* ImportWalletPresenter.swift in Sources */,
+				PH6B000100000000000008 /* ImportWalletView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
