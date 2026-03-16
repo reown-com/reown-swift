@@ -12,7 +12,7 @@ struct SettingsView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onScan: { viewModel.onScanOptions() }
+                    onScan: { viewModel.scanHandler.show() }
                 )
 
                 ScrollView {
@@ -93,6 +93,11 @@ struct SettingsView: View {
         .alert("Value copied to clipboard", isPresented: $copyAlert) {
             Button("OK", role: .cancel) { }
         }
+        .scanOptionsSheet(
+            isPresented: $viewModel.scanHandler.showScanOptions,
+            onScanQR: { viewModel.scanHandler.scanQR() },
+            onPasteURL: { viewModel.scanHandler.pasteURL() }
+        )
         .navigationBarHidden(true)
         .onAppear {
             viewModel.objectWillChange.send()

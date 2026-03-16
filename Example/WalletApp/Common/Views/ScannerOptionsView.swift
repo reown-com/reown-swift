@@ -6,45 +6,37 @@ struct ScannerOptionsView: View {
     let onClose: () -> Void
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.6)
-                .onTapGesture { onClose() }
+        VStack(spacing: Spacing._5) {
+            ModalHeaderBar(closeAction: onClose)
 
-            VStack {
-                Spacer()
+            VStack(spacing: 8) {
+                optionButton(
+                    title: "Scan QR code",
+                    icon: {
+                        Image("barcode-icon")
+                            .resizable()
+                            .renderingMode(.template)
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(AppColors.textPrimary)
+                    },
+                    action: onScanQR
+                )
 
-                ModalContainer {
-                    ModalHeaderBar(closeAction: onClose)
-                        .padding(.bottom, Spacing._5)
-
-                    VStack(spacing: 8) {
-                        optionButton(
-                            title: "Scan QR code",
-                            icon: {
-                                Image("barcode-icon")
-                                    .resizable()
-                                    .renderingMode(.template)
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 20, height: 20)
-                                    .foregroundColor(AppColors.textPrimary)
-                            },
-                            action: onScanQR
-                        )
-
-                        optionButton(
-                            title: "Paste a URL",
-                            icon: {
-                                CopyIconShape()
-                                    .fill(AppColors.textPrimary)
-                                    .frame(width: 20, height: 20)
-                            },
-                            action: onPasteURL
-                        )
-                    }
-                }
+                optionButton(
+                    title: "Paste a URL",
+                    icon: {
+                        CopyIconShape()
+                            .fill(AppColors.textPrimary)
+                            .frame(width: 20, height: 20)
+                    },
+                    action: onPasteURL
+                )
             }
         }
-        .edgesIgnoringSafeArea(.all)
+        .padding(.horizontal, Spacing._5)
+        .ignoresSafeArea()
+        .background(AppColors.backgroundPrimary)
     }
 
     private func optionButton<Icon: View>(
@@ -67,6 +59,28 @@ struct ScannerOptionsView: View {
             .frame(height: 76)
             .background(AppColors.foregroundPrimary)
             .cornerRadius(Spacing._5)
+        }
+    }
+}
+
+// MARK: - Scan Options Sheet Modifier
+
+extension View {
+    func scanOptionsSheet(
+        isPresented: Binding<Bool>,
+        onScanQR: @escaping () -> Void,
+        onPasteURL: @escaping () -> Void
+    ) -> some View {
+        sheet(isPresented: isPresented) {
+            ScannerOptionsView(
+                onScanQR: onScanQR,
+                onPasteURL: onPasteURL,
+                onClose: { isPresented.wrappedValue = false }
+            )
+            .ignoresSafeArea()
+            .presentationDragIndicator(.hidden)
+            .presentationDetents([.height(258)])
+            .sheetBackground()
         }
     }
 }

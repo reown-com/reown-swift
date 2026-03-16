@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		SCNH000100000000000000AA /* ScanOptionsHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCNH000200000000000000AA /* ScanOptionsHandler.swift */; };
 		MC01A1B2C3D4E5F6A7000001 /* ModalComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = MC01A1B2C3D4E5F6A7100001 /* ModalComponents.swift */; };
 		SCAN0PT10001000000000001 /* ScannerOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCAN0PT10002000000000001 /* ScannerOptionsView.swift */; };
 		SCAN0PT10001000000000002 /* ScannerOptionsModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCAN0PT10002000000000002 /* ScannerOptionsModule.swift */; };
@@ -119,6 +120,7 @@
 		84CE642127981DED00142511 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CE642027981DED00142511 /* SceneDelegate.swift */; };
 		84CE642827981DF000142511 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84CE642727981DF000142511 /* Assets.xcassets */; };
 		84CE642B27981DF000142511 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 84CE642927981DF000142511 /* LaunchScreen.storyboard */; };
+		C5LAUNCH0100000000000001 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C5LAUNCH0300000000000001 /* LaunchScreen.storyboard */; };
 		84D093EB2B4EA6CB005B1925 /* ActivityIndicatorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D093EA2B4EA6CB005B1925 /* ActivityIndicatorManager.swift */; };
 		84D88C7F2CE751E7003A6C16 /* CATransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D88C7E2CE751E7003A6C16 /* CATransactionView.swift */; };
 		84D88C822CE7525F003A6C16 /* CATransactionPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D88C812CE7525F003A6C16 /* CATransactionPresenter.swift */; };
@@ -213,6 +215,7 @@
 		C56EE24D293F566D004840D1 /* WalletRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE22E293F5669004840D1 /* WalletRouter.swift */; };
 		C56EE24E293F566D004840D1 /* WalletInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE22F293F5669004840D1 /* WalletInteractor.swift */; };
 		C56EE24F293F566D004840D1 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE22B293F5668004840D1 /* WalletView.swift */; };
+		SESSD3TA11000000000000B1 /* SessionDetailModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */; };
 		C56EE250293F566D004840D1 /* ScanTargetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE23D293F566C004840D1 /* ScanTargetView.swift */; };
 		C56EE255293F569A004840D1 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = C56EE254293F569A004840D1 /* Starscream */; };
 		C56EE270293F56D7004840D1 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56EE26A293F56D6004840D1 /* String.swift */; };
@@ -402,6 +405,7 @@
 		84A6E3C22A386BBC008A0571 /* Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Publisher.swift; sourceTree = "<group>"; };
 		84AA01DA28CF0CD7005D48D8 /* XCTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTest.swift; sourceTree = "<group>"; };
 		84AEC24E2B4D1EE400E27A5B /* ActivityIndicatorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityIndicatorManager.swift; sourceTree = "<group>"; };
+		SCNH000200000000000000AA /* ScanOptionsHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanOptionsHandler.swift; sourceTree = "<group>"; };
 		84AEC2502B4D42C100E27A5B /* AlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertPresenter.swift; sourceTree = "<group>"; };
 		84AEF0152D3DD8CA006E43E5 /* SendStableCoinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinView.swift; sourceTree = "<group>"; };
 		84AEF0182D3DD9C0006E43E5 /* SendStableCoinModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendStableCoinModule.swift; sourceTree = "<group>"; };
@@ -420,6 +424,7 @@
 		84CE642027981DED00142511 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		84CE642727981DF000142511 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		84CE642A27981DF000142511 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C5LAUNCH0200000000000001 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		84CE642C27981DF000142511 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		84CE6453279FFE1100142511 /* Wallet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Wallet.entitlements; sourceTree = "<group>"; };
 		84D093EA2B4EA6CB005B1925 /* ActivityIndicatorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityIndicatorManager.swift; sourceTree = "<group>"; };
@@ -500,6 +505,7 @@
 		C56EE21B293F55ED004840D1 /* WalletApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C56EE221293F55EE004840D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C56EE22B293F5668004840D1 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
+		SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailModalView.swift; sourceTree = "<group>"; };
 		C56EE22C293F5668004840D1 /* WalletPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletPresenter.swift; sourceTree = "<group>"; };
 		C56EE22D293F5669004840D1 /* WalletModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletModule.swift; sourceTree = "<group>"; };
 		C56EE22E293F5669004840D1 /* WalletRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletRouter.swift; sourceTree = "<group>"; };
@@ -1241,6 +1247,7 @@
 				C56EE22F293F5669004840D1 /* WalletInteractor.swift */,
 				C56EE22C293F5668004840D1 /* WalletPresenter.swift */,
 				C56EE22B293F5668004840D1 /* WalletView.swift */,
+				SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */,
 				SCAN0PT10002000000000002 /* ScannerOptionsModule.swift */,
 			);
 			path = Wallet;
@@ -1279,6 +1286,7 @@
 				C56EE262293F56D6004840D1 /* Extensions */,
 				C56EE263293F56D6004840D1 /* VIPER */,
 				84AEC24E2B4D1EE400E27A5B /* ActivityIndicatorManager.swift */,
+				SCNH000200000000000000AA /* ScanOptionsHandler.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1374,6 +1382,7 @@
 				C56EE221293F55EE004840D1 /* Assets.xcassets */,
 				C56EE29F293F5C4F004840D1 /* Info.plist */,
 				C5F32A352954FE3C00A6476E /* Colors.xcassets */,
+				C5LAUNCH0300000000000001 /* LaunchScreen.storyboard */,
 			);
 			path = Other;
 			sourceTree = "<group>";
@@ -1911,8 +1920,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5LAUNCH0100000000000001 /* LaunchScreen.storyboard in Resources */,
 				C56EE222293F55EE004840D1 /* Assets.xcassets in Resources */,
 				C5F32A362954FE3C00A6476E /* Colors.xcassets in Resources */,
+				4E1B9FB61BBA4CF99D6D747D /* KHTeka-Light.otf in Resources */,
+				6E62B8D2E0FB49E8A80B3F5D /* KHTeka-Regular.otf in Resources */,
+				49CA97C56E7E4FFF80E60BEC /* KHTeka-Medium.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2113,6 +2126,7 @@
 				MC01A1B2C3D4E5F6A7000001 /* ModalComponents.swift in Sources */,
 				SCAN0PT10001000000000001 /* ScannerOptionsView.swift in Sources */,
 				SCAN0PT10001000000000002 /* ScannerOptionsModule.swift in Sources */,
+				SCNH000100000000000000AA /* ScanOptionsHandler.swift in Sources */,
 				MC01A1B2C3D4E5F6A7000002 /* VerifyBadgeView.swift in Sources */,
 				MC01A1B2C3D4E5F6A7000003 /* AppInfoCardView.swift in Sources */,
 				MC01A1B2C3D4E5F6A7000004 /* NetworkSelectorView.swift in Sources */,
@@ -2136,6 +2150,7 @@
 				C5B2F6F729705293000DBA0E /* SessionRequestRouter.swift in Sources */,
 				84AEF01B2D3DD9F1006E43E5 /* SendStableCoinRouter.swift in Sources */,
 				C56EE24F293F566D004840D1 /* WalletView.swift in Sources */,
+				SESSD3TA11000000000000B1 /* SessionDetailModalView.swift in Sources */,
 				C55D34B22965FB750004314A /* SessionProposalView.swift in Sources */,
 				44650A3D2E93F775004F2144 /* TonAccountStorage.swift in Sources */,
 				44650A412F1E0001004F2144 /* TronAccountStorage.swift in Sources */,
@@ -2263,6 +2278,14 @@
 			isa = PBXVariantGroup;
 			children = (
 				84CE642A27981DF000142511 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		C5LAUNCH0300000000000001 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C5LAUNCH0200000000000001 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
@@ -2730,7 +2753,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access for scanning QR code";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -2767,7 +2790,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access for scanning QR code";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";

@@ -16,7 +16,9 @@ final class WalletPresenter: ObservableObject {
     private var isPairingTimer: Timer?
 
     @Published var sessions = [Session]()
-    
+    @Published var selectedSessionForDetail: Session? = nil
+    @Published var isDisconnecting = false
+
     @Published var showPairingLoading = false {
         didSet {
             handlePairingLoadingChanged()
@@ -25,6 +27,11 @@ final class WalletPresenter: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = "Error"
     @Published var showConnectedSheet = false
+
+    lazy var scanHandler = ScanOptionsHandler(
+        onScan: { [weak self] in self?.presentScanCamera() },
+        onUri: { [weak self] in self?.handleScannedOrPastedUri($0) }
+    )
     
     private var disposeBag = Set<AnyCancellable>()
 
@@ -54,28 +61,23 @@ final class WalletPresenter: ObservableObject {
     }
     
     func onConnection(session: Session) {
-        router.presentConnectionDetails(session: session)
+        selectedSessionForDetail = session
     }
 
-    func onScanOptions() {
-        router.presentScannerOptions(
-            onScanQR: { [weak self] in
-                self?.router.dismissToPresent {
-                    self?.presentScanCamera()
-                }
-            },
-            onPasteURL: { [weak self] in
-                guard let self else { return }
-                let clipboard = UIPasteboard.general.string ?? ""
-                guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
-                    return
-                }
-                self.router.dismissToPresent {
-                    self.handleScannedOrPastedUri(clipboard)
-                }
+    func disconnectSelectedSession() {
+        guard let session = selectedSessionForDetail else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.isDisconnecting = true
+            do {
+                try await self.interactor.disconnectSession(session: session)
+                self.isDisconnecting = false
+                self.selectedSessionForDetail = nil
+            } catch {
+                self.isDisconnecting = false
+                AlertPresenter.present(message: error.localizedDescription, type: .error)
             }
-        )
+        }
     }
 
     private func presentScanCamera() {
@@ -116,6 +118,11 @@ final class WalletPresenter: ObservableObject {
 // MARK: - Private functions
 extension WalletPresenter {
     private func setupInitialState() {
+        scanHandler.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &disposeBag)
+
         interactor.sessionsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] sessions in
