@@ -93,6 +93,11 @@ struct SettingsView: View {
         .alert("Value copied to clipboard", isPresented: $copyAlert) {
             Button("OK", role: .cancel) { }
         }
+        .scanOptionsSheet(
+            isPresented: $viewModel.showScanOptions,
+            onScanQR: { viewModel.onScanQR() },
+            onPasteURL: { viewModel.onPasteURL() }
+        )
         .navigationBarHidden(true)
         .onAppear {
             viewModel.objectWillChange.send()

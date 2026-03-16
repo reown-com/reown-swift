@@ -135,6 +135,7 @@ final class BalancesViewModel: ObservableObject {
     @Published var isRefreshing: Bool = false
     @Published var showError: Bool = false
     @Published var errorMessage: String = ""
+    @Published var showScanOptions: Bool = false
 
     // MARK: - Dependencies
 
@@ -258,29 +259,26 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Navigation Actions
 
     func onScanOptions() {
-        let vc = ScannerOptionsModule.create(
-            app: app,
-            onScanQR: { [weak self] in
-                self?.dismissToPresent {
-                    self?.presentScanCamera()
-                }
-            },
-            onPasteURL: { [weak self] in
-                guard let self else { return }
-                let clipboard = UIPasteboard.general.string ?? ""
-                guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
-                    return
-                }
-                self.dismissToPresent {
-                    self.handleScannedOrPastedUri(clipboard)
-                }
-            },
-            onClose: { [weak self] in
-                self?.dismissPresented()
-            }
-        )
-        UIApplication.currentWindow.rootViewController?.present(vc, animated: true)
+        showScanOptions = true
+    }
+
+    func onScanQR() {
+        showScanOptions = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.presentScanCamera()
+        }
+    }
+
+    func onPasteURL() {
+        let clipboard = UIPasteboard.general.string ?? ""
+        guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
+            return
+        }
+        showScanOptions = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.handleScannedOrPastedUri(clipboard)
+        }
     }
 
     private func presentScanCamera() {

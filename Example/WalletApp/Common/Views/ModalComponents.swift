@@ -261,3 +261,21 @@ struct ModalBackButton: View {
         }
     }
 }
+
+// MARK: - Sheet Background
+
+extension View {
+    func sheetBackground() -> some View {
+        modifier(_SheetBackgroundModifier())
+    }
+}
+
+private struct _SheetBackgroundModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.4, *) {
+            content.presentationBackground(AppColors.backgroundPrimary)
+        } else {
+            content
+        }
+    }
+}

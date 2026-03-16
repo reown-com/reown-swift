@@ -188,6 +188,11 @@ struct BalancesView: View {
         .alert(viewModel.errorMessage, isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         }
+        .scanOptionsSheet(
+            isPresented: $viewModel.showScanOptions,
+            onScanQR: { viewModel.onScanQR() },
+            onPasteURL: { viewModel.onPasteURL() }
+        )
         .navigationBarHidden(true)
         .onAppear {
             viewModel.onAppear()

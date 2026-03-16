@@ -114,6 +114,11 @@ struct WalletView: View {
                 }
             }
         }
+        .scanOptionsSheet(
+            isPresented: $presenter.showScanOptions,
+            onScanQR: { presenter.onScanQR() },
+            onPasteURL: { presenter.onPasteURL() }
+        )
         .sheet(isPresented: Binding(
             get: { presenter.selectedSessionForDetail != nil },
             set: { if !$0 { presenter.selectedSessionForDetail = nil } }
@@ -212,17 +217,7 @@ private struct SessionDetailSheetModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .presentationDetents([.medium, .large])
-            .modifier(SheetBackgroundModifier())
-    }
-}
-
-private struct SheetBackgroundModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(iOS 16.4, *) {
-            content.presentationBackground(AppColors.backgroundPrimary)
-        } else {
-            content
-        }
+            .sheetBackground()
     }
 }
 

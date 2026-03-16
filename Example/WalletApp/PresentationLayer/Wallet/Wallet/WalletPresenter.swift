@@ -27,6 +27,7 @@ final class WalletPresenter: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = "Error"
     @Published var showConnectedSheet = false
+    @Published var showScanOptions = false
     
     private var disposeBag = Set<AnyCancellable>()
 
@@ -76,24 +77,26 @@ final class WalletPresenter: ObservableObject {
     }
 
     func onScanOptions() {
-        router.presentScannerOptions(
-            onScanQR: { [weak self] in
-                self?.router.dismissToPresent {
-                    self?.presentScanCamera()
-                }
-            },
-            onPasteURL: { [weak self] in
-                guard let self else { return }
-                let clipboard = UIPasteboard.general.string ?? ""
-                guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
-                    return
-                }
-                self.router.dismissToPresent {
-                    self.handleScannedOrPastedUri(clipboard)
-                }
-            }
-        )
+        showScanOptions = true
+    }
+
+    func onScanQR() {
+        showScanOptions = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.presentScanCamera()
+        }
+    }
+
+    func onPasteURL() {
+        let clipboard = UIPasteboard.general.string ?? ""
+        guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
+            return
+        }
+        showScanOptions = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.handleScannedOrPastedUri(clipboard)
+        }
     }
 
     private func presentScanCamera() {
