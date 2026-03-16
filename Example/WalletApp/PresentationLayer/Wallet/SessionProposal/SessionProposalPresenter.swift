@@ -26,7 +26,7 @@ final class SessionProposalPresenter: ObservableObject {
     }
 
     private let interactor: SessionProposalInteractor
-    private let router: SessionProposalRouter
+    var dismissAction: (() -> Void)?
 
     let importAccount: ImportAccount
     let sessionProposal: Session.Proposal
@@ -124,7 +124,6 @@ final class SessionProposalPresenter: ObservableObject {
 
     init(
         interactor: SessionProposalInteractor,
-        router: SessionProposalRouter,
         importAccount: ImportAccount,
         proposal: Session.Proposal,
         context: VerifyContext?,
@@ -132,7 +131,6 @@ final class SessionProposalPresenter: ObservableObject {
     ) {
         defer { setupInitialState() }
         self.interactor = interactor
-        self.router = router
         self.sessionProposal = proposal
         self.importAccount = importAccount
         self.validationStatus = context?.validation
@@ -155,7 +153,7 @@ final class SessionProposalPresenter: ObservableObject {
             
             _ = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, selectedChainIds: selectedChainIds, proposalRequestsResponses: proposalRequestsResponses)
             ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            dismiss()
             AlertPresenter.present(message: "Connected", type: .success)
         } catch {
             ActivityIndicatorManager.shared.stop()
@@ -170,7 +168,7 @@ final class SessionProposalPresenter: ObservableObject {
             ActivityIndicatorManager.shared.start()
             try await interactor.reject(proposal: sessionProposal)
             ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            dismiss()
         } catch {
             ActivityIndicatorManager.shared.stop()
             errorMessage = error.localizedDescription
@@ -179,7 +177,7 @@ final class SessionProposalPresenter: ObservableObject {
     }
     
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 
     private func createAuthObjectForChain(chain: Blockchain, authPayload: AuthPayload) throws -> AuthObject {
@@ -330,7 +328,3 @@ private extension SessionProposalPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension SessionProposalPresenter: SceneViewModel {
-
-}

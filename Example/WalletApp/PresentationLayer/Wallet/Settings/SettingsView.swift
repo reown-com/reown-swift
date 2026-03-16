@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
+    @EnvironmentObject var coordinator: NavigationCoordinator
 
     var body: some View {
         ZStack {
@@ -25,7 +26,7 @@ struct SettingsView: View {
                         )
 
                         SettingsCardView.navigation("Secret Keys & Phrases") {
-                            viewModel.secretPhrasesPressed()
+                            coordinator.settingsPath.append(SettingsDestination.secretPhrase)
                         }
 
                         SettingsCardView.navigation("Import Wallet") {
@@ -33,7 +34,13 @@ struct SettingsView: View {
                         }
 
                         SettingsCardView.navigation("React-App Browser") {
-                            viewModel.browserPressed()
+                            coordinator.settingsPath.append(SettingsDestination.browser)
+                        }
+
+                        SettingsCardView.externalLink("Report a Bug") {
+                            if let url = URL(string: "https://github.com/reown-com/reown-swift/issues") {
+                                UIApplication.shared.open(url)
+                            }
                         }
 
                         sectionHeader(title: "Device")

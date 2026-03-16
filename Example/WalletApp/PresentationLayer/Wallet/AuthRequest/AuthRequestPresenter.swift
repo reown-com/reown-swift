@@ -23,7 +23,7 @@ final class AuthRequestPresenter: ObservableObject {
             }
         }
     }
-    private let router: AuthRequestRouter
+    var dismissAction: (() -> Void)?
 
     let importAccount: ImportAccount
     let request: AuthenticationRequest
@@ -54,13 +54,11 @@ final class AuthRequestPresenter: ObservableObject {
 
     init(
         importAccount: ImportAccount,
-        router: AuthRequestRouter,
         request: AuthenticationRequest,
         context: VerifyContext?,
         messageSigner: MessageSigner
     ) {
         defer { setupInitialState() }
-        self.router = router
         self.importAccount = importAccount
         self.request = request
         self.validationStatus = context?.validation
@@ -80,7 +78,7 @@ final class AuthRequestPresenter: ObservableObject {
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
             }
-            router.dismiss()
+            dismiss()
             AlertPresenter.present(message: "Request signed", type: .success)
 
         } catch {
@@ -103,7 +101,7 @@ final class AuthRequestPresenter: ObservableObject {
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
             }
-            router.dismiss()
+            dismiss()
             AlertPresenter.present(message: "Request signed", type: .success)
 
         } catch {
@@ -125,7 +123,7 @@ final class AuthRequestPresenter: ObservableObject {
             }
             ActivityIndicatorManager.shared.stop()
 
-            router.dismiss()
+            dismiss()
         } catch {
             ActivityIndicatorManager.shared.stop()
 
@@ -195,7 +193,7 @@ final class AuthRequestPresenter: ObservableObject {
     }
 
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 }
 
@@ -289,7 +287,3 @@ private extension AuthRequestPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension AuthRequestPresenter: SceneViewModel {
-
-}

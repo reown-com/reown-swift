@@ -6,7 +6,7 @@ import ReownWalletKit
 
 final class SessionRequestPresenter: ObservableObject {
     private let interactor: SessionRequestInteractor
-    private let router: SessionRequestRouter
+    var dismissAction: (() -> Void)?
     private let importAccount: ImportAccount
     
     let sessionRequest: Request
@@ -54,14 +54,12 @@ final class SessionRequestPresenter: ObservableObject {
 
     init(
         interactor: SessionRequestInteractor,
-        router: SessionRequestRouter,
         sessionRequest: Request,
         importAccount: ImportAccount,
         context: VerifyContext?
     ) {
         defer { setupInitialState() }
         self.interactor = interactor
-        self.router = router
         self.sessionRequest = sessionRequest
         self.session = interactor.getSession(topic: sessionRequest.topic)
         self.importAccount = importAccount
@@ -74,7 +72,7 @@ final class SessionRequestPresenter: ObservableObject {
             ActivityIndicatorManager.shared.start()
             _ = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
             ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            dismiss()
             AlertPresenter.present(message: "Request signed", type: .success)
         } catch {
             ActivityIndicatorManager.shared.stop()
@@ -89,7 +87,7 @@ final class SessionRequestPresenter: ObservableObject {
             ActivityIndicatorManager.shared.start()
             try await interactor.respondError(sessionRequest: sessionRequest)
             ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            dismiss()
         } catch {
             ActivityIndicatorManager.shared.stop()
             errorMessage = error.localizedDescription
@@ -98,7 +96,7 @@ final class SessionRequestPresenter: ObservableObject {
     }
     
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 }
 
@@ -116,7 +114,3 @@ private extension SessionRequestPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension SessionRequestPresenter: SceneViewModel {
-
-}

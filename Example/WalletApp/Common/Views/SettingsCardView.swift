@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsCardView: View {
     let title: String
     var value: String? = nil
+    var trailingIcon: String? = nil
     var showToggle: Bool = false
     @Binding var isOn: Bool
     var onTap: (() -> Void)? = nil
@@ -39,6 +40,12 @@ struct SettingsCardView: View {
                     .foregroundColor(AppColors.textSecondary)
                     .lineLimit(1)
             }
+
+            if let icon = trailingIcon {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppColors.textSecondary)
+            }
         }
         .padding(.horizontal, Spacing._6)
         .frame(height: 76)
@@ -51,10 +58,21 @@ struct SettingsCardView: View {
 
 extension SettingsCardView {
 
-    /// Navigation card — tappable with title only
+    /// Navigation card — tappable with title and chevron
     static func navigation(_ title: String, onTap: @escaping () -> Void) -> SettingsCardView {
         SettingsCardView(
             title: title,
+            trailingIcon: "chevron.right",
+            isOn: .constant(false),
+            onTap: onTap
+        )
+    }
+
+    /// External link card — tappable with title and external link icon
+    static func externalLink(_ title: String, onTap: @escaping () -> Void) -> SettingsCardView {
+        SettingsCardView(
+            title: title,
+            trailingIcon: "arrow.up.right",
             isOn: .constant(false),
             onTap: onTap
         )

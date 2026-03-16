@@ -120,6 +120,7 @@ private let mainnetNativeTokens: [TokenBalance] = [
 /// Notification posted when a payment is completed successfully
 extension Notification.Name {
     static let paymentCompleted = Notification.Name("paymentCompleted")
+    static let paymentLinkDetected = Notification.Name("paymentLinkDetected")
 }
 
 /// ViewModel for the Balances screen
@@ -145,7 +146,6 @@ final class BalancesViewModel: ObservableObject {
 
     private let app: Application
     private let importAccount: ImportAccount
-    weak var viewController: UIViewController?
 
     // MARK: - Auto-refresh
 
@@ -267,28 +267,7 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Navigation Actions
 
     private func presentScanCamera() {
-        guard let viewController = viewController else { return }
-        ScanModule.create(app: app, onValue: { [weak self] uriString in
-            self?.viewController?.navigationController?.dismiss(animated: true)
-            self?.handleScannedOrPastedUri(uriString)
-        }, onError: { [weak self] error in
-            print("Scan error: \(error.localizedDescription)")
-            self?.viewController?.navigationController?.dismiss(animated: true)
-        })
-        .wrapToNavigationController()
-        .present(from: viewController)
-    }
-
-    private func dismissPresented() {
-        UIApplication.currentWindow.rootViewController?.dismiss(animated: true)
-    }
-
-    private func dismissToPresent(then completion: @escaping () -> Void) {
-        if let presented = UIApplication.currentWindow.rootViewController?.presentedViewController {
-            presented.dismiss(animated: true, completion: completion)
-        } else {
-            completion()
-        }
+        // Scan camera is handled via ScanOptionsHandler
     }
     
     // MARK: - Private Methods
@@ -428,41 +407,8 @@ final class BalancesViewModel: ObservableObject {
     }
     
     private func startPayFlow(paymentLink: String) {
-        guard let rootVC = UIApplication.currentWindow.rootViewController else { return }
-        let address = importAccount.account.address
-        let accounts = [
-            "eip155:1:\(address)",
-            "eip155:137:\(address)",
-            "eip155:8453:\(address)"
-        ]
-
-        PayModule.create(
-            app: app,
-            paymentLink: paymentLink,
-            accounts: accounts,
-            importAccount: importAccount
-        )
-        .presentFullScreen(from: rootVC, transparentBackground: true)
+        NotificationCenter.default.post(name: .paymentLinkDetected, object: paymentLink)
     }
 }
 
-// MARK: - SceneViewModel Conformance
-
-extension BalancesViewModel: SceneViewModel {
-    var sceneTitle: String? {
-        return nil
-    }
-
-    var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .never
-    }
-
-    var isNavigationBarHidden: Bool {
-        return true
-    }
-}
-
-// Import WalletConnectURI and WalletKit
 import ReownWalletKit
-
-
