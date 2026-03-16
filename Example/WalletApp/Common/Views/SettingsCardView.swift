@@ -8,38 +8,42 @@ struct SettingsCardView: View {
     var onTap: (() -> Void)? = nil
 
     var body: some View {
-        Button {
-            if showToggle {
-                isOn.toggle()
-            } else {
+        if showToggle {
+            cardContent
+        } else {
+            Button {
                 onTap?()
+            } label: {
+                cardContent
             }
-        } label: {
-            HStack {
-                Text(title)
-                    .appFont(.lg)
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(1)
-
-                Spacer()
-
-                if showToggle {
-                    Toggle("", isOn: $isOn)
-                        .labelsHidden()
-                        .tint(AppColors.backgroundAccentPrimary)
-                } else if let value = value {
-                    Text(value)
-                        .appFont(.md)
-                        .foregroundColor(AppColors.textSecondary)
-                        .lineLimit(1)
-                }
-            }
-            .padding(.horizontal, Spacing._6)
-            .frame(height: 76)
-            .background(AppColors.foregroundPrimary)
-            .cornerRadius(AppRadius._5)
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+    }
+
+    private var cardContent: some View {
+        HStack {
+            Text(title)
+                .appFont(.lg)
+                .foregroundColor(AppColors.textPrimary)
+                .lineLimit(1)
+
+            Spacer()
+
+            if showToggle {
+                Toggle("", isOn: $isOn)
+                    .labelsHidden()
+                    .tint(AppColors.backgroundAccentPrimary)
+            } else if let value = value {
+                Text(value)
+                    .appFont(.md)
+                    .foregroundColor(AppColors.textSecondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, Spacing._6)
+        .frame(height: 76)
+        .background(AppColors.foregroundPrimary)
+        .cornerRadius(AppRadius._5)
     }
 }
 

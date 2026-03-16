@@ -50,7 +50,8 @@ final class WalletGenerationService {
 
     func importEVMMnemonic(_ mnemonic: String) -> Bool {
         let trimmed = mnemonic.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return false }
+        let wordCount = trimmed.components(separatedBy: " ").count
+        guard [12, 15, 18, 21, 24].contains(wordCount) else { return false }
 
         let seed = Mnemonic.createSeed(mnemonic: trimmed)
         let masterKey = PrivateKey(seed: seed, coin: .ethereum)

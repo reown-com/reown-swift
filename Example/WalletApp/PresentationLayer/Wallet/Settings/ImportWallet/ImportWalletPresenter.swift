@@ -77,7 +77,7 @@ final class ImportWalletPresenter: ObservableObject {
 
     private func importEVM(_ input: String) -> Bool {
         let words = input.components(separatedBy: " ")
-        if words.count >= 12 {
+        if [12, 15, 18, 21, 24].contains(words.count) {
             return walletService.importEVMMnemonic(input)
         } else {
             return walletService.importEVMPrivateKey(input)

@@ -12,13 +12,14 @@ final class SecretPhrasePresenter: ObservableObject {
 
     init(
         accountStorage: AccountStorage,
+        stacksAccountStorage: StacksAccountStorage = StacksAccountStorage(),
         solanaAccountStorage: SolanaAccountStorage = SolanaAccountStorage(),
         suiAccountStorage: SuiAccountStorage = SuiAccountStorage(),
         tonAccountStorage: TonAccountStorage = TonAccountStorage(),
         tronAccountStorage: TronAccountStorage = TronAccountStorage()
     ) {
         self.accountStorage = accountStorage
-        self.stacksAccountStorage = StacksAccountStorage()
+        self.stacksAccountStorage = stacksAccountStorage
         self.solanaAccountStorage = solanaAccountStorage
         self.suiAccountStorage = suiAccountStorage
         self.tonAccountStorage = tonAccountStorage
