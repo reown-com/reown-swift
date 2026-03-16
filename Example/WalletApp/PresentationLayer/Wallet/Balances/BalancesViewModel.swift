@@ -135,7 +135,11 @@ final class BalancesViewModel: ObservableObject {
     @Published var isRefreshing: Bool = false
     @Published var showError: Bool = false
     @Published var errorMessage: String = ""
-    @Published var showScanOptions: Bool = false
+
+    lazy var scanHandler = ScanOptionsHandler(
+        onScan: { [weak self] in self?.presentScanCamera() },
+        onUri: { [weak self] in self?.handleScannedOrPastedUri($0) }
+    )
 
     // MARK: - Dependencies
 
@@ -188,6 +192,10 @@ final class BalancesViewModel: ObservableObject {
         self.app = app
         self.importAccount = importAccount
         subscribeToPaymentCompletion()
+        scanHandler.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     deinit {
@@ -257,29 +265,6 @@ final class BalancesViewModel: ObservableObject {
     }
     
     // MARK: - Navigation Actions
-
-    func onScanOptions() {
-        showScanOptions = true
-    }
-
-    func onScanQR() {
-        showScanOptions = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.presentScanCamera()
-        }
-    }
-
-    func onPasteURL() {
-        let clipboard = UIPasteboard.general.string ?? ""
-        guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
-            return
-        }
-        showScanOptions = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.handleScannedOrPastedUri(clipboard)
-        }
-    }
 
     private func presentScanCamera() {
         guard let viewController = viewController else { return }

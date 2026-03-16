@@ -12,7 +12,7 @@ struct SettingsView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onScan: { viewModel.onScanOptions() }
+                    onScan: { viewModel.scanHandler.show() }
                 )
 
                 ScrollView {
@@ -94,9 +94,9 @@ struct SettingsView: View {
             Button("OK", role: .cancel) { }
         }
         .scanOptionsSheet(
-            isPresented: $viewModel.showScanOptions,
-            onScanQR: { viewModel.onScanQR() },
-            onPasteURL: { viewModel.onPasteURL() }
+            isPresented: $viewModel.scanHandler.showScanOptions,
+            onScanQR: { viewModel.scanHandler.scanQR() },
+            onPasteURL: { viewModel.scanHandler.pasteURL() }
         )
         .navigationBarHidden(true)
         .onAppear {

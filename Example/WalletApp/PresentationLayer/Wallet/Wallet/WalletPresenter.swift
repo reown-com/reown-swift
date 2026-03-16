@@ -27,7 +27,11 @@ final class WalletPresenter: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = "Error"
     @Published var showConnectedSheet = false
-    @Published var showScanOptions = false
+
+    lazy var scanHandler = ScanOptionsHandler(
+        onScan: { [weak self] in self?.presentScanCamera() },
+        onUri: { [weak self] in self?.handleScannedOrPastedUri($0) }
+    )
     
     private var disposeBag = Set<AnyCancellable>()
 
@@ -76,29 +80,6 @@ final class WalletPresenter: ObservableObject {
         }
     }
 
-    func onScanOptions() {
-        showScanOptions = true
-    }
-
-    func onScanQR() {
-        showScanOptions = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.presentScanCamera()
-        }
-    }
-
-    func onPasteURL() {
-        let clipboard = UIPasteboard.general.string ?? ""
-        guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
-            return
-        }
-        showScanOptions = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.handleScannedOrPastedUri(clipboard)
-        }
-    }
-
     private func presentScanCamera() {
         router.presentScan { [weak self] uriString in
             self?.router.dismiss()
@@ -137,6 +118,11 @@ final class WalletPresenter: ObservableObject {
 // MARK: - Private functions
 extension WalletPresenter {
     private func setupInitialState() {
+        scanHandler.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &disposeBag)
+
         interactor.sessionsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] sessions in

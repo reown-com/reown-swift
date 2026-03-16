@@ -150,7 +150,7 @@ struct BalancesView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onScan: { viewModel.onScanOptions() }
+                    onScan: { viewModel.scanHandler.show() }
                 )
 
                 if viewModel.isLoading && viewModel.tokenBalances.isEmpty {
@@ -189,9 +189,9 @@ struct BalancesView: View {
             Button("OK", role: .cancel) {}
         }
         .scanOptionsSheet(
-            isPresented: $viewModel.showScanOptions,
-            onScanQR: { viewModel.onScanQR() },
-            onPasteURL: { viewModel.onPasteURL() }
+            isPresented: $viewModel.scanHandler.showScanOptions,
+            onScanQR: { viewModel.scanHandler.scanQR() },
+            onPasteURL: { viewModel.scanHandler.pasteURL() }
         )
         .navigationBarHidden(true)
         .onAppear {

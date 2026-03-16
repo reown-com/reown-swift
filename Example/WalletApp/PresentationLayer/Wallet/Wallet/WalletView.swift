@@ -11,7 +11,7 @@ struct WalletView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 HeaderView(
-                    onScan: { presenter.onScanOptions() }
+                    onScan: { presenter.scanHandler.show() }
                 )
 
                 ZStack {
@@ -115,9 +115,9 @@ struct WalletView: View {
             }
         }
         .scanOptionsSheet(
-            isPresented: $presenter.showScanOptions,
-            onScanQR: { presenter.onScanQR() },
-            onPasteURL: { presenter.onPasteURL() }
+            isPresented: $presenter.scanHandler.showScanOptions,
+            onScanQR: { presenter.scanHandler.scanQR() },
+            onPasteURL: { presenter.scanHandler.pasteURL() }
         )
         .sheet(isPresented: Binding(
             get: { presenter.selectedSessionForDetail != nil },

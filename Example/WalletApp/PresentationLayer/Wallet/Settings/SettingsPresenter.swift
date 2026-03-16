@@ -92,7 +92,10 @@ final class SettingsPresenter: ObservableObject {
         return tronAccountStorage.getPrivateKey() ?? "No Tron private key"
     }
 
-    @Published var showScanOptions = false
+    lazy var scanHandler = ScanOptionsHandler(
+        onScan: { [weak self] in self?.presentScanCamera() },
+        onUri: { [weak self] in self?.handleScannedOrPastedUri($0) }
+    )
 
     var clientId: String {
         guard let clientId = try? Networking.interactor.getClientId() else { return .empty }
@@ -101,29 +104,6 @@ final class SettingsPresenter: ObservableObject {
 
     func browserPressed() {
         router.presentBrowser()
-    }
-
-    func onScanOptions() {
-        showScanOptions = true
-    }
-
-    func onScanQR() {
-        showScanOptions = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.presentScanCamera()
-        }
-    }
-
-    func onPasteURL() {
-        let clipboard = UIPasteboard.general.string ?? ""
-        guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
-            return
-        }
-        showScanOptions = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.handleScannedOrPastedUri(clipboard)
-        }
     }
 
     private func presentScanCamera() {
@@ -165,7 +145,10 @@ extension SettingsPresenter: SceneViewModel {
 private extension SettingsPresenter {
 
     func setupInitialState() {
-
+        scanHandler.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &disposeBag)
     }
 
     func handleScannedOrPastedUri(_ uriString: String) {
