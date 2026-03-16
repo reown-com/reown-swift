@@ -307,6 +307,14 @@
 		PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000C /* PayConfirmingView.swift */; };
 		PAY0000012EE100000000000D /* PayDataCollectionWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */; };
 		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
+		PH6B000100000000000001 /* WalletGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000001 /* WalletGenerationService.swift */; };
+		PH6B000100000000000002 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000002 /* ThemeManager.swift */; };
+		PH6B000100000000000003 /* SettingsCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000003 /* SettingsCardView.swift */; };
+		PH6B000100000000000004 /* SecretPhrasePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000004 /* SecretPhrasePresenter.swift */; };
+		PH6B000100000000000005 /* SecretPhraseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000005 /* SecretPhraseView.swift */; };
+		PH6B000100000000000006 /* SecretPhraseModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000006 /* SecretPhraseModule.swift */; };
+		PH6B000100000000000007 /* ImportWalletPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000007 /* ImportWalletPresenter.swift */; };
+		PH6B000100000000000008 /* ImportWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000008 /* ImportWalletView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -612,6 +620,14 @@
 		PAY0000022EE100000000000C /* PayConfirmingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayConfirmingView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayDataCollectionWebView.swift; sourceTree = "<group>"; };
 		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
+		PH6F000100000000000001 /* WalletGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationService.swift; sourceTree = "<group>"; };
+		PH6F000100000000000002 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		PH6F000100000000000003 /* SettingsCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCardView.swift; sourceTree = "<group>"; };
+		PH6F000100000000000004 /* SecretPhrasePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretPhrasePresenter.swift; sourceTree = "<group>"; };
+		PH6F000100000000000005 /* SecretPhraseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretPhraseView.swift; sourceTree = "<group>"; };
+		PH6F000100000000000006 /* SecretPhraseModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretPhraseModule.swift; sourceTree = "<group>"; };
+		PH6F000100000000000007 /* ImportWalletPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportWalletPresenter.swift; sourceTree = "<group>"; };
+		PH6F000100000000000008 /* ImportWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportWalletView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -986,8 +1002,29 @@
 				A518119C2A52E83100A52B15 /* SettingsRouter.swift */,
 				A518119D2A52E83100A52B15 /* SettingsInteractor.swift */,
 				A518119E2A52E83100A52B15 /* SettingsView.swift */,
+				PH6G000100000000000001 /* SecretPhrase */,
+				PH6G000100000000000002 /* ImportWallet */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		PH6G000100000000000001 /* SecretPhrase */ = {
+			isa = PBXGroup;
+			children = (
+				PH6F000100000000000004 /* SecretPhrasePresenter.swift */,
+				PH6F000100000000000005 /* SecretPhraseView.swift */,
+				PH6F000100000000000006 /* SecretPhraseModule.swift */,
+			);
+			path = SecretPhrase;
+			sourceTree = "<group>";
+		};
+		PH6G000100000000000002 /* ImportWallet */ = {
+			isa = PBXGroup;
+			children = (
+				PH6F000100000000000007 /* ImportWalletPresenter.swift */,
+				PH6F000100000000000008 /* ImportWalletView.swift */,
+			);
+			path = ImportWallet;
 			sourceTree = "<group>";
 		};
 		A54195992934BFDD0035AD19 /* Signer */ = {
@@ -1096,6 +1133,7 @@
 			isa = PBXGroup;
 			children = (
 				44EF89702E0149360025778F /* StacksAccointStorage.swift */,
+				PH6F000100000000000001 /* WalletGenerationService.swift */,
 				A5D610CC2AB3592F00C20083 /* ListingsSertice */,
 			);
 			path = BusinessLayer;
@@ -1319,6 +1357,7 @@
 				BD2D8CE19361455B9E46709C /* Spacing.swift */,
 				031F02C8D611403299617574 /* AppRadius.swift */,
 				B0086530789641B19877C4E8 /* AppButtonStyle.swift */,
+				PH6F000100000000000002 /* ThemeManager.swift */,
 			);
 			path = Style;
 			sourceTree = "<group>";
@@ -1417,6 +1456,7 @@
 				MC01A1B2C3D4E5F6A7100009 /* ChainIconProvider.swift */,
 				MC01A1B2C3D4E5F6A710000A /* ChainIconsView.swift */,
 				MC01A1B2C3D4E5F6A710000B /* NetworkInfoCardView.swift */,
+				PH6F000100000000000003 /* SettingsCardView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2229,6 +2269,14 @@
 				A5D610D22AB35B1100C20083 /* Listings.swift in Sources */,
 				A5B4F7C82ABB21190099AF7C /* CacheAsyncImage.swift in Sources */,
 				84D88C8A2CF075E9003A6C16 /* CATransactionRouter.swift in Sources */,
+				PH6B000100000000000001 /* WalletGenerationService.swift in Sources */,
+				PH6B000100000000000002 /* ThemeManager.swift in Sources */,
+				PH6B000100000000000003 /* SettingsCardView.swift in Sources */,
+				PH6B000100000000000004 /* SecretPhrasePresenter.swift in Sources */,
+				PH6B000100000000000005 /* SecretPhraseView.swift in Sources */,
+				PH6B000100000000000006 /* SecretPhraseModule.swift in Sources */,
+				PH6B000100000000000007 /* ImportWalletPresenter.swift in Sources */,
+				PH6B000100000000000008 /* ImportWalletView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

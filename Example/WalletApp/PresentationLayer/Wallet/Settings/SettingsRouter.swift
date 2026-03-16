@@ -10,8 +10,9 @@ final class SettingsRouter {
         self.app = app
     }
 
-    @MainActor func presentWelcome() async {
-        WelcomeModule.create(app: app).present()
+    func presentSecretPhrase() {
+        SecretPhraseModule.create(app: app)
+            .push(from: viewController)
     }
 
     func presentBrowser() {
