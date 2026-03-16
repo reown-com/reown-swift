@@ -65,6 +65,8 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 	<key>WALLETAPP_SENTRY_DSN</key>
 	<string>$(WALLETAPP_SENTRY_DSN)</string>
 </dict>
