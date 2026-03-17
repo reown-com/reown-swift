@@ -40,7 +40,7 @@ final class NavigationCoordinator: ObservableObject {
     }()
 
     private var disposeBag = Set<AnyCancellable>()
-    private var pendingPaymentLink: String?
+    private var pendingPaymentTask: DispatchWorkItem?
 
     // MARK: - Init
 
@@ -98,14 +98,14 @@ final class NavigationCoordinator: ObservableObject {
         ]
 
         if activeModal != nil {
-            // Queue payment for after current modal dismisses
-            pendingPaymentLink = paymentLink
+            pendingPaymentTask?.cancel()
             activeModal = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-                guard let self, let link = self.pendingPaymentLink else { return }
-                self.pendingPaymentLink = nil
-                self.activeModal = .pay(paymentLink: link, accounts: accounts)
+            let task = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                self.activeModal = .pay(paymentLink: paymentLink, accounts: accounts)
             }
+            pendingPaymentTask = task
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)
         } else {
             activeModal = .pay(paymentLink: paymentLink, accounts: accounts)
         }

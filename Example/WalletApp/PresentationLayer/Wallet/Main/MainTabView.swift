@@ -33,9 +33,11 @@ struct MainTabView: View {
                     switch destination {
                     case .connectionDetails(let session):
                         let presenter = ConnectionDetailsPresenter(session: session)
-                        let _ = { presenter.dismissAction = { [weak coordinator] in coordinator?.walletPath.removeLast() } }()
                         ConnectionDetailsView()
                             .environmentObject(presenter)
+                            .onAppear { [weak coordinator] in
+                                presenter.dismissAction = { coordinator?.walletPath.removeLast() }
+                            }
                     }
                 }
         }
