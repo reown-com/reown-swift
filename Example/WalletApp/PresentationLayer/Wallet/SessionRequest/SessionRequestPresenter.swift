@@ -49,6 +49,8 @@ final class SessionRequestPresenter: ObservableObject {
     
     @Published var showError = false
     @Published var errorMessage = "Error"
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
     
     private var disposeBag = Set<AnyCancellable>()
 
@@ -69,13 +71,13 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isActionLoading = true
             _ = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             dismiss()
             AlertPresenter.present(message: "Request signed", type: .success)
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
@@ -84,12 +86,12 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onReject() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isCancelLoading = true
             try await interactor.respondError(sessionRequest: sessionRequest)
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }

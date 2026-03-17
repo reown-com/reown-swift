@@ -35,6 +35,8 @@ final class SessionProposalPresenter: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = "Error"
     @Published var selectedChainIds: Set<String> = []
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
 
     var requiredChainIds: Set<String> {
         var ids = Set<String>()
@@ -140,8 +142,8 @@ final class SessionProposalPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
-            
+            isActionLoading = true
+
             // Build authentication responses if there are authentication requests
             var proposalRequestsResponses: ProposalRequestsResponses? = nil
             if sessionProposal.requests?.authentication != nil {
@@ -150,13 +152,13 @@ final class SessionProposalPresenter: ObservableObject {
                     proposalRequestsResponses = ProposalRequestsResponses(authentication: authObjects)
                 }
             }
-            
+
             _ = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, selectedChainIds: selectedChainIds, proposalRequestsResponses: proposalRequestsResponses)
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             dismiss()
             AlertPresenter.present(message: "Connected", type: .success)
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
@@ -165,12 +167,12 @@ final class SessionProposalPresenter: ObservableObject {
     @MainActor
     func onReject() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isCancelLoading = true
             try await interactor.reject(proposal: sessionProposal)
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }

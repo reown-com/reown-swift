@@ -38,6 +38,8 @@ struct SessionProposalView: View {
                         cancelTitle: "Cancel",
                         actionTitle: "Connect",
                         isActionDisabled: presenter.selectedChainIds.isEmpty,
+                        isCancelLoading: presenter.isCancelLoading,
+                        isActionLoading: presenter.isActionLoading,
                         onCancel: {
                             Task(priority: .userInitiated) { try await presenter.onReject() }
                         },

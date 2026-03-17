@@ -28,6 +28,10 @@ final class AuthRequestPresenter: ObservableObject {
     let importAccount: ImportAccount
     let request: AuthenticationRequest
     let validationStatus: VerifyContext.ValidationStatus?
+
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
+    @Published var isSignOneLoading = false
     
     var messages: [(String, String)] {
         return buildFormattedMessages(request: request)
@@ -65,15 +69,17 @@ final class AuthRequestPresenter: ObservableObject {
         self.messageSigner = messageSigner
     }
 
+    private var isAnyLoading: Bool { isActionLoading || isCancelLoading || isSignOneLoading }
+
     @MainActor
     func signMulti() async {
         do {
-            ActivityIndicatorManager.shared.start()
+            isActionLoading = true
 
             let auths = try buildAuthObjects()
 
             _ = try await WalletKit.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             /* Redirect */
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
@@ -82,7 +88,7 @@ final class AuthRequestPresenter: ObservableObject {
             AlertPresenter.present(message: "Request signed", type: .success)
 
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             AlertPresenter.present(message: error.localizedDescription, type: .error)
         }
     }
@@ -90,12 +96,12 @@ final class AuthRequestPresenter: ObservableObject {
     @MainActor
     func signOne() async {
         do {
-            ActivityIndicatorManager.shared.start()
+            isSignOneLoading = true
 
             let auths = try buildOneAuthObject()
 
             _ = try await WalletKit.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
-            ActivityIndicatorManager.shared.stop()
+            isSignOneLoading = false
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
@@ -105,27 +111,26 @@ final class AuthRequestPresenter: ObservableObject {
             AlertPresenter.present(message: "Request signed", type: .success)
 
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isSignOneLoading = false
             AlertPresenter.present(message: error.localizedDescription, type: .error)
         }
     }
 
     @MainActor
-    func reject() async  {
-        ActivityIndicatorManager.shared.start()
-
+    func reject() async {
         do {
+            isCancelLoading = true
             try await WalletKit.instance.rejectSession(requestId: request.id)
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
             }
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
 
             dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
 
             AlertPresenter.present(message: error.localizedDescription, type: .error)
         }
