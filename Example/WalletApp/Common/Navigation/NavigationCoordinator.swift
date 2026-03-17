@@ -114,6 +114,14 @@ final class NavigationCoordinator: ObservableObject {
     // MARK: - WalletKit Subscriptions
 
     private func subscribeToWalletKit() {
+        // Subscribe to wallet import notifications
+        NotificationCenter.default.publisher(for: .walletImported)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.handleWalletImported()
+            }
+            .store(in: &disposeBag)
+
         // Subscribe to payment link notifications from scan handlers
         NotificationCenter.default.publisher(for: .paymentLinkDetected)
             .receive(on: DispatchQueue.main)
@@ -156,5 +164,18 @@ final class NavigationCoordinator: ObservableObject {
                 self?.activeModal = .authRequest(result.request, result.context)
             }
             .store(in: &disposeBag)
+    }
+
+    private func handleWalletImported() {
+        // Disconnect all active WalletConnect sessions
+        let sessions = WalletKit.instance.getSessions()
+        for session in sessions {
+            Task {
+                try? await WalletKit.instance.disconnect(topic: session.topic)
+            }
+        }
+
+        // Refresh balances
+        Task { await balancesViewModel.refresh() }
     }
 }

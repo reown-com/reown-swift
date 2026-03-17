@@ -70,6 +70,7 @@ final class ImportWalletPresenter: ObservableObject {
         if success {
             input = ""
             showSuccess = true
+            NotificationCenter.default.post(name: .walletImported, object: nil)
         } else {
             errorMessage = "Invalid input for \(selectedChain.rawValue)"
         }

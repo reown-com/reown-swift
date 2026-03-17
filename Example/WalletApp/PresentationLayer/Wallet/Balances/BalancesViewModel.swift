@@ -121,6 +121,7 @@ private let mainnetNativeTokens: [TokenBalance] = [
 extension Notification.Name {
     static let paymentCompleted = Notification.Name("paymentCompleted")
     static let paymentLinkDetected = Notification.Name("paymentLinkDetected")
+    static let walletImported = Notification.Name("walletImported")
 }
 
 /// ViewModel for the Balances screen
