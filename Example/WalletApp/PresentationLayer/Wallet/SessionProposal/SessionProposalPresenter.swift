@@ -26,7 +26,7 @@ final class SessionProposalPresenter: ObservableObject {
     }
 
     private let interactor: SessionProposalInteractor
-    private let router: SessionProposalRouter
+    var dismissAction: (() -> Void)?
 
     let importAccount: ImportAccount
     let sessionProposal: Session.Proposal
@@ -35,6 +35,8 @@ final class SessionProposalPresenter: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = "Error"
     @Published var selectedChainIds: Set<String> = []
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
 
     var requiredChainIds: Set<String> {
         var ids = Set<String>()
@@ -124,7 +126,6 @@ final class SessionProposalPresenter: ObservableObject {
 
     init(
         interactor: SessionProposalInteractor,
-        router: SessionProposalRouter,
         importAccount: ImportAccount,
         proposal: Session.Proposal,
         context: VerifyContext?,
@@ -132,7 +133,6 @@ final class SessionProposalPresenter: ObservableObject {
     ) {
         defer { setupInitialState() }
         self.interactor = interactor
-        self.router = router
         self.sessionProposal = proposal
         self.importAccount = importAccount
         self.validationStatus = context?.validation
@@ -142,8 +142,8 @@ final class SessionProposalPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
-            
+            isActionLoading = true
+
             // Build authentication responses if there are authentication requests
             var proposalRequestsResponses: ProposalRequestsResponses? = nil
             if sessionProposal.requests?.authentication != nil {
@@ -152,13 +152,13 @@ final class SessionProposalPresenter: ObservableObject {
                     proposalRequestsResponses = ProposalRequestsResponses(authentication: authObjects)
                 }
             }
-            
+
             _ = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, selectedChainIds: selectedChainIds, proposalRequestsResponses: proposalRequestsResponses)
-            ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            isActionLoading = false
+            dismiss()
             AlertPresenter.present(message: "Connected", type: .success)
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
@@ -167,19 +167,19 @@ final class SessionProposalPresenter: ObservableObject {
     @MainActor
     func onReject() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isCancelLoading = true
             try await interactor.reject(proposal: sessionProposal)
-            ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            isCancelLoading = false
+            dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
     }
     
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 
     private func createAuthObjectForChain(chain: Blockchain, authPayload: AuthPayload) throws -> AuthObject {
@@ -330,7 +330,3 @@ private extension SessionProposalPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension SessionProposalPresenter: SceneViewModel {
-
-}

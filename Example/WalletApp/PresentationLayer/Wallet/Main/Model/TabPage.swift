@@ -1,6 +1,6 @@
-import UIKit
+import Foundation
 
-enum TabPage: CaseIterable {
+enum TabPage: CaseIterable, Hashable {
     case wallets
     case connectedApps
     case settings
@@ -16,25 +16,14 @@ enum TabPage: CaseIterable {
         }
     }
 
-    var icon: UIImage {
+    var systemImage: String {
         switch self {
         case .wallets:
-            return UIImage(systemName: "wallet.bifold.fill")
-                ?? UIImage(systemName: "creditcard.fill")!
+            return "wallet.bifold.fill"
         case .connectedApps:
-            return UIImage(systemName: "square.stack.3d.up.fill")
-                ?? UIImage(named: "connections_tab")!
+            return "square.stack.3d.up.fill"
         case .settings:
-            return UIImage(systemName: "gearshape.fill")
-                ?? UIImage(named: "settings_tab")!
+            return "gearshape.fill"
         }
-    }
-
-    static var selectedIndex: Int {
-        return 0
-    }
-
-    static var enabledTabs: [TabPage] {
-        return [.wallets, .connectedApps, .settings]
     }
 }

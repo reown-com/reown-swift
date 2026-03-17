@@ -14,7 +14,7 @@ enum PayFlowStep: Int, CaseIterable {
 }
 
 final class PayPresenter: ObservableObject {
-    private let router: PayRouter
+    var dismissAction: (() -> Void)?
     private let importAccount: ImportAccount
     private var disposeBag = Set<AnyCancellable>()
 
@@ -82,8 +82,7 @@ final class PayPresenter: ObservableObject {
         return "Pay \(paymentInfo?.formattedAmount ?? "")"
     }
 
-    init(router: PayRouter, paymentLink: String, accounts: [String], importAccount: ImportAccount) {
-        self.router = router
+    init(paymentLink: String, accounts: [String], importAccount: ImportAccount) {
         self.paymentLink = paymentLink
         self.accounts = accounts
         self.importAccount = importAccount
@@ -261,7 +260,7 @@ final class PayPresenter: ObservableObject {
     }
 
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 
     // MARK: - Error Detection (from RN utils.ts)
@@ -282,13 +281,3 @@ final class PayPresenter: ObservableObject {
 
 }
 
-// MARK: - SceneViewModel
-extension PayPresenter: SceneViewModel {
-    var sceneTitle: String? {
-        return nil
-    }
-
-    var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .never
-    }
-}

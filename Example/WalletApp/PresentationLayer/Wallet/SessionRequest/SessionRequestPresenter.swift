@@ -6,7 +6,7 @@ import ReownWalletKit
 
 final class SessionRequestPresenter: ObservableObject {
     private let interactor: SessionRequestInteractor
-    private let router: SessionRequestRouter
+    var dismissAction: (() -> Void)?
     private let importAccount: ImportAccount
     
     let sessionRequest: Request
@@ -49,19 +49,19 @@ final class SessionRequestPresenter: ObservableObject {
     
     @Published var showError = false
     @Published var errorMessage = "Error"
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
     
     private var disposeBag = Set<AnyCancellable>()
 
     init(
         interactor: SessionRequestInteractor,
-        router: SessionRequestRouter,
         sessionRequest: Request,
         importAccount: ImportAccount,
         context: VerifyContext?
     ) {
         defer { setupInitialState() }
         self.interactor = interactor
-        self.router = router
         self.sessionRequest = sessionRequest
         self.session = interactor.getSession(topic: sessionRequest.topic)
         self.importAccount = importAccount
@@ -71,13 +71,13 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isActionLoading = true
             _ = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
-            ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            isActionLoading = false
+            dismiss()
             AlertPresenter.present(message: "Request signed", type: .success)
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
@@ -86,19 +86,19 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onReject() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isCancelLoading = true
             try await interactor.respondError(sessionRequest: sessionRequest)
-            ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            isCancelLoading = false
+            dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
     }
     
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 }
 
@@ -116,7 +116,3 @@ private extension SessionRequestPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension SessionRequestPresenter: SceneViewModel {
-
-}

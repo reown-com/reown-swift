@@ -6,6 +6,9 @@ import Combine
 final class ScanOptionsHandler: ObservableObject {
     @Published var showScanOptions = false
 
+    /// Override for scan camera presentation (set by coordinator)
+    var onScanOverride: (() -> Void)?
+
     private let onScan: () -> Void
     private let onUri: (String) -> Void
 
@@ -21,7 +24,11 @@ final class ScanOptionsHandler: ObservableObject {
     func scanQR() {
         showScanOptions = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.onScan()
+            if let override = self?.onScanOverride {
+                override()
+            } else {
+                self?.onScan()
+            }
         }
     }
 

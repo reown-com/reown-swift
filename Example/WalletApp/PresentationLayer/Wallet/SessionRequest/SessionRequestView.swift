@@ -35,6 +35,8 @@ struct SessionRequestView: View {
                     ModalFooterView(
                         cancelTitle: "Cancel",
                         actionTitle: "Sign",
+                        isCancelLoading: presenter.isCancelLoading,
+                        isActionLoading: presenter.isActionLoading,
                         onCancel: {
                             Task(priority: .userInitiated) { try await presenter.onReject() }
                         },

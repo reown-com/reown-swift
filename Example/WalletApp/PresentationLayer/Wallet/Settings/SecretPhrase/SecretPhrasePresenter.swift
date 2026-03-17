@@ -1,4 +1,4 @@
-import UIKit
+import Foundation
 import WalletConnectNetworking
 
 final class SecretPhrasePresenter: ObservableObject {
@@ -101,4 +101,3 @@ final class SecretPhrasePresenter: ObservableObject {
     }
 }
 
-extension SecretPhrasePresenter: SceneViewModel {}

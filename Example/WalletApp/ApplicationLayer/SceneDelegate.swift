@@ -7,12 +7,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
     private let app = Application()
+    private lazy var coordinator = NavigationCoordinator(app: app)
 
     private var configurators: [Configurator] {
         return [
             MigrationConfigurator(app: app),
             ThirdPartyConfigurator(),
-            ApplicationConfigurator(app: app),
+            ApplicationConfigurator(app: app, coordinator: coordinator),
             AppearanceConfigurator()
         ]
     }
@@ -179,12 +180,16 @@ private extension SceneDelegate {
         )
         
 
+        guard let redirect = try? AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true) else {
+            print("[WalletKit] Failed to create redirect metadata")
+            return
+        }
         let metadata = AppMetadata(
             name: "Swift Wallet",
             description: "wallet description",
             url: "example.wallet",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
-            redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
+            redirect: redirect
         )
 
         #if DEBUG
@@ -248,49 +253,10 @@ private extension SceneDelegate {
         return nil
     }
     
-    /// Handle a payment link URL
-    /// - Parameter paymentLink: The payment link URL - either a WC URI with embedded pay param,
-    ///   or POS scan format "walletapp://walletconnectpay?paymentId=<id>"
+    /// Handle a payment link URL via the coordinator
     private func handlePaymentLink(_ paymentLink: String) {
         print("🔗 [PayDeeplink] handlePaymentLink called with: \(paymentLink)")
-
-        guard let topController = window?.rootViewController?.topController else {
-            print("🔗 [PayDeeplink] ERROR: No top controller available")
-            return
-        }
-        print("🔗 [PayDeeplink] Top controller: \(type(of: topController))")
-
-        // Get wallet account from storage
-        guard let account = AccountStorage(defaults: .standard).importAccount else {
-            print("🔗 [PayDeeplink] ERROR: No account found in storage")
-            AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
-            return
-        }
-        print("🔗 [PayDeeplink] Account found: \(account.account.address)")
-
-        // Get accounts in CAIP-10 format for multiple chains
-        let address = account.account.address
-        let accounts = [
-            "eip155:1:\(address)",      // Ethereum Mainnet
-            "eip155:137:\(address)",    // Polygon
-            "eip155:8453:\(address)"    // Base
-        ]
-        print("🔗 [PayDeeplink] CAIP-10 accounts: \(accounts)")
-
-        print("🔗 [PayDeeplink] Creating PayModule with paymentLink: \(paymentLink)")
-        let paymentVC = PayModule.create(
-            app: app,
-            paymentLink: paymentLink,
-            accounts: accounts,
-            importAccount: account
-        )
-        paymentVC.modalPresentationStyle = .overCurrentContext
-        paymentVC.modalTransitionStyle = .crossDissolve
-        paymentVC.view.backgroundColor = .clear
-        print("🔗 [PayDeeplink] Presenting PayModule...")
-        topController.present(paymentVC, animated: true) {
-            print("🔗 [PayDeeplink] PayModule presented successfully")
-        }
+        coordinator.showPayment(paymentLink: paymentLink)
     }
 }
 

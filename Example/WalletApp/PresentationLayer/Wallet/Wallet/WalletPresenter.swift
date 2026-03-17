@@ -9,9 +9,8 @@ final class WalletPresenter: ObservableObject {
     }
     
     private let interactor: WalletInteractor
-    private let router: WalletRouter
     private let importAccount: ImportAccount
-    
+
     private let app: Application
     private var isPairingTimer: Timer?
 
@@ -37,7 +36,6 @@ final class WalletPresenter: ObservableObject {
 
     init(
         interactor: WalletInteractor,
-        router: WalletRouter,
         app: Application,
         importAccount: ImportAccount
     ) {
@@ -45,7 +43,6 @@ final class WalletPresenter: ObservableObject {
             setupInitialState()
         }
         self.interactor = interactor
-        self.router = router
         self.app = app
         self.importAccount = importAccount
     }
@@ -54,10 +51,7 @@ final class WalletPresenter: ObservableObject {
         showPairingLoading = app.requestSent
         setUpPairingIndicatorRemoval()
 
-        let pendingRequests = interactor.getPendingRequests()
-        if let request = pendingRequests.first(where: { $0.context != nil }) {
-            router.present(sessionRequest: request.request, importAccount: importAccount, sessionContext: request.context)
-        }
+        // Pending requests are handled by NavigationCoordinator's WalletKit subscriptions
     }
     
     func onConnection(session: Session) {
@@ -81,13 +75,7 @@ final class WalletPresenter: ObservableObject {
     }
 
     private func presentScanCamera() {
-        router.presentScan { [weak self] uriString in
-            self?.router.dismiss()
-            self?.handleScannedOrPastedUri(uriString)
-        } onError: { [weak self] error in
-            print(error.localizedDescription)
-            self?.router.dismiss()
-        }
+        // Scan camera handled via ScanOptionsHandler sheet
     }
     
     func removeSession(at indexSet: IndexSet) async {
@@ -137,10 +125,11 @@ extension WalletPresenter {
     
     /// Handle scanned or pasted URI - detect if it's a Pay URL or WalletConnect pairing URI
     private func handleScannedOrPastedUri(_ uriString: String) {
-        // Check if it's a WalletConnect Pay URL
+        // Check if it's a WalletConnect Pay URL — handled via notification
         if WalletKit.isPaymentLink(uriString) {
             print("Detected WalletConnect Pay URL: \(uriString)")
-            router.startPayFlow(paymentLink: uriString, importAccount: importAccount)
+            // Post notification for coordinator to handle
+            NotificationCenter.default.post(name: .paymentLinkDetected, object: uriString)
             return
         }
 
@@ -183,20 +172,6 @@ extension WalletPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension WalletPresenter: SceneViewModel {
-    var sceneTitle: String? {
-        return nil
-    }
-
-    var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .never
-    }
-
-    var isNavigationBarHidden: Bool {
-        return true
-    }
-}
 
 // MARK: - LocalizedError
 extension WalletPresenter.Errors {

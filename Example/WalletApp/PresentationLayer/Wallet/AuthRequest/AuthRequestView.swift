@@ -45,6 +45,8 @@ struct AuthRequestView: View {
                         ModalFooterView(
                             cancelTitle: "Cancel",
                             actionTitle: "Connect",
+                            isCancelLoading: presenter.isCancelLoading,
+                            isActionLoading: presenter.isActionLoading,
                             onCancel: {
                                 Task(priority: .userInitiated) { await presenter.reject() }
                             },
@@ -56,11 +58,19 @@ struct AuthRequestView: View {
                         Button {
                             Task(priority: .userInitiated) { await presenter.signOne() }
                         } label: {
-                            Text("Sign One")
-                                .frame(maxWidth: .infinity)
-                                .frame(height: Spacing._11)
+                            if presenter.isSignOneLoading {
+                                ProgressView()
+                                    .tint(.primary)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: Spacing._11)
+                            } else {
+                                Text("Sign One")
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: Spacing._11)
+                            }
                         }
                         .buttonStyle(SecondaryButtonStyle())
+                        .disabled(presenter.isActionLoading || presenter.isCancelLoading || presenter.isSignOneLoading)
                     }
                 }
             }

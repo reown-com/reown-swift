@@ -1,31 +1,26 @@
-import UIKit
+import SwiftUI
 import Combine
 import WalletConnectNetworking
-import WalletConnectPairing
 import ReownWalletKit
 
 final class SettingsPresenter: ObservableObject {
 
-    private let interactor: SettingsInteractor
-    private let router: SettingsRouter
-    private let accountStorage: AccountStorage
+    let accountStorage: AccountStorage
     private var disposeBag = Set<AnyCancellable>()
 
     @Published var showImportWallet = false
 
     let themeManager = ThemeManager.shared
 
-    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage) {
-        defer { setupInitialState() }
-        self.interactor = interactor
-        self.router = router
-        self.accountStorage = accountStorage
-    }
-
     lazy var scanHandler = ScanOptionsHandler(
         onScan: { [weak self] in self?.presentScanCamera() },
         onUri: { [weak self] in self?.handleScannedOrPastedUri($0) }
     )
+
+    init(accountStorage: AccountStorage) {
+        self.accountStorage = accountStorage
+        setupInitialState()
+    }
 
     var clientId: String {
         guard let clientId = try? Networking.interactor.getClientId() else { return .empty }
@@ -38,53 +33,21 @@ final class SettingsPresenter: ObservableObject {
         return "\(version) (\(build))"
     }
 
-    func secretPhrasesPressed() {
-        router.presentSecretPhrase()
-    }
-
     func importWalletPressed() {
         showImportWallet = true
     }
 
-    func browserPressed() {
-        router.presentBrowser()
-    }
-
-    /// Creates the ImportWalletPresenter for the sheet
     func makeImportWalletPresenter() -> ImportWalletPresenter {
         let service = WalletGenerationService(accountStorage: accountStorage)
         return ImportWalletPresenter(walletService: service)
     }
 
     private func presentScanCamera() {
-        router.presentScan { [weak self] uriString in
-            self?.router.dismiss()
-            self?.handleScannedOrPastedUri(uriString)
-        } onError: { [weak self] error in
-            print(error.localizedDescription)
-            self?.router.dismiss()
-        }
+        // Scan camera still uses UIKit bridge via ScanOptionsHandler
     }
 }
 
-// MARK: SceneViewModel
-
-extension SettingsPresenter: SceneViewModel {
-
-    var sceneTitle: String? {
-        return nil
-    }
-
-    var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .never
-    }
-
-    var isNavigationBarHidden: Bool {
-        return true
-    }
-}
-
-// MARK: Privates
+// MARK: - Privates
 
 private extension SettingsPresenter {
 
