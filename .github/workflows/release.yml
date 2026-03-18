@@ -1,4 +1,5 @@
 name: release
+run-name: "Release ${{ inputs.app }} — ${{ github.ref_name }}"
 
 on:
   workflow_dispatch:
@@ -19,7 +20,7 @@ jobs:
     runs-on: macos-latest-xlarge
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Select Xcode 26 (iOS 26 SDK)
       uses: maxim-lobanov/setup-xcode@v1
@@ -31,7 +32,7 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           .build
@@ -42,6 +43,7 @@ jobs:
           ${{ runner.os }}-spm-
 
     - name: Release
+      id: release
       shell: bash
       env:
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
@@ -52,3 +54,39 @@ jobs:
         MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
       run: |
         make release APPLE_ID=${{ secrets.APPLE_ID }} PROJECT_ID=${{ secrets.RELEASE_PROJECT_ID }} WALLETAPP_SENTRY_DSN=${{ secrets.WALLETAPP_SENTRY_DSN }} MIXPANEL_TOKEN=${{secrets.MIXPANEL_TOKEN}} APP=${{ github.event.inputs.app }}
+
+    - name: Send Slack notification
+      if: always() && !cancelled()
+      uses: slackapi/slack-github-action@v2.1.0
+      with:
+        webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        webhook-type: incoming-webhook
+        payload: |
+          {
+            "text": "iOS Build Report - ${{ inputs.app }}",
+            "blocks": [
+              {
+                "type": "header",
+                "text": { "type": "plain_text", "text": "🍎 iOS Build Report" }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*App:*\n`${{ inputs.app }}`" },
+                  { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.ref_name }}`" },
+                  { "type": "mrkdwn", "text": "*Status:*\n`${{ steps.release.outcome == 'success' && '✅ Success' || '❌ Failed' }}`" },
+                  { "type": "mrkdwn", "text": "*Triggered by:*\n`${{ github.actor }}`" }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": { "type": "plain_text", "text": "View Workflow Run" },
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              }
+            ]
+          }
