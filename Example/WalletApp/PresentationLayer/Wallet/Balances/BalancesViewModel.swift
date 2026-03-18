@@ -234,7 +234,7 @@ final class BalancesViewModel: ObservableObject {
 
     func copyAddress() {
         UIPasteboard.general.string = walletAddress
-        AlertPresenter.present(message: "Address copied", type: .success)
+        WalletToast.present(message: "Address copied", type: .success)
     }
 
     // MARK: - Auto-refresh

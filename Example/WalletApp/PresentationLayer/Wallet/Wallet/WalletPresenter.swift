@@ -69,7 +69,7 @@ final class WalletPresenter: ObservableObject {
                 self.selectedSessionForDetail = nil
             } catch {
                 self.isDisconnecting = false
-                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                WalletToast.present(message: error.localizedDescription, type: .error)
             }
         }
     }
@@ -87,7 +87,7 @@ final class WalletPresenter: ObservableObject {
             } catch {
                 ActivityIndicatorManager.shared.stop()
                 sessions = sessions
-                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                WalletToast.present(message: error.localizedDescription, type: .error)
             }
         }
     }
@@ -97,7 +97,7 @@ final class WalletPresenter: ObservableObject {
 
         if showPairingLoading {
             isPairingTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { _ in
-                AlertPresenter.present(message: "Pairing takes longer then expected, check your internet connection or try again", type: .warning)
+                WalletToast.present(message: "Pairing takes longer then expected, check your internet connection or try again", type: .warning)
             }
         }
     }

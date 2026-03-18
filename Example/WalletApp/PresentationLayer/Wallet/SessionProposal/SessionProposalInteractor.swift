@@ -150,11 +150,11 @@ final class SessionProposalInteractor {
             )
         } catch let error as AutoNamespacesError {
             try await reject(proposal: proposal, reason: RejectionReason(from: error))
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
             return false
         } catch {
             try await reject(proposal: proposal, reason: .userRejected)
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
             return false
         }
 

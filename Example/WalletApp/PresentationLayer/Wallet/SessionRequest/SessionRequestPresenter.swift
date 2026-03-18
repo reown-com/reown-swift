@@ -75,7 +75,7 @@ final class SessionRequestPresenter: ObservableObject {
             _ = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
             isActionLoading = false
             dismiss()
-            AlertPresenter.present(message: "Request signed", type: .success)
+            WalletToast.present(message: "Request signed", type: .success)
         } catch {
             isActionLoading = false
             errorMessage = error.localizedDescription

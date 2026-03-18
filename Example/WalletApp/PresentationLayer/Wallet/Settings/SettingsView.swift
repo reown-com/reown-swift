@@ -47,7 +47,7 @@ struct SettingsView: View {
 
                         SettingsCardView.info("Client ID", value: truncated(viewModel.clientId)) {
                             UIPasteboard.general.string = viewModel.clientId
-                            AlertPresenter.present(message: "Client ID copied", type: .success)
+                            WalletToast.present(message: "Client ID copied", type: .success)
                         }
 
                         SettingsCardView.info("App Version", value: viewModel.appVersion)

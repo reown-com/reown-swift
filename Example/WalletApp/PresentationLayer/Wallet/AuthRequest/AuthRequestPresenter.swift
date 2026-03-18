@@ -85,11 +85,11 @@ final class AuthRequestPresenter: ObservableObject {
                 ReownRouter.goBack(uri: uri)
             }
             dismiss()
-            AlertPresenter.present(message: "Request signed", type: .success)
+            WalletToast.present(message: "Request signed", type: .success)
 
         } catch {
             isActionLoading = false
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
         }
     }
 
@@ -108,11 +108,11 @@ final class AuthRequestPresenter: ObservableObject {
                 ReownRouter.goBack(uri: uri)
             }
             dismiss()
-            AlertPresenter.present(message: "Request signed", type: .success)
+            WalletToast.present(message: "Request signed", type: .success)
 
         } catch {
             isSignOneLoading = false
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
         }
     }
 
@@ -132,7 +132,7 @@ final class AuthRequestPresenter: ObservableObject {
         } catch {
             isCancelLoading = false
 
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
         }
     }
     

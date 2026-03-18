@@ -81,11 +81,11 @@ final class NavigationCoordinator: ObservableObject {
                 do {
                     try await WalletKit.instance.pair(uri: uri)
                 } catch {
-                    AlertPresenter.present(message: error.localizedDescription, type: .error)
+                    WalletToast.present(message: error.localizedDescription, type: .error)
                 }
             }
         } catch {
-            AlertPresenter.present(message: "Invalid QR code", type: .error)
+            WalletToast.present(message: "Invalid QR code", type: .error)
         }
     }
 
@@ -158,7 +158,7 @@ final class NavigationCoordinator: ObservableObject {
                 let supportedChains: Set<Blockchain> = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
                 let commonChains = requestedChains.intersection(supportedChains)
                 guard !commonChains.isEmpty else {
-                    AlertPresenter.present(message: "No common chains", type: .error)
+                    WalletToast.present(message: "No common chains", type: .error)
                     return
                 }
                 self?.activeModal = .authRequest(result.request, result.context)
