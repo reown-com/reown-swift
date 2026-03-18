@@ -19,6 +19,7 @@ struct ApplicationConfigurator: Configurator {
             importAccount = service.generateAllWallets()
         }
 
+        precondition(Thread.isMainThread, "ApplicationConfigurator.configure() must be called on the main thread")
         MainActor.assumeIsolated {
             coordinator.importAccount = importAccount
 

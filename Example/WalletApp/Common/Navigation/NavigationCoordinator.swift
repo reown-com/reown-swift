@@ -17,18 +17,18 @@ final class NavigationCoordinator: ObservableObject {
     // MARK: - Dependencies
 
     let app: Application
-    var importAccount: ImportAccount!
+    var importAccount: ImportAccount?
 
     // MARK: - Cached View Models (created once, reused across tab switches)
 
     private(set) lazy var balancesViewModel: BalancesViewModel = {
-        let vm = BalancesViewModel(app: app, importAccount: importAccount)
+        let vm = BalancesViewModel(app: app, importAccount: importAccount!)
         vm.scanHandler.onScanOverride = { [weak self] in self?.presentScanCamera() }
         return vm
     }()
 
     private(set) lazy var walletPresenter: WalletPresenter = {
-        let p = WalletPresenter(interactor: WalletInteractor(), app: app, importAccount: importAccount)
+        let p = WalletPresenter(interactor: WalletInteractor(), app: app, importAccount: importAccount!)
         p.scanHandler.onScanOverride = { [weak self] in self?.presentScanCamera() }
         return p
     }()
@@ -51,6 +51,10 @@ final class NavigationCoordinator: ObservableObject {
     // MARK: - Setup
 
     func setup() {
+        guard let importAccount else {
+            assertionFailure("importAccount must be set before calling setup()")
+            return
+        }
         app.configurationService.configure(importAccount: importAccount)
         subscribeToWalletKit()
     }
@@ -90,6 +94,7 @@ final class NavigationCoordinator: ObservableObject {
     }
 
     func showPayment(paymentLink: String) {
+        guard let importAccount else { return }
         let address = importAccount.account.address
         let accounts = [
             "eip155:1:\(address)",

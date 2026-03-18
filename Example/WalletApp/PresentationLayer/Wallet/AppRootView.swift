@@ -42,7 +42,7 @@ struct AppRootView: View {
     private func makeSessionProposalView(proposal: Session.Proposal, context: VerifyContext?) -> some View {
         let presenter = SessionProposalPresenter(
             interactor: SessionProposalInteractor(),
-            importAccount: coordinator.importAccount,
+            importAccount: coordinator.importAccount!,
             proposal: proposal,
             context: context,
             messageSigner: coordinator.app.messageSigner
@@ -56,7 +56,7 @@ struct AppRootView: View {
         let presenter = SessionRequestPresenter(
             interactor: SessionRequestInteractor(),
             sessionRequest: request,
-            importAccount: coordinator.importAccount,
+            importAccount: coordinator.importAccount!,
             context: context
         )
         presenter.dismissAction = { [weak coordinator] in coordinator?.dismissModal() }
@@ -66,7 +66,7 @@ struct AppRootView: View {
 
     private func makeAuthRequestView(request: AuthenticationRequest, context: VerifyContext?) -> some View {
         let presenter = AuthRequestPresenter(
-            importAccount: coordinator.importAccount,
+            importAccount: coordinator.importAccount!,
             request: request,
             context: context,
             messageSigner: coordinator.app.messageSigner
@@ -94,7 +94,7 @@ struct AppRootView: View {
         let presenter = PayPresenter(
             paymentLink: paymentLink,
             accounts: accounts,
-            importAccount: coordinator.importAccount
+            importAccount: coordinator.importAccount!
         )
         presenter.dismissAction = { [weak coordinator] in coordinator?.dismissModal() }
         return PayContainerView()

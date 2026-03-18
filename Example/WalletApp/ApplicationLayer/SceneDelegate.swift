@@ -180,14 +180,14 @@ private extension SceneDelegate {
         )
         
 
-        guard let redirect = try? AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true) else {
+        guard let redirect = try? AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.reown.com/wallet", linkMode: true) else {
             print("[WalletKit] Failed to create redirect metadata")
             return
         }
         let metadata = AppMetadata(
             name: "Swift Wallet",
-            description: "wallet description",
-            url: "example.wallet",
+            description: "Swift sample wallet showcasing WalletConnect SDK integration",
+            url: "https://walletconnect.network/sdk",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
             redirect: redirect
         )

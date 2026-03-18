@@ -15,12 +15,16 @@ final class ConfigurationService {
         )
         Networking.instance.setLogging(level: .off)
 
+        guard let redirect = try? AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.reown.com/wallet", linkMode: true) else {
+            print("[ConfigurationService] Failed to create redirect metadata")
+            return
+        }
         let metadata = AppMetadata(
             name: "Swift Wallet",
-            description: "wallet description",
-            url: "example.wallet",
-            icons: ["https://avatars.githubusercontent.com/u/37784886"], 
-            redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
+            description: "Swift sample wallet showcasing WalletConnect SDK integration",
+            url: "https://walletconnect.network/sdk",
+            icons: ["https://avatars.githubusercontent.com/u/37784886"],
+            redirect: redirect
         )
 
         WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey)
@@ -35,7 +39,7 @@ final class ConfigurationService {
             LoggingService.instance.setUpUser(account: importAccount.account.absoluteString, clientId: clientId)
             ProfilingService.instance.setUpProfiling(account: importAccount.account.absoluteString, clientId: clientId)
             let groupKeychain = GroupKeychainStorage(serviceIdentifier: "group.com.walletconnect.sdk")
-            try! groupKeychain.add(clientId, forKey: "clientId")
+            try? groupKeychain.add(clientId, forKey: "clientId")
         }
         LoggingService.instance.startLogging()
 
