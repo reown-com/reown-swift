@@ -53,7 +53,7 @@ struct WalletToast {
 
             window.rootViewController = hostingController
             window.isUserInteractionEnabled = true
-            window.makeKeyAndVisible()
+            window.isHidden = false
 
             // Slide in from top
             hostingController.view.transform = CGAffineTransform(translationX: 0, y: -100)

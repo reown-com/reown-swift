@@ -95,7 +95,7 @@ final class WalletPresenter: ObservableObject {
 
         if showPairingLoading {
             isPairingTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { _ in
-                WalletToast.present(message: "Pairing takes longer then expected, check your internet connection or try again", type: .warning)
+                WalletToast.present(message: "Pairing takes longer than expected, check your internet connection or try again", type: .warning)
             }
         }
     }
