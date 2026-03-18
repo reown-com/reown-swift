@@ -48,6 +48,9 @@ struct WalletToast {
             let window = UIWindow(windowScene: scene)
             window.windowLevel = .alert
             window.backgroundColor = .clear
+
+            window.overrideUserInterfaceStyle = ThemeManager.shared.isDarkMode ? .dark : .light
+
             window.rootViewController = hostingController
             window.isUserInteractionEnabled = true
             window.makeKeyAndVisible()

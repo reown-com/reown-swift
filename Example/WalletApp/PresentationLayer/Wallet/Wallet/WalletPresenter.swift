@@ -23,9 +23,7 @@ final class WalletPresenter: ObservableObject {
             handlePairingLoadingChanged()
         }
     }
-    @Published var showError = false
-    @Published var errorMessage = "Error"
-    @Published var showConnectedSheet = false
+@Published var showConnectedSheet = false
 
     lazy var scanHandler = ScanOptionsHandler(
         onScan: { [weak self] in self?.presentScanCamera() },
@@ -139,19 +137,17 @@ extension WalletPresenter {
             print("URI: \(uri)")
             pair(uri: uri)
         } catch {
-            errorMessage = error.localizedDescription
-            showError.toggle()
+            WalletToast.present(message: "Invalid link or URI", type: .error)
         }
     }
-    
+
     private func pair(uri: WalletConnectURI) {
         Task(priority: .high) { @MainActor [weak self] in
             guard let self else { return }
             do {
                 try await self.interactor.pair(uri: uri)
             } catch {
-                self.errorMessage = error.localizedDescription
-                self.showError.toggle()
+                WalletToast.present(message: error.localizedDescription, type: .error)
             }
         }
     }

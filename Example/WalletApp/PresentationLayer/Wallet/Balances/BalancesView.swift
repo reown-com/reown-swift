@@ -185,9 +185,6 @@ struct BalancesView: View {
                 }
             }
         }
-        .alert(viewModel.errorMessage, isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
-        }
         .scanOptionsSheet(
             isPresented: $viewModel.scanHandler.showScanOptions,
             onScanQR: { viewModel.scanHandler.scanQR() },
