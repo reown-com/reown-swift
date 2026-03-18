@@ -35,7 +35,7 @@ final class ScanOptionsHandler: ObservableObject {
     func pasteURL() {
         let clipboard = UIPasteboard.general.string ?? ""
         guard !clipboard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            AlertPresenter.present(message: "No URL found in clipboard", type: .warning)
+            WalletToast.present(message: "No URL found in clipboard", type: .warning)
             return
         }
         showScanOptions = false

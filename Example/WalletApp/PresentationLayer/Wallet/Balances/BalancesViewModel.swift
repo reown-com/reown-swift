@@ -135,8 +135,6 @@ final class BalancesViewModel: ObservableObject {
     @Published var tokenBalances: [TokenBalance] = []
     @Published var isLoading: Bool = true
     @Published var isRefreshing: Bool = false
-    @Published var showError: Bool = false
-    @Published var errorMessage: String = ""
 
     lazy var scanHandler = ScanOptionsHandler(
         onScan: { [weak self] in self?.presentScanCamera() },
@@ -234,7 +232,7 @@ final class BalancesViewModel: ObservableObject {
 
     func copyAddress() {
         UIPasteboard.general.string = walletAddress
-        AlertPresenter.present(message: "Address copied", type: .success)
+        WalletToast.present(message: "Address copied", type: .success)
     }
 
     // MARK: - Auto-refresh
@@ -391,18 +389,16 @@ final class BalancesViewModel: ObservableObject {
             let uri = try WalletConnectURI(uriString: uriString)
             pair(uri: uri)
         } catch {
-            errorMessage = error.localizedDescription
-            showError = true
+            WalletToast.present(message: "Invalid link or URI", type: .error)
         }
     }
-    
+
     private func pair(uri: WalletConnectURI) {
         Task { @MainActor in
             do {
                 try await WalletKit.instance.pair(uri: uri)
             } catch {
-                self.errorMessage = error.localizedDescription
-                self.showError = true
+                WalletToast.present(message: error.localizedDescription, type: .error)
             }
         }
     }

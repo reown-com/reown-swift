@@ -44,9 +44,9 @@ final class ConfigurationService {
             .sink { status in
             switch status {
             case .connected:
-                AlertPresenter.present(message: "Your web socket has connected", type: .success)
+                WalletToast.present(message: "Your web socket has connected", type: .success)
             case .disconnected:
-                AlertPresenter.present(message: "Your web socket is disconnected", type: .warning)
+                WalletToast.present(message: "Your web socket is disconnected", type: .warning)
             }
         }.store(in: &publishers)
 
@@ -55,7 +55,7 @@ final class ConfigurationService {
             .sink { log in
             switch log {
             case .error(let logMessage):
-                AlertPresenter.present(message: logMessage.message, type: .error)
+                WalletToast.present(message: logMessage.message, type: .error)
             default: return
             }
         }.store(in: &publishers)
@@ -63,15 +63,15 @@ final class ConfigurationService {
         WalletKit.instance.pairingExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { pairing in
-            AlertPresenter.present(message: "Pairing has expired", type: .warning)
+            WalletToast.present(message: "Pairing has expired", type: .warning)
         }.store(in: &publishers)
 
         WalletKit.instance.sessionProposalExpirationPublisher.sink { _ in
-            AlertPresenter.present(message: "Session Proposal has expired", type: .warning)
+            WalletToast.present(message: "Session Proposal has expired", type: .warning)
         }.store(in: &publishers)
 
         WalletKit.instance.requestExpirationPublisher.sink { _ in
-            AlertPresenter.present(message: "Session Request has expired", type: .warning)
+            WalletToast.present(message: "Session Request has expired", type: .warning)
         }.store(in: &publishers)
 
     }

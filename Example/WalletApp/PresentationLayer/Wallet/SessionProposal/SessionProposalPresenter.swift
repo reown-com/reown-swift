@@ -156,7 +156,7 @@ final class SessionProposalPresenter: ObservableObject {
             _ = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, selectedChainIds: selectedChainIds, proposalRequestsResponses: proposalRequestsResponses)
             isActionLoading = false
             dismiss()
-            AlertPresenter.present(message: "Connected", type: .success)
+            WalletToast.present(message: "Connected", type: .success)
         } catch {
             isActionLoading = false
             errorMessage = error.localizedDescription

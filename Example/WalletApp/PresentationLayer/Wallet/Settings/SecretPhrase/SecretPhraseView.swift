@@ -77,7 +77,7 @@ struct SecretPhraseView: View {
     private func row(title: String, subtitle: String) -> some View {
         Button {
             UIPasteboard.general.string = subtitle
-            AlertPresenter.present(message: "\(title) copied", type: .success)
+            WalletToast.present(message: "\(title) copied", type: .success)
         } label: {
             VStack(alignment: .leading, spacing: Spacing._1) {
                 HStack(spacing: Spacing._05) {

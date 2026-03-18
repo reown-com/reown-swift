@@ -144,7 +144,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         } catch {
             print("🔗 [PayDeeplink] WalletConnectURI error: \(error)")
             if case WalletConnectURI.Errors.expired = error {
-                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                WalletToast.present(message: error.localizedDescription, type: .error)
             } else {
                 guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                       let queryItems = components.queryItems,
@@ -161,7 +161,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 do {
                     try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                 } catch {
-                    AlertPresenter.present(message: error.localizedDescription, type: .error)
+                    WalletToast.present(message: error.localizedDescription, type: .error)
                 }
             }
         }

@@ -82,9 +82,6 @@ struct WalletView: View {
             }
             .padding(.bottom, Spacing._5)
         }
-        .alert(presenter.errorMessage, isPresented: $presenter.showError) {
-            Button("OK", role: .cancel) {}
-        }
         .sheet(isPresented: $presenter.showConnectedSheet) {
             ZStack {
                 VStack {
