@@ -55,6 +55,16 @@ jobs:
       run: |
         make release APPLE_ID=${{ secrets.APPLE_ID }} PROJECT_ID=${{ secrets.RELEASE_PROJECT_ID }} WALLETAPP_SENTRY_DSN=${{ secrets.WALLETAPP_SENTRY_DSN }} MIXPANEL_TOKEN=${{secrets.MIXPANEL_TOKEN}} APP=${{ github.event.inputs.app }}
 
+    - name: Set TestFlight URL
+      id: testflight
+      if: always()
+      run: |
+        case "${{ inputs.app }}" in
+          DApp)      echo "url=${{ vars.TESTFLIGHT_DAPP_URL }}" >> "$GITHUB_OUTPUT" ;;
+          WalletApp) echo "url=${{ vars.TESTFLIGHT_WALLETAPP_URL }}" >> "$GITHUB_OUTPUT" ;;
+          Showcase)  echo "url=${{ vars.TESTFLIGHT_SHOWCASE_URL }}" >> "$GITHUB_OUTPUT" ;;
+        esac
+
     - name: Send Slack notification
       if: always() && !cancelled()
       continue-on-error: true
@@ -86,7 +96,7 @@ jobs:
                     "type": "button",
                     "text": { "type": "plain_text", "text": "View Workflow Run" },
                     "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                  }
+                  }${{ steps.release.outcome == 'success' && steps.testflight.outputs.url != '' && format(',{{"type":"button","text":{{"type":"plain_text","text":"View in TestFlight"}},"url":"{0}"}}', steps.testflight.outputs.url) || '' }}
                 ]
               }
             ]
