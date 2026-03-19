@@ -8,7 +8,7 @@ CAST_HOST = notify.walletconnect.com
 EXPLORER_HOST = explorer-api.walletconnect.com
 
 // Uncomment next line and paste your project id. Get this on: https://cloud.walletconnect.com/sign-in
-// PROJECT_ID = YOUR_PROJECT_ID
+ PROJECT_ID = 4003efc79c1e35dea7a433f7c115b86d
 
 // Uncomment next line and paste dapp's project id to run all the notify tests
 // GM_DAPP_PROJECT_ID = GM_DAPP_PROJECT_ID

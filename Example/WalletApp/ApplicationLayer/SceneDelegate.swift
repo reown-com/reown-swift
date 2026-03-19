@@ -1,19 +1,19 @@
-import SafariServices
 import UIKit
 import ReownWalletKit
 import WalletConnectSign
 import Commons
 
-final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
+final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
     private let app = Application()
+    private lazy var coordinator = NavigationCoordinator(app: app)
 
     private var configurators: [Configurator] {
         return [
             MigrationConfigurator(app: app),
             ThirdPartyConfigurator(),
-            ApplicationConfigurator(app: app),
+            ApplicationConfigurator(app: app, coordinator: coordinator),
             AppearanceConfigurator()
         ]
     }
@@ -48,9 +48,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         // Setup the window
         window = UIWindow(windowScene: windowScene)
         window?.makeKeyAndVisible()
-
-        // Notification center delegate setup
-        UNUserNotificationCenter.current().delegate = self
 
         configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
@@ -147,7 +144,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         } catch {
             print("🔗 [PayDeeplink] WalletConnectURI error: \(error)")
             if case WalletConnectURI.Errors.expired = error {
-                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                WalletToast.present(message: error.localizedDescription, type: .error)
             } else {
                 guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                       let queryItems = components.queryItems,
@@ -164,36 +161,16 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                 do {
                     try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                 } catch {
-                    AlertPresenter.present(message: error.localizedDescription, type: .error)
+                    WalletToast.present(message: error.localizedDescription, type: .error)
                 }
             }
         }
     }
 
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        open(notification: notification)
-        return [.sound, .banner, .badge]
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        open(notification: response.notification)
-    }
 }
 
 private extension SceneDelegate {
-
-    func open(notification: UNNotification) {
-        let popupTag: Int = 1020
-        if let url = URL(string: notification.request.content.subtitle),
-           let topController = window?.rootViewController?.topController, topController.view.tag != popupTag
-        {
-            let safari = SFSafariViewController(url: url)
-            safari.modalPresentationStyle = .formSheet
-            safari.view.tag = popupTag
-            window?.rootViewController?.topController.present(safari, animated: true)
-        }
-    }
 
     func configureWalletKitClientIfNeeded() {
         Networking.configure(
@@ -203,18 +180,22 @@ private extension SceneDelegate {
         )
         
 
+        guard let redirect = try? AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.reown.com/wallet", linkMode: true) else {
+            print("[WalletKit] Failed to create redirect metadata")
+            return
+        }
         let metadata = AppMetadata(
-            name: "Example Wallet",
-            description: "wallet description",
-            url: "example.wallet",
+            name: "Swift Wallet",
+            description: "Swift sample wallet showcasing WalletConnect SDK integration",
+            url: "https://walletconnect.network/sdk",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
-            redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
+            redirect: redirect
         )
 
         #if DEBUG
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey, payLogging: true)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey, payLogging: true)
         #else
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey)
         #endif
     }
 
@@ -272,48 +253,10 @@ private extension SceneDelegate {
         return nil
     }
     
-    /// Handle a payment link URL
-    /// - Parameter paymentLink: The payment link URL - either a WC URI with embedded pay param,
-    ///   or POS scan format "walletapp://walletconnectpay?paymentId=<id>"
+    /// Handle a payment link URL via the coordinator
     private func handlePaymentLink(_ paymentLink: String) {
         print("🔗 [PayDeeplink] handlePaymentLink called with: \(paymentLink)")
-
-        guard let topController = window?.rootViewController?.topController else {
-            print("🔗 [PayDeeplink] ERROR: No top controller available")
-            return
-        }
-        print("🔗 [PayDeeplink] Top controller: \(type(of: topController))")
-
-        // Get wallet account from storage
-        guard let account = AccountStorage(defaults: .standard).importAccount else {
-            print("🔗 [PayDeeplink] ERROR: No account found in storage")
-            AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
-            return
-        }
-        print("🔗 [PayDeeplink] Account found: \(account.account.address)")
-
-        // Get accounts in CAIP-10 format for multiple chains
-        let address = account.account.address
-        let accounts = [
-            "eip155:1:\(address)",      // Ethereum Mainnet
-            "eip155:137:\(address)",    // Polygon
-            "eip155:8453:\(address)"    // Base
-        ]
-        print("🔗 [PayDeeplink] CAIP-10 accounts: \(accounts)")
-
-        print("🔗 [PayDeeplink] Creating PayModule with paymentLink: \(paymentLink)")
-        let paymentVC = PayModule.create(
-            app: app,
-            paymentLink: paymentLink,
-            accounts: accounts,
-            importAccount: account
-        )
-        paymentVC.modalPresentationStyle = .overCurrentContext
-        paymentVC.view.backgroundColor = .clear
-        print("🔗 [PayDeeplink] Presenting PayModule...")
-        topController.present(paymentVC, animated: true) {
-            print("🔗 [PayDeeplink] PayModule presented successfully")
-        }
+        coordinator.showPayment(paymentLink: paymentLink)
     }
 }
 

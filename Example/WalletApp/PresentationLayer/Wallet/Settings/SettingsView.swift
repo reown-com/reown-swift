@@ -1,137 +1,89 @@
 import SwiftUI
-import AsyncButton
-import ReownAppKitUI
 
 struct SettingsView: View {
     @EnvironmentObject var viewModel: SettingsPresenter
-    @State private var copyAlert: Bool = false
+    @EnvironmentObject var coordinator: NavigationCoordinator
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                separator()
+        ZStack {
+            AppColors.backgroundPrimary
+                .edgesIgnoringSafeArea(.all)
 
-                Group {
-                    header(title: "Account")
-                    row(title: "CAIP-10", subtitle: viewModel.account)
-                    row(title: "Private key", subtitle: viewModel.privateKey)
+            VStack(spacing: 0) {
+                HeaderView(
+                    onScan: { viewModel.scanHandler.show() }
+                )
 
-                    header(title: "Stacks")
-                    row(title: "Stacks Mnemonic", subtitle: viewModel.stacksMnemonic)
-                    row(title: "Stacks Mainnet Address", subtitle: viewModel.stacksMainnetAddress)
-                    row(title: "Stacks Testnet Address", subtitle: viewModel.stacksTestnetAddress)
+                ScrollView {
+                    VStack(spacing: Spacing._2) {
 
-                    header(title: "Solana")
-                    row(title: "Solana Address", subtitle: viewModel.solanaAddress)
-                    row(title: "Solana Private Key", subtitle: viewModel.solanaPrivateKey)
+                        SettingsCardView.toggle(
+                            "Dark mode",
+                            isOn: Binding(
+                                get: { viewModel.themeManager.isDarkMode },
+                                set: { viewModel.themeManager.isDarkMode = $0 }
+                            )
+                        )
 
-                    header(title: "Sui")
-                    row(title: "Sui Address", subtitle: viewModel.suiAddress)
-                    row(title: "Sui Private Key", subtitle: viewModel.suiPrivateKey)
+                        SettingsCardView.navigation("Secret Keys & Phrases") {
+                            coordinator.settingsPath.append(SettingsDestination.secretPhrase)
+                        }
 
-                    header(title: "TON")
-                    row(title: "TON Address", subtitle: viewModel.tonAddress)
-                    row(title: "TON Private Key", subtitle: viewModel.tonPrivateKey)
+                        SettingsCardView.navigation("Import Wallet") {
+                            viewModel.importWalletPressed()
+                        }
 
-                    header(title: "Tron")
-                    row(title: "Tron Address", subtitle: viewModel.tronAddress)
-                    row(title: "Tron Private Key", subtitle: viewModel.tronPrivateKey)
-                }
-                .padding(.horizontal, 20)
+                        SettingsCardView.navigation("React-App Browser") {
+                            coordinator.settingsPath.append(SettingsDestination.browser)
+                        }
 
-                separator()
+                        SettingsCardView.externalLink("Report a Bug") {
+                            if let url = URL(string: "https://github.com/reown-com/reown-swift/issues") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
 
-                Group {
-                    header(title: "Device")
-                    row(title: "Client ID", subtitle: viewModel.clientId)
-                    row(title: "Device Token", subtitle: viewModel.deviceToken)
-                }
-                .padding(.horizontal, 20)
+                        sectionHeader(title: "Device")
 
-                separator()
+                        SettingsCardView.info("Client ID", value: truncated(viewModel.clientId)) {
+                            UIPasteboard.general.string = viewModel.clientId
+                            WalletToast.present(message: "Client ID copied", type: .success)
+                        }
 
-                Group {
-                    Button {
-                        viewModel.browserPressed()
-                    } label: {
-                        Text("Browser")
-                            .frame(maxWidth: .infinity)
+                        SettingsCardView.info("App Version", value: viewModel.appVersion)
                     }
-                    .frame(height: 44.0)
-
-
-                    AsyncButton {
-                        try await viewModel.logoutPressed()
-                    } label: {
-                        Text("Log out")
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .frame(height: 44.0)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Radius.m)
-                            .stroke(Color.red, lineWidth: 1)
-                    )
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, Spacing._5)
+                    .padding(.top, Spacing._3)
+                    .padding(.bottom, Spacing._6)
                 }
-                .padding(.horizontal, 20)
             }
         }
-        .alert("Value copied to clipboard", isPresented: $copyAlert) {
-            Button("OK", role: .cancel) { }
+        .scanOptionsSheet(
+            isPresented: $viewModel.scanHandler.showScanOptions,
+            onScanQR: { viewModel.scanHandler.scanQR() },
+            onPasteURL: { viewModel.scanHandler.pasteURL() }
+        )
+        .sheet(isPresented: $viewModel.showImportWallet) {
+            ImportWalletView()
+                .environmentObject(viewModel.makeImportWalletPresenter())
+                .presentationDetents([.medium, .large])
         }
-        .onAppear {
-            viewModel.objectWillChange.send()
-        }
+        .navigationBarHidden(true)
     }
 
-    func header(title: String) -> some View {
+    private func sectionHeader(title: String) -> some View {
         HStack {
             Text(title)
-                .foregroundColor(.Foreground100)
-                .font(.large700)
-                .padding(.vertical, 6)
+                .foregroundColor(AppColors.textSecondary)
+                .appFont(.md, weight: .medium)
             Spacer()
         }
+        .padding(.top, Spacing._4)
+        .padding(.bottom, Spacing._1)
     }
 
-    func row(title: String, subtitle: String) -> some View {
-        return Button(action: {
-            UIPasteboard.general.string = subtitle
-            copyAlert = true
-        }) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(title)
-                        .multilineTextAlignment(.leading)
-                        .foregroundColor(.Foreground100)
-                        .font(.paragraph700)
-
-                    Image("copy_small")
-                        .foregroundColor(.Foreground100)
-
-                    Spacer()
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 16)
-
-                Text(subtitle)
-                    .multilineTextAlignment(.leading)
-                    .foregroundColor(.Foreground150)
-                    .font(.paragraph500)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 16)
-            }
-            .background(Color.Foreground100.opacity(0.05).cornerRadius(12))
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    func separator() -> some View {
-        Rectangle()
-            .foregroundColor(.Foreground100.opacity(0.05))
-            .frame(maxWidth: .infinity)
-            .frame(height: 1)
-            .padding(.top, 8)
+    private func truncated(_ value: String) -> String {
+        guard value.count > 20 else { return value }
+        return String(value.prefix(10)) + "..." + String(value.suffix(6))
     }
 }
