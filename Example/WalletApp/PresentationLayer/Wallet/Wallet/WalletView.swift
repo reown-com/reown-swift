@@ -3,27 +3,32 @@ import ReownWalletKit
 
 struct WalletView: View {
     @EnvironmentObject var presenter: WalletPresenter
-    
+
     var body: some View {
         ZStack {
-            Color.grey100
+            AppColors.backgroundPrimary
                 .edgesIgnoringSafeArea(.all)
-            
-            VStack(alignment: .leading, spacing: 16) {
+
+            VStack(alignment: .leading, spacing: 0) {
+                HeaderView(
+                    onScan: { presenter.scanHandler.show() }
+                )
+
                 ZStack {
                     if presenter.sessions.isEmpty {
-                        VStack(spacing: 10) {
-                            Image("connect-template")
-                            
-                            Text("Apps you connect with will appear here. To connect scan or paste the code that's displayed in the app.")
-                                .foregroundColor(.grey50)
-                                .font(.system(size: 15, weight: .regular, design: .rounded))
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
+                        VStack(spacing: Spacing._2) {
+                            Text("No connected apps yet")
+                                .foregroundColor(AppColors.textPrimary)
+                                .appFont(.h6)
+
+                            Text("Scan a WalletConnect QR code to get started.")
+                                .foregroundColor(AppColors.textSecondary)
+                                .appFont(.lg)
                         }
-                        .padding(20)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    
+
                     VStack {
                         ZStack {
                             if !presenter.sessions.isEmpty {
@@ -31,7 +36,8 @@ struct WalletView: View {
                                     ForEach(presenter.sessions, id: \.topic) { session in
                                         connectionView(session: session)
                                             .listRowSeparator(.hidden)
-                                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 16, trailing: 0))
+                                            .listRowInsets(EdgeInsets(top: 0, leading: Spacing._5, bottom: Spacing._2, trailing: Spacing._5))
+                                            .listRowBackground(Color.clear)
                                     }
                                     .onDelete { indexSet in
                                         Task(priority: .high) {
@@ -40,117 +46,175 @@ struct WalletView: View {
                                     }
                                 }
                                 .listStyle(PlainListStyle())
+                                .scrollContentBackground(.hidden)
+                                .padding(.top, Spacing._7)
                             }
-                            
+
                             if presenter.showPairingLoading {
                                 VStack {
                                     Spacer()
-                                    
+
                                     ZStack {
-                                        RoundedRectangle(cornerRadius: 20).fill(
+                                        RoundedRectangle(cornerRadius: CGFloat(AppRadius._5)).fill(
                                             LinearGradient(
                                                 gradient: Gradient(colors: [
-                                                    .blue100,
-                                                    .blue200
+                                                    AppColors.backgroundAccentPrimary,
+                                                    AppColors.foregroundAccentPrimary90Solid
                                                 ]),
                                                 startPoint: .top, endPoint: .bottom)
                                         )
                                         .blink()
-                                        
+
                                         Text("WalletConnect is pairing...")
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 16, weight: .regular, design: .rounded))
-                                            .padding(.vertical, 10)
-                                            .padding(.horizontal, 15)
+                                            .foregroundColor(AppColors.white)
+                                            .appFont(.lg)
+                                            .padding(.vertical, Spacing._3)
+                                            .padding(.horizontal, Spacing._4)
                                     }
                                     .fixedSize(horizontal: true, vertical: true)
                                 }
                             }
                         }
-                        
+
                         Spacer()
                     }
                 }
             }
-            .padding(.vertical, 20)
-        }
-        .alert(presenter.errorMessage, isPresented: $presenter.showError) {
-            Button("OK", role: .cancel) {}
+            .padding(.bottom, Spacing._5)
         }
         .sheet(isPresented: $presenter.showConnectedSheet) {
             ZStack {
                 VStack {
                     Image("connected")
-                    
+
                     Spacer()
                 }
-                
-                VStack(spacing: 8) {
+
+                VStack(spacing: Spacing._2) {
                     Rectangle()
                         .foregroundColor(.clear)
                         .frame(width: 48, height: 4)
-                        .background(Color(red: 0.02, green: 0.17, blue: 0.17).opacity(0.2))
+                        .background(AppColors.textPrimary.opacity(0.2))
                         .cornerRadius(100)
-                        .padding(.top, 8)
-                    
+                        .padding(.top, Spacing._2)
+
                     Text("Connected")
-                        .foregroundColor(.grey8)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundColor(AppColors.textPrimary)
+                        .appFont(.h6, weight: .medium)
                         .padding(.top, 168)
-                    
-                    
+
                     Text("You can go back to your browser now")
-                        .foregroundColor(Color(red: 0.47, green: 0.53, blue: 0.53))
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                    
+                        .foregroundColor(AppColors.textSecondary)
+                        .appFont(.lg, weight: .medium)
+
                     Spacer()
                 }
             }
         }
+        .scanOptionsSheet(
+            isPresented: $presenter.scanHandler.showScanOptions,
+            onScanQR: { presenter.scanHandler.scanQR() },
+            onPasteURL: { presenter.scanHandler.pasteURL() }
+        )
+        .sheet(isPresented: Binding(
+            get: { presenter.selectedSessionForDetail != nil },
+            set: { if !$0 { presenter.selectedSessionForDetail = nil } }
+        )) {
+            if let session = presenter.selectedSessionForDetail {
+                SessionDetailModalView(
+                    session: session,
+                    onDisconnect: { presenter.disconnectSelectedSession() },
+                    onClose: { presenter.selectedSessionForDetail = nil },
+                    isDisconnecting: presenter.isDisconnecting
+                )
+                .presentationDragIndicator(.hidden)
+                .modifier(SessionDetailSheetModifier())
+            }
+        }
+        .navigationBarHidden(true)
         .onAppear {
             presenter.onAppear()
         }
     }
-    
+
     private func connectionView(session: Session) -> some View {
         Button {
             presenter.onConnection(session: session)
         } label: {
-            VStack {
-                HStack(spacing: 10) {
-                    AsyncImage(url: URL(string: session.peer.icons.first ?? "")) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .frame(width: 60, height: 60)
-                                .background(Color.black)
-                                .cornerRadius(30, corners: .allCorners)
-                        } else {
-                            Color.black
-                                .frame(width: 60, height: 60)
-                                .cornerRadius(30, corners: .allCorners)
-                        }
+            HStack(spacing: Spacing._4) {
+                // App icon — 42x42, rounded 12px
+                AsyncImage(url: URL(string: session.peer.icons.first ?? "")) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        AppColors.foregroundTertiary
                     }
-                    .padding(.leading, 20)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(session.peer.name)
-                            .foregroundColor(.grey8)
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        
-                        Text(session.peer.url)
-                            .foregroundColor(.grey50)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                    }
-                    
-                    Spacer()
-                    
-                    Image("forward-shevron")
-                        .foregroundColor(.grey8)
-                        .padding(.trailing, 20)
+                }
+                .frame(width: 42, height: 42)
+                .cornerRadius(AppRadius._3)
+
+                // Name + domain
+                VStack(alignment: .leading, spacing: Spacing._05) {
+                    Text(session.peer.name)
+                        .appFont(.lg)
+                        .foregroundColor(AppColors.textPrimary)
+                        .lineLimit(1)
+
+                    Text(formattedDomain(session.peer.url))
+                        .appFont(.lg)
+                        .foregroundColor(AppColors.textSecondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: Spacing._2)
+
+                // Chain icons
+                ChainIconsView(
+                    chainIds: chainIds(from: session),
+                    size: 24,
+                    overlap: 8,
+                    maxVisible: 4
+                )
+            }
+            .padding(Spacing._5)
+            .background(AppColors.foregroundPrimary)
+            .cornerRadius(Spacing._5)
+        }
+    }
+
+    private func formattedDomain(_ urlString: String) -> String {
+        var d = urlString
+        if let url = URL(string: d), let host = url.host {
+            d = host
+        }
+        if d.hasPrefix("www.") {
+            d = String(d.dropFirst(4))
+        }
+        return d
+    }
+
+    private func chainIds(from session: Session) -> [String] {
+        var ids = [String]()
+        var seen = Set<String>()
+        for (_, ns) in session.namespaces {
+            for account in ns.accounts {
+                let chainId = account.blockchain.absoluteString
+                if seen.insert(chainId).inserted {
+                    ids.append(chainId)
                 }
             }
         }
+        return ids
+    }
+}
+
+private struct SessionDetailSheetModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .presentationDetents([.medium, .large])
+            .sheetBackground()
     }
 }
 

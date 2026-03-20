@@ -1,20 +1,16 @@
-import UIKit
+import SwiftUI
 import Combine
 
 import ReownWalletKit
 
 final class ConnectionDetailsPresenter: ObservableObject {
-    private let router: ConnectionDetailsRouter
-    
+    var dismissAction: (() -> Void)?
+
     let session: Session
-    
+
     private var disposeBag = Set<AnyCancellable>()
 
-    init(
-        router: ConnectionDetailsRouter,
-        session: Session
-    ) {
-        self.router = router
+    init(session: Session) {
         self.session = session
     }
 
@@ -24,8 +20,8 @@ final class ConnectionDetailsPresenter: ObservableObject {
                 ActivityIndicatorManager.shared.start()
                 try await WalletKit.instance.disconnect(topic: session.topic)
                 ActivityIndicatorManager.shared.stop()
-                DispatchQueue.main.async {
-                    self.router.dismiss()
+                await MainActor.run {
+                    dismissAction?()
                 }
             } catch {
                 ActivityIndicatorManager.shared.stop()
@@ -33,7 +29,6 @@ final class ConnectionDetailsPresenter: ObservableObject {
             }
         }
     }
-
 
     func accountReferences(namespace: String) -> [String] {
         session.namespaces[namespace]?.accounts.map { "\($0.namespace):\(($0.reference))" } ?? []
@@ -43,9 +38,7 @@ final class ConnectionDetailsPresenter: ObservableObject {
         Task {
             do {
                 ActivityIndicatorManager.shared.start()
-
                 try await WalletKit.instance.emit(topic: session.topic, event: Session.Event(name: "chainChanged", data: AnyCodable("1")), chainId: Blockchain("eip155:1")!)
-
                 ActivityIndicatorManager.shared.stop()
             } catch {
                 ActivityIndicatorManager.shared.stop()
@@ -53,14 +46,4 @@ final class ConnectionDetailsPresenter: ObservableObject {
             }
         }
     }
-}
-
-// MARK: - Private functions
-private extension ConnectionDetailsPresenter {
-
-}
-
-// MARK: - SceneViewModel
-extension ConnectionDetailsPresenter: SceneViewModel {
-
 }
