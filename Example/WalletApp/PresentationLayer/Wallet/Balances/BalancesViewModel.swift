@@ -12,12 +12,12 @@ struct BalanceAPIResponse: Codable {
 struct TokenBalance: Codable {
     let name: String
     let symbol: String
-    let chainId: String
+    let chainId: String?
     let address: String?
-    let value: Double
-    let price: Double
-    let quantity: TokenQuantity
-    let iconUrl: String
+    let value: Double?
+    let price: Double?
+    let quantity: TokenQuantity?
+    let iconUrl: String?
 }
 
 struct TokenQuantity: Codable {
@@ -254,7 +254,17 @@ final class BalancesViewModel: ObservableObject {
 
                 // Fetch and decode
                 let (data, _) = try await URLSession.shared.data(for: request)
-                let response = try JSONDecoder().decode(BalanceAPIResponse.self, from: data)
+                let decoder = JSONDecoder()
+                let response: BalanceAPIResponse
+                do {
+                    response = try decoder.decode(BalanceAPIResponse.self, from: data)
+                } catch {
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("Balance API decode error: \(error)")
+                        print("Raw response: \(jsonString.prefix(1000))")
+                    }
+                    throw error
+                }
 
                 // Filter for USDC and EURC tokens
                 let usdcTokens = response.balances.filter { $0.symbol == "USDC" }
@@ -266,7 +276,7 @@ final class BalancesViewModel: ObservableObject {
                     for chain in USDCChain.allCases {
                         if let index = self.usdcBalances.firstIndex(where: { $0.chain == chain }),
                            let apiBalance = usdcTokens.first(where: { $0.chainId == chain.chainId }) {
-                            self.usdcBalances[index].balance = Decimal(apiBalance.value)
+                            self.usdcBalances[index].balance = Decimal(apiBalance.value ?? 0)
                             self.usdcBalances[index].error = nil
                         } else if let index = self.usdcBalances.firstIndex(where: { $0.chain == chain }) {
                             self.usdcBalances[index].balance = 0
@@ -278,7 +288,7 @@ final class BalancesViewModel: ObservableObject {
                     for chain in USDCChain.eurcChains {
                         if let index = self.eurcBalances.firstIndex(where: { $0.chain == chain }),
                            let apiBalance = eurcTokens.first(where: { $0.chainId == chain.chainId }) {
-                            self.eurcBalances[index].balance = Decimal(apiBalance.value)
+                            self.eurcBalances[index].balance = Decimal(apiBalance.value ?? 0)
                             self.eurcBalances[index].error = nil
                         } else if let index = self.eurcBalances.firstIndex(where: { $0.chain == chain }) {
                             self.eurcBalances[index].balance = 0
