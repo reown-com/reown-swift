@@ -23,11 +23,15 @@ final class AuthRequestPresenter: ObservableObject {
             }
         }
     }
-    private let router: AuthRequestRouter
+    var dismissAction: (() -> Void)?
 
     let importAccount: ImportAccount
     let request: AuthenticationRequest
     let validationStatus: VerifyContext.ValidationStatus?
+
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
+    @Published var isSignOneLoading = false
     
     var messages: [(String, String)] {
         return buildFormattedMessages(request: request)
@@ -46,7 +50,6 @@ final class AuthRequestPresenter: ObservableObject {
         }
     }
 
-    @Published var showSignedSheet = false
     
     private var disposeBag = Set<AnyCancellable>()
     private let solanaAccountStorage = SolanaAccountStorage()
@@ -55,91 +58,84 @@ final class AuthRequestPresenter: ObservableObject {
 
     init(
         importAccount: ImportAccount,
-        router: AuthRequestRouter,
         request: AuthenticationRequest,
         context: VerifyContext?,
         messageSigner: MessageSigner
     ) {
         defer { setupInitialState() }
-        self.router = router
         self.importAccount = importAccount
         self.request = request
         self.validationStatus = context?.validation
         self.messageSigner = messageSigner
     }
 
+    private var isAnyLoading: Bool { isActionLoading || isCancelLoading || isSignOneLoading }
+
     @MainActor
     func signMulti() async {
         do {
-            ActivityIndicatorManager.shared.start()
+            isActionLoading = true
 
             let auths = try buildAuthObjects()
 
             _ = try await WalletKit.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             /* Redirect */
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
-                router.dismiss()
-            } else {
-                showSignedSheet.toggle()
             }
+            dismiss()
+            WalletToast.present(message: "Request signed", type: .success)
 
         } catch {
-            ActivityIndicatorManager.shared.stop()
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            isActionLoading = false
+            WalletToast.present(message: error.localizedDescription, type: .error)
         }
     }
 
     @MainActor
     func signOne() async {
         do {
-            ActivityIndicatorManager.shared.start()
+            isSignOneLoading = true
 
             let auths = try buildOneAuthObject()
 
             _ = try await WalletKit.instance.approveSessionAuthenticate(requestId: request.id, auths: auths)
-            ActivityIndicatorManager.shared.stop()
+            isSignOneLoading = false
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
-                router.dismiss()
-            } else {
-                showSignedSheet.toggle()
             }
+            dismiss()
+            WalletToast.present(message: "Request signed", type: .success)
 
         } catch {
-            ActivityIndicatorManager.shared.stop()
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            isSignOneLoading = false
+            WalletToast.present(message: error.localizedDescription, type: .error)
         }
     }
 
     @MainActor
-    func reject() async  {
-        ActivityIndicatorManager.shared.start()
-
+    func reject() async {
         do {
+            isCancelLoading = true
             try await WalletKit.instance.rejectSession(requestId: request.id)
 
             /* Redirect */
             if let uri = request.requester.redirect?.native {
                 ReownRouter.goBack(uri: uri)
             }
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
 
-            router.dismiss()
+            dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
 
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
         }
     }
     
-    func onSignedSheetDismiss() {
-        router.dismiss()
-    }
-
     private func createAuthObjectForChain(chain: Blockchain) throws -> AuthObject {
         guard let account = resolvedAccount(for: chain) else {
             throw Errors.noCommonChains
@@ -202,7 +198,7 @@ final class AuthRequestPresenter: ObservableObject {
     }
 
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 }
 
@@ -296,7 +292,3 @@ private extension AuthRequestPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension AuthRequestPresenter: SceneViewModel {
-
-}

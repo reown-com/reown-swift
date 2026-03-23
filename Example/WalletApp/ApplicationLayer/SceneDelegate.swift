@@ -1,19 +1,19 @@
-import SafariServices
 import UIKit
 import ReownWalletKit
 import WalletConnectSign
 import Commons
 
-final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
+final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
     private let app = Application()
+    private lazy var coordinator = NavigationCoordinator(app: app)
 
     private var configurators: [Configurator] {
         return [
             MigrationConfigurator(app: app),
             ThirdPartyConfigurator(),
-            ApplicationConfigurator(app: app),
+            ApplicationConfigurator(app: app, coordinator: coordinator),
             AppearanceConfigurator()
         ]
     }
@@ -57,9 +57,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
         // Setup the window
         window = UIWindow(windowScene: windowScene)
         window?.makeKeyAndVisible()
-
-        // Notification center delegate setup
-        UNUserNotificationCenter.current().delegate = self
 
         configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
@@ -171,7 +168,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
             }
         } catch {
             if case WalletConnectURI.Errors.expired = error {
-                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                WalletToast.present(message: error.localizedDescription, type: .error)
             } else {
                 guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                       let queryItems = components.queryItems,
@@ -187,21 +184,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificatio
                 do {
                     try WalletKit.instance.dispatchEnvelope(url.absoluteString)
                 } catch {
-                    AlertPresenter.present(message: error.localizedDescription, type: .error)
+                    WalletToast.present(message: error.localizedDescription, type: .error)
                 }
             }
         }
     }
 
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        open(notification: notification)
-        return [.sound, .banner, .badge]
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        open(notification: response.notification)
-    }
 }
 
 private extension SceneDelegate {
@@ -215,7 +204,7 @@ private extension SceneDelegate {
                     self?.handleScannedPaymentUrl(urlString)
                 case .failure(let error):
                     if case NFCPaymentError.cancelled = error { return }
-                    AlertPresenter.present(message: error.localizedDescription, type: .error)
+                    WalletToast.present(message: error.localizedDescription, type: .error)
                 }
             }
         }
@@ -229,17 +218,6 @@ private extension SceneDelegate {
         print("NFC scan returned non-payment URL: \(urlString)")
     }
 
-    func open(notification: UNNotification) {
-        let popupTag: Int = 1020
-        if let url = URL(string: notification.request.content.subtitle),
-           let topController = window?.rootViewController?.topController, topController.view.tag != popupTag
-        {
-            let safari = SFSafariViewController(url: url)
-            safari.modalPresentationStyle = .formSheet
-            safari.view.tag = popupTag
-            window?.rootViewController?.topController.present(safari, animated: true)
-        }
-    }
 
     func configureWalletKitClientIfNeeded() {
         Networking.configure(
@@ -249,18 +227,22 @@ private extension SceneDelegate {
         )
         
 
+        guard let redirect = try? AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.reown.com/wallet", linkMode: true) else {
+            print("[WalletKit] Failed to create redirect metadata")
+            return
+        }
         let metadata = AppMetadata(
-            name: "Example Wallet",
-            description: "wallet description",
-            url: "example.wallet",
+            name: "Swift Wallet",
+            description: "Swift sample wallet showcasing WalletConnect SDK integration",
+            url: "https://walletconnect.network/sdk",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
-            redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
+            redirect: redirect
         )
 
         #if DEBUG
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey, payLogging: true)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey, payLogging: true)
         #else
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey)
         #endif
     }
 
@@ -299,31 +281,9 @@ private extension SceneDelegate {
         return nil
     }
     
-    /// Present the payment flow for the given payment link.
+    /// Handle a payment link URL via the coordinator
     private func handlePaymentLink(_ paymentLink: String) {
-        guard let topController = window?.rootViewController?.topController else { return }
-
-        guard let account = AccountStorage(defaults: .standard).importAccount else {
-            AlertPresenter.present(message: "No account found. Please import an account first.", type: .error)
-            return
-        }
-
-        let address = account.account.address
-        let accounts = [
-            "eip155:1:\(address)",
-            "eip155:137:\(address)",
-            "eip155:8453:\(address)"
-        ]
-
-        let paymentVC = PayModule.create(
-            app: app,
-            paymentLink: paymentLink,
-            accounts: accounts,
-            importAccount: account
-        )
-        paymentVC.modalPresentationStyle = .overCurrentContext
-        paymentVC.view.backgroundColor = .clear
-        topController.present(paymentVC, animated: true)
+        coordinator.showPayment(paymentLink: paymentLink)
     }
 }
 
