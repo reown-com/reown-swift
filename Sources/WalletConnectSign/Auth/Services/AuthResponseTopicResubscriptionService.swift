@@ -22,6 +22,10 @@ class AuthResponseTopicResubscriptionService {
     private let authResponseTopicRecordsStore: CodableStore<AuthResponseTopicRecord>
     private var cleanupTimer: Timer?
 
+    deinit {
+        cleanupTimer?.invalidate()
+    }
+
     init(
         networkingInteractor: NetworkInteracting,
         logger: ConsoleLogging,

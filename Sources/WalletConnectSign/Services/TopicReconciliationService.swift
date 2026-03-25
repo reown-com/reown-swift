@@ -9,6 +9,10 @@ final class TopicReconciliationService {
     private let logger: ConsoleLogging
     private var reconciliationTimer: Timer?
 
+    deinit {
+        reconciliationTimer?.invalidate()
+    }
+
     init(
         networkingInteractor: NetworkInteracting,
         sessionStore: WCSessionStorage,
