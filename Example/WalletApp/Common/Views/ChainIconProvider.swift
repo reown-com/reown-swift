@@ -34,6 +34,7 @@ enum ChainIconProvider {
             case "324": return ("zkSync", "zkSync")
             case "5": return ("Goerli", "Goerli")
             case "11155111": return ("Sepolia", "Sepolia")
+            case "143": return ("Monad", "Monad")
             case "36900": return ("ADI", "ADI")
             default: return nil
             }
