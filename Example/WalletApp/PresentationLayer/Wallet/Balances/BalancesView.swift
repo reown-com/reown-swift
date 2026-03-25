@@ -207,7 +207,7 @@ struct BalancesView: View {
         HStack(spacing: Spacing._3) {
             ZStack(alignment: .bottomTrailing) {
                 CachedTokenImage(url: token.iconUrl, symbol: token.symbol)
-                chainBadge(for: token.chainId)
+                chainBadge(for: token.chainId ?? "")
             }
 
             VStack(alignment: .leading, spacing: Spacing._05) {
