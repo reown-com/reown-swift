@@ -320,6 +320,10 @@ public final class RelayClient {
         topicsTracker.addTopics(topics)
     }
 
+    public func getSubscribedTopics() -> [String] {
+        return subscriptionsTracker.getTopics()
+    }
+
     // FIXME: Parse data to string once before trying to decode -> respond error on fail
     private func handlePayloadMessage(_ payload: String) {
         if let request = tryDecode(RPCRequest.self, from: payload) {

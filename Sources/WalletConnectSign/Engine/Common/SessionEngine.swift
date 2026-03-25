@@ -148,6 +148,7 @@ private extension SessionEngine {
             self?.historyService.removePendingRequest(topic: session.topic)
             self?.kms.deletePrivateKey(for: session.selfParticipant.publicKey)
             self?.kms.deleteAgreementSecret(for: session.topic)
+            self?.networkingInteractor.unsubscribe(topic: session.topic)
         }
     }
 
@@ -171,11 +172,14 @@ private extension SessionEngine {
     func onSessionDelete(payload: RequestSubscriptionPayload<SessionType.DeleteParams>) {
         let protocolMethod = SessionDeleteProtocolMethod()
         let topic = payload.topic
-        guard sessionStore.hasSession(forTopic: topic) else {
+        guard let session = sessionStore.getSession(forTopic: topic) else {
             return respondError(payload: payload, reason: .noSessionForTopic, protocolMethod: protocolMethod)
         }
         sessionStore.delete(topic: topic)
         networkingInteractor.unsubscribe(topic: topic)
+        kms.deleteSymmetricKey(for: topic)
+        kms.deletePrivateKey(for: session.selfParticipant.publicKey)
+        kms.deleteAgreementSecret(for: topic)
         Task(priority: .high) {
             try await networkingInteractor.respondSuccess(topic: payload.topic, requestId: payload.id, protocolMethod: protocolMethod)
         }

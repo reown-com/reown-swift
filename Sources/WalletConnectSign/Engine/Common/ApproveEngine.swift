@@ -342,7 +342,10 @@ private extension ApproveEngine {
                 removePairing(pairingTopic: payload.topic)
             }
         } catch {
-            return logger.debug(error.localizedDescription)
+            logger.debug(error.localizedDescription)
+            removePairing(pairingTopic: payload.topic)
+            kms.deletePrivateKey(for: payload.request.proposer.publicKey)
+            return
         }
     }
 
@@ -477,6 +480,7 @@ private extension ApproveEngine {
             verifyContext: nil
         )
         sessionStore.setSession(session)
+        networkingInteractor.unsubscribe(topic: pairingTopic)
 
         Task(priority: .high) {
             try await networkingInteractor.respondSuccess(topic: payload.topic, requestId: payload.id, protocolMethod: protocolMethod)
