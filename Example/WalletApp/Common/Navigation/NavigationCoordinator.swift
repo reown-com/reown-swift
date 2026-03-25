@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import CoreNFC
 import ReownWalletKit
 import WalletConnectNetworking
 
@@ -67,6 +68,28 @@ final class NavigationCoordinator: ObservableObject {
 
     func presentScanCamera() {
         showScanCamera = true
+    }
+
+    var isNFCAvailable: Bool {
+        NFCPaymentReader.isAvailable
+    }
+
+    func scanNFC() {
+        NFCPaymentReader.shared.scan { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let urlString):
+                    if WalletKit.isPaymentLink(urlString) {
+                        self?.showPayment(paymentLink: urlString)
+                    } else {
+                        WalletToast.present(message: "Not a valid payment link", type: .error)
+                    }
+                case .failure(let error):
+                    if case NFCPaymentError.cancelled = error { return }
+                    WalletToast.present(message: error.localizedDescription, type: .error)
+                }
+            }
+        }
     }
 
     func handleScanResult(_ uriString: String) {

@@ -141,6 +141,7 @@ private let cardShape = RoundedRectangle(cornerRadius: CGFloat(AppRadius._5))
 
 struct BalancesView: View {
     @EnvironmentObject var viewModel: BalancesViewModel
+    @EnvironmentObject var coordinator: NavigationCoordinator
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
@@ -151,8 +152,8 @@ struct BalancesView: View {
             VStack(spacing: 0) {
                 HeaderView(
                     onScan: { viewModel.scanHandler.show() },
-                    onNfc: { viewModel.onScanNFC() },
-                    isNfcAvailable: viewModel.isNFCAvailable
+                    onNfc: { coordinator.scanNFC() },
+                    isNfcAvailable: coordinator.isNFCAvailable
                 )
 
                 if viewModel.isLoading && viewModel.tokenBalances.isEmpty {

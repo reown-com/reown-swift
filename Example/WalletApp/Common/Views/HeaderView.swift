@@ -27,16 +27,21 @@ struct HeaderView: View {
                 // NFC button
                 if isNfcAvailable, let onNfc {
                     Button(action: onNfc) {
-                        Image(systemName: "wave.3.right")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(AppColors.textPrimary)
-                            .frame(width: 38, height: 38)
-                            .background(AppColors.backgroundPrimary)
-                            .cornerRadius(CGFloat(AppRadius._3))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: CGFloat(AppRadius._3))
-                                    .stroke(AppColors.foregroundTertiary, lineWidth: 1)
-                            )
+                        ZStack {
+                            Circle()
+                                .fill(AppColors.backgroundInvert)
+                                .frame(width: 24, height: 24)
+                            Image(systemName: "radiowaves.right")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(AppColors.textInvert)
+                        }
+                        .frame(width: 38, height: 38)
+                        .background(AppColors.backgroundPrimary)
+                        .cornerRadius(CGFloat(AppRadius._3))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CGFloat(AppRadius._3))
+                                .stroke(AppColors.foregroundTertiary, lineWidth: 1)
+                        )
                     }
                     .accessibilityIdentifier("headerNfc")
                 }
