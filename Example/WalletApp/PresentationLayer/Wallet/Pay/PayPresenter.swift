@@ -119,15 +119,10 @@ final class PayPresenter: ObservableObject {
                     self.selectedOption = response.options.first
 
                     // Auto-pay mode: skip UI and confirm immediately if possible
-                    if self.autoPayMode {
-                        let autoOption = response.options.first { _ in
-                            self.collectData == nil
-                        }
-                        if let option = autoOption {
-                            self.selectedOption = option
-                            self.confirmPayment()
-                            return
-                        }
+                    if self.autoPayMode, self.collectData == nil, let option = response.options.first {
+                        self.selectedOption = option
+                        self.confirmPayment()
+                        return
                     }
                     self.currentStep = .options
                 }

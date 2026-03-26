@@ -19,8 +19,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        guard let url = userActivity.webpageURL,
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+        guard let url = userActivity.webpageURL else {
             return
         }
 
@@ -215,7 +214,7 @@ private extension SceneDelegate {
             handlePaymentLink(urlString)
             return
         }
-        print("NFC scan returned non-payment URL: \(urlString)")
+        print("NFC scan returned non-payment URL")
     }
 
 

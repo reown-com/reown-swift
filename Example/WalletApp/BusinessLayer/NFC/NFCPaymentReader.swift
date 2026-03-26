@@ -67,7 +67,7 @@ extension NFCPaymentReader: NFCNDEFReaderSessionDelegate {
                 // Try to extract a URI from the NDEF record
                 if let url = record.wellKnownTypeURIPayload() {
                     let urlString = url.absoluteString
-                    print("NFC: Payment URL read from tag: \(urlString)")
+                    print("NFC: Payment URL read from tag")
                     session.alertMessage = "Payment link received!"
                     session.invalidate()
                     completion?(.success(urlString))

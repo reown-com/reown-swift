@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-import CoreNFC
 import SwiftUI
 
 // MARK: - Blockchain API Response Models
