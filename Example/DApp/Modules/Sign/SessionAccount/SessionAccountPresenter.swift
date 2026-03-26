@@ -52,9 +52,14 @@ final class SessionAccountPresenter: ObservableObject {
                     try await Sign.instance.request(params: request)
                     lastRequest = request
                     ActivityIndicatorManager.shared.stop()
-                    requesting = true
-                    DispatchQueue.main.async { [weak self] in
-                        self?.openWallet()
+                    
+                    let requestId = request.id
+                    let sessionTopic = session.topic
+                    
+                    await MainActor.run { [weak self] in
+                        guard let self = self else { return }
+                        self.requesting = true
+                        self.openWallet(requstId: requestId, topic: sessionTopic)
                     }
                 } catch {
                     ActivityIndicatorManager.shared.stop()
@@ -104,12 +109,39 @@ extension SessionAccountPresenter {
         showResponse.toggle()
     }
     
-    private func openWallet() {
-        if let nativeUri = session.peer.redirect?.native {
-            UIApplication.shared.open(URL(string: "\(nativeUri)wc?requestSent")!)
-        } else {
-            showRequestSent.toggle()
+    private func openWallet(requstId: RPCID, topic: String) {
+        // Use the documentation format for HTTP-based redirect links:
+        // {YOUR_WALLET_URL}/wc?requestId={requestId}&sessionTopic={session.Topic}
+        
+        let redirectUrl = session.peer.redirect?.native ?? session.peer.redirect?.universal
+        
+        if let redirectUrl = redirectUrl {
+            var plainAppUrl = redirectUrl
+            
+            if plainAppUrl.hasPrefix("http://") || plainAppUrl.hasPrefix("https://") {
+                // HTTP-based URL - use documentation format with parameters
+                if plainAppUrl.hasSuffix("/") {
+                    plainAppUrl = String(plainAppUrl.dropLast())
+                }
+                // Only add /wc if it's not already there
+                let wcPath = plainAppUrl.hasSuffix("/wc") ? "" : "/wc"
+                let urlString = "\(plainAppUrl)\(wcPath)?requestId=\(requstId.string)&sessionTopic=\(topic)"
+                
+                if let url = URL(string: urlString) {
+                    UIApplication.shared.open(url)
+                    return
+                }
+            } else {
+                // Custom scheme URL - use simple format without extra parameters
+                if let url = URL(string: redirectUrl) {
+                    UIApplication.shared.open(url)
+                    return
+                }
+            }
         }
+        
+        // Final fallback if URL construction fails
+        showRequestSent.toggle()
     }
 }
 

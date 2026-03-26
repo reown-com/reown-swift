@@ -1,7 +1,7 @@
 import Foundation
 
 public struct Base58 {
-    static let baseAlphabets = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+    public static let baseAlphabets = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
     static var zeroAlphabet: Character = "1"
     static var base: Int = 58
 

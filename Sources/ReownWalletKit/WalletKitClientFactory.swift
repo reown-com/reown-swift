@@ -1,5 +1,8 @@
 import Foundation
-import YttriumWrapper
+#if SWIFT_PACKAGE
+import WalletConnectPay
+#endif
+// import YttriumWrapper
 
 struct WalletKitClientFactory {
     static func create(
@@ -7,8 +10,10 @@ struct WalletKitClientFactory {
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
         config: WalletKit.Config,
-        projectId: String? = nil  
+        projectId: String? = nil
     ) -> WalletKitClient {
+        // Chain abstraction client creation commented out
+        /*
         let metadata = PulseMetadata(
             url: nil,
             bundleId: Bundle.main.bundleIdentifier,
@@ -28,13 +33,18 @@ struct WalletKitClientFactory {
 
         let chainAbstractionClient = ChainAbstractionClient(projectId: usedProjectId, pulseMetadata: metadata)
         let ChainAbstractionNamespace = ChainAbstractionNamespace(chainAbstractionClient: chainAbstractionClient)
+        */
+
+        // Create Pay namespace wrapping the already-configured PayClient
+        let payNamespace = PayNamespace(payClient: WalletConnectPay.instance)
 
         return WalletKitClient(
             signClient: signClient,
             pairingClient: pairingClient,
             pushClient: pushClient,
-            chainAbstractionClient: chainAbstractionClient,
-            ChainAbstractionNamespace: ChainAbstractionNamespace
+            payNamespace: payNamespace
+            // chainAbstractionClient: chainAbstractionClient,
+            // ChainAbstractionNamespace: ChainAbstractionNamespace
         )
     }
 }

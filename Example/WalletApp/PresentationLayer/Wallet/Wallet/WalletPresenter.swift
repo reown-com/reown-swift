@@ -9,28 +9,31 @@ final class WalletPresenter: ObservableObject {
     }
     
     private let interactor: WalletInteractor
-    private let router: WalletRouter
     private let importAccount: ImportAccount
-    
+
     private let app: Application
     private var isPairingTimer: Timer?
 
     @Published var sessions = [Session]()
-    
+    @Published var selectedSessionForDetail: Session? = nil
+    @Published var isDisconnecting = false
+
     @Published var showPairingLoading = false {
         didSet {
             handlePairingLoadingChanged()
         }
     }
-    @Published var showError = false
-    @Published var errorMessage = "Error"
-    @Published var showConnectedSheet = false
+@Published var showConnectedSheet = false
+
+    lazy var scanHandler = ScanOptionsHandler(
+        onScan: { [weak self] in self?.presentScanCamera() },
+        onUri: { [weak self] in self?.handleScannedOrPastedUri($0) }
+    )
     
     private var disposeBag = Set<AnyCancellable>()
 
     init(
         interactor: WalletInteractor,
-        router: WalletRouter,
         app: Application,
         importAccount: ImportAccount
     ) {
@@ -38,7 +41,6 @@ final class WalletPresenter: ObservableObject {
             setupInitialState()
         }
         self.interactor = interactor
-        self.router = router
         self.app = app
         self.importAccount = importAccount
     }
@@ -47,55 +49,31 @@ final class WalletPresenter: ObservableObject {
         showPairingLoading = app.requestSent
         setUpPairingIndicatorRemoval()
 
-        let pendingRequests = interactor.getPendingRequests()
-        if let request = pendingRequests.first(where: { $0.context != nil }) {
-            router.present(sessionRequest: request.request, importAccount: importAccount, sessionContext: request.context)
-        }
+        // Pending requests are handled by NavigationCoordinator's WalletKit subscriptions
     }
     
     func onConnection(session: Session) {
-        router.presentConnectionDetails(session: session)
+        selectedSessionForDetail = session
     }
 
-    func onPasteUri() {
-        router.presentPaste { [weak self] uriString in
+    func disconnectSelectedSession() {
+        guard let session = selectedSessionForDetail else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.isDisconnecting = true
             do {
-                let uri = try WalletConnectURI(uriString: uriString)
-                print("URI: \(uri)")
-                self?.pair(uri: uri)
+                try await self.interactor.disconnectSession(session: session)
+                self.isDisconnecting = false
+                self.selectedSessionForDetail = nil
             } catch {
-                self?.errorMessage = error.localizedDescription
-                self?.showError.toggle()
+                self.isDisconnecting = false
+                WalletToast.present(message: error.localizedDescription, type: .error)
             }
-        } onError: { [weak self] error in
-            print(error.localizedDescription)
-            self?.router.dismiss()
         }
     }
 
-    func sendStableCoin() {
-        router.presentSendStableCoin(importAccount: importAccount)
-    }
-
-    func sendEthereum() {
-        router.presentSendEthereum(importAccount: importAccount)
-    }
-
-    func onScanUri() {
-        router.presentScan { [weak self] uriString in
-            do {
-                let uri = try WalletConnectURI(uriString: uriString)
-                print("URI: \(uri)")
-                self?.pair(uri: uri)
-                self?.router.dismiss()
-            } catch {
-                self?.errorMessage = error.localizedDescription
-                self?.showError.toggle()
-            }
-        } onError: { [weak self] error in
-            print(error.localizedDescription)
-            self?.router.dismiss()
-        }
+    private func presentScanCamera() {
+        // Scan camera handled via ScanOptionsHandler sheet
     }
     
     func removeSession(at indexSet: IndexSet) async {
@@ -107,7 +85,7 @@ final class WalletPresenter: ObservableObject {
             } catch {
                 ActivityIndicatorManager.shared.stop()
                 sessions = sessions
-                AlertPresenter.present(message: error.localizedDescription, type: .error)
+                WalletToast.present(message: error.localizedDescription, type: .error)
             }
         }
     }
@@ -117,7 +95,7 @@ final class WalletPresenter: ObservableObject {
 
         if showPairingLoading {
             isPairingTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { _ in
-                AlertPresenter.present(message: "Pairing takes longer then expected, check your internet connection or try again", type: .warning)
+                WalletToast.present(message: "Pairing takes longer than expected, check your internet connection or try again", type: .warning)
             }
         }
     }
@@ -126,6 +104,11 @@ final class WalletPresenter: ObservableObject {
 // MARK: - Private functions
 extension WalletPresenter {
     private func setupInitialState() {
+        scanHandler.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &disposeBag)
+
         interactor.sessionsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] sessions in
@@ -138,13 +121,33 @@ extension WalletPresenter {
         pairFromDapp()
     }
     
+    /// Handle scanned or pasted URI - detect if it's a Pay URL or WalletConnect pairing URI
+    private func handleScannedOrPastedUri(_ uriString: String) {
+        // Check if it's a WalletConnect Pay URL — handled via notification
+        if WalletKit.isPaymentLink(uriString) {
+            print("Detected WalletConnect Pay URL: \(uriString)")
+            // Post notification for coordinator to handle
+            NotificationCenter.default.post(name: .paymentLinkDetected, object: uriString)
+            return
+        }
+
+        // Otherwise, try to parse as WalletConnect pairing URI
+        do {
+            let uri = try WalletConnectURI(uriString: uriString)
+            print("URI: \(uri)")
+            pair(uri: uri)
+        } catch {
+            WalletToast.present(message: "Invalid link or URI", type: .error)
+        }
+    }
+
     private func pair(uri: WalletConnectURI) {
-        Task.detached(priority: .high) { @MainActor [unowned self] in
+        Task(priority: .high) { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 try await self.interactor.pair(uri: uri)
             } catch {
-                self.errorMessage = error.localizedDescription
-                self.showError.toggle()
+                WalletToast.present(message: error.localizedDescription, type: .error)
             }
         }
     }
@@ -165,16 +168,6 @@ extension WalletPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension WalletPresenter: SceneViewModel {
-    var sceneTitle: String? {
-        return "Connections"
-    }
-
-    var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .always
-    }
-}
 
 // MARK: - LocalizedError
 extension WalletPresenter.Errors {

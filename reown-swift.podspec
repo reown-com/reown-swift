@@ -1,6 +1,7 @@
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "Sources/WalletConnectRelay/PackageConfig.json")))
+yttrium_version = '0.10.50'
 
 Pod::Spec.new do |spec|
 
@@ -9,7 +10,7 @@ Pod::Spec.new do |spec|
   spec.summary     = "Reown Swift WalletKit & AppKit"
   spec.description = "Implementation of WalletKit and AppKit"
   spec.homepage    = "https://reown.com"
-  spec.license     = { :type => 'Apache-2.0', :file => 'LICENSE' }
+  spec.license     = { :type => 'WalletConnect Community License Agreement', :file => 'LICENSE' }
   spec.authors          = "Reown, Inc."
   spec.source = {
     :git => 'https://github.com/reown-com/reown-swift.git',
@@ -26,14 +27,25 @@ spec.pod_target_xcconfig = {
 
   spec.default_subspecs = 'WalletKit'
 
+  spec.subspec 'WalletConnectPay' do |ss|
+    ss.source_files = 'Sources/WalletConnectPay/**/*.{h,m,swift}'
+    ss.dependency 'YttriumWrapper', yttrium_version
+    ss.dependency 'reown-swift/WalletConnectRelay'
+    ss.resource_bundles = {
+      'reown_WalletConnectPay' => [
+        'Sources/WalletConnectPay/PackageConfig.json'
+      ]
+    }
+  end
+
   spec.subspec 'WalletKit' do |ss|
     ss.source_files = 'Sources/ReownWalletKit/**/*.{h,m,swift}'
-    ss.dependency 'YttriumWrapper', '0.9.7'
+    ss.dependency 'reown-swift/WalletConnectPay'
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/WalletConnectPush'
     ss.dependency 'reown-swift/WalletConnectVerify'
     ss.dependency 'reown-swift/WalletConnectUtils'
-    end
+  end
 
   spec.subspec 'ReownAppKitBackport' do |ss|
     ss.source_files = 'Sources/ReownAppKitBackport/**/*.{h,m,swift}'
@@ -79,7 +91,6 @@ spec.pod_target_xcconfig = {
   spec.subspec 'WalletConnectSigner' do |ss|
     ss.source_files = 'Sources/WalletConnectSigner/**/*.{h,m,swift}'
     ss.dependency 'reown-swift/WalletConnectNetworking'
-    ss.dependency 'YttriumWrapper', '0.9.7'
   end
 
   spec.subspec 'WalletConnectIdentity' do |ss|

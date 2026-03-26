@@ -242,6 +242,21 @@ final class AnyCodableTests: XCTestCase {
         XCTAssertNoThrow(try array[5].get([String: String].self))
     }
 
+    func testEncodingActualBoolPreserved() throws {
+        let json = """
+        {"visible":false,"count":0,"enabled":true,"value":1}
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(AnyCodable.self, from: json)
+        let encoded = try JSONEncoder().encode(decoded)
+        let reDecoded = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+
+        XCTAssertEqual(reDecoded["visible"] as? Bool, false)
+        XCTAssertEqual(reDecoded["enabled"] as? Bool, true)
+        XCTAssertEqual(reDecoded["count"] as? Int, 0)
+        XCTAssertEqual(reDecoded["value"] as? Int, 1)
+    }
+
     func testDecodeFail() {
         let data = SampleStruct.invalidJSONData
         XCTAssertThrowsError(try JSONDecoder().decode(AnyCodable.self, from: data)) { error in

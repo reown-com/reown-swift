@@ -49,9 +49,6 @@ SIMULATOR_IDENTIFIER = YOUR_SIMULATOR_IDENTIFIER
 ## Example Apps
 open `Example/ExampleApp.xcodeproj`
 
-## License
-
-Apache 2.0
 
 ## Guides
 

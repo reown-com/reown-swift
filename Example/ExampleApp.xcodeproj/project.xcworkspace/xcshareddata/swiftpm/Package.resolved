@@ -30,10 +30,10 @@
       },
       {
         "package": "HDWalletKit",
-        "repositoryURL": "https://github.com/WalletConnect/HDWallet",
+        "repositoryURL": "https://github.com/kailuo/HDWallet",
         "state": {
-          "branch": "develop",
-          "revision": "748a85b1dfe9a2fa592bd9266c5a926e4e1d3f44",
+          "branch": "xcode26",
+          "revision": "3591c59ed2c5bf443495dd706338bc0fd2544068",
           "version": null
         }
       },
@@ -159,8 +159,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-http2.git",
         "state": {
           "branch": null,
-          "revision": "eaa71bb6ae082eee5a07407b1ad0cbd8f48f9dca",
-          "version": "1.34.1"
+          "revision": "170f4ca06b6a9c57b811293cebcb96e81b661310",
+          "version": "1.35.0"
         }
       },
       {
@@ -267,8 +267,8 @@
         "repositoryURL": "https://github.com/reown-com/yttrium",
         "state": {
           "branch": null,
-          "revision": "b96e0fb5aae557897a35586f30487044b426b1ca",
-          "version": "0.9.7"
+          "revision": "c670309e6593875ba8211b9722d465b92d7ea2cf",
+          "version": "0.10.50"
         }
       }
     ]

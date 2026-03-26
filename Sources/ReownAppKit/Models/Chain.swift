@@ -199,6 +199,18 @@ public enum ChainPresets {
             imageId: "ab781bbc-ccc6-418d-d32d-789b15da1f00"
         ),
         Chain(
+            chainName: "Monad",
+            chainNamespace: "eip155",
+            chainReference: "143",
+            requiredMethods: EthUtils.ethRequiredMethods,
+            optionalMethods: EthUtils.ethOptionalMethods,
+            events: EthUtils.ethEvents,
+            token: .init(name: "Monad", symbol: "MON", decimal: 18),
+            rpcUrl: "https://rpc.monad.xyz",
+            blockExplorerUrl: "https://monadexplorer.com",
+            imageId: ""
+        ),
+        Chain(
             chainName: "Aurora",
             chainNamespace: "eip155",
             chainReference: "1313161554",
