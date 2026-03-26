@@ -6,7 +6,7 @@ import ReownWalletKit
 
 final class SessionRequestPresenter: ObservableObject {
     private let interactor: SessionRequestInteractor
-    private let router: SessionRequestRouter
+    var dismissAction: (() -> Void)?
     private let importAccount: ImportAccount
     
     let sessionRequest: Request
@@ -14,8 +14,28 @@ final class SessionRequestPresenter: ObservableObject {
     let validationStatus: VerifyContext.ValidationStatus?
 
     var message: String {
-        guard let messages = try? sessionRequest.params.get([String].self),
-              let firstMessage = messages.first else {
+        guard let messages = try? sessionRequest.params.get([String].self) else {
+            return String(describing: sessionRequest.params.value)
+        }
+
+        // eth_signTypedData_v4: params are [address, typedDataJSON]
+        // Show the typed data (second param), not the address (first param)
+        if sessionRequest.method == "eth_signTypedData" || sessionRequest.method == "eth_signTypedData_v4" {
+            guard messages.count > 1 else {
+                return String(describing: sessionRequest.params.value)
+            }
+            let typedDataJSON = messages[1]
+            // Pretty print the JSON if possible
+            if let data = typedDataJSON.data(using: .utf8),
+               let jsonObject = try? JSONSerialization.jsonObject(with: data),
+               let prettyData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
+               let prettyString = String(data: prettyData, encoding: .utf8) {
+                return prettyString
+            }
+            return typedDataJSON
+        }
+
+        guard let firstMessage = messages.first else {
             return String(describing: sessionRequest.params.value)
         }
 
@@ -29,20 +49,19 @@ final class SessionRequestPresenter: ObservableObject {
     
     @Published var showError = false
     @Published var errorMessage = "Error"
-    @Published var showSignedSheet = false
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
     
     private var disposeBag = Set<AnyCancellable>()
 
     init(
         interactor: SessionRequestInteractor,
-        router: SessionRequestRouter,
         sessionRequest: Request,
         importAccount: ImportAccount,
         context: VerifyContext?
     ) {
         defer { setupInitialState() }
         self.interactor = interactor
-        self.router = router
         self.sessionRequest = sessionRequest
         self.session = interactor.getSession(topic: sessionRequest.topic)
         self.importAccount = importAccount
@@ -52,12 +71,13 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
-            let showConnected = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
-            showConnected ? showSignedSheet.toggle() : router.dismiss()
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = true
+            _ = try await interactor.respondSessionRequest(sessionRequest: sessionRequest, importAccount: importAccount)
+            isActionLoading = false
+            dismiss()
+            WalletToast.present(message: "Request signed", type: .success)
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
@@ -66,23 +86,19 @@ final class SessionRequestPresenter: ObservableObject {
     @MainActor
     func onReject() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isCancelLoading = true
             try await interactor.respondError(sessionRequest: sessionRequest)
-            ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            isCancelLoading = false
+            dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
     }
     
-    func onSignedSheetDismiss() {
-        dismiss()
-    }
-    
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 }
 
@@ -100,7 +116,3 @@ private extension SessionRequestPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension SessionRequestPresenter: SceneViewModel {
-
-}

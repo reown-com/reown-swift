@@ -24,7 +24,9 @@ public class AppKit {
         get { UserDefaults.standard.string(forKey: "appkit.primarySessionTopic") }
         set { UserDefaults.standard.set(newValue, forKey: "appkit.primarySessionTopic") }
     }
-        
+
+    private static let configQueue = DispatchQueue(label: "com.walletconnect..appkit.config", attributes: .concurrent)
+
     /// AppKit client instance
     public static var instance: AppKitClient = {
         guard let config = AppKit.config else {
@@ -78,7 +80,16 @@ public class AppKit {
 
     }
     
-    private(set) static var config: Config!
+    private static var _config: Config!
+    
+    static var config: Config! {
+        get {
+            return configQueue.sync { _config }
+        }
+        set {
+            configQueue.async(flags: .barrier) { _config = newValue }
+        }
+    }
     
     private(set) static var viewModel: Web3ModalViewModel!
 
@@ -198,7 +209,15 @@ public class AppKit {
     }
     
     public static func set(sessionParams: SessionParams) {
-        AppKit.config.sessionParams = sessionParams
+        configQueue.async(flags: .barrier) {
+            _config.sessionParams = sessionParams
+        }
+    }
+    
+    public static func set(authRequestParams: AuthRequestParams) {
+        configQueue.async(flags: .barrier) {
+            _config.authRequestParams = authRequestParams
+        }
     }
     
     public static func set(authRequestParams: AuthRequestParams?) {
@@ -301,6 +320,26 @@ public struct SessionParams {
     public let optionalNamespaces: [String: ProposalNamespace]?
     public let sessionProperties: [String: String]?
     
+    /// Initialize SessionParams with namespaces that will be treated as optional
+    /// to improve connection compatibility between dApps and wallets.
+    /// - Parameters:
+    ///   - namespaces: The namespaces for the session (will be treated as optional)
+    ///   - sessionProperties: Optional session properties
+    public init(
+        namespaces: [String: ProposalNamespace],
+        sessionProperties: [String: String]? = nil
+    ) {
+        self.requiredNamespaces = [:]
+        self.optionalNamespaces = namespaces
+        self.sessionProperties = sessionProperties
+    }
+    
+    /// Initialize SessionParams with required and optional namespaces
+    /// - Parameters:
+    ///   - requiredNamespaces: Required namespaces for the session (deprecated - will be moved to optional namespaces)
+    ///   - optionalNamespaces: Optional namespaces for the session
+    ///   - sessionProperties: Optional session properties
+    @available(*, deprecated, message: "requiredNamespaces parameter is deprecated. All namespaces will be treated as optional to improve connection compatibility. Use init(namespaces:sessionProperties:) instead.")
     public init(requiredNamespaces: [String: ProposalNamespace], optionalNamespaces: [String: ProposalNamespace]? = nil, sessionProperties: [String: String]? = nil) {
         self.requiredNamespaces = requiredNamespaces
         self.optionalNamespaces = optionalNamespaces
@@ -317,10 +356,7 @@ public struct SessionParams {
                 chains: blockchains,
                 methods: methods,
                 events: events
-            )
-        ]
-        
-        let optionalNamespaces: [String: ProposalNamespace] = [
+            ),
             "solana": ProposalNamespace(
                 chains: [
                     Blockchain("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")!
@@ -331,10 +367,10 @@ public struct SessionParams {
                 ], events: []
             )
         ]
+
        
         return SessionParams(
-            requiredNamespaces: [:],
-            optionalNamespaces: namespaces.merging(optionalNamespaces, uniquingKeysWith: { old, _ in old }),
+            namespaces: namespaces,
             sessionProperties: nil
         )
     }()

@@ -7,7 +7,7 @@ public protocol SignClientProtocol {
     var sessionRequestPublisher: AnyPublisher<(request: Request, context: VerifyContext?), Never> { get }
     var sessionsPublisher: AnyPublisher<[Session], Never> { get }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { get }
-    var sessionSettlePublisher: AnyPublisher<Session, Never> { get }
+    var sessionSettlePublisher: AnyPublisher<(session: Session, responses: ProposalRequestsResponses?), Never> { get }
     var sessionDeletePublisher: AnyPublisher<(String, Reason), Never> { get }
     var sessionResponsePublisher: AnyPublisher<Response, Never> { get }
     var sessionRejectionPublisher: AnyPublisher<(Session.Proposal, Reason), Never> { get }
@@ -19,7 +19,8 @@ public protocol SignClientProtocol {
     var requestExpirationPublisher: AnyPublisher<RPCID, Never> { get }
 
     func request(params: Request) async throws
-    func approve(proposalId: String, namespaces: [String: SessionNamespace], sessionProperties: [String: String]?, scopedProperties: [String: String]?) async throws -> Session
+    func approve(proposalId: String, namespaces: [String: SessionNamespace], sessionProperties: [String: String]?, scopedProperties: [String: String]?, proposalRequestsResponses: ProposalRequestsResponses?) async throws -> Session
+    @available(*, deprecated, message: "Use connect(namespaces:sessionProperties:scopedProperties:authentication:) and pass authentication params instead.")
     func authenticate(_ params: AuthRequestParams, walletUniversalLink: String?) async throws -> WalletConnectURI?
     func rejectSession(proposalId: String, reason: RejectionReason) async throws
     func rejectSession(requestId: RPCID) async throws
@@ -40,4 +41,3 @@ public protocol SignClientProtocol {
     func getPendingAuthRequests() throws -> [(AuthenticationRequest, VerifyContext?)]
     func getPendingProposals(topic: String?) -> [(proposal: Session.Proposal, context: VerifyContext?)]
 }
-

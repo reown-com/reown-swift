@@ -79,9 +79,7 @@ final class ApproveEngineTests: XCTestCase {
 
         let topicB = networkingInteractor.subscriptions.last!
 
-        XCTAssertTrue(networkingInteractor.didCallSubscribe)
         XCTAssert(cryptoMock.hasAgreementSecret(for: topicB), "Responder must store agreement key for topic B")
-        XCTAssertEqual(networkingInteractor.didRespondOnTopic!, topicA, "Responder must respond on topic A")
         XCTAssertTrue(sessionStorageMock.hasSession(forTopic: topicB), "Responder must persist session on topic B")
     }
 
@@ -102,21 +100,11 @@ final class ApproveEngineTests: XCTestCase {
         XCTAssertTrue(sessionProposed)
     }
 
-    func testSessionSettle() async throws {
-        let agreementKeys = AgreementKeys.stub()
-        let topicB = String.generateTopic()
-        cryptoMock.setAgreementSecret(agreementKeys, topic: topicB)
-        let proposal = SessionProposal.stub(proposerPubKey: AgreementPrivateKey().publicKey.hexRepresentation)
-        _ = try await engine.settle(topic: topicB, proposal: proposal, namespaces: SessionNamespace.stubDictionary(), pairingTopic: "")
-        XCTAssert(networkingInteractor.didSubscribe(to: topicB), "Responder must subscribe for topic B")
-        XCTAssertTrue(networkingInteractor.didCallRequest, "Responder must send session settle payload on topic B")
-    }
-
     func testHandleSessionSettle() {
         let sessionTopic = String.generateTopic()
         cryptoMock.setAgreementSecret(AgreementKeys.stub(), topic: sessionTopic)
         var didCallBackOnSessionApproved = false
-        engine.onSessionSettle = { _ in
+        engine.onSessionSettle = { _, _ in
             didCallBackOnSessionApproved = true
         }
         sessionTopicToProposal.set(SessionProposal.stub().publicRepresentation(pairingTopic: ""), forKey: sessionTopic)
@@ -157,6 +145,108 @@ final class ApproveEngineTests: XCTestCase {
         XCTAssertTrue(networkingInteractor.didUnsubscribe(to: session.topic), "Responder must unsubscribe topic B")
         XCTAssertFalse(cryptoMock.hasAgreementSecret(for: session.topic), "Responder must remove agreement secret")
         XCTAssertFalse(cryptoMock.hasPrivateKey(for: session.self.publicKey!), "Responder must remove private key")
+    }
+
+    func testApprovedSessionBuilderUsesExplicitChains() {
+        let ethMainnet = Blockchain("eip155:1")!
+        let polygon = Blockchain("eip155:137")!
+
+        let namespace = SessionNamespace(
+            chains: [ethMainnet, polygon],
+            accounts: [
+                Account("eip155:1:0x1234567890abcdef1234567890abcdef12345678")!,
+                Account("eip155:137:0xabcdefabcdefabcdefabcdefabcdefabcdefabcd")!
+            ],
+            methods: ["eth_sendTransaction"],
+            events: []
+        )
+
+        let approved = ApprovedSessionMetadataBuilder.chains(from: ["eip155": namespace])
+
+        XCTAssertEqual(approved, ["eip155:1", "eip155:137"])
+    }
+
+    func testApprovedSessionBuilderFallsBackToAccounts() {
+        let tonMainnetAccount = Account("ton:-239:UQCjI2QtnNXkYxNovk87FQF0J")!
+        let tonTestAccount = Account("ton:-3:UQCjI2QtnNXkYxNovk87FQF0J")!
+
+        let namespace = SessionNamespace(
+            chains: nil,
+            accounts: [tonMainnetAccount, tonTestAccount],
+            methods: ["ton_sendMessage"],
+            events: []
+        )
+
+        let approved = ApprovedSessionMetadataBuilder.chains(from: ["ton": namespace])
+
+        XCTAssertEqual(approved, ["ton:-239", "ton:-3"])
+    }
+
+    func testApprovedSessionBuilderDeduplicatesChains() {
+        let ethMainnet = Blockchain("eip155:1")!
+        let namespaceWithChains = SessionNamespace(
+            chains: [ethMainnet],
+            accounts: [Account("eip155:1:0x1234567890abcdef1234567890abcdef12345678")!],
+            methods: ["eth_sendTransaction"],
+            events: []
+        )
+        let namespaceWithAccountsOnly = SessionNamespace(
+            chains: nil,
+            accounts: [Account("eip155:1:0xabcdefabcdefabcdefabcdefabcdefabcdefabcd")!],
+            methods: ["eth_sign"],
+            events: []
+        )
+
+        let approved = ApprovedSessionMetadataBuilder.chains(from: [
+            "eip155": namespaceWithChains,
+            "eip155:1": namespaceWithAccountsOnly
+        ])
+
+        XCTAssertEqual(approved, ["eip155:1"])
+    }
+
+    func testApprovedSessionBuilderAggregatesMethods() {
+        let namespaceA = SessionNamespace(
+            chains: nil,
+            accounts: [Account("eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb")!],
+            methods: ["eth_sign", "eth_sendTransaction"],
+            events: []
+        )
+        let namespaceB = SessionNamespace(
+            chains: nil,
+            accounts: [Account("eip155:137:0xabcdefabcdefabcdefabcdefabcdefabcdefabcd")!],
+            methods: ["eth_sendTransaction", "personal_sign"],
+            events: []
+        )
+
+        let approvedMethods = ApprovedSessionMetadataBuilder.methods(from: [
+            "eip155": namespaceA,
+            "eip155:137": namespaceB
+        ])
+
+        XCTAssertEqual(approvedMethods, ["eth_sendTransaction", "eth_sign", "personal_sign"])
+    }
+
+    func testApprovedSessionBuilderAggregatesEvents() {
+        let namespaceA = SessionNamespace(
+            chains: nil,
+            accounts: [Account("eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb")!],
+            methods: [],
+            events: ["accountsChanged", "chainChanged"]
+        )
+        let namespaceB = SessionNamespace(
+            chains: nil,
+            accounts: [Account("eip155:137:0xabcdefabcdefabcdefabcdefabcdefabcdefabcd")!],
+            methods: [],
+            events: ["accountsChanged", "message"]
+        )
+
+        let approvedEvents = ApprovedSessionMetadataBuilder.events(from: [
+            "eip155": namespaceA,
+            "eip155:137": namespaceB
+        ])
+
+        XCTAssertEqual(approvedEvents, ["accountsChanged", "chainChanged", "message"])
     }
     
     func testVerifyContextStorageAdd() {

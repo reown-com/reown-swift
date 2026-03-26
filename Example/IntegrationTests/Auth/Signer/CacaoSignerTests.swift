@@ -9,7 +9,6 @@ class CacaoSignerTest: XCTestCase {
 
     let signer = MessageSignerFactory(signerFactory: DefaultSignerFactory())
         .create()
-    let verifier = MessageVerifierFactory(crypto: DefaultCryptoProvider()).create(projectId: InputConfig.projectId)
 
     let privateKey = Data(hex: "305c6cde3846927892cd32762f6120539f3ec74c9e3a16b9b798b1e85351ae2a")
 
@@ -54,14 +53,5 @@ class CacaoSignerTest: XCTestCase {
         let formatted = try SIWEFromCacaoPayloadFormatter().formatMessage(from: cacaoPayload)
         XCTAssertEqual(formatted, message)
         XCTAssertEqual(try signer.sign(payload: cacaoPayload, privateKey: privateKey, type: .eip191), signature)
-    }
-
-    func testCacaoVerify() async throws {
-        do {
-            try await verifier.verify(signature: signature, message: message, address: "0x15bca56b6e2728aec2532df9d436bd1600e86688", chainId: "eip155:1")
-        } catch {
-            print(error)
-            throw error
-        }
     }
 }

@@ -8,7 +8,7 @@ struct DefaultCryptoProvider: CryptoProvider {
 
     public func recoverPubKey(signature: EthereumSignature, message: Data) throws -> Data {
         let publicKey = try EthereumPublicKey(
-            message: message.bytes,
+            message: [UInt8](message),
             v: EthereumQuantity(quantity: BigUInt(signature.v)),
             r: EthereumQuantity(signature.r),
             s: EthereumQuantity(signature.s)

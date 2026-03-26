@@ -1,6 +1,6 @@
 import Foundation
 import Combine
-import YttriumWrapper
+// import YttriumWrapper
 
 /// Web3 Wallet Client
 ///
@@ -8,10 +8,7 @@ import YttriumWrapper
 ///
 /// Access via `WalletKit.instance`
 public class WalletKitClient {
-    enum Errors: LocalizedError {
-        case smartAccountNotEnabled
-        case chainAbstractionNotEnabled
-    }
+
     // MARK: - Public Properties
     
     /// Publisher that sends session proposal
@@ -51,7 +48,9 @@ public class WalletKitClient {
     ///
     /// Event is emited on proposer and responder client when both communicating peers have successfully established a session.
     public var sessionSettlePublisher: AnyPublisher<Session, Never> {
-        signClient.sessionSettlePublisher.eraseToAnyPublisher()
+        signClient.sessionSettlePublisher
+            .map(\.session)
+            .eraseToAnyPublisher()
     }
     
     /// Publisher that sends deleted session topic
@@ -103,33 +102,39 @@ public class WalletKitClient {
     private let signClient: SignClientProtocol
     private let pairingClient: PairingClientProtocol
     private let pushClient: PushClientProtocol
-    private let chainAbstractionClient: ChainAbstractionClient
+    // private let chainAbstractionClient: ChainAbstractionClient
 
     private var account: Account?
 
     // Namespaces
-    public let ChainAbstraction: ChainAbstractionNamespace
+    // public let ChainAbstraction: ChainAbstractionNamespace
+
+    /// Pay namespace for WalletConnect Pay functionality
+    public let Pay: PayNamespace
 
     init(
         signClient: SignClientProtocol,
         pairingClient: PairingClientProtocol,
         pushClient: PushClientProtocol,
-        chainAbstractionClient: ChainAbstractionClient,
-        ChainAbstractionNamespace: ChainAbstractionNamespace
+        payNamespace: PayNamespace
+        // chainAbstractionClient: ChainAbstractionClient,
+        // ChainAbstractionNamespace: ChainAbstractionNamespace
     ) {
         self.signClient = signClient
         self.pairingClient = pairingClient
         self.pushClient = pushClient
-        self.chainAbstractionClient = chainAbstractionClient
-        self.ChainAbstraction = ChainAbstractionNamespace
+        self.Pay = payNamespace
+        // self.chainAbstractionClient = chainAbstractionClient
+        // self.ChainAbstraction = ChainAbstractionNamespace
     }
     
     /// For a wallet to approve a session proposal.
     /// - Parameters:
     ///   - proposalId: Session Proposal id
     ///   - namespaces: namespaces for given session, needs to contain at least required namespaces proposed by dApp.
-    public func approve(proposalId: String, namespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil) async throws -> Session {
-        try await signClient.approve(proposalId: proposalId, namespaces: namespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties)
+    ///   - proposalRequestsResponses: optional authentication responses for session proposals containing authentication requests
+    public func approve(proposalId: String, namespaces: [String: SessionNamespace], sessionProperties: [String: String]? = nil, scopedProperties: [String: String]? = nil, proposalRequestsResponses: ProposalRequestsResponses? = nil) async throws -> Session {
+        try await signClient.approve(proposalId: proposalId, namespaces: namespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties, proposalRequestsResponses: proposalRequestsResponses)
     }
 
     /// For the wallet to reject a session proposal.
@@ -275,6 +280,8 @@ public class WalletKitClient {
         return pairingClient.getPairings()
     }
 
+    // Chain abstraction methods commented out
+    /*
     public func prepareERC20TransferCall(
         erc20Address: String,
         to: String,
@@ -288,6 +295,7 @@ public class WalletKitClient {
     public func erc20Balance(chainId: String, token: String, owner: String) async throws -> Ffiu256 {
         return try await chainAbstractionClient.erc20TokenBalance(chainId: chainId, token: token, owner: owner)
     }
+    */
 }
 
 
@@ -298,4 +306,3 @@ extension WalletKitClient {
     }
 }
 #endif
-

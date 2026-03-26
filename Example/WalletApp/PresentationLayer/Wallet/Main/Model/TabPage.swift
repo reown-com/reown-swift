@@ -1,37 +1,29 @@
-import UIKit
+import Foundation
 
-enum TabPage: CaseIterable {
-    case wallet
-    case notifications
+enum TabPage: CaseIterable, Hashable {
+    case wallets
+    case connectedApps
     case settings
 
     var title: String {
         switch self {
-        case .wallet:
-            return "Connections"
-        case .notifications:
-            return "Inbox"
+        case .wallets:
+            return "Wallets"
+        case .connectedApps:
+            return "Connected Apps"
         case .settings:
             return "Settings"
         }
     }
 
-    var icon: UIImage {
+    var systemImage: String {
         switch self {
-        case .wallet:
-            return UIImage(named: "connections_tab")!
-        case .notifications:
-            return UIImage(named: "inbox_tab")!
+        case .wallets:
+            return "wallet.bifold.fill"
+        case .connectedApps:
+            return "square.stack.3d.up.fill"
         case .settings:
-            return UIImage(named: "settings_tab")!
+            return "gearshape.fill"
         }
-    }
-
-    static var selectedIndex: Int {
-        return 0
-    }
-
-    static var enabledTabs: [TabPage] {
-        return [.wallet, .notifications, .settings]
     }
 }

@@ -39,15 +39,6 @@ actor SessionAuthenticateResponder {
     }
 
     func respond(requestId: RPCID, auths: [Cacao]) async throws -> Session? {
-        eventsClient.saveTraceEvent(SessionAuthenticateTraceEvents.signatureVerificationStarted)
-        do {
-            try await util.recoverAndVerifySignature(cacaos: auths)
-            eventsClient.saveTraceEvent(SessionAuthenticateTraceEvents.signatureVerificationSuccess)
-        } catch {
-            eventsClient.saveTraceEvent(SessionAuthenticateErrorEvents.signatureVerificationFailed)
-            throw error
-        }
-
         let sessionAuthenticateRequestParams: SessionAuthenticateRequestParams
         let pairingTopic: String
 

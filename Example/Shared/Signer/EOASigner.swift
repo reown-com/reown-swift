@@ -12,8 +12,9 @@ final class EOASigner {
         case "personal_sign":
             return signer.personalSign(request.params)
 
-        case "eth_signTypedData":
-            return signer.signTypedData(request.params)
+        case "eth_signTypedData", "eth_signTypedData_v4":
+            let signature = try await signer.signTypedData(request.params)
+            return AnyCodable(signature)
 
         case "eth_sendTransaction":
             return try signer.sendTransaction(request.params)

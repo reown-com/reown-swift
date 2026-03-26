@@ -1,5 +1,4 @@
 import Foundation
-import WalletConnectIdentity
 import Web3
 import WalletConnectSigner
 import WalletConnectSign

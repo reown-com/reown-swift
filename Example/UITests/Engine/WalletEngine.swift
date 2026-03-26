@@ -13,6 +13,10 @@ struct WalletEngine {
         instance.buttons["Paste URI"]
     }
 
+    var createNewAccountButton: XCUIElement {
+        instance.buttons["Create new account"]
+    }
+
     var alert: XCUIElement {
         instance.alerts["Paste URI"]
     }
@@ -29,14 +33,32 @@ struct WalletEngine {
         instance.staticTexts["Swift Dapp"]
     }
 
-    // Proposal
+    // AuthRequest (Session Authentication) buttons
 
     var approveButton: XCUIElement {
         instance.buttons["Approve"]
     }
 
     var rejectButton: XCUIElement {
-        instance.buttons["Reject"]
+        instance.buttons["Decline"]
+    }
+
+    var signOneButton: XCUIElement {
+        instance.buttons["Sign One"]
+    }
+
+    var declineButton: XCUIElement {
+        instance.buttons["Decline"]
+    }
+
+    // SessionRequest (personal_sign, etc.) buttons
+    
+    var allowButton: XCUIElement {
+        instance.buttons["Allow"]
+    }
+
+    var sessionRequestDeclineButton: XCUIElement {
+        instance.buttons["Decline"]
     }
 
     // SessionDetails
@@ -51,6 +73,16 @@ struct WalletEngine {
 
     var pingAlert: XCUIElement {
         instance.alerts.element.staticTexts["Received ping response"]
+    }
+
+    // Sign message completion elements
+    var requestSignedText: XCUIElement {
+        instance.staticTexts["Request is signed"]
+    }
+
+    // Alternative ways to detect successful sign message
+    var requestSignedLabel: XCUIElement {
+        instance.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'signed'")).firstMatch
     }
 
     func swipeDismiss() {

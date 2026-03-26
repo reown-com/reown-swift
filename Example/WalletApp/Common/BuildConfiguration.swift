@@ -1,5 +1,4 @@
 import Foundation
-import WalletConnectNotify
 
 class BuildConfiguration {
     enum Environment: String {
@@ -10,15 +9,6 @@ class BuildConfiguration {
     static let shared = BuildConfiguration()
 
     var environment: Environment
-
-    var apnsEnvironment: APNSEnvironment {
-        switch environment {
-        case .debug:
-            return .sandbox
-        case .release:
-            return .production
-        }
-    }
 
     init() {
         let currentConfiguration = Bundle.main.object(forInfoDictionaryKey: "CONFIGURATION") as! String

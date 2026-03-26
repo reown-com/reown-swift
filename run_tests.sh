@@ -1,6 +1,14 @@
 #!/bin/bash
 set -eE
-trap 'xcrun simctl delete "$DEVICE_ID"' ERR
+
+# Cleanup ephemeral simulator if created
+cleanup() {
+    if [ -n "$DEVICE_ID" ]; then
+        echo "Removing ephemeral simulator"
+        xcrun simctl delete "$DEVICE_ID" || true
+    fi
+}
+trap cleanup EXIT ERR
 
 # Parse named arguments
 while [[ $# -gt 0 ]]; do
@@ -45,9 +53,17 @@ echo "Removing and recreating test_results directory"
 rm -rf test_results
 mkdir test_results
 
-# Create ephemeral simulator
-DEVICE_ID=$(xcrun simctl create "EphemeralSim$SCHEME" "iPhone 14")
+# Always run on iOS Simulator. Create an ephemeral device and target it.
+echo "Creating ephemeral iOS Simulator"
+DEVICE_TYPE="iPhone 16"
+DEVICE_ID=$(xcrun simctl create "EphemeralSim$SCHEME" "$DEVICE_TYPE" || true)
+if [ -z "$DEVICE_ID" ]; then
+    echo "Failed to create '$DEVICE_TYPE', falling back to 'iPhone 14'"
+    DEVICE_TYPE="iPhone 14"
+    DEVICE_ID=$(xcrun simctl create "EphemeralSim$SCHEME" "$DEVICE_TYPE")
+fi
 echo "Created ephemeral simulator with id: $DEVICE_ID"
+DEST="platform=iOS Simulator,id=$DEVICE_ID"
 
 if [ -z "$TESTPLAN" ]; then
     XCTESTRUN=$(find . -name "*_$SCHEME*.xctestrun")
@@ -68,7 +84,7 @@ if [ -z "$XCTESTRUN" ]; then
         ${PROJECT:+-project "$PROJECT"} \
         ${TESTPLAN:+-testPlan "$TESTPLAN"} \
         -scheme "$SCHEME" \
-        -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+        -destination "$DEST" \
         -derivedDataPath DerivedDataCache \
         -clonedSourcePackagesDirPath ../SourcePackagesCache \
         -resultBundlePath "test_results/$SCHEME.xcresult" \
@@ -97,7 +113,7 @@ else
     set -o pipefail && env NSUnbufferedIO=YES \
         xcodebuild \
         -xctestrun "$XCTESTRUN" \
-        -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+        -destination "$DEST" \
         -derivedDataPath DerivedDataCache \
         -clonedSourcePackagesDirPath ../SourcePackagesCache \
         -resultBundlePath "test_results/$SCHEME.xcresult" \
@@ -107,7 +123,6 @@ else
     )
 fi  
 
-echo "Removing ephemeral simulator"
-xcrun simctl delete "$DEVICE_ID"
+:
 
 echo "Done"

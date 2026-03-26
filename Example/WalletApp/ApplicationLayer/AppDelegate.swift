@@ -1,13 +1,9 @@
 import UIKit
-import Combine
-import WalletConnectNotify
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
-    private var publishers = [AnyCancellable]()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
         return true
     }
 
@@ -19,24 +15,4 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {}
-
-    func application(
-      _ application: UIApplication,
-      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
-    ) {
-
-        let deviceTokenString = deviceToken.map { data in String(format: "%02.2hhx", data) }
-        UserDefaults.standard.set(deviceTokenString.joined(), forKey: "deviceToken")
-
-        Task(priority: .high) {            
-            try await Notify.instance.register(deviceToken: deviceToken, enableEncrypted: true)
-        }
-    }
-
-    func application(
-      _ application: UIApplication,
-      didFailToRegisterForRemoteNotificationsWithError error: Error
-    ) {
-        print("Failed to register: \(error)")
-    }
 }

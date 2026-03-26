@@ -14,7 +14,7 @@ public struct Web3Signer: EthereumSigner {
 
     public func sign(message: Data, with key: Data) throws -> EthereumSignature {
         let privateKey = try EthereumPrivateKey(privateKey: [UInt8](key))
-        let signature = try privateKey.sign(message: message.bytes)
+        let signature = try privateKey.sign(message: [UInt8](message))
         return EthereumSignature(v: UInt8(signature.v), r: signature.r, s: signature.s)
     }
 }

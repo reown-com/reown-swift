@@ -3,20 +3,7 @@ import Foundation
 import WalletConnectSign
 
 enum Proposal {
-    static let requiredNamespaces: [String: ProposalNamespace] = [
-        "eip155": ProposalNamespace(
-            chains: [
-                Blockchain("eip155:1")!
-            ],
-            methods: [
-                "eth_sendTransaction",
-                "personal_sign",
-                "eth_signTypedData"
-            ], events: []
-        )
-    ]
-    
-    static let optionalNamespaces: [String: ProposalNamespace] = [
+    static let namespaces: [String: ProposalNamespace] = [
         "solana": ProposalNamespace(
             chains: [
                 Blockchain("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")!
@@ -28,7 +15,8 @@ enum Proposal {
         ),
         "eip155": ProposalNamespace(
             chains: [
-                Blockchain("eip155:137")!
+                Blockchain("eip155:137")!,
+                Blockchain("eip155:1")!
             ],
             methods: [
                 "eth_sendTransaction",

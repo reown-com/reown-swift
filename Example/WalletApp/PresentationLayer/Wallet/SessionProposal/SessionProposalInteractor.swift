@@ -1,40 +1,132 @@
 import Foundation
 
 import ReownWalletKit
+import WalletConnectSign
 import ReownRouter
 
 final class SessionProposalInteractor {
-    func approve(proposal: Session.Proposal, EOAAccount: Account) async throws -> Bool {
+    func approve(proposal: Session.Proposal, EOAAccount: Account, selectedChainIds: Set<String>? = nil, proposalRequestsResponses: ProposalRequestsResponses? = nil) async throws -> Bool {
         // Following properties are used to support all the required and optional namespaces for the testing purposes
         let supportedMethods = Set(proposal.requiredNamespaces.flatMap { $0.value.methods } + (proposal.optionalNamespaces?.flatMap { $0.value.methods } ?? []))
         let supportedEvents = Set(proposal.requiredNamespaces.flatMap { $0.value.events } + (proposal.optionalNamespaces?.flatMap { $0.value.events } ?? []))
-        
+
+        let stacksAccountStorage = StacksAccountStorage()
+        let suiAccountStorage = SuiAccountStorage()
+        let tonAccountStorage = TonAccountStorage()
+        let tronAccountStorage = TronAccountStorage()
+        let solanaAccountStorage = SolanaAccountStorage()
+
+        // Filter chains by user selection when provided
+        func filterSelected(_ chains: [Blockchain]) -> [Blockchain] {
+            guard let selected = selectedChainIds else { return chains }
+            return chains.filter { selected.contains($0.absoluteString) }
+        }
+
+        // Handle EIP155 chains
         let supportedRequiredChains = proposal.requiredNamespaces["eip155"]?.chains ?? []
         let supportedOptionalChains = proposal.optionalNamespaces?["eip155"]?.chains ?? []
-        var supportedChains = supportedRequiredChains + supportedOptionalChains
+        let supportedEIP155Chains = filterSelected(supportedRequiredChains + supportedOptionalChains)
 
-        var supportedAccounts: [Account]
+        // Handle Solana chains
+        let supportedRequiredSolanaChains = proposal.requiredNamespaces["solana"]?.chains ?? []
+        let supportedOptionalSolanaChains = proposal.optionalNamespaces?["solana"]?.chains ?? []
+        let supportedSolanaChains = filterSelected(supportedRequiredSolanaChains + supportedOptionalSolanaChains)
+
+        // Handle Stacks chains
+        let supportedRequiredStacksChains = proposal.requiredNamespaces["stacks"]?.chains ?? []
+        let supportedOptionalStacksChains = proposal.optionalNamespaces?["stacks"]?.chains ?? []
+        let supportedStacksChains = filterSelected(supportedRequiredStacksChains + supportedOptionalStacksChains)
+
+        // Handle Sui chains
+        let supportedRequiredSuiChains = proposal.requiredNamespaces["sui"]?.chains ?? []
+        let supportedOptionalSuiChains = proposal.optionalNamespaces?["sui"]?.chains ?? []
+        let supportedSuiChains = filterSelected(supportedRequiredSuiChains + supportedOptionalSuiChains)
+
+        // Handle TON chains
+        let supportedRequiredTonChains = proposal.requiredNamespaces["ton"]?.chains ?? []
+        let supportedOptionalTonChains = proposal.optionalNamespaces?["ton"]?.chains ?? []
+        let supportedTonChains = filterSelected(supportedRequiredTonChains + supportedOptionalTonChains)
+
+        // Handle Tron chains
+        let supportedRequiredTronChains = proposal.requiredNamespaces["tron"]?.chains ?? []
+        let supportedOptionalTronChains = proposal.optionalNamespaces?["tron"]?.chains ?? []
+        let supportedTronChains = filterSelected(supportedRequiredTronChains + supportedOptionalTronChains)
+
+        // Combine supported chains; add optional groups only when available
+        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains + supportedTronChains
+
+        var supportedAccounts: [Account] = []
         var sessionProperties = [String: String]()
 
-//        if WalletKitEnabler.shared.isSmartAccountEnabled {
-//            let sepolia = Blockchain("eip155:11155111")!
-//            let sepoliaOwnerAccount = Account(blockchain: sepolia, address: EOAAccount.address)!
-//            let smartAccountAddresses = try await WalletKitEnabler.shared.getSmartAccountsAddresses(ownerAccount: sepoliaOwnerAccount)
-//            supportedAccounts = smartAccountAddresses.map { Account(blockchain: sepolia, address: $0)! }
-//            sessionProperties = getSessionProperties(addresses: smartAccountAddresses)
-//        } else {
-            supportedAccounts = Array(supportedChains).map { Account(blockchain: $0, address: EOAAccount.address)! }
-//        }
+        // Add EIP155 accounts
+        let eip155Accounts = Array(supportedEIP155Chains).map { Account(blockchain: $0, address: EOAAccount.address)! }
+        supportedAccounts.append(contentsOf: eip155Accounts)
+
+        // Add Solana accounts if proposed and available
+        if let solanaAccount = solanaAccountStorage.getCaip10Account(), !supportedSolanaChains.isEmpty {
+            supportedChains.append(contentsOf: supportedSolanaChains)
+            // Use the same Solana address for all requested Solana chains
+            let solanaAccounts = Array(supportedSolanaChains).map { Account(blockchain: $0, address: solanaAccount.address)! }
+            supportedAccounts.append(contentsOf: solanaAccounts)
+        }
+
+        // Add Stacks accounts if available
+        if !supportedStacksChains.isEmpty {
+            var stacksAccounts: [Account] = []
+            for chain in supportedStacksChains {
+                if let stacksAccount = try stacksAccountStorage.getCaip10Account(for: chain) {
+                    stacksAccounts.append(stacksAccount)
+                }
+            }
+            supportedAccounts.append(contentsOf: stacksAccounts)
+        }
+
+        // Add Sui accounts if available
+        if let suiAccount = suiAccountStorage.getCaip10Account(), !supportedSuiChains.isEmpty {
+            let suiAccounts = Array(supportedSuiChains).map { Account(blockchain: $0, address: suiAccount.address)! }
+            supportedAccounts.append(contentsOf: suiAccounts)
+        }
+
+        // Add TON accounts if available
+        if !supportedTonChains.isEmpty {
+            var tonAccounts: [Account] = []
+            for chain in supportedTonChains {
+                if let tonAccount = tonAccountStorage.getCaip10Account(for: chain) {
+                    tonAccounts.append(tonAccount)
+                }
+            }
+            supportedAccounts.append(contentsOf: tonAccounts)
+
+            // Add TON session properties (public key and state init)
+            if let publicKey = tonAccountStorage.getPublicKey() {
+                sessionProperties["ton_getPublicKey"] = publicKey
+            }
+            if let stateInit = tonAccountStorage.getStateInitBoc() {
+                sessionProperties["ton_getStateInit"] = stateInit
+            }
+        }
+
+        // Add Tron accounts if available
+        if !supportedTronChains.isEmpty {
+            var tronAccounts: [Account] = []
+            for chain in supportedTronChains {
+                if let tronAccount = tronAccountStorage.getCaip10Account(for: chain) {
+                    tronAccounts.append(tronAccount)
+                }
+            }
+            supportedAccounts.append(contentsOf: tronAccounts)
+            // Add Tron session property for v1 transaction format
+            sessionProperties["tron_method_version"] = "v1"
+        }
 
         /* Use only supported values for production. I.e:
-        let supportedMethods = ["eth_signTransaction", "personal_sign", "eth_signTypedData", "eth_sendTransaction", "eth_sign"]
-        let supportedEvents = ["accountsChanged", "chainChanged"]
-        let supportedChains = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
-        let supportedAccounts = [Account(blockchain: Blockchain("eip155:1")!, address: ETHSigner.address)!, Account(blockchain: Blockchain("eip155:137")!, address: ETHSigner.address)!]
-        */
+         let supportedMethods = ["eth_signTransaction", "personal_sign", "eth_signTypedData", "eth_sendTransaction", "eth_sign"]
+         let supportedEvents = ["accountsChanged", "chainChanged"]
+         let supportedChains = [Blockchain("eip155:1")!, Blockchain("eip155:137")!]
+         let supportedAccounts = [Account(blockchain: Blockchain("eip155:1")!, address: ETHSigner.address)!, Account(blockchain: Blockchain("eip155:137")!, address: ETHSigner.address)!]
+         */
 
         // Define scopedProperties according to CAIP-345
-
         let scopedProperties: [String: String] = [
             "eip155": """
             {
@@ -58,15 +150,15 @@ final class SessionProposalInteractor {
             )
         } catch let error as AutoNamespacesError {
             try await reject(proposal: proposal, reason: RejectionReason(from: error))
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
             return false
         } catch {
             try await reject(proposal: proposal, reason: .userRejected)
-            AlertPresenter.present(message: error.localizedDescription, type: .error)
+            WalletToast.present(message: error.localizedDescription, type: .error)
             return false
         }
 
-        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties)
+        _ = try await WalletKit.instance.approve(proposalId: proposal.id, namespaces: sessionNamespaces, sessionProperties: sessionProperties, scopedProperties: scopedProperties, proposalRequestsResponses: proposalRequestsResponses)
         if let uri = proposal.proposer.redirect?.native {
             ReownRouter.goBack(uri: uri)
             return false
@@ -112,4 +204,3 @@ final class SessionProposalInteractor {
         return sessionProperties
     }
 }
-

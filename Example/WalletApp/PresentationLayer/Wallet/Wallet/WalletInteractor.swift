@@ -1,7 +1,6 @@
 import Combine
 
 import ReownWalletKit
-import WalletConnectNotify
 
 final class WalletInteractor {
     var sessionsPublisher: AnyPublisher<[Session], Never> {

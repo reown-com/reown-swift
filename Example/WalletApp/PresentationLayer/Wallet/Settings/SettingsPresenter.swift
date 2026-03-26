@@ -1,37 +1,25 @@
-import UIKit
+import SwiftUI
 import Combine
 import WalletConnectNetworking
 import ReownWalletKit
 
 final class SettingsPresenter: ObservableObject {
 
-    private let interactor: SettingsInteractor
-    private let importAccount: ImportAccount
-    private let router: SettingsRouter
-    private let accountStorage: AccountStorage
+    let accountStorage: AccountStorage
     private var disposeBag = Set<AnyCancellable>()
-    @Published var smartAccountSafe: String = "Loading..."
 
-    init(interactor: SettingsInteractor, router: SettingsRouter, accountStorage: AccountStorage, importAccount: ImportAccount) {
-        defer { setupInitialState() }
-        self.interactor = interactor
-        self.router = router
+    @Published var showImportWallet = false
+
+    let themeManager = ThemeManager.shared
+
+    lazy var scanHandler = ScanOptionsHandler(
+        onScan: { [weak self] in self?.presentScanCamera() },
+        onUri: { [weak self] in self?.handleScannedOrPastedUri($0) }
+    )
+
+    init(accountStorage: AccountStorage) {
         self.accountStorage = accountStorage
-        self.importAccount = importAccount
-    }
-
-    func enableChainAbstraction(_ enable: Bool) {
-        WalletKitEnabler.shared.isChainAbstractionEnabled = enable
-    }
-
-    var account: String {
-        guard let importAccount = accountStorage.importAccount else { return .empty }
-        return importAccount.account.absoluteString
-    }
-
-    var privateKey: String {
-        guard let importAccount = accountStorage.importAccount else { return .empty }
-        return importAccount.privateKey
+        setupInitialState()
     }
 
     var clientId: String {
@@ -39,43 +27,54 @@ final class SettingsPresenter: ObservableObject {
         return clientId
     }
 
-    var deviceToken: String {
-        guard let deviceToken = UserDefaults.standard.string(forKey: "deviceToken") else { return .empty }
-        return deviceToken
+    var appVersion: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "–"
+        return "\(version) (\(build))"
     }
 
-    func browserPressed() {
-        router.presentBrowser()
+    func importWalletPressed() {
+        showImportWallet = true
     }
 
-    func logoutPressed() async throws {
-        guard let account = accountStorage.importAccount?.account else { return }
-        try? await interactor.notifyUnregister(account: account)
-        accountStorage.importAccount = nil
-        try await WalletKit.instance.cleanup()
-        UserDefaults.standard.set(nil, forKey: "deviceToken")
-        await router.presentWelcome()
-    }
-}
-
-// MARK: SceneViewModel
-
-extension SettingsPresenter: SceneViewModel {
-
-    var sceneTitle: String? {
-        return "Settings"
+    func makeImportWalletPresenter() -> ImportWalletPresenter {
+        let service = WalletGenerationService(accountStorage: accountStorage)
+        return ImportWalletPresenter(walletService: service)
     }
 
-    var largeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode {
-        return .always
+    private func presentScanCamera() {
+        // Scan camera still uses UIKit bridge via ScanOptionsHandler
     }
 }
 
-// MARK: Privates
+// MARK: - Privates
 
 private extension SettingsPresenter {
 
     func setupInitialState() {
+        scanHandler.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &disposeBag)
 
+        themeManager.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &disposeBag)
+    }
+
+    func handleScannedOrPastedUri(_ uriString: String) {
+        do {
+            let uri = try WalletConnectURI(uriString: uriString)
+            Task { @MainActor in
+                do {
+                    try await WalletKit.instance.pair(uri: uri)
+                } catch {
+                    print("Pairing error: \(error.localizedDescription)")
+                }
+            }
+        } catch {
+            print("Invalid URI: \(error.localizedDescription)")
+        }
     }
 }
