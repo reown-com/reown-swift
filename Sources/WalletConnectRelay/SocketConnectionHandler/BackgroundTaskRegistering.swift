@@ -15,7 +15,8 @@ class BackgroundTaskRegistrar: BackgroundTaskRegistering {
     func register(name: String, completion: @escaping () -> Void) {
 #if os(iOS)
         invalidateIfNeeded()
-        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: name) { [unowned self] in
+        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: name) { [weak self] in
+            guard let self else { return }
             UIApplication.shared.endBackgroundTask(backgroundTaskID)
             backgroundTaskID = .invalid
             completion()
