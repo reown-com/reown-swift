@@ -176,12 +176,12 @@ private extension SessionEngine {
             return respondError(payload: payload, reason: .noSessionForTopic, protocolMethod: protocolMethod)
         }
         sessionStore.delete(topic: topic)
-        networkingInteractor.unsubscribe(topic: topic)
-        kms.deleteSymmetricKey(for: topic)
-        kms.deletePrivateKey(for: session.selfParticipant.publicKey)
-        kms.deleteAgreementSecret(for: topic)
         Task(priority: .high) {
             try await networkingInteractor.respondSuccess(topic: payload.topic, requestId: payload.id, protocolMethod: protocolMethod)
+            networkingInteractor.unsubscribe(topic: topic)
+            kms.deleteSymmetricKey(for: topic)
+            kms.deletePrivateKey(for: session.selfParticipant.publicKey)
+            kms.deleteAgreementSecret(for: topic)
         }
         onSessionDelete?(topic, payload.request)
     }

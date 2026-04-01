@@ -40,8 +40,10 @@ class AuthResponseTopicResubscriptionService {
     }
 
     private func startPeriodicCleanup() {
-        cleanupTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
-            self?.cleanExpiredRecordsIfNeeded()
+        DispatchQueue.main.async { [weak self] in
+            self?.cleanupTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+                self?.cleanExpiredRecordsIfNeeded()
+            }
         }
     }
 

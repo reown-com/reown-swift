@@ -29,8 +29,10 @@ final class TopicReconciliationService {
     }
 
     private func startReconciliation() {
-        reconciliationTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
-            self?.reconcile()
+        DispatchQueue.main.async { [weak self] in
+            self?.reconciliationTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+                self?.reconcile()
+            }
         }
     }
 
