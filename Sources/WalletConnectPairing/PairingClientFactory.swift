@@ -31,7 +31,7 @@ public struct PairingClientFactory {
         let walletPairService = WalletPairService(networkingInteractor: networkingClient, kms: kms, pairingStorage: pairingStore, history: history, logger: logger, eventsClient: eventsClient)
         let pairingRequestsSubscriber = PairingRequestsSubscriber(networkingInteractor: networkingClient, pairingStorage: pairingStore, logger: logger)
         let pairingsProvider = PairingsProvider(pairingStorage: pairingStore)
-        let cleanupService = PairingCleanupService(pairingStore: pairingStore, kms: kms)
+        let cleanupService = PairingCleanupService(pairingStore: pairingStore, kms: kms, networkInteractor: networkingClient)
         let expirationService = ExpirationService(pairingStorage: pairingStore, networkInteractor: networkingClient, kms: kms)
         let resubscribeService = PairingResubscribeService(networkInteractor: networkingClient, pairingStorage: pairingStore)
         let pairingDeleteRequestSubscriber = PairingDeleteRequestSubscriber(networkingInteractor: networkingClient, kms: kms, pairingStorage: pairingStore, logger: logger)

@@ -58,6 +58,7 @@ class AuthResponseSubscriber {
             .responseErrorSubscription(on: SessionAuthenticatedProtocolMethod.responseApprove())
             .sink { [unowned self] (payload: ResponseSubscriptionErrorPayload<SessionAuthenticateRequestParams>) in
                 guard let error = AuthError(code: payload.error.code) else { return }
+                removeResponseTopicRecord(responseTopic: payload.topic)
                 Task { removePairing(pairingTopic: payload.topic) }
                 authResponsePublisherSubject.send((payload.id, .failure(error)))
             }.store(in: &publishers)
@@ -93,6 +94,7 @@ class AuthResponseSubscriber {
             .sink { [unowned self] (payload: ResponseSubscriptionErrorPayload<SessionAuthenticateRequestParams>) in
                 Task { eventsClient.saveMessageEvent(.sessionAuthenticateLinkModeResponseRejectReceived(payload.id)) }
                 guard let error = AuthError(code: payload.error.code) else { return }
+                removeResponseTopicRecord(responseTopic: payload.topic)
                 authResponsePublisherSubject.send((payload.id, .failure(error)))
             }.store(in: &publishers)
 

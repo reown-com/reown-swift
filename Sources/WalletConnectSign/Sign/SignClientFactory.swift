@@ -144,6 +144,14 @@ public struct SignClientFactory {
 
         let authenticateTransportTypeSwitcher = AuthenticateTransportTypeSwitcher(linkAuthRequester: linkAuthRequester, pairingClient: pairingClient, logger: logger, appRequestService: appRequestService, appProposeService: appProposerService)
 
+        let topicReconciliationService = TopicReconciliationService(
+            networkingInteractor: networkingClient,
+            sessionStore: sessionStore,
+            pairingStore: pairingStore,
+            authResponseTopicRecordsStore: authResponseTopicRecordsStore,
+            logger: logger
+        )
+
         let client = SignClient(
             logger: logger,
             networkingClient: networkingClient,
@@ -177,7 +185,8 @@ public struct SignClientFactory {
             linkSessionRequestSubscriber: linkSessionRequestSubscriber,
             sessionResponderDispatcher: sessionResponderDispatcher,
             linkSessionRequestResponseSubscriber: linkSessionRequestResponseSubscriber,
-            authenticateTransportTypeSwitcher: authenticateTransportTypeSwitcher
+            authenticateTransportTypeSwitcher: authenticateTransportTypeSwitcher,
+            topicReconciliationService: topicReconciliationService
         )
         return client
     }
