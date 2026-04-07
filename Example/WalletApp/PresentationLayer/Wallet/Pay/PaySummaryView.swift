@@ -5,87 +5,56 @@ struct PaySummaryView: View {
     @EnvironmentObject var presenter: PayPresenter
 
     var body: some View {
-        VStack(spacing: 0) {
+        PayModalContainer {
             // Header: X close (right only)
-            HStack {
-                Spacer()
-                Button(action: {
-                    presenter.dismiss()
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.grey50)
-                        .frame(width: 30, height: 30)
-                        .background(Color.grey95.opacity(0.5))
-                        .clipShape(Circle())
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
+            PayHeaderBar(closeAction: { presenter.dismiss() })
 
             if let info = presenter.paymentInfo {
                 // Merchant header
                 MerchantHeader(info: info)
-                    .padding(.top, 16)
+                    .padding(.top, Spacing._4)
 
                 // "Pay with" row
                 if let option = presenter.selectedOption {
                     HStack {
                         Text("Pay with")
-                            .font(.system(size: 15, weight: .regular, design: .rounded))
-                            .foregroundColor(.grey50)
+                            .appFont(.lg)
+                            .foregroundColor(AppColors.textTertiary)
 
                         Spacer()
 
-                        HStack(spacing: 8) {
+                        HStack(spacing: Spacing._2) {
                             Text(option.formattedAmount)
-                                .font(.system(size: 15, weight: .medium, design: .rounded))
-                                .foregroundColor(.grey8)
+                                .appFont(.lg)
+                                .foregroundColor(AppColors.textPrimary)
 
                             TokenIconWithNetwork(
                                 iconUrl: option.amount.display.iconUrl,
                                 networkIconUrl: option.amount.display.networkIconUrl,
                                 symbol: option.amount.display.assetSymbol,
-                                size: 24
+                                size: 32,
+                                badgeBorderColor: AppColors.foregroundPrimary
                             )
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
-                    .background(Color.grey95.opacity(0.3))
-                    .cornerRadius(16)
-                    .padding(.top, 24)
+                    .padding(.horizontal, Spacing._5)
+                    .frame(height: 68)
+                    .background(AppColors.foregroundPrimary)
+                    .cornerRadius(AppRadius._4)
+                    .padding(.top, Spacing._6)
                 }
 
                 Spacer()
-                    .frame(minHeight: 20, maxHeight: 40)
+                    .frame(height: Spacing._5)
 
                 // Pay button
-                Button(action: {
-                    presenter.confirmPayment()
-                }) {
-                    Text("Pay \(info.formattedAmount)")
-                        .frame(maxWidth: .infinity)
-                        .foregroundColor(.white)
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .padding(.vertical, 16)
-                }
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [.blue100, .blue200]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+                PayPrimaryButton(
+                    title: "Pay \(info.formattedAmount)",
+                    action: { presenter.confirmPayment() }
                 )
-                .cornerRadius(16)
+                .padding(.bottom, Spacing._2)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 24)
-        .background(Color.whiteBackground)
-        .cornerRadius(34)
-        .padding(.horizontal, 10)
-        .padding(.bottom, 10)
     }
 }
 

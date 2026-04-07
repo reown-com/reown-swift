@@ -26,7 +26,7 @@ final class SessionProposalPresenter: ObservableObject {
     }
 
     private let interactor: SessionProposalInteractor
-    private let router: SessionProposalRouter
+    var dismissAction: (() -> Void)?
 
     let importAccount: ImportAccount
     let sessionProposal: Session.Proposal
@@ -34,8 +34,72 @@ final class SessionProposalPresenter: ObservableObject {
     
     @Published var showError = false
     @Published var errorMessage = "Error"
-    @Published var showConnectedSheet = false
-    
+    @Published var selectedChainIds: Set<String> = []
+    @Published var isActionLoading = false
+    @Published var isCancelLoading = false
+
+    var requiredChainIds: Set<String> {
+        var ids = Set<String>()
+        for (key, ns) in sessionProposal.requiredNamespaces {
+            if let blockchains = ns.chains {
+                for bc in blockchains {
+                    ids.insert(bc.absoluteString)
+                }
+            } else {
+                ids.insert(key)
+            }
+        }
+        return ids
+    }
+
+    var availableChains: [ChainInfo] {
+        var chains: [ChainInfo] = []
+        var seen = Set<String>()
+
+        func addChains(from namespaces: [String: ProposalNamespace]) {
+            for (key, ns) in namespaces {
+                if let blockchains = ns.chains {
+                    for bc in blockchains {
+                        let id = bc.absoluteString
+                        guard !seen.contains(id) else { continue }
+                        seen.insert(id)
+                        chains.append(ChainInfo(
+                            id: id,
+                            name: chainDisplayName(for: bc),
+                            iconName: nil
+                        ))
+                    }
+                } else {
+                    let id = key
+                    guard !seen.contains(id) else { continue }
+                    seen.insert(id)
+                    chains.append(ChainInfo(id: id, name: key.uppercased(), iconName: nil))
+                }
+            }
+        }
+
+        addChains(from: sessionProposal.requiredNamespaces)
+        if let optional = sessionProposal.optionalNamespaces {
+            addChains(from: optional)
+        }
+        return chains
+    }
+
+    private func chainDisplayName(for blockchain: Blockchain) -> String {
+        if let name = ChainIconProvider.chainName(for: blockchain.absoluteString) {
+            return name
+        }
+        let ns = blockchain.namespace
+        let ref = blockchain.reference
+        // Fallback for unknown chains
+        switch ns.lowercased() {
+        case "eip155": return "EVM (\(ref))"
+        case "mvx": return "MultiversX"
+        case "tezos": return "Tezos"
+        default: return "\(ns):\(ref)"
+        }
+    }
+
     private var disposeBag = Set<AnyCancellable>()
     private let solanaAccountStorage = SolanaAccountStorage()
     private let messageSigner: MessageSigner
@@ -62,7 +126,6 @@ final class SessionProposalPresenter: ObservableObject {
 
     init(
         interactor: SessionProposalInteractor,
-        router: SessionProposalRouter,
         importAccount: ImportAccount,
         proposal: Session.Proposal,
         context: VerifyContext?,
@@ -70,7 +133,6 @@ final class SessionProposalPresenter: ObservableObject {
     ) {
         defer { setupInitialState() }
         self.interactor = interactor
-        self.router = router
         self.sessionProposal = proposal
         self.importAccount = importAccount
         self.validationStatus = context?.validation
@@ -80,8 +142,8 @@ final class SessionProposalPresenter: ObservableObject {
     @MainActor
     func onApprove() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
-            
+            isActionLoading = true
+
             // Build authentication responses if there are authentication requests
             var proposalRequestsResponses: ProposalRequestsResponses? = nil
             if sessionProposal.requests?.authentication != nil {
@@ -90,12 +152,13 @@ final class SessionProposalPresenter: ObservableObject {
                     proposalRequestsResponses = ProposalRequestsResponses(authentication: authObjects)
                 }
             }
-            
-            let showConnected = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, proposalRequestsResponses: proposalRequestsResponses)
-            showConnected ? showConnectedSheet.toggle() : router.dismiss()
-            ActivityIndicatorManager.shared.stop()
+
+            _ = try await interactor.approve(proposal: sessionProposal, EOAAccount: importAccount.account, selectedChainIds: selectedChainIds, proposalRequestsResponses: proposalRequestsResponses)
+            isActionLoading = false
+            dismiss()
+            WalletToast.present(message: "Connected", type: .success)
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isActionLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
@@ -104,23 +167,19 @@ final class SessionProposalPresenter: ObservableObject {
     @MainActor
     func onReject() async throws {
         do {
-            ActivityIndicatorManager.shared.start()
+            isCancelLoading = true
             try await interactor.reject(proposal: sessionProposal)
-            ActivityIndicatorManager.shared.stop()
-            router.dismiss()
+            isCancelLoading = false
+            dismiss()
         } catch {
-            ActivityIndicatorManager.shared.stop()
+            isCancelLoading = false
             errorMessage = error.localizedDescription
             showError.toggle()
         }
     }
     
-    func onConnectedSheetDismiss() {
-        router.dismiss()
-    }
-
     func dismiss() {
-        router.dismiss()
+        dismissAction?()
     }
 
     private func createAuthObjectForChain(chain: Blockchain, authPayload: AuthPayload) throws -> AuthObject {
@@ -171,6 +230,9 @@ final class SessionProposalPresenter: ObservableObject {
 // MARK: - Private functions
 private extension SessionProposalPresenter {
     func setupInitialState() {
+        // Pre-select all available chains
+        selectedChainIds = Set(availableChains.map(\.id))
+
         WalletKit.instance.sessionProposalExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] proposal in
@@ -268,7 +330,3 @@ private extension SessionProposalPresenter {
     }
 }
 
-// MARK: - SceneViewModel
-extension SessionProposalPresenter: SceneViewModel {
-
-}

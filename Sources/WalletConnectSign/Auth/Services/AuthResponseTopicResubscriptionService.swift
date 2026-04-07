@@ -20,6 +20,11 @@ class AuthResponseTopicResubscriptionService {
     private let logger: ConsoleLogging
     private var publishers = [AnyCancellable]()
     private let authResponseTopicRecordsStore: CodableStore<AuthResponseTopicRecord>
+    private var cleanupTimer: Timer?
+
+    deinit {
+        cleanupTimer?.invalidate()
+    }
 
     init(
         networkingInteractor: NetworkInteracting,
@@ -31,6 +36,15 @@ class AuthResponseTopicResubscriptionService {
         self.authResponseTopicRecordsStore = authResponseTopicRecordsStore
         cleanExpiredRecordsIfNeeded()
         subscribeResponsTopics()
+        startPeriodicCleanup()
+    }
+
+    private func startPeriodicCleanup() {
+        DispatchQueue.main.async { [weak self] in
+            self?.cleanupTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+                self?.cleanExpiredRecordsIfNeeded()
+            }
+        }
     }
 
     func subscribeResponsTopics() {
@@ -44,6 +58,7 @@ class AuthResponseTopicResubscriptionService {
         authResponseTopicRecordsStore.getAll().forEach { record in
             if record.isExpired {
                 authResponseTopicRecordsStore.delete(forKey: record.topic)
+                networkingInteractor.unsubscribe(topic: record.topic)
             }
         }
     }

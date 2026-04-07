@@ -1,6 +1,5 @@
 import UIKit
 import WalletConnectNetworking
-import WalletConnectNotify
 import ReownWalletKit
 import Combine
 
@@ -16,25 +15,23 @@ final class ConfigurationService {
         )
         Networking.instance.setLogging(level: .off)
 
+        guard let redirect = try? AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.reown.com/wallet", linkMode: true) else {
+            print("[ConfigurationService] Failed to create redirect metadata")
+            return
+        }
         let metadata = AppMetadata(
-            name: "Example Wallet",
-            description: "wallet description",
-            url: "example.wallet",
-            icons: ["https://avatars.githubusercontent.com/u/37784886"], 
-            redirect: try! AppMetadata.Redirect(native: "walletapp://", universal: "https://lab.web3modal.com/wallet", linkMode: true)
+            name: "Swift Wallet",
+            description: "Swift sample wallet showcasing WalletConnect SDK integration",
+            url: "https://walletconnect.network/sdk",
+            icons: ["https://avatars.githubusercontent.com/u/37784886"],
+            redirect: redirect
         )
 
-        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), environment: BuildConfiguration.shared.apnsEnvironment, pimlicoApiKey: InputConfig.pimlicoApiKey)
+        WalletKit.configure(metadata: metadata, crypto: DefaultCryptoProvider(), pimlicoApiKey: InputConfig.pimlicoApiKey)
 
         // Initialize SuiSigner
         SuiSigner.initialize(projectId: InputConfig.projectId)
 
-        Notify.configure(
-            environment: BuildConfiguration.shared.apnsEnvironment,
-            crypto: DefaultCryptoProvider()
-        )
-
-        Notify.instance.setLogging(level: .off)
         Sign.instance.setLogging(level: .off)
         Events.instance.setLogging(level: .off)
 
@@ -42,7 +39,7 @@ final class ConfigurationService {
             LoggingService.instance.setUpUser(account: importAccount.account.absoluteString, clientId: clientId)
             ProfilingService.instance.setUpProfiling(account: importAccount.account.absoluteString, clientId: clientId)
             let groupKeychain = GroupKeychainStorage(serviceIdentifier: "group.com.walletconnect.sdk")
-            try! groupKeychain.add(clientId, forKey: "clientId")
+            try? groupKeychain.add(clientId, forKey: "clientId")
         }
         LoggingService.instance.startLogging()
 
@@ -51,9 +48,9 @@ final class ConfigurationService {
             .sink { status in
             switch status {
             case .connected:
-                AlertPresenter.present(message: "Your web socket has connected", type: .success)
+                WalletToast.present(message: "Your web socket has connected", type: .success)
             case .disconnected:
-                AlertPresenter.present(message: "Your web socket is disconnected", type: .warning)
+                WalletToast.present(message: "Your web socket is disconnected", type: .warning)
             }
         }.store(in: &publishers)
 
@@ -62,7 +59,7 @@ final class ConfigurationService {
             .sink { log in
             switch log {
             case .error(let logMessage):
-                AlertPresenter.present(message: logMessage.message, type: .error)
+                WalletToast.present(message: logMessage.message, type: .error)
             default: return
             }
         }.store(in: &publishers)
@@ -70,29 +67,16 @@ final class ConfigurationService {
         WalletKit.instance.pairingExpirationPublisher
             .receive(on: DispatchQueue.main)
             .sink { pairing in
-            AlertPresenter.present(message: "Pairing has expired", type: .warning)
+            WalletToast.present(message: "Pairing has expired", type: .warning)
         }.store(in: &publishers)
 
         WalletKit.instance.sessionProposalExpirationPublisher.sink { _ in
-            AlertPresenter.present(message: "Session Proposal has expired", type: .warning)
+            WalletToast.present(message: "Session Proposal has expired", type: .warning)
         }.store(in: &publishers)
 
         WalletKit.instance.requestExpirationPublisher.sink { _ in
-            AlertPresenter.present(message: "Session Request has expired", type: .warning)
+            WalletToast.present(message: "Session Request has expired", type: .warning)
         }.store(in: &publishers)
 
-        Task {
-            do {
-               // let params = try await Notify.instance.prepareRegistration(account: importAccount.account, domain: "com.walletconnect")
-               // let signature = importAccount.onSign(message: params.message)
-//                try await Notify.instance.register(params: params, signature: signature)
-            } catch {
-                DispatchQueue.main.async {
-                    let logMessage = LogMessage(message: "Push Server registration failed with: \(error.localizedDescription)")
-                    ProfilingService.instance.send(logMessage: logMessage)
-                    UIApplication.currentWindow.rootViewController?.showAlert(title: "Register error", error: error)
-                }
-            }
-        }
     }
 }

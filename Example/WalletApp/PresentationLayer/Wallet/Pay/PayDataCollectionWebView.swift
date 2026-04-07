@@ -6,7 +6,6 @@ struct PayDataCollectionWebView: View {
     let onClose: () -> Void
     let onComplete: () -> Void
     let onError: (String) -> Void
-    let onFormDataChanged: (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void
 
     @State private var isLoading = true
 
@@ -16,33 +15,20 @@ struct PayDataCollectionWebView: View {
                 url: url,
                 isLoading: $isLoading,
                 onComplete: onComplete,
-                onError: onError,
-                onFormDataChanged: onFormDataChanged
+                onError: onError
             )
 
-            // Close button
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.gray)
-                    .frame(width: 28, height: 28)
-                    .background(Color.white.opacity(0.9))
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-            }
-            .padding(.top, 56)
-            .padding(.trailing, 20)
+            // Close button — matches other Pay modals
+            PayCloseButton(action: onClose)
+                .padding(.top, Spacing._4)
+                .padding(.trailing, Spacing._5)
 
             if isLoading {
-                VStack(spacing: 16) {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                    Text("Loading...")
-                        .font(.system(size: 14, design: .rounded))
-                        .foregroundColor(.secondary)
+                VStack {
+                    WalletConnectLoadingView(size: 120)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.white)
+                .background(AppColors.backgroundPrimary)
             }
         }
     }
@@ -53,10 +39,9 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
     @Binding var isLoading: Bool
     let onComplete: () -> Void
     let onError: (String) -> Void
-    let onFormDataChanged: (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(isLoading: $isLoading, onComplete: onComplete, onError: onError, onFormDataChanged: onFormDataChanged)
+        Coordinator(isLoading: $isLoading, onComplete: onComplete, onError: onError)
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -68,8 +53,8 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
-        webView.backgroundColor = .white
-        webView.scrollView.backgroundColor = .white
+        webView.backgroundColor = UIColor(AppColors.backgroundPrimary)
+        webView.scrollView.backgroundColor = UIColor(AppColors.backgroundPrimary)
         webView.isOpaque = false
 
         print("💳 [PayWebView] Loading URL: \(url)")
@@ -83,13 +68,11 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
         @Binding var isLoading: Bool
         let onComplete: () -> Void
         let onError: (String) -> Void
-        let onFormDataChanged: (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void
 
-        init(isLoading: Binding<Bool>, onComplete: @escaping () -> Void, onError: @escaping (String) -> Void, onFormDataChanged: @escaping (_ fullName: String?, _ dob: String?, _ pobAddress: String?) -> Void) {
+        init(isLoading: Binding<Bool>, onComplete: @escaping () -> Void, onError: @escaping (String) -> Void) {
             self._isLoading = isLoading
             self.onComplete = onComplete
             self.onError = onError
-            self.onFormDataChanged = onFormDataChanged
         }
 
         // JavaScript calls: window.webkit.messageHandlers.payDataCollectionComplete.postMessage({...})
@@ -109,14 +92,9 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
             switch type {
             case "IC_COMPLETE":
                 let success = body["success"] as? Bool ?? false
-                // Extract form data from completion message (same fields as prefill)
-                let fullName = body["fullName"] as? String
-                let dob = body["dob"] as? String
-                let pobAddress = body["pobAddress"] as? String
-                print("💳 [PayWebView] IC_COMPLETE received, success: \(success), fullName: \(fullName ?? "nil"), dob: \(dob ?? "nil"), pobAddress: \(pobAddress ?? "nil")")
+                print("💳 [PayWebView] IC_COMPLETE received, success: \(success)")
                 if success {
                     DispatchQueue.main.async { [weak self] in
-                        self?.onFormDataChanged(fullName, dob, pobAddress)
                         self?.onComplete()
                     }
                 }
@@ -125,14 +103,6 @@ private struct PayWebViewRepresentable: UIViewRepresentable {
                 print("💳 [PayWebView] IC_ERROR received: \(error)")
                 DispatchQueue.main.async { [weak self] in
                     self?.onError(error)
-                }
-            case "IC_FORM_DATA":
-                let fullName = body["fullName"] as? String
-                let dob = body["dob"] as? String
-                let pobAddress = body["pobAddress"] as? String
-                print("💳 [PayWebView] IC_FORM_DATA received - fullName: \(fullName ?? "nil"), dob: \(dob ?? "nil"), pobAddress: \(pobAddress ?? "nil")")
-                DispatchQueue.main.async { [weak self] in
-                    self?.onFormDataChanged(fullName, dob, pobAddress)
                 }
             default:
                 // Ignore unknown message types silently (don't treat as error)
@@ -210,8 +180,7 @@ struct PayDataCollectionWebView_Previews: PreviewProvider {
             url: URL(string: "https://example.com")!,
             onClose: {},
             onComplete: {},
-            onError: { _ in },
-            onFormDataChanged: { _, _, _ in }
+            onError: { _ in }
         )
     }
 }

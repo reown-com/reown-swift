@@ -186,6 +186,7 @@ public final class SignClient: SignClientProtocol {
     private var authRequestPublisherSubject = PassthroughSubject<(request: AuthenticationRequest, context: VerifyContext?), Never>()
     private let authRequestSubscribersTracking: AuthRequestSubscribersTracking
     private let authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher
+    private let topicReconciliationService: TopicReconciliationService
 
 
     // Link Mode
@@ -233,7 +234,8 @@ public final class SignClient: SignClientProtocol {
          linkSessionRequestSubscriber: LinkSessionRequestSubscriber,
          sessionResponderDispatcher: SessionResponderDispatcher,
          linkSessionRequestResponseSubscriber: LinkSessionRequestResponseSubscriber,
-         authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher
+         authenticateTransportTypeSwitcher: AuthenticateTransportTypeSwitcher,
+         topicReconciliationService: TopicReconciliationService
     ) {
         self.logger = logger
         self.networkingClient = networkingClient
@@ -268,6 +270,7 @@ public final class SignClient: SignClientProtocol {
         self.sessionResponderDispatcher = sessionResponderDispatcher
         self.linkSessionRequestResponseSubscriber = linkSessionRequestResponseSubscriber
         self.authenticateTransportTypeSwitcher = authenticateTransportTypeSwitcher
+        self.topicReconciliationService = topicReconciliationService
 
         setUpConnectionObserving()
         setUpEnginesCallbacks()

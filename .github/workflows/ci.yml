@@ -52,10 +52,10 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Select Xcode 16.4 (iOS 18.x simulators)
+    - name: Select Xcode 26 (iOS 26 SDK)
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '16.4'
+        xcode-version: '26'
 
     - uses: actions/cache/restore@v3
       with:

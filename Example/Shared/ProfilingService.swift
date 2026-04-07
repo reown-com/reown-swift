@@ -3,7 +3,6 @@ import Mixpanel
 import WalletConnectNetworking
 import Combine
 import WalletConnectSign
-import WalletConnectNotify
 
 final class ProfilingService {
     public static var instance = ProfilingService()
