@@ -57,6 +57,12 @@ enum ChainIconProvider {
             case "0xcd8690dc": return ("Tron", "Tron Testnet")
             default: return ("Tron", "Tron")
             }
+        case "canton":
+            switch ref {
+            case "mainnet": return ("Canton", "Canton")
+            case "devnet": return ("Canton", "Canton Devnet")
+            default: return ("Canton", "Canton")
+            }
         default: return nil
         }
     }
