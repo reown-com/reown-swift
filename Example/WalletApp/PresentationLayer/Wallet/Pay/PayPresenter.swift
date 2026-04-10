@@ -69,17 +69,9 @@ final class PayPresenter: ObservableObject {
         collectData != nil
     }
 
-    /// Whether the currently selected option requires information capture
-    var selectedOptionRequiresIC: Bool {
-        collectData != nil
-    }
-
-    /// Button title for the options screen — "Continue" if IC required, "Pay $X" otherwise
+    /// Button title for the options screen — "Continue"
     var optionsButtonTitle: String {
-        if selectedOptionRequiresIC {
-            return "Continue"
-        }
-        return "Pay \(paymentInfo?.formattedAmount ?? "")"
+        return "Continue"
     }
 
     init(paymentLink: String, accounts: [String], importAccount: ImportAccount) {
@@ -112,10 +104,15 @@ final class PayPresenter: ObservableObject {
                 } else {
                     // Select first option by default
                     self.selectedOption = response.options.first
-                    self.currentStep = .options
+                    // Auto-skip to summary for single option with no IC
+                    if response.options.count == 1 && response.collectData == nil {
+                        self.currentStep = .summary
+                    } else {
+                        self.currentStep = .options
+                    }
                 }
             } catch {
-                self.resultType = Self.detectErrorType(from: error.localizedDescription)
+                self.resultType = Self.detectResultType(from: error)
                 self.currentStep = .result
             }
         }
@@ -141,22 +138,51 @@ final class PayPresenter: ObservableObject {
 
     /// Called when IC WebView encounters an error
     func onICWebViewError(_ error: String) {
-        errorMessage = "Information capture failed: \(error)"
-        showError = true
+        let detectedType = Self.detectErrorType(from: error)
+        switch detectedType {
+        case .generic:
+            errorMessage = "Information capture failed: \(error)"
+            showError = true
+        default:
+            resultType = detectedType
+            currentStep = .result
+        }
     }
 
-    /// Build IC WebView URL with domain validation
+    /// Build IC WebView URL with domain validation, prefill data, and theme
     func buildICWebViewURL() -> URL? {
         guard let baseUrlString = collectData?.url,
               !baseUrlString.isEmpty,
-              let url = URL(string: baseUrlString),
-              let host = url.host,
+              var components = URLComponents(string: baseUrlString),
+              let host = components.host,
               Self.trustedICDomains.contains(host) else {
             print("⚠️ [Pay] Rejected untrusted or invalid IC URL: \(collectData?.url ?? "nil")")
             return nil
         }
 
-        return url
+        // Prefill data
+        let prefillData: [String: String] = [
+            "fullName": "John Doe",
+            "dob": "1990-06-15",
+            "pobAddress": "Buenos Aires"
+        ]
+
+        if let jsonData = try? JSONSerialization.data(withJSONObject: prefillData) {
+            let base64 = jsonData.base64EncodedString()
+            var queryItems = components.queryItems ?? []
+            // Replace existing prefill param if present, otherwise add
+            if let idx = queryItems.firstIndex(where: { $0.name == "prefill" }) {
+                queryItems[idx] = URLQueryItem(name: "prefill", value: base64)
+            } else {
+                queryItems.append(URLQueryItem(name: "prefill", value: base64))
+            }
+            // Append theme param
+            let theme = ThemeManager.shared.isDarkMode ? "dark" : "light"
+            queryItems.append(URLQueryItem(name: "theme", value: theme))
+            components.queryItems = queryItems
+        }
+
+        return components.url
     }
 
     func goBack() {
@@ -239,7 +265,7 @@ final class PayPresenter: ObservableObject {
                 case .succeeded, .processing:
                     self.resultType = .success
                 case .cancelled:
-                    self.resultType = .generic(message: "This payment was cancelled.")
+                    self.resultType = .cancelled
                 case .failed:
                     self.resultType = .generic(message: "Payment failed.")
                 case .expired:
@@ -253,7 +279,7 @@ final class PayPresenter: ObservableObject {
                 NotificationCenter.default.post(name: .paymentCompleted, object: nil)
 
             } catch {
-                self.resultType = Self.detectErrorType(from: error.localizedDescription)
+                self.resultType = Self.detectResultType(from: error)
                 self.currentStep = .result
             }
         }
@@ -263,7 +289,45 @@ final class PayPresenter: ObservableObject {
         dismissAction?()
     }
 
-    // MARK: - Error Detection (from RN utils.ts)
+    // MARK: - Error Detection
+
+    /// Map SDK typed errors to result types, with string fallback
+    static func detectResultType(from error: Error) -> PayResultType {
+        // Match on typed SDK errors first
+        if let e = error as? GetPaymentOptionsError {
+            switch e {
+            case .PaymentExpired:
+                return .expired
+            case .PaymentNotFound(let msg):
+                // Cancelled payments may surface as NotFound — check inner message
+                let lowered = msg.lowercased()
+                if lowered.contains("cancelled") || lowered.contains("canceled") {
+                    return .cancelled
+                }
+                return .notFound
+            default:
+                break
+            }
+        }
+        if let e = error as? ConfirmPaymentError {
+            switch e {
+            case .PaymentExpired, .RouteExpired, .QuoteExpired:
+                return .expired
+            case .PaymentNotFound(let msg):
+                let lowered = msg.lowercased()
+                if lowered.contains("cancelled") || lowered.contains("canceled") {
+                    return .cancelled
+                }
+                return .notFound
+            case .PollingTimeout:
+                return .expired
+            default:
+                break
+            }
+        }
+        // Fallback: string matching on localizedDescription
+        return detectErrorType(from: error.localizedDescription)
+    }
 
     static func detectErrorType(from message: String) -> PayResultType {
         let lowered = message.lowercased()
@@ -272,6 +336,9 @@ final class PayPresenter: ObservableObject {
         }
         if lowered.contains("expired") || lowered.contains("timeout") {
             return .expired
+        }
+        if lowered.contains("cancelled") || lowered.contains("canceled") {
+            return .cancelled
         }
         if lowered.contains("not found") || lowered.contains("404") {
             return .notFound

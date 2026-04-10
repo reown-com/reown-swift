@@ -44,6 +44,8 @@
 	<string>$(PIMLICO_API_KEY)</string>
 	<key>PROJECT_ID</key>
 	<string>$(PROJECT_ID)</string>
+	<key>TEST_WALLET_PRIVATE_KEY</key>
+	<string>$(TEST_WALLET_PRIVATE_KEY)</string>
 	<key>RPC_URL</key>
 	<string>$(RPC_URL)</string>
 	<key>SIMULATOR_IDENTIFIER</key>

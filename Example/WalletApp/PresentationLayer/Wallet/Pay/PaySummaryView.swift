@@ -6,12 +6,19 @@ struct PaySummaryView: View {
 
     var body: some View {
         PayModalContainer {
-            // Header: X close (right only)
-            PayHeaderBar(closeAction: { presenter.dismiss() })
+            // Header: back (left) + X close (right)
+            PayHeaderBar(
+                showBack: true,
+                backAction: { presenter.goBack() },
+                closeAction: { presenter.dismiss() },
+                backAccessibilityId: "pay-button-back",
+                closeAccessibilityId: "pay-button-close"
+            )
 
             if let info = presenter.paymentInfo {
                 // Merchant header
                 MerchantHeader(info: info)
+                    .accessibilityIdentifier("pay-merchant-info")
                     .padding(.top, Spacing._4)
 
                 // "Pay with" row
@@ -41,6 +48,7 @@ struct PaySummaryView: View {
                     .frame(height: 68)
                     .background(AppColors.foregroundPrimary)
                     .cornerRadius(AppRadius._4)
+                    .accessibilityIdentifier("pay-review-token-\(option.amount.display.networkName ?? "unknown")")
                     .padding(.top, Spacing._6)
                 }
 
@@ -50,6 +58,7 @@ struct PaySummaryView: View {
                 // Pay button
                 PayPrimaryButton(
                     title: "Pay \(info.formattedAmount)",
+                    accessibilityId: "pay-button-pay",
                     action: { presenter.confirmPayment() }
                 )
                 .padding(.bottom, Spacing._2)

@@ -1,0 +1,107 @@
+name: Maestro E2E Pay Tests
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+    inputs:
+      maestro_flows_ref:
+        description: 'Branch/tag of WalletConnect/actions for test flows'
+        required: false
+        default: 'master'
+
+permissions:
+  contents: read
+  checks: write
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-pay-tests:
+    runs-on: macos-latest-xlarge
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Select Xcode 26 (iOS 26 SDK)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26'
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            **/SourcePackagesCache
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+
+      - name: Build WalletApp for simulator (test mode)
+        run: |
+          set -o pipefail && env NSUnbufferedIO=YES \
+            xcodebuild \
+            -project "Example/ExampleApp.xcodeproj" \
+            -scheme "WalletApp" \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -derivedDataPath DerivedDataCache \
+            -clonedSourcePackagesDirPath ../SourcePackagesCache \
+            RELAY_HOST='relay.walletconnect.com' \
+            PROJECT_ID='${{ secrets.PROJECT_ID }}' \
+            TEST_WALLET_PRIVATE_KEY='${{ secrets.TEST_WALLET_PRIVATE_KEY }}' \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) ENABLE_TEST_MODE' \
+            build \
+            | xcbeautify
+
+      - name: Copy shared Pay test flows
+        uses: WalletConnect/actions/maestro/pay-tests@master
+
+      - name: Install Maestro
+        uses: WalletConnect/actions/maestro/setup@master
+
+      - name: Boot iOS simulator
+        run: |
+          xcrun simctl boot "iPhone 16" 2>/dev/null || true
+          xcrun simctl bootstatus "iPhone 16"
+
+      - name: Install app on simulator
+        run: |
+          APP_PATH=$(find DerivedDataCache -name "WalletApp.app" -path "*/Debug-iphonesimulator/*" | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: WalletApp.app not found in DerivedDataCache"
+            find DerivedDataCache -name "*.app" -path "*/Debug-iphonesimulator/*"
+            exit 1
+          fi
+          echo "Installing: $APP_PATH"
+          xcrun simctl install booted "$APP_PATH"
+
+      - name: Run Maestro Pay E2E tests
+        run: |
+          maestro test \
+            --env APP_ID=com.walletconnect.walletapp \
+            --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }} \
+            --env WPAY_MERCHANT_ID_SINGLE_NOKYC=${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }} \
+            --env WPAY_CUSTOMER_KEY_MULTI_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }} \
+            --env WPAY_MERCHANT_ID_MULTI_NOKYC=${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }} \
+            --env WPAY_CUSTOMER_KEY_MULTI_KYC=${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }} \
+            --env WPAY_MERCHANT_ID_MULTI_KYC=${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }} \
+            --include-tags pay \
+            --test-output-dir debug-artifacts/maestro-output \
+            --debug-output debug-artifacts/maestro-debug \
+            .maestro/
+
+      - name: Capture simulator logs
+        if: always()
+        run: |
+          xcrun simctl spawn booted log collect --output debug-artifacts/sim-logs.logarchive 2>/dev/null || true
+
+      - name: Upload debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-pay-test-artifacts
+          path: debug-artifacts/
+          retention-days: 14
+          if-no-files-found: ignore

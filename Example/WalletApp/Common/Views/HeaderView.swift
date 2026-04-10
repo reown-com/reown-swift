@@ -33,7 +33,7 @@ struct HeaderView: View {
                     .background(AppColors.backgroundInvert)
                     .cornerRadius(CGFloat(AppRadius._3))
             }
-            .accessibilityIdentifier("headerScan")
+            .accessibilityIdentifier("button-scan")
         }
         .padding(.horizontal, Spacing._5)
         .padding(.bottom, Spacing._2)

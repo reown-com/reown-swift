@@ -19,16 +19,19 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        guard let url = userActivity.webpageURL,
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+        guard let url = userActivity.webpageURL else {
             return
         }
-        
+
+        if handleIncomingURL(url) {
+            return
+        }
+
         // Extract topic from URL
         if let topic = extractTopicFromURL(url.absoluteString) {
             LinkModeTopicsStorage.shared.addTopic(topic)
         }
-        
+
         do {
             try WalletKit.instance.dispatchEnvelope(url.absoluteString)
         } catch {
@@ -58,15 +61,19 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let url = urlContext.url
             print("🔗 [PayDeeplink] Cold start - Received URL: \(url.absoluteString)")
             pendingPaymentLink = extractPaymentLink(from: url)
+        } else if let userActivityURL = connectionOptions.userActivities.first?.webpageURL {
+            print("🔗 [PayDeeplink] Cold start - Received universal link: \(userActivityURL.absoluteString)")
+            pendingPaymentLink = extractPaymentLink(from: userActivityURL)
         } else {
-            print("🔗 [PayDeeplink] Cold start - No URL context")
+            print("🔗 [PayDeeplink] Cold start - No URL context or user activity")
         }
 
         // Process connection options (only if not a pay-only deeplink)
         // If `pay` param exists but no `uri`, skip pairing
         let hasPayParam = pendingPaymentLink != nil
-        let hasUriParam = connectionOptions.urlContexts.first.flatMap { context -> Bool in
-            guard let components = URLComponents(url: context.url, resolvingAgainstBaseURL: false),
+        let incomingURL = connectionOptions.urlContexts.first?.url ?? connectionOptions.userActivities.first?.webpageURL
+        let hasUriParam = incomingURL.flatMap { url -> Bool in
+            guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                   let queryItems = components.queryItems else { return false }
             return queryItems.contains(where: { $0.name == "uri" })
         } ?? false
@@ -124,15 +131,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let url = context.url
         print("🔗 [PayDeeplink] openURLContexts - Received URL: \(url.absoluteString)")
 
-        // Check for payment deep link and handle if found
-        if let paymentLink = extractPaymentLink(from: url) {
-            handlePaymentLink(paymentLink)
-            // For POS scan format (walletconnectpay host), return early - no pairing needed
-            if url.host == "walletconnectpay" {
-                return
-            }
-            // For new format (uri with pay param), continue to pairing flow
-            print("🔗 [PayDeeplink] Continuing to pairing flow...")
+        if handleIncomingURL(url) {
+            return
         }
 
         do {
@@ -171,6 +171,22 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 }
 
 private extension SceneDelegate {
+    @discardableResult
+    func handleIncomingURL(_ url: URL) -> Bool {
+        guard let paymentLink = extractPaymentLink(from: url) else {
+            return false
+        }
+
+        handlePaymentLink(paymentLink)
+
+        if containsWalletConnectURI(in: url) {
+            print("🔗 [PayDeeplink] Continuing to pairing flow...")
+            return false
+        }
+
+        // Mirror the Paste URL flow for direct payment links: start Pay only.
+        return true
+    }
 
     func configureWalletKitClientIfNeeded() {
         Networking.configure(
@@ -220,11 +236,13 @@ private extension SceneDelegate {
         return isPayLink
     }
 
-    /// Extract payment link from a URL if present
-    /// Supports two formats:
+    /// Extract payment link from a URL if present.
+    /// Supports:
     /// - WC URI format: `uri` parameter containing embedded `pay` param
-    /// - POS scan format: `walletconnectpay` host with `paymentId` query param (scanned directly from POS)
-    /// - Returns: The payment link string if found, nil otherwise
+    /// - Gateway / universal links with `pid` or `paymentId` query params
+    /// - App deeplinks with `walletconnectpay?paymentId=...`
+    /// Returns the same payment string that the manual Paste URL flow would pass
+    /// to the Pay modal whenever possible.
     private func extractPaymentLink(from url: URL) -> String? {
         print("🔗 [PayDeeplink] Extracting payment link from: \(url.absoluteString)")
 
@@ -242,15 +260,33 @@ private extension SceneDelegate {
             return uriValue
         }
 
-        // POS scan format: walletconnectpay host with paymentId (scanned directly from POS)
+        // App deeplink format: extract the bare payment ID instead of forwarding the
+        // custom walletapp:// URL, which Pay rejects.
         if url.host == "walletconnectpay",
-           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-            print("🔗 [PayDeeplink] POS scan format - paymentId: \(paymentId)")
-            return "walletapp://walletconnectpay?paymentId=\(paymentId)"
+           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value,
+           !paymentId.isEmpty {
+            print("🔗 [PayDeeplink] App deeplink format - paymentId: \(paymentId)")
+            return paymentId
+        }
+
+        // For gateway / universal links, preserve the original URL exactly.
+        if let paymentId = queryItems.first(where: { $0.name == "paymentId" || $0.name == "pid" })?.value,
+           !paymentId.isEmpty {
+            print("🔗 [PayDeeplink] Found paymentId in URL query: \(paymentId)")
+            return url.absoluteString
         }
 
         print("🔗 [PayDeeplink] No payment link found in URL")
         return nil
+    }
+
+    private func containsWalletConnectURI(in url: URL) -> Bool {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let uriValue = components.queryItems?.first(where: { $0.name == "uri" })?.value else {
+            return false
+        }
+
+        return !uriValue.isEmpty
     }
     
     /// Handle a payment link URL via the coordinator
@@ -259,4 +295,3 @@ private extension SceneDelegate {
         coordinator.showPayment(paymentLink: paymentLink)
     }
 }
-
