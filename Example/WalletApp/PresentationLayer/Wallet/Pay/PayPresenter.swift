@@ -160,7 +160,10 @@ final class PayPresenter: ObservableObject {
             return nil
         }
 
-        // Prefill data
+        var queryItems = components.queryItems ?? []
+
+        #if ENABLE_TEST_MODE
+        // Prefill data — only used in test builds
         let prefillData: [String: String] = [
             "fullName": "John Doe",
             "dob": "1990-06-15",
@@ -169,18 +172,18 @@ final class PayPresenter: ObservableObject {
 
         if let jsonData = try? JSONSerialization.data(withJSONObject: prefillData) {
             let base64 = jsonData.base64EncodedString()
-            var queryItems = components.queryItems ?? []
-            // Replace existing prefill param if present, otherwise add
             if let idx = queryItems.firstIndex(where: { $0.name == "prefill" }) {
                 queryItems[idx] = URLQueryItem(name: "prefill", value: base64)
             } else {
                 queryItems.append(URLQueryItem(name: "prefill", value: base64))
             }
-            // Append theme param
-            let theme = ThemeManager.shared.isDarkMode ? "dark" : "light"
-            queryItems.append(URLQueryItem(name: "theme", value: theme))
-            components.queryItems = queryItems
         }
+        #endif
+
+        // Append theme param
+        let theme = ThemeManager.shared.isDarkMode ? "dark" : "light"
+        queryItems.append(URLQueryItem(name: "theme", value: theme))
+        components.queryItems = queryItems
 
         return components.url
     }
