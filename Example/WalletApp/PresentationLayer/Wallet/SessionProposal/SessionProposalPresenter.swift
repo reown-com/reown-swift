@@ -199,6 +199,8 @@ final class SessionProposalPresenter: ObservableObject {
             )
         } else if chain.namespace.caseInsensitiveCompare("solana") == .orderedSame {
             signature = try solanaSignature(for: message)
+        } else if chain.namespace.caseInsensitiveCompare("canton") == .orderedSame {
+            signature = CacaoSignature(t: .ed25519, s: CantonAccountStorage.publicKeyBase64)
         } else {
             throw Errors.noCommonChains
         }
@@ -263,6 +265,11 @@ private extension SessionProposalPresenter {
             return Account(blockchain: chain, address: solanaAccount.address)
         }
 
+        if chain.namespace.caseInsensitiveCompare("canton") == .orderedSame {
+            let cantonAccountStorage = CantonAccountStorage()
+            return cantonAccountStorage.getCaip10Account(for: chain)
+        }
+
         return nil
     }
 
@@ -276,6 +283,11 @@ private extension SessionProposalPresenter {
             }
             supported.formUnion(solanaChains)
         }
+
+        let cantonChains = requestedChains.filter { chain in
+            chain.namespace.caseInsensitiveCompare("canton") == .orderedSame
+        }
+        supported.formUnion(cantonChains)
 
         return supported
     }
