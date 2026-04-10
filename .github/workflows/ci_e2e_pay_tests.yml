@@ -10,7 +10,7 @@ on:
       maestro_flows_ref:
         description: 'Branch/tag of WalletConnect/actions for test flows'
         required: false
-        default: 'feat/maestro-pay-actions'
+        default: 'main'
 
 permissions:
   contents: read
@@ -57,10 +57,10 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@feat/maestro-pay-actions
+        uses: WalletConnect/actions/maestro/pay-tests@f9522878950f7bd904a628b2c4d486b93034a4fe # main
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@feat/maestro-pay-actions
+        uses: WalletConnect/actions/maestro/setup@f9522878950f7bd904a628b2c4d486b93034a4fe # main
 
       - name: Boot iOS simulator
         run: |
