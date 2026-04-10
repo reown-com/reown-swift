@@ -62,7 +62,7 @@ jobs:
       - name: Install Maestro
         uses: WalletConnect/actions/maestro/setup@f9522878950f7bd904a628b2c4d486b93034a4fe # main
         with:
-          version: '1.39.15'
+          version: '2.4.0'
 
       - name: Boot iOS simulator
         run: |
