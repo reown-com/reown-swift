@@ -163,19 +163,11 @@ final class PayPresenter: ObservableObject {
         var queryItems = components.queryItems ?? []
 
         #if ENABLE_TEST_MODE
-        // Prefill data — only used in test builds
-        let prefillData: [String: String] = [
-            "fullName": "John Doe",
-            "dob": "1990-06-15",
-            "pobAddress": "Buenos Aires"
-        ]
-
-        if let jsonData = try? JSONSerialization.data(withJSONObject: prefillData) {
-            let base64 = jsonData.base64EncodedString()
+        if let prefill = buildPrefillParam(schema: collectData?.schema) {
             if let idx = queryItems.firstIndex(where: { $0.name == "prefill" }) {
-                queryItems[idx] = URLQueryItem(name: "prefill", value: base64)
+                queryItems[idx] = URLQueryItem(name: "prefill", value: prefill)
             } else {
-                queryItems.append(URLQueryItem(name: "prefill", value: base64))
+                queryItems.append(URLQueryItem(name: "prefill", value: prefill))
             }
         }
         #endif
@@ -187,6 +179,59 @@ final class PayPresenter: ObservableObject {
 
         return components.url
     }
+
+    #if ENABLE_TEST_MODE
+    /// Build Base64-encoded prefill param from schema's required fields.
+    /// Parses the JSON Schema to find all required fields (top-level + anyOf)
+    /// and only includes fields that have known prefill values.
+    private func buildPrefillParam(schema: String?) -> String? {
+        guard let schema = schema,
+              let schemaData = schema.data(using: .utf8),
+              let schemaJson = try? JSONSerialization.jsonObject(with: schemaData) as? [String: Any] else {
+            return nil
+        }
+
+        // Collect required fields from top-level "required" array
+        var requiredFields = Set<String>()
+        if let topRequired = schemaJson["required"] as? [String] {
+            requiredFields.formUnion(topRequired)
+        }
+
+        // Collect required fields from "anyOf" conditional groups
+        if let anyOf = schemaJson["anyOf"] as? [[String: Any]] {
+            for group in anyOf {
+                if let groupRequired = group["required"] as? [String] {
+                    requiredFields.formUnion(groupRequired)
+                }
+            }
+        }
+
+        // Map of field id -> prefill value
+        let fieldValues: [String: String] = [
+            "fullName": "Test User",
+            "dob": "1990-01-15",
+            "pobAddress": "New York, NY",
+            "pobCountry": "US",
+            "porAddress": "New York, NY",
+            "porCountry": "US"
+        ]
+
+        // Build prefill dict with only required fields
+        var prefillData = [String: String]()
+        for fieldId in requiredFields {
+            if let value = fieldValues[fieldId] {
+                prefillData[fieldId] = value
+            }
+        }
+
+        guard !prefillData.isEmpty,
+              let jsonData = try? JSONSerialization.data(withJSONObject: prefillData) else {
+            return nil
+        }
+
+        return jsonData.base64EncodedString()
+    }
+    #endif
 
     func goBack() {
         switch currentStep {
