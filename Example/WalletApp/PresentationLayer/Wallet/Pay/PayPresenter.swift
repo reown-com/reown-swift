@@ -162,7 +162,6 @@ final class PayPresenter: ObservableObject {
 
         var queryItems = components.queryItems ?? []
 
-        #if ENABLE_TEST_MODE
         if let prefill = buildPrefillParam(schema: collectData?.schema) {
             if let idx = queryItems.firstIndex(where: { $0.name == "prefill" }) {
                 queryItems[idx] = URLQueryItem(name: "prefill", value: prefill)
@@ -170,7 +169,6 @@ final class PayPresenter: ObservableObject {
                 queryItems.append(URLQueryItem(name: "prefill", value: prefill))
             }
         }
-        #endif
 
         // Append theme param
         let theme = ThemeManager.shared.isDarkMode ? "dark" : "light"
@@ -180,7 +178,6 @@ final class PayPresenter: ObservableObject {
         return components.url
     }
 
-    #if ENABLE_TEST_MODE
     /// Build Base64-encoded prefill param from schema's required fields.
     /// Parses the JSON Schema to find all required fields (top-level + anyOf)
     /// and only includes fields that have known prefill values.
@@ -231,7 +228,6 @@ final class PayPresenter: ObservableObject {
 
         return jsonData.base64EncodedString()
     }
-    #endif
 
     func goBack() {
         switch currentStep {
