@@ -21,6 +21,7 @@ jobs:
 
   e2e-pay-tests:
     needs: check-balance
+    if: always() # Balance alert should not block tests
     runs-on: macos-latest-xlarge
     timeout-minutes: 45
     permissions:
