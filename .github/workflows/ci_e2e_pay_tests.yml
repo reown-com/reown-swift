@@ -22,7 +22,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-balance:
+    uses: ./.github/workflows/e2e_balance_check.yml
+    secrets: inherit
+
   e2e-pay-tests:
+    needs: check-balance
     runs-on: macos-latest-xlarge
     timeout-minutes: 45
     steps:
