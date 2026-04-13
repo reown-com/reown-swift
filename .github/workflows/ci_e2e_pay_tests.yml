@@ -5,17 +5,10 @@ on:
     branches:
       - develop
       - main
-  workflow_dispatch:
-    inputs:
-      maestro_flows_ref:
-        description: 'Branch/tag of WalletConnect/actions for test flows'
-        required: false
-        default: 'main'
+  workflow_dispatch: {}
 
 permissions:
   contents: read
-  checks: write
-  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}
@@ -30,6 +23,9 @@ jobs:
     needs: check-balance
     runs-on: macos-latest-xlarge
     timeout-minutes: 45
+    permissions:
+      checks: write
+      actions: read
     steps:
       - uses: actions/checkout@v3
 

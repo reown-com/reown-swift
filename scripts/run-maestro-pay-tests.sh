@@ -52,10 +52,9 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 echo "Loading credentials from $ENV_FILE"
-set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
-set +a
+while IFS='=' read -r key value; do
+  [[ "$key" =~ ^[A-Z_][A-Z0-9_]*$ ]] && export "$key=$value"
+done < <(grep -E '^[A-Z_][A-Z0-9_]*=' "$ENV_FILE")
 
 REQUIRED_VARS=(
   WPAY_CUSTOMER_KEY_SINGLE_NOKYC
