@@ -79,6 +79,12 @@ final class Signer {
             throw Errors.accountForRequestNotFound
         }
 
+        // Handle Canton methods
+        if request.method.starts(with: "canton_") {
+            let cantonSigner = CantonSigner()
+            return try await cantonSigner.sign(request: request)
+        }
+
         // Default EOA route
         let requestedAddress = try await getRequestedAddress(request)
 
@@ -115,6 +121,11 @@ final class Signer {
                 return suiAddress
             }
             throw Errors.cantFindRequestedAddress
+        }
+
+        // Canton methods: return hardcoded address
+        if request.method.starts(with: "canton_") {
+            return CantonAccountStorage.partyIdUrlEncoded
         }
 
         // Stacks methods: read from StacksAccountStorage for specific chain

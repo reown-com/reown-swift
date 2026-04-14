@@ -14,6 +14,7 @@ final class SessionProposalInteractor {
         let suiAccountStorage = SuiAccountStorage()
         let tonAccountStorage = TonAccountStorage()
         let tronAccountStorage = TronAccountStorage()
+        let cantonAccountStorage = CantonAccountStorage()
         let solanaAccountStorage = SolanaAccountStorage()
 
         // Filter chains by user selection when provided
@@ -52,8 +53,13 @@ final class SessionProposalInteractor {
         let supportedOptionalTronChains = proposal.optionalNamespaces?["tron"]?.chains ?? []
         let supportedTronChains = filterSelected(supportedRequiredTronChains + supportedOptionalTronChains)
 
+        // Handle Canton chains
+        let supportedRequiredCantonChains = proposal.requiredNamespaces["canton"]?.chains ?? []
+        let supportedOptionalCantonChains = proposal.optionalNamespaces?["canton"]?.chains ?? []
+        let supportedCantonChains = filterSelected(supportedRequiredCantonChains + supportedOptionalCantonChains)
+
         // Combine supported chains; add optional groups only when available
-        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains + supportedTronChains
+        var supportedChains = supportedEIP155Chains + supportedStacksChains + supportedSuiChains + supportedTonChains + supportedTronChains + supportedCantonChains
 
         var supportedAccounts: [Account] = []
         var sessionProperties = [String: String]()
@@ -117,6 +123,17 @@ final class SessionProposalInteractor {
             supportedAccounts.append(contentsOf: tronAccounts)
             // Add Tron session property for v1 transaction format
             sessionProperties["tron_method_version"] = "v1"
+        }
+
+        // Add Canton accounts if available
+        if !supportedCantonChains.isEmpty {
+            var cantonAccounts: [Account] = []
+            for chain in supportedCantonChains {
+                if let cantonAccount = cantonAccountStorage.getCaip10Account(for: chain) {
+                    cantonAccounts.append(cantonAccount)
+                }
+            }
+            supportedAccounts.append(contentsOf: cantonAccounts)
         }
 
         /* Use only supported values for production. I.e:
