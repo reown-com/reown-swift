@@ -25,10 +25,6 @@ final class PayPresenter: ObservableObject {
         "pay.walletconnect.com"
     ]
 
-    // Auto-pay mode: when true, skips option selection and auto-confirms
-    // Used for NFC tap-to-pay (Apple Pay-like UX)
-    let autoPayMode: Bool
-
     // Flow state
     @Published var currentStep: PayFlowStep = .loading
     @Published var showError = false
@@ -78,11 +74,10 @@ final class PayPresenter: ObservableObject {
         return "Continue"
     }
 
-    init(paymentLink: String, accounts: [String], importAccount: ImportAccount, autoPayMode: Bool = false) {
+    init(paymentLink: String, accounts: [String], importAccount: ImportAccount) {
         self.paymentLink = paymentLink
         self.accounts = accounts
         self.importAccount = importAccount
-        self.autoPayMode = autoPayMode
         loadPaymentOptions()
     }
 
@@ -109,13 +104,6 @@ final class PayPresenter: ObservableObject {
                 } else {
                     // Select first option by default
                     self.selectedOption = response.options.first
-
-                    // Auto-pay mode: skip UI and confirm immediately if possible (NFC tap-to-pay)
-                    if self.autoPayMode, self.collectData == nil, let option = response.options.first {
-                        self.selectedOption = option
-                        self.confirmPayment()
-                        return
-                    }
 
                     // Auto-skip to summary for single option with no IC
                     if response.options.count == 1 && response.collectData == nil {
@@ -333,13 +321,6 @@ final class PayPresenter: ObservableObject {
 
                 // Notify balances screen to refresh
                 NotificationCenter.default.post(name: .paymentCompleted, object: nil)
-
-                // Auto-dismiss after 3s in auto-pay mode (NFC tap-to-pay)
-                if self.autoPayMode {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
-                        self?.dismiss()
-                    }
-                }
 
             } catch {
                 self.resultType = Self.detectResultType(from: error)
