@@ -130,25 +130,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    func sceneDidBecomeActive(_ scene: UIScene) {
-        // Control Center widget writes a flag to shared UserDefaults
-        let defaults = UserDefaults(suiteName: "group.com.walletconnect.sdk")
-        if defaults?.bool(forKey: "pendingNfcPay") == true {
-            defaults?.removeObject(forKey: "pendingNfcPay")
-            triggerNfcScan()
-        }
-    }
-
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let context = URLContexts.first else { return }
 
         let url = context.url
-
-        // Handle widget "Tap to Pay" deep link
-        if url.scheme == "walletapp" && url.host == "nfc-pay" {
-            triggerNfcScan()
-            return
-        }
 
         // Check for payment deep link and handle if found
         if let paymentLink = extractPaymentLink(from: url) {
