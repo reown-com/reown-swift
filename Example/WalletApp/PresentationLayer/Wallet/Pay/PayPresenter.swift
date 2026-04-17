@@ -104,6 +104,7 @@ final class PayPresenter: ObservableObject {
                 } else {
                     // Select first option by default
                     self.selectedOption = response.options.first
+
                     // Auto-skip to summary for single option with no IC
                     if response.options.count == 1 && response.collectData == nil {
                         self.currentStep = .summary
@@ -126,7 +127,6 @@ final class PayPresenter: ObservableObject {
            let url = collectData.url, !url.isEmpty {
             currentStep = .webviewDataCollection
         } else {
-            // No IC needed or no webview URL — go to summary
             currentStep = .summary
         }
     }
