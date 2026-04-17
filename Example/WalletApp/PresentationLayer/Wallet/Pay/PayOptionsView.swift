@@ -12,26 +12,30 @@ struct PayOptionsView: View {
                     PayQuestionButton(action: {
                         presenter.showWhyInfoRequiredScreen()
                     })
+                    .accessibilityIdentifier("pay-button-info")
                 }
 
                 Spacer()
 
-                PayCloseButton(action: { presenter.dismiss() })
+                PayCloseButton(action: { presenter.dismiss() }, accessibilityId: "pay-button-close")
             }
             .padding(.top, Spacing._5)
 
             if let info = presenter.paymentInfo {
                 // Merchant icon (no seal check)
                 MerchantHeader(info: info)
+                    .accessibilityIdentifier("pay-merchant-info")
                     .padding(.top, Spacing._5)
 
                 // Payment options list
                 VStack(spacing: Spacing._2) {
-                    ForEach(presenter.paymentOptions, id: \.id) { option in
+                    ForEach(Array(presenter.paymentOptions.enumerated()), id: \.element.id) { index, option in
+                        let isSelected = presenter.selectedOption?.id == option.id
                         PaymentOptionCard(
                             option: option,
-                            isSelected: presenter.selectedOption?.id == option.id,
+                            isSelected: isSelected,
                             requiresIC: presenter.anyOptionRequiresIC,
+                            accessibilityId: isSelected ? "pay-option-\(index)-selected" : "pay-option-\(index)",
                             onSelect: { presenter.selectOption(option) }
                         )
                     }
@@ -42,6 +46,7 @@ struct PayOptionsView: View {
                 PayPrimaryButton(
                     title: presenter.optionsButtonTitle,
                     isEnabled: presenter.selectedOption != nil,
+                    accessibilityId: "pay-button-continue",
                     action: { presenter.continueFromOptions() }
                 )
                 .padding(.top, Spacing._5)
@@ -102,6 +107,7 @@ struct PaymentOptionCard: View {
     let option: PaymentOption
     let isSelected: Bool
     let requiresIC: Bool
+    let accessibilityId: String
     let onSelect: () -> Void
 
     var body: some View {
@@ -126,7 +132,10 @@ struct PaymentOptionCard: View {
 
                 // "Info required" pill
                 if requiresIC {
-                    InfoRequiredPillView(isSelected: isSelected)
+                    InfoRequiredPillView(
+                        isSelected: isSelected,
+                        accessibilityId: "pay-info-required-badge"
+                    )
                 }
             }
             .padding(Spacing._5)
@@ -137,6 +146,9 @@ struct PaymentOptionCard: View {
                     .stroke(isSelected ? AppColors.borderAccentPrimary : Color.clear, lineWidth: 1)
             )
         }
+        .accessibilityIdentifier(accessibilityId)
+        .accessibilityLabel(option.amount.display.networkName ?? "unknown")
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -227,6 +239,7 @@ struct TokenIcon: View {
 
 struct InfoRequiredPill: UIViewRepresentable {
     let isSelected: Bool
+    let accessibilityId: String?
 
     func makeUIView(context: Context) -> UILabel {
         let label = UILabel()
@@ -234,6 +247,9 @@ struct InfoRequiredPill: UIViewRepresentable {
         label.textAlignment = .center
         label.setContentHuggingPriority(.required, for: .horizontal)
         label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        label.isAccessibilityElement = true
+        label.accessibilityLabel = "Info required"
+        label.accessibilityIdentifier = accessibilityId
         return label
     }
 
@@ -242,6 +258,7 @@ struct InfoRequiredPill: UIViewRepresentable {
         let textInvert = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x202020) : UIColor(hex: 0xFFFFFF) }
         let textPrimary = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xFFFFFF) : UIColor(hex: 0x202020) }
         label.textColor = isSelected ? textInvert : textPrimary
+        label.accessibilityIdentifier = accessibilityId
     }
 }
 
@@ -249,9 +266,10 @@ struct InfoRequiredPill: UIViewRepresentable {
 
 struct InfoRequiredPillView: View {
     let isSelected: Bool
+    let accessibilityId: String?
 
     var body: some View {
-        InfoRequiredPill(isSelected: isSelected)
+        InfoRequiredPill(isSelected: isSelected, accessibilityId: accessibilityId)
             .fixedSize()
             .padding(.horizontal, Spacing._2)
             .padding(.vertical, 6)

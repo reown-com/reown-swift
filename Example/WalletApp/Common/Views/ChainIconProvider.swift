@@ -34,6 +34,7 @@ enum ChainIconProvider {
             case "324": return ("zkSync", "zkSync")
             case "5": return ("Goerli", "Goerli")
             case "11155111": return ("Sepolia", "Sepolia")
+            case "143": return ("Monad", "Monad")
             case "36900": return ("ADI", "ADI")
             default: return nil
             }
@@ -55,6 +56,12 @@ enum ChainIconProvider {
             case "0x2b6653dc": return ("Tron", "Tron")
             case "0xcd8690dc": return ("Tron", "Tron Testnet")
             default: return ("Tron", "Tron")
+            }
+        case "canton":
+            switch ref {
+            case "mainnet": return ("Canton", "Canton")
+            case "devnet": return ("Canton", "Canton Devnet")
+            default: return ("Canton", "Canton")
             }
         default: return nil
         }

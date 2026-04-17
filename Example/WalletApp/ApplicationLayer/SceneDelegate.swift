@@ -23,12 +23,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
 
-        // Check if the Universal Link is a payment URL (e.g. pay.walletconnect.com).
-        // This handles both NFC Background Tag Reading and regular Universal Link taps.
-        let urlString = url.absoluteString
-        if WalletKit.isPaymentLink(urlString) {
-            NFCPaymentReader.suppressAutoScan = true
-            handlePaymentLink(urlString)
+        if handleIncomingURL(url) {
             return
         }
 
@@ -60,36 +55,20 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         configureWalletKitClientIfNeeded()
         app.requestSent = (connectionOptions.urlContexts.first?.url.absoluteString.replacingOccurrences(of: "walletapp://wc?", with: "") == "requestSent")
 
-        // Check for widget "Tap to Pay" deep link on cold start
-        if let urlContext = connectionOptions.urlContexts.first,
-           urlContext.url.scheme == "walletapp" && urlContext.url.host == "nfc-pay" {
-            configurators.configure()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.triggerNfcScan()
-            }
-            return
-        }
-
         // Check for payment deep link on cold start
         var pendingPaymentLink: String?
         if let url = connectionOptions.urlContexts.first?.url {
             pendingPaymentLink = extractPaymentLink(from: url)
-        }
-
-        // Check for payment Universal Link on cold start (e.g. NFC Background Tag Reading).
-        // Universal Links arrive via userActivities, not urlContexts.
-        if pendingPaymentLink == nil,
-           let url = connectionOptions.userActivities
-               .first(where: { $0.activityType == NSUserActivityTypeBrowsingWeb })?.webpageURL,
-           WalletKit.isPaymentLink(url.absoluteString) {
-            pendingPaymentLink = url.absoluteString
+        } else if let userActivityURL = connectionOptions.userActivities.first?.webpageURL {
+            pendingPaymentLink = extractPaymentLink(from: userActivityURL)
         }
 
         // Process connection options (only if not a pay-only deeplink)
         // If `pay` param exists but no `uri`, skip pairing
         let hasPayParam = pendingPaymentLink != nil
-        let hasUriParam = connectionOptions.urlContexts.first.flatMap { context -> Bool in
-            guard let components = URLComponents(url: context.url, resolvingAgainstBaseURL: false),
+        let incomingURL = connectionOptions.urlContexts.first?.url ?? connectionOptions.userActivities.first?.webpageURL
+        let hasUriParam = incomingURL.flatMap { url -> Bool in
+            guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                   let queryItems = components.queryItems else { return false }
             return queryItems.contains(where: { $0.name == "uri" })
         } ?? false
@@ -135,14 +114,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let url = context.url
 
-        // Check for payment deep link and handle if found
-        if let paymentLink = extractPaymentLink(from: url) {
-            handlePaymentLink(paymentLink)
-            // For POS scan format (walletconnectpay host), return early - no pairing needed
-            if url.host == "walletconnectpay" {
-                return
-            }
-            // For new format (uri with pay param), continue to pairing flow
+        if handleIncomingURL(url) {
+            return
         }
 
         do {
@@ -178,30 +151,23 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 }
 
 private extension SceneDelegate {
+    @discardableResult
+    func handleIncomingURL(_ url: URL) -> Bool {
+        guard let paymentLink = extractPaymentLink(from: url) else {
+            return false
+        }
 
-    func triggerNfcScan() {
+        // Suppress NFC auto-scan — payment modal will be shown instead.
         NFCPaymentReader.suppressAutoScan = true
-        NFCPaymentReader.shared.scan { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let urlString):
-                    self?.handleScannedPaymentUrl(urlString)
-                case .failure(let error):
-                    if case NFCPaymentError.cancelled = error { return }
-                    WalletToast.present(message: error.localizedDescription, type: .error)
-                }
-            }
-        }
-    }
+        handlePaymentLink(paymentLink)
 
-    func handleScannedPaymentUrl(_ urlString: String) {
-        if WalletKit.isPaymentLink(urlString) {
-            handlePaymentLink(urlString)
-            return
+        if containsWalletConnectURI(in: url) {
+            return false
         }
-        print("NFC scan returned non-payment URL")
-    }
 
+        // Mirror the Paste URL flow for direct payment links: start Pay only.
+        return true
+    }
 
     func configureWalletKitClientIfNeeded() {
         Networking.configure(
@@ -244,8 +210,10 @@ private extension SceneDelegate {
     }
 
     /// Extract payment link from a URL if present.
-    /// Supports WC URI format (`uri` param with embedded `pay`) and
-    /// POS scan format (`walletconnectpay` host with `paymentId`).
+    /// Supports:
+    /// - WC URI format: `uri` parameter containing embedded `pay` param
+    /// - Gateway / universal links with `pid` or `paymentId` query params
+    /// - App deeplinks with `walletconnectpay?paymentId=...`
     private func extractPaymentLink(from url: URL) -> String? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let queryItems = components.queryItems else { return nil }
@@ -256,13 +224,30 @@ private extension SceneDelegate {
             return uriValue
         }
 
-        // POS scan format: walletconnectpay host with paymentId
+        // App deeplink format: extract the bare payment ID instead of forwarding the
+        // custom walletapp:// URL, which Pay rejects.
         if url.host == "walletconnectpay",
-           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value {
-            return "walletapp://walletconnectpay?paymentId=\(paymentId)"
+           let paymentId = queryItems.first(where: { $0.name == "paymentId" })?.value,
+           !paymentId.isEmpty {
+            return paymentId
+        }
+
+        // For gateway / universal links, preserve the original URL exactly.
+        if let paymentId = queryItems.first(where: { $0.name == "paymentId" || $0.name == "pid" })?.value,
+           !paymentId.isEmpty {
+            return url.absoluteString
         }
 
         return nil
+    }
+
+    private func containsWalletConnectURI(in url: URL) -> Bool {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let uriValue = components.queryItems?.first(where: { $0.name == "uri" })?.value else {
+            return false
+        }
+
+        return !uriValue.isEmpty
     }
     
     /// Handle a payment link URL via the coordinator
@@ -270,4 +255,3 @@ private extension SceneDelegate {
         coordinator.showPayment(paymentLink: paymentLink)
     }
 }
-

@@ -4,6 +4,7 @@ struct ScannerOptionsView: View {
     let onScanQR: () -> Void
     let onPasteURL: () -> Void
     let onClose: () -> Void
+    @ObservedObject var scanHandler: ScanOptionsHandler
 
     var body: some View {
         VStack(spacing: Spacing._5) {
@@ -32,6 +33,29 @@ struct ScannerOptionsView: View {
                     },
                     action: onPasteURL
                 )
+
+                #if ENABLE_TEST_MODE
+                // Test mode: visible text input for Maestro E2E tests
+                VStack(spacing: 8) {
+                    TextField("Enter URL", text: $scanHandler.testModeUrl)
+                        .textFieldStyle(.roundedBorder)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .accessibilityIdentifier("input-paste-url")
+
+                    Button(action: { scanHandler.submitTestUrl() }) {
+                        Text("Submit URL")
+                            .appFont(.lg)
+                            .foregroundColor(AppColors.textInvert)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(AppColors.backgroundInvert)
+                            .cornerRadius(Spacing._3)
+                    }
+                    .accessibilityIdentifier("button-submit-url")
+                }
+                .padding(.top, 8)
+                #endif
             }
         }
         .padding(.horizontal, Spacing._5)
@@ -68,6 +92,7 @@ struct ScannerOptionsView: View {
 extension View {
     func scanOptionsSheet(
         isPresented: Binding<Bool>,
+        scanHandler: ScanOptionsHandler,
         onScanQR: @escaping () -> Void,
         onPasteURL: @escaping () -> Void
     ) -> some View {
@@ -75,11 +100,16 @@ extension View {
             ScannerOptionsView(
                 onScanQR: onScanQR,
                 onPasteURL: onPasteURL,
-                onClose: { isPresented.wrappedValue = false }
+                onClose: { isPresented.wrappedValue = false },
+                scanHandler: scanHandler
             )
             .ignoresSafeArea()
             .presentationDragIndicator(.hidden)
+            #if ENABLE_TEST_MODE
+            .presentationDetents([.height(400)])
+            #else
             .presentationDetents([.height(258)])
+            #endif
             .sheetBackground()
         }
     }

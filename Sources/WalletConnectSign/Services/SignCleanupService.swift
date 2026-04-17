@@ -25,6 +25,7 @@ final class SignCleanupService {
     }
 
     func cleanup() throws {
+        unsubscribeSync()
         try cleanupStorages()
     }
 }
@@ -36,6 +37,12 @@ private extension SignCleanupService {
         let session = sessionStore.getAll().map { $0.topic }
 
         try? await networkInteractor.batchUnsubscribe(topics: pairing + session)
+    }
+
+    func unsubscribeSync() {
+        let pairing = pairingStore.getAll().map { $0.topic }
+        let session = sessionStore.getAll().map { $0.topic }
+        (pairing + session).forEach { networkInteractor.unsubscribe(topic: $0) }
     }
 
     func cleanupStorages() throws {

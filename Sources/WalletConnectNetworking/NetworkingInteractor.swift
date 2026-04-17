@@ -81,6 +81,10 @@ public class NetworkingInteractor: NetworkInteracting {
         }
     }
 
+    public func getSubscribedTopics() -> [String] {
+        return relayClient.getSubscribedTopics()
+    }
+
     public func batchSubscribe(topics: [String]) async throws {
         try await relayClient.batchSubscribe(topics: topics)
     }

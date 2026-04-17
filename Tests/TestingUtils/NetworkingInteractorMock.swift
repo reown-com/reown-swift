@@ -16,7 +16,11 @@ public class NetworkingInteractorMock: NetworkInteracting {
     }
     
     public func trackTopics(_ topics: [String]) {
-        
+
+    }
+
+    public func getSubscribedTopics() -> [String] {
+        return subscriptions
     }
     
     public func subscribe(topic: String, connectUnconditionally: Bool) async throws {

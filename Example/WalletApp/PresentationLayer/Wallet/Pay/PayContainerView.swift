@@ -9,6 +9,7 @@ struct PayContainerView: View {
             ZStack {
                 Color.black.opacity(0.6)
                     .ignoresSafeArea()
+                    .accessibilityHidden(true)
                     .onTapGesture {
                         // Dismiss keyboard when tapping background
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -32,7 +33,8 @@ struct PayContainerView: View {
                             if let url = presenter.buildICWebViewURL() {
                                 PayDataCollectionWebView(
                                     url: url,
-                                    onClose: { presenter.goBack() },
+                                    onBack: { presenter.goBack() },
+                                    onClose: { presenter.dismiss() },
                                     onComplete: { presenter.onICWebViewComplete() },
                                     onError: { error in presenter.onICWebViewError(error) }
                                 )
@@ -54,6 +56,7 @@ struct PayContainerView: View {
                     }
                     .transition(.opacity)
                     .id(presenter.currentStep)
+                    .accessibilityElement(children: .contain)
                 }
                 .animation(.easeInOut(duration: 0.25), value: presenter.currentStep)
             }

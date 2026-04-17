@@ -20,6 +20,10 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 fastlane/README.md
 .env
+.env.maestro
+
+# Maestro E2E test flows (downloaded at runtime)
+.maestro/
 
 # Configuration - local overrides (Configuration.xcconfig is tracked as template)
 Configuration.local.xcconfig

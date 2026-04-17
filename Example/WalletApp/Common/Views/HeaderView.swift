@@ -60,6 +60,7 @@ struct HeaderView: View {
                 }
                 .accessibilityIdentifier("headerScan")
             }
+            .accessibilityIdentifier("button-scan")
         }
         .padding(.horizontal, Spacing._5)
         .padding(.bottom, Spacing._2)
