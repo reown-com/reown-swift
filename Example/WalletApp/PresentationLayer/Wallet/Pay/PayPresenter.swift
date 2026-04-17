@@ -139,8 +139,7 @@ final class PayPresenter: ObservableObject {
            let url = collectData.url, !url.isEmpty {
             currentStep = .webviewDataCollection
         } else {
-            // No IC needed — skip summary and pay directly
-            confirmPayment()
+            currentStep = .summary
         }
     }
 
