@@ -113,6 +113,7 @@ struct WalletView: View {
         }
         .scanOptionsSheet(
             isPresented: $presenter.scanHandler.showScanOptions,
+            scanHandler: presenter.scanHandler,
             onScanQR: { presenter.scanHandler.scanQR() },
             onPasteURL: { presenter.scanHandler.pasteURL() }
         )

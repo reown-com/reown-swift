@@ -18,6 +18,7 @@ struct PayConfirmingView: View {
             Text(presenter.loadingMessage)
                 .appFont(.h6)
                 .foregroundColor(AppColors.textPrimary)
+                .accessibilityIdentifier("pay-loading-message")
 
             Spacer()
                 .frame(height: Spacing._7) // 28px + 20px container padding = 48px total

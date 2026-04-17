@@ -187,6 +187,7 @@ struct BalancesView: View {
         }
         .scanOptionsSheet(
             isPresented: $viewModel.scanHandler.showScanOptions,
+            scanHandler: viewModel.scanHandler,
             onScanQR: { viewModel.scanHandler.scanQR() },
             onPasteURL: { viewModel.scanHandler.pasteURL() }
         )

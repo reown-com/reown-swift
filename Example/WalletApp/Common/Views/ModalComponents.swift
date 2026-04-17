@@ -110,9 +110,10 @@ struct CloseIconShape: Shape {
 /// 38x38 button with 1px border, X icon 20x20
 struct ModalCloseButton: View {
     let action: () -> Void
+    var accessibilityId: String? = nil
 
     var body: some View {
-        Button(action: action) {
+        let button = Button(action: action) {
             CloseIconShape()
                 .fill(AppColors.textPrimary)
                 .frame(width: 20, height: 20)
@@ -123,6 +124,11 @@ struct ModalCloseButton: View {
                         .stroke(AppColors.borderSecondary, lineWidth: 1)
                 )
                 .cornerRadius(Spacing._3)
+        }
+        if let accessibilityId {
+            button.accessibilityIdentifier(accessibilityId)
+        } else {
+            button
         }
     }
 }
@@ -146,6 +152,7 @@ struct ModalContainer<Content: View>: View {
         .padding(.bottom, Spacing._5)
         .background(AppColors.backgroundPrimary)
         .cornerRadius(AppRadius._8)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -157,11 +164,13 @@ struct ModalHeaderBar: View {
     var backAction: (() -> Void)?
     var closeAction: () -> Void
     var leadingContent: AnyView?
+    var backAccessibilityId: String? = nil
+    var closeAccessibilityId: String? = nil
 
     var body: some View {
         HStack {
             if showBack, let backAction {
-                ModalBackButton(action: backAction)
+                ModalBackButton(action: backAction, accessibilityId: backAccessibilityId)
             }
 
             if let leadingContent {
@@ -170,7 +179,7 @@ struct ModalHeaderBar: View {
 
             Spacer()
 
-            ModalCloseButton(action: closeAction)
+            ModalCloseButton(action: closeAction, accessibilityId: closeAccessibilityId)
         }
         .padding(.top, Spacing._4)
     }
@@ -250,14 +259,20 @@ struct CopyIconShape: Shape {
 /// Reusable back arrow button
 struct ModalBackButton: View {
     let action: () -> Void
+    var accessibilityId: String? = nil
 
     var body: some View {
-        Button(action: action) {
+        let button = Button(action: action) {
             Image(systemName: "arrow.left")
                 .appFont(.lg, weight: .medium)
                 .foregroundColor(AppColors.textPrimary)
                 .frame(width: 38, height: 38)
                 .cornerRadius(Spacing._3)
+        }
+        if let accessibilityId {
+            button.accessibilityIdentifier(accessibilityId)
+        } else {
+            button
         }
     }
 }

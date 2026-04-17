@@ -25,6 +25,10 @@ struct InputConfig {
         return config(for: "PAY_API_KEY")
     }
 
+    static var testWalletPrivateKey: String? {
+        return config(for: "TEST_WALLET_PRIVATE_KEY")
+    }
+
     private static func config(for key: String) -> String? {
         return Bundle.main.object(forInfoDictionaryKey: key) as? String
     }

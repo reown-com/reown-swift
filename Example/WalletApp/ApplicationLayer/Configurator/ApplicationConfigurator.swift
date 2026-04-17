@@ -12,12 +12,27 @@ struct ApplicationConfigurator: Configurator {
 
     func configure() {
         let importAccount: ImportAccount
+        let service = WalletGenerationService(accountStorage: app.accountStorage)
+
+        #if ENABLE_TEST_MODE
+        // In test mode, use a pre-funded wallet if a private key is provided
+        if let testKey = InputConfig.testWalletPrivateKey, !testKey.isEmpty,
+           service.importEVMPrivateKey(testKey),
+           let account = app.accountStorage.importAccount {
+            importAccount = account
+            print("🧪 [TestMode] Imported test wallet: \(account.account.address)")
+        } else if let existing = app.accountStorage.importAccount {
+            importAccount = existing
+        } else {
+            importAccount = service.generateAllWallets()
+        }
+        #else
         if let existing = app.accountStorage.importAccount {
             importAccount = existing
         } else {
-            let service = WalletGenerationService(accountStorage: app.accountStorage)
             importAccount = service.generateAllWallets()
         }
+        #endif
 
         precondition(Thread.isMainThread, "ApplicationConfigurator.configure() must be called on the main thread")
         MainActor.assumeIsolated {

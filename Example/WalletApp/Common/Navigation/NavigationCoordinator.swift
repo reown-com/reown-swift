@@ -98,8 +98,11 @@ final class NavigationCoordinator: ObservableObject {
         let address = importAccount.account.address
         let accounts = [
             "eip155:1:\(address)",
+            "eip155:10:\(address)",
+            "eip155:56:\(address)",
             "eip155:137:\(address)",
-            "eip155:8453:\(address)"
+            "eip155:8453:\(address)",
+            "eip155:42161:\(address)"
         ]
 
         if activeModal != nil {

@@ -9,7 +9,9 @@ struct PayWhyInfoRequiredView: View {
             PayHeaderBar(
                 showBack: true,
                 backAction: { presenter.goBack() },
-                closeAction: { presenter.dismiss() }
+                closeAction: { presenter.dismiss() },
+                backAccessibilityId: "pay-button-back",
+                closeAccessibilityId: "pay-button-close"
             )
 
             Spacer()
