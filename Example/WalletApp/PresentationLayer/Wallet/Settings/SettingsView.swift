@@ -11,7 +11,9 @@ struct SettingsView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onScan: { viewModel.scanHandler.show() }
+                    onScan: { viewModel.scanHandler.show() },
+                    onNfc: { coordinator.scanNFC() },
+                    isNfcAvailable: coordinator.isNFCAvailable
                 )
 
                 ScrollView {

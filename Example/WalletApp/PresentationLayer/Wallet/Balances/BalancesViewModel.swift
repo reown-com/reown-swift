@@ -11,7 +11,7 @@ struct BalanceAPIResponse: Codable {
 struct TokenBalance: Codable {
     let name: String
     let symbol: String
-    let chainId: String
+    let chainId: String?
     let address: String?
     let value: Double
     let price: Double
@@ -209,7 +209,6 @@ final class BalancesViewModel: ObservableObject {
     }
 
     func onDisappear() {
-//        print("[Balance] onDisappear")
         stopAutoRefresh()
     }
 
@@ -239,17 +238,12 @@ final class BalancesViewModel: ObservableObject {
 
     private func startAutoRefresh() {
         stopAutoRefresh()
-//        print("[Balance] Starting auto-refresh timer (interval: \(Self.refreshInterval)s)")
         refreshTimer = Timer.scheduledTimer(withTimeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
-//            print("[Balance] Auto-refresh timer fired")
             self?.fetchAllBalances()
         }
     }
 
     private func stopAutoRefresh() {
-        if refreshTimer != nil {
-//            print("[Balance] Stopping auto-refresh timer")
-        }
         refreshTimer?.invalidate()
         refreshTimer = nil
     }
@@ -263,7 +257,26 @@ final class BalancesViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    /// Whether NFC reading is available on this device.
+    var isNFCAvailable: Bool {
+        NFCPaymentReader.isAvailable
+    }
+
     // MARK: - Navigation Actions
+
+    func onScanNFC() {
+        NFCPaymentReader.shared.scan { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let urlString):
+                    self?.handleScannedOrPastedUri(urlString)
+                case .failure(let error):
+                    if case NFCPaymentError.cancelled = error { return }
+                    WalletToast.present(message: error.localizedDescription, type: .error)
+                }
+            }
+        }
+    }
 
     private func presentScanCamera() {
         // Scan camera is handled via ScanOptionsHandler
@@ -378,7 +391,7 @@ final class BalancesViewModel: ObservableObject {
     }
     
     private func handleScannedOrPastedUri(_ uriString: String) {
-        // Check if it's a WalletConnect Pay URL
+        // Check if it's a WalletConnect Pay URL (e.g. pay.walletconnect.com)
         if WalletKit.isPaymentLink(uriString) {
             startPayFlow(paymentLink: uriString)
             return
