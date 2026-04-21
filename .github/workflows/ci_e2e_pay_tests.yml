@@ -95,7 +95,6 @@ jobs:
             --env WPAY_MERCHANT_ID_MULTI_KYC=${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }} \
             --include-tags pay \
             --test-output-dir debug-artifacts/maestro-output \
-            --debug-output debug-artifacts/maestro-debug \
             .maestro/
 
       - name: Capture simulator logs
@@ -108,7 +107,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: maestro-pay-test-artifacts
-          path: debug-artifacts/
+          path: |
+            debug-artifacts/**/*.png
+            debug-artifacts/**/*.jpg
+            debug-artifacts/**/*.jpeg
+            debug-artifacts/**/*.mp4
+            debug-artifacts/**/*.mov
+            debug-artifacts/**/*.webm
+            debug-artifacts/**/*.gif
+            debug-artifacts/sim-logs.logarchive
           retention-days: 14
           if-no-files-found: ignore
 
