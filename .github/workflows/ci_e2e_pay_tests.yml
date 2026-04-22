@@ -59,10 +59,10 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@f9522878950f7bd904a628b2c4d486b93034a4fe # main
+        uses: WalletConnect/actions/maestro/pay-tests@0c9875ae33fe85fa6a4110dc46c82876d91a551d # main
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@f9522878950f7bd904a628b2c4d486b93034a4fe # main
+        uses: WalletConnect/actions/maestro/setup@0c9875ae33fe85fa6a4110dc46c82876d91a551d # main
         with:
           version: '2.4.0'
 
