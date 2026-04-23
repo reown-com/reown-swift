@@ -39,6 +39,17 @@ final class PayPresenter: ObservableObject {
     @Published var selectedOption: PaymentOption?
     @Published var requiredActions: [Action] = []
 
+    // Two-action flow state (Permit2 / approve + sign)
+    @Published var paymentContext: PaymentContext?
+    @Published var isLoadingActions = false
+    @Published var approvalGasEstimate: String?
+    @Published var isEstimatingApprovalGas = false
+    private var actionsRequestSeq: Int = 0
+
+    /// Local expiry safety margin — refuse to broadcast a payment whose
+    /// `expiresAt` is within this window of now.
+    private static let expiryGuardMs: Int64 = 10_000
+
     // Payment result info (from confirmPayment response)
     @Published var paymentResultInfo: ConfirmPaymentResultResponse?
 
@@ -108,6 +119,9 @@ final class PayPresenter: ObservableObject {
                     // Auto-skip to summary for single option with no IC
                     if response.options.count == 1 && response.collectData == nil {
                         self.currentStep = .summary
+                        if let option = response.options.first {
+                            self.loadRequiredActions(for: option, paymentId: response.paymentId)
+                        }
                     } else {
                         self.currentStep = .options
                     }
@@ -121,19 +135,24 @@ final class PayPresenter: ObservableObject {
 
     /// Called from options screen when user taps the primary button
     func continueFromOptions() {
-        guard selectedOption != nil else { return }
+        guard let option = selectedOption,
+              let paymentId = paymentOptionsResponse?.paymentId else { return }
 
         if let collectData = collectData,
            let url = collectData.url, !url.isEmpty {
             currentStep = .webviewDataCollection
         } else {
             currentStep = .summary
+            loadRequiredActions(for: option, paymentId: paymentId)
         }
     }
 
     /// Called when IC WebView completes successfully
     func onICWebViewComplete() {
         currentStep = .summary
+        if let option = selectedOption, let paymentId = paymentOptionsResponse?.paymentId {
+            loadRequiredActions(for: option, paymentId: paymentId)
+        }
     }
 
     /// Called when IC WebView encounters an error
@@ -261,6 +280,63 @@ final class PayPresenter: ObservableObject {
         selectedOption = option
     }
 
+    /// Fetches required actions for the selected option in the background.
+    /// While running, the summary step renders immediately but the Pay button is disabled.
+    /// Uses a request-sequence counter to ignore stale responses from rapid option changes.
+    func loadRequiredActions(for option: PaymentOption, paymentId: String) {
+        actionsRequestSeq += 1
+        let seq = actionsRequestSeq
+        isLoadingActions = true
+        requiredActions = []
+        paymentContext = nil
+        approvalGasEstimate = nil
+        isEstimatingApprovalGas = false
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
+                    paymentId: paymentId,
+                    optionId: option.id
+                )
+                // Ignore stale response
+                guard seq == self.actionsRequestSeq else { return }
+
+                self.requiredActions = actions
+                let context = PaymentUtil.getPaymentContext(actions: actions)
+                self.paymentContext = context
+                self.isLoadingActions = false
+
+                // Estimate approval fee in background — non-blocking.
+                if let approval = context.approvalAction {
+                    self.isEstimatingApprovalGas = true
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        let service = PayTransactionService(projectId: InputConfig.projectId)
+                        let estimate = await service.estimateTransactionFee(action: approval)
+                        guard seq == self.actionsRequestSeq else { return }
+                        self.approvalGasEstimate = estimate
+                        self.isEstimatingApprovalGas = false
+                    }
+                }
+            } catch {
+                guard seq == self.actionsRequestSeq else { return }
+                self.isLoadingActions = false
+                self.resultType = Self.detectResultType(from: error)
+                self.currentStep = .result
+            }
+        }
+    }
+
+    /// Returns true when `paymentInfo.expiresAt` is within `expiryGuardMs` of
+    /// the current time (or already past). Matches the Kotlin sample's guard.
+    private func isPaymentExpiredLocally() -> Bool {
+        guard let expiresAtSec = paymentInfo?.expiresAt else { return false }
+        let expiresAtMs = expiresAtSec * 1_000
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1_000)
+        return expiresAtMs <= nowMs + Self.expiryGuardMs
+    }
+
     func confirmPayment() {
         guard let option = selectedOption,
               let paymentId = paymentOptionsResponse?.paymentId else {
@@ -269,31 +345,65 @@ final class PayPresenter: ObservableObject {
             return
         }
 
-        // Switch to confirming state
+        // Local expiry guard — avoid racing an effectively-expired payment
+        // through the RPC flow.
+        if isPaymentExpiredLocally() {
+            resultType = .expired
+            currentStep = .result
+            return
+        }
+
+        // Switch to confirming state. The exact message is set below once we
+        // know whether this is a single- or multi-step flow.
         loadingMessage = "Processing your payment..."
         currentStep = .confirming
 
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                // 1. Get required actions for the selected option
-                let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
-                    paymentId: paymentId,
-                    optionId: option.id
-                )
-                self.requiredActions = actions
-
-                // 2. Sign all wallet RPC actions
-                var signatures: [String] = []
-                let ethSigner = ETHSigner(importAccount: importAccount)
-
-                for action in actions {
-                    let rpcAction = action.walletRpc
-                    let signature = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
-                    signatures.append(signature)
+                // Ensure we have the required actions (may still be in flight if user tapped fast).
+                let actions: [Action]
+                if !self.requiredActions.isEmpty {
+                    actions = self.requiredActions
+                } else {
+                    actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
+                        paymentId: paymentId,
+                        optionId: option.id
+                    )
+                    self.requiredActions = actions
+                    self.paymentContext = PaymentUtil.getPaymentContext(actions: actions)
                 }
 
-                // 3. Confirm payment with signatures
+                let tokenSymbol = option.amount.display.assetSymbol
+                let txService = PayTransactionService(projectId: InputConfig.projectId)
+                let ethSigner = ETHSigner(importAccount: importAccount)
+                var signatures: [String] = []
+                let isMultiStep = self.paymentContext?.requiresApproval == true
+
+                for action in actions {
+                    switch action.walletRpc.method {
+                    case "eth_sendTransaction":
+                        self.loadingMessage = "Setting up \(tokenSymbol) for the first time…"
+                        _ = try await txService.sendTransactionAndWait(
+                            action: action,
+                            importAccount: self.importAccount
+                        )
+                    case "eth_signTypedData", "eth_signTypedData_v3", "eth_signTypedData_v4":
+                        self.loadingMessage = isMultiStep
+                            ? "Finalizing your payment…"
+                            : "Processing your payment..."
+                        let signature = try await ethSigner.signTypedData(
+                            AnyCodable(action.walletRpc.params)
+                        )
+                        signatures.append(signature)
+                    default:
+                        throw PayPresenterError.unsupportedWalletRpcMethod(action.walletRpc.method)
+                    }
+                }
+
+                self.loadingMessage = isMultiStep
+                    ? "Finalizing your payment…"
+                    : "Processing your payment..."
                 let result = try await WalletKit.instance.Pay.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
@@ -325,6 +435,17 @@ final class PayPresenter: ObservableObject {
             } catch {
                 self.resultType = Self.detectResultType(from: error)
                 self.currentStep = .result
+            }
+        }
+    }
+
+    enum PayPresenterError: Error, LocalizedError {
+        case unsupportedWalletRpcMethod(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .unsupportedWalletRpcMethod(let m):
+                return "Unsupported wallet RPC method: \(m)"
             }
         }
     }

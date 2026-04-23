@@ -23,4 +23,11 @@ final class AccountStorage {
             UserDefaults.standard.set(newValue?.storageId, forKey: "account")
         }
     }
+
+    /// True once the user imports a wallet via the Settings UI. Used to prevent
+    /// `TEST_WALLET_PRIVATE_KEY` from overwriting a manually-imported wallet on subsequent launches.
+    var userImportedWallet: Bool {
+        get { UserDefaults.standard.bool(forKey: "userImportedWallet") }
+        set { UserDefaults.standard.set(newValue, forKey: "userImportedWallet") }
+    }
 }

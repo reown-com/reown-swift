@@ -260,6 +260,9 @@
 		PAY0000012EE100000000000E /* PayOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000E /* PayOptionsView.swift */; };
 		PAY0000012EE100000000000F /* PayWhyInfoRequiredView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE100000000000F /* PayWhyInfoRequiredView.swift */; };
 		PAY0000012EE1000000000010 /* PaySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000010 /* PaySummaryView.swift */; };
+		PAY0000012EE1000000000020 /* PaymentUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000020 /* PaymentUtil.swift */; };
+		PAY0000012EE1000000000021 /* PayRPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000021 /* PayRPCClient.swift */; };
+		PAY0000012EE1000000000022 /* PayTransactionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000022 /* PayTransactionService.swift */; };
 		PH6B000100000000000001 /* WalletGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000001 /* WalletGenerationService.swift */; };
 		PH6B000100000000000002 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000002 /* ThemeManager.swift */; };
 		PH6B000100000000000003 /* SettingsCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000003 /* SettingsCardView.swift */; };
@@ -271,6 +274,7 @@
 		SCNH000100000000000000AA /* ScanOptionsHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCNH000200000000000000AA /* ScanOptionsHandler.swift */; };
 		SESSD3TA11000000000000B1 /* SessionDetailModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */; };
 		SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNTD0002000000000001 /* SignTypedDataSigner.swift */; };
+		EIP71200010000000001 /* EIP712TypedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EIP71200020000000001 /* EIP712TypedData.swift */; };
 		WTST000100000000000000AA /* WalletToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = WTST000200000000000000AA /* WalletToast.swift */; };
 /* End PBXBuildFile section */
 
@@ -533,6 +537,9 @@
 		PAY0000022EE100000000000E /* PayOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayOptionsView.swift; sourceTree = "<group>"; };
 		PAY0000022EE100000000000F /* PayWhyInfoRequiredView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWhyInfoRequiredView.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000010 /* PaySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaySummaryView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000020 /* PaymentUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentUtil.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000021 /* PayRPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayRPCClient.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000022 /* PayTransactionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayTransactionService.swift; sourceTree = "<group>"; };
 		PH6F000100000000000001 /* WalletGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationService.swift; sourceTree = "<group>"; };
 		PH6F000100000000000002 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		PH6F000100000000000003 /* SettingsCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCardView.swift; sourceTree = "<group>"; };
@@ -544,6 +551,7 @@
 		SCNH000200000000000000AA /* ScanOptionsHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanOptionsHandler.swift; sourceTree = "<group>"; };
 		SESSD3TA11000000000000F1 /* SessionDetailModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailModalView.swift; sourceTree = "<group>"; };
 		SIGNTD0002000000000001 /* SignTypedDataSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignTypedDataSigner.swift; sourceTree = "<group>"; };
+		EIP71200020000000001 /* EIP712TypedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EIP712TypedData.swift; sourceTree = "<group>"; };
 		WTST000200000000000000AA /* WalletToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletToast.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -897,6 +905,7 @@
 				44D89A102DF183C800056A7B /* SuiSigner.swift */,
 				A57E71A5291CF76400325797 /* ETHSigner.swift */,
 				SIGNTD0002000000000001 /* SignTypedDataSigner.swift */,
+				EIP71200020000000001 /* EIP712TypedData.swift */,
 				A57E71A7291CF8A500325797 /* SOLSigner.swift */,
 				44650A3E2E951D71004F2144 /* TonSigner.swift */,
 				44650A422F1E0002004F2144 /* TronSigner.swift */,
@@ -1458,6 +1467,9 @@
 				PAY0000022EE1000000000010 /* PaySummaryView.swift */,
 				PAY0000022EE100000000000C /* PayConfirmingView.swift */,
 				PAY0000022EE100000000000D /* PayDataCollectionWebView.swift */,
+				PAY0000022EE1000000000020 /* PaymentUtil.swift */,
+				PAY0000022EE1000000000021 /* PayRPCClient.swift */,
+				PAY0000022EE1000000000022 /* PayTransactionService.swift */,
 			);
 			path = Pay;
 			sourceTree = "<group>";
@@ -2034,6 +2046,9 @@
 				PAY0000012EE1000000000010 /* PaySummaryView.swift in Sources */,
 				PAY0000012EE100000000000C /* PayConfirmingView.swift in Sources */,
 				PAY0000012EE100000000000D /* PayDataCollectionWebView.swift in Sources */,
+				PAY0000012EE1000000000020 /* PaymentUtil.swift in Sources */,
+				PAY0000012EE1000000000021 /* PayRPCClient.swift in Sources */,
+				PAY0000012EE1000000000022 /* PayTransactionService.swift in Sources */,
 				44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */,
 				44650A432F1E0002004F2144 /* TronSigner.swift in Sources */,
 				CA00CA032F3A0001000CA101 /* CantonSigner.swift in Sources */,
@@ -2042,6 +2057,7 @@
 				A5D610CE2AB3594100C20083 /* ListingsAPI.swift in Sources */,
 				C5B2F6FB297055B0000DBA0E /* ETHSigner.swift in Sources */,
 				SIGNTD0001000000000001 /* SignTypedDataSigner.swift in Sources */,
+				EIP71200010000000001 /* EIP712TypedData.swift in Sources */,
 				A5D610D42AB35BED00C20083 /* FailableDecodable.swift in Sources */,
 				A56AC8F22AD88A5A001C8FAA /* Sequence.swift in Sources */,
 				A50B6A382B06697B00162B01 /* ProfilingService.swift in Sources */,

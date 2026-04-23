@@ -18,21 +18,27 @@ final class NavigationCoordinator: ObservableObject {
     // MARK: - Dependencies
 
     let app: Application
-    var importAccount: ImportAccount?
+    @Published var importAccount: ImportAccount?
 
-    // MARK: - Cached View Models (created once, reused across tab switches)
+    // MARK: - Cached View Models (recreated when the imported wallet changes)
 
-    private(set) lazy var balancesViewModel: BalancesViewModel = {
+    private var _balancesViewModel: BalancesViewModel?
+    var balancesViewModel: BalancesViewModel {
+        if let vm = _balancesViewModel { return vm }
         let vm = BalancesViewModel(app: app, importAccount: importAccount!)
         vm.scanHandler.onScanOverride = { [weak self] in self?.presentScanCamera() }
+        _balancesViewModel = vm
         return vm
-    }()
+    }
 
-    private(set) lazy var walletPresenter: WalletPresenter = {
+    private var _walletPresenter: WalletPresenter?
+    var walletPresenter: WalletPresenter {
+        if let p = _walletPresenter { return p }
         let p = WalletPresenter(interactor: WalletInteractor(), app: app, importAccount: importAccount!)
         p.scanHandler.onScanOverride = { [weak self] in self?.presentScanCamera() }
+        _walletPresenter = p
         return p
-    }()
+    }
 
     private(set) lazy var settingsPresenter: SettingsPresenter = {
         let p = SettingsPresenter(accountStorage: app.accountStorage)
@@ -206,7 +212,12 @@ final class NavigationCoordinator: ObservableObject {
             }
         }
 
-        // Refresh balances
+        // Pick up the newly imported account and rebuild presenters that captured the old one.
+        importAccount = app.accountStorage.importAccount
+        _balancesViewModel = nil
+        _walletPresenter = nil
+
+        // Refresh balances on the fresh view model
         Task { await balancesViewModel.refresh() }
     }
 }

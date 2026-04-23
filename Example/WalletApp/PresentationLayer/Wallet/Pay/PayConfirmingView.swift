@@ -14,10 +14,21 @@ struct PayConfirmingView: View {
             Spacer()
                 .frame(height: Spacing._4)
 
-            // Loading text
+            // Loading text — fades + slides when the message changes between steps
+            // (e.g. "Setting up USDC…" → "Finalizing your payment…").
             Text(presenter.loadingMessage)
                 .appFont(.h6)
                 .foregroundColor(AppColors.textPrimary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, Spacing._5)
+                .id(presenter.loadingMessage)
+                .transition(
+                    .asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .bottom)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    )
+                )
+                .animation(.easeInOut(duration: 0.25), value: presenter.loadingMessage)
                 .accessibilityIdentifier("pay-loading-message")
 
             Spacer()

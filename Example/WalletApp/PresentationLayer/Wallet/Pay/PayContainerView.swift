@@ -59,12 +59,12 @@ struct PayContainerView: View {
                     .accessibilityElement(children: .contain)
                 }
                 .animation(.easeInOut(duration: 0.25), value: presenter.currentStep)
+                .ignoresSafeArea(edges: .bottom)
             }
         }
         .alert(presenter.errorMessage, isPresented: $presenter.showError) {
             Button("OK", role: .cancel) {}
         }
-        .ignoresSafeArea()
     }
 }
 
