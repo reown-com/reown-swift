@@ -180,8 +180,10 @@ struct EIP712TypedData {
 
     private func encodeUInt(_ value: Any) throws -> [UInt8] {
         let v = try parseBigUInt(value)
-        var bytes = Array(v.serialize())
-        if bytes.count > 32 { bytes = Array(bytes.suffix(32)) }
+        let bytes = Array(v.serialize())
+        guard bytes.count <= 32 else {
+            throw EIP712Error.integerOutOfRange(String(describing: value))
+        }
         return Array(repeating: 0, count: 32 - bytes.count) + bytes
     }
 
@@ -189,8 +191,10 @@ struct EIP712TypedData {
         let v = try parseBigInt(value)
         let modulus = BigInt(1) << 256
         let unsigned = v >= 0 ? v : (modulus + v)
-        var bytes = Array(unsigned.magnitude.serialize())
-        if bytes.count > 32 { bytes = Array(bytes.suffix(32)) }
+        let bytes = Array(unsigned.magnitude.serialize())
+        guard bytes.count <= 32 else {
+            throw EIP712Error.integerOutOfRange(String(describing: value))
+        }
         return Array(repeating: 0, count: 32 - bytes.count) + bytes
     }
 
@@ -271,6 +275,7 @@ struct EIP712TypedData {
         case expectedBool
         case invalidAddress(String)
         case invalidInteger(String)
+        case integerOutOfRange(String)
 
         var errorDescription: String? {
             switch self {
@@ -284,6 +289,7 @@ struct EIP712TypedData {
             case .expectedBool: return "Expected bool value"
             case .invalidAddress(let a): return "Invalid address: \(a)"
             case .invalidInteger(let s): return "Invalid integer: \(s)"
+            case .integerOutOfRange(let s): return "Integer out of uint256/int256 range: \(s)"
             }
         }
     }

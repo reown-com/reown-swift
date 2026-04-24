@@ -174,6 +174,7 @@ final class PayPresenter: ObservableObject {
         guard let baseUrlString = collectData?.url,
               !baseUrlString.isEmpty,
               var components = URLComponents(string: baseUrlString),
+              components.scheme?.lowercased() == "https",
               let host = components.host,
               Self.trustedICDomains.contains(host) else {
             print("⚠️ [Pay] Rejected untrusted or invalid IC URL: \(collectData?.url ?? "nil")")

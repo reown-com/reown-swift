@@ -113,6 +113,11 @@ struct PayTransactionService {
 
         let privateKey = try EthereumPrivateKey(hexPrivateKey: importAccount.privateKey)
 
+        let signerAddress = privateKey.address.hex(eip55: false)
+        guard payload.from.lowercased() == signerAddress.lowercased() else {
+            throw PayTxError.fromAddressMismatch(payload: payload.from, signer: signerAddress)
+        }
+
         let estimateRequest = RPCTxRequest(
             from: payload.from,
             to: payload.to,
@@ -285,6 +290,7 @@ enum PayTxError: Error, LocalizedError {
     case timeout(String)
     case txReverted(hash: String)
     case receiptTimeout(hash: String)
+    case fromAddressMismatch(payload: String, signer: String)
 
     var errorDescription: String? {
         switch self {
@@ -293,6 +299,8 @@ enum PayTxError: Error, LocalizedError {
         case .timeout(let m): return "Timed out: \(m)"
         case .txReverted(let h): return "Transaction reverted: \(h)"
         case .receiptTimeout(let h): return "Timed out waiting for receipt \(h)"
+        case .fromAddressMismatch(let p, let s):
+            return "Payload sender \(p) does not match signer \(s)"
         }
     }
 }
