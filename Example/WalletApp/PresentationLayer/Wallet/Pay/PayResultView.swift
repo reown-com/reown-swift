@@ -69,7 +69,7 @@ struct PayResultView: View {
             PayPrimaryButton(
                 title: buttonTitle,
                 accessibilityId: buttonAccessibilityId,
-                action: { presenter.dismiss() }
+                action: { presenter.primaryResultAction() }
             )
 
             Spacer()

@@ -15,6 +15,7 @@ enum PayFlowStep: Int, CaseIterable {
 
 final class PayPresenter: ObservableObject {
     var dismissAction: (() -> Void)?
+    var scanNewQRAction: (() -> Void)?
     private let importAccount: ImportAccount
     private var disposeBag = Set<AnyCancellable>()
 
@@ -452,6 +453,15 @@ final class PayPresenter: ObservableObject {
 
     func dismiss() {
         dismissAction?()
+    }
+
+    func primaryResultAction() {
+        switch resultType {
+        case .expired:
+            scanNewQRAction?()
+        case .success, .insufficientFunds, .cancelled, .notFound, .generic:
+            dismiss()
+        }
     }
 
     // MARK: - Error Detection
