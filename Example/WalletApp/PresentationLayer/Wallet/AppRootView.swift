@@ -97,6 +97,12 @@ struct AppRootView: View {
             importAccount: coordinator.importAccount!
         )
         presenter.dismissAction = { [weak coordinator] in coordinator?.dismissModal() }
+        presenter.scanNewQRAction = { [weak coordinator] in
+            coordinator?.dismissModal()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                coordinator?.presentScanCamera()
+            }
+        }
         return PayContainerView()
             .environmentObject(presenter)
     }

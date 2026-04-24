@@ -58,6 +58,8 @@ struct ImportWalletView: View {
                 .scrollContentBackground(.hidden)
                 .frame(minHeight: 100)
                 .padding(.horizontal, Spacing._05)
+                .autocorrectionDisabled(true)
+                .textInputAutocapitalization(.never)
         }
         .background(AppColors.foregroundPrimary)
         .cornerRadius(AppRadius._3)

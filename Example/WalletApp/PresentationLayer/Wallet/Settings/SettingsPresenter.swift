@@ -39,7 +39,7 @@ final class SettingsPresenter: ObservableObject {
 
     func makeImportWalletPresenter() -> ImportWalletPresenter {
         let service = WalletGenerationService(accountStorage: accountStorage)
-        return ImportWalletPresenter(walletService: service)
+        return ImportWalletPresenter(walletService: service, accountStorage: accountStorage)
     }
 
     private func presentScanCamera() {

@@ -27,19 +27,23 @@ struct PayOptionsView: View {
                     .accessibilityIdentifier("pay-merchant-info")
                     .padding(.top, Spacing._5)
 
-                // Payment options list
-                VStack(spacing: Spacing._2) {
-                    ForEach(Array(presenter.paymentOptions.enumerated()), id: \.element.id) { index, option in
-                        let isSelected = presenter.selectedOption?.id == option.id
-                        PaymentOptionCard(
-                            option: option,
-                            isSelected: isSelected,
-                            requiresIC: presenter.anyOptionRequiresIC,
-                            accessibilityId: isSelected ? "pay-option-\(index)-selected" : "pay-option-\(index)",
-                            onSelect: { presenter.selectOption(option) }
-                        )
+                // Payment options list — scrollable so the CTA stays visible
+                // when many options are present.
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: Spacing._2) {
+                        ForEach(Array(presenter.paymentOptions.enumerated()), id: \.element.id) { index, option in
+                            let isSelected = presenter.selectedOption?.id == option.id
+                            PaymentOptionCard(
+                                option: option,
+                                isSelected: isSelected,
+                                requiresIC: presenter.anyOptionRequiresIC,
+                                accessibilityId: isSelected ? "pay-option-\(index)-selected" : "pay-option-\(index)",
+                                onSelect: { presenter.selectOption(option) }
+                            )
+                        }
                     }
                 }
+                .frame(maxHeight: UIScreen.main.bounds.height * 0.5)
                 .padding(.top, Spacing._7)
 
                 // Primary button
