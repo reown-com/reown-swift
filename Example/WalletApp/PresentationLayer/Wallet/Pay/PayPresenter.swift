@@ -386,10 +386,11 @@ final class PayPresenter: ObservableObject {
                     switch action.walletRpc.method {
                     case "eth_sendTransaction":
                         self.loadingMessage = "Setting up \(tokenSymbol) for the first time…"
-                        _ = try await txService.sendTransactionAndWait(
+                        let txHash = try await txService.sendTransactionAndWait(
                             action: action,
                             importAccount: self.importAccount
                         )
+                        signatures.append(txHash)
                     case "eth_signTypedData", "eth_signTypedData_v3", "eth_signTypedData_v4":
                         self.loadingMessage = isMultiStep
                             ? "Finalizing your payment…"
