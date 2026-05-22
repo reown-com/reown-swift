@@ -88,35 +88,25 @@ struct OptionItem: View {
         case .none:
             EmptyView()
         case .info(let action, let id):
-            PayInfoIcon()
-                .frame(width: 20, height: 20)
-                .foregroundColor(AppColors.textPrimary)
-                .frame(width: 38, height: 38)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Spacing._3)
-                        .stroke(AppColors.borderSecondary, lineWidth: 1)
-                )
-                .contentShape(Rectangle())
-                .onTapGesture { action() }
-                .accessibilityElement()
-                .accessibilityAddTraits(.isButton)
-                .accessibilityLabel("Info")
-                .accessibilityIdentifier(id ?? "")
+            OptionSlotButton(
+                imageName: "PayInfo",
+                iconSize: 20,
+                buttonSize: 38,
+                accessibilityId: id ?? "",
+                accessibilityLabel: "Info",
+                action: action
+            )
+            .frame(width: 38, height: 38)
         case .pencil(let action, let id):
-            PayPencilIcon()
-                .frame(width: 18, height: 18)
-                .foregroundColor(AppColors.textPrimary)
-                .frame(width: 38, height: 38)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Spacing._3)
-                        .stroke(AppColors.borderSecondary, lineWidth: 1)
-                )
-                .contentShape(Rectangle())
-                .onTapGesture { action() }
-                .accessibilityElement()
-                .accessibilityAddTraits(.isButton)
-                .accessibilityLabel("Edit")
-                .accessibilityIdentifier(id ?? "")
+            OptionSlotButton(
+                imageName: "PayPencil",
+                iconSize: 18,
+                buttonSize: 38,
+                accessibilityId: id ?? "",
+                accessibilityLabel: "Edit",
+                action: action
+            )
+            .frame(width: 38, height: 38)
         }
     }
 }
@@ -189,5 +179,64 @@ struct PayInfoIcon: View {
             .renderingMode(.template)
             .resizable()
             .aspectRatio(contentMode: .fit)
+    }
+}
+
+// MARK: - OptionSlotButton (UIKit-backed for reliable Maestro identifiers)
+
+/// UIKit `UIButton` wrapper used by `OptionItem`'s right slot. Pure SwiftUI
+/// Buttons nested inside an `.accessibilityElement(children: .contain)` row
+/// don't reliably expose their `accessibilityIdentifier` to XCUITest, so the
+/// info / edit affordances Maestro needs to tap (e.g. `pay-option-info-required`)
+/// are rendered through this representable to guarantee a native UIView carries
+/// the id directly.
+struct OptionSlotButton: UIViewRepresentable {
+    let imageName: String
+    let iconSize: CGFloat
+    let buttonSize: CGFloat
+    let accessibilityId: String
+    let accessibilityLabel: String
+    let action: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .system)
+        button.tintColor = UIColor.label
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.separator.cgColor
+        button.isAccessibilityElement = true
+        button.accessibilityTraits = .button
+        button.addTarget(context.coordinator, action: #selector(Coordinator.tap), for: .touchUpInside)
+        configure(button: button, context: context)
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        context.coordinator.action = action
+        configure(button: button, context: context)
+    }
+
+    private func configure(button: UIButton, context: Context) {
+        let inset = max(0, (buttonSize - iconSize) / 2)
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.image = UIImage(named: imageName)?.withRenderingMode(.alwaysTemplate)
+            config.contentInsets = NSDirectionalEdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+            config.background.backgroundColor = .clear
+            button.configuration = config
+        } else {
+            button.setImage(UIImage(named: imageName)?.withRenderingMode(.alwaysTemplate), for: .normal)
+            button.imageEdgeInsets = UIEdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
+        }
+        button.accessibilityIdentifier = accessibilityId
+        button.accessibilityLabel = accessibilityLabel
+    }
+
+    final class Coordinator {
+        var action: () -> Void
+        init(action: @escaping () -> Void) { self.action = action }
+        @objc func tap() { action() }
     }
 }
