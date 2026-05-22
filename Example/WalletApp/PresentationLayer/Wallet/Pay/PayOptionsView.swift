@@ -31,9 +31,9 @@ struct PayOptionsView: View {
                     .appFont(.h6)
                     .foregroundColor(AppColors.textPrimary)
                     .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("pay-select-option-header")
             }
             .padding(.top, Spacing._5)
-            .accessibilityIdentifier("pay-select-token-title")
 
             // Payment options list — tap a row to advance directly to review.
             // There is no Continue button; row selection and confirmation are

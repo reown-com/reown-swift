@@ -73,7 +73,7 @@ enum PaymentReviewFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = currency
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.locale = Locale.current
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSNumber(value: amount)) ?? "\(amount) \(currency)"
@@ -82,7 +82,7 @@ enum PaymentReviewFormatter {
     private static func formatNative(_ amount: Double, symbol: String) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.locale = Locale.current
         let digits = amount >= 0.01 ? 4 : 6
         formatter.minimumFractionDigits = digits
         formatter.maximumFractionDigits = digits
