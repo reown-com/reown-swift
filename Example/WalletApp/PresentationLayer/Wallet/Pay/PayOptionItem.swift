@@ -98,6 +98,7 @@ struct OptionItem: View {
                             .stroke(AppColors.borderSecondary, lineWidth: 1)
                     )
             }
+            .accessibilityLabel("Info")
             .accessibilityIdentifier(id ?? "")
         case .pencil(let action, let id):
             Button(action: action) {
@@ -110,6 +111,7 @@ struct OptionItem: View {
                             .stroke(AppColors.borderSecondary, lineWidth: 1)
                     )
             }
+            .accessibilityLabel("Edit")
             .accessibilityIdentifier(id ?? "")
         }
     }
