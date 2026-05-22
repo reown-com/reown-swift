@@ -88,31 +88,35 @@ struct OptionItem: View {
         case .none:
             EmptyView()
         case .info(let action, let id):
-            Button(action: action) {
-                PayInfoIcon()
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(AppColors.textPrimary)
-                    .frame(width: 38, height: 38)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Spacing._3)
-                            .stroke(AppColors.borderSecondary, lineWidth: 1)
-                    )
-            }
-            .accessibilityLabel("Info")
-            .accessibilityIdentifier(id ?? "")
+            PayInfoIcon()
+                .frame(width: 20, height: 20)
+                .foregroundColor(AppColors.textPrimary)
+                .frame(width: 38, height: 38)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Spacing._3)
+                        .stroke(AppColors.borderSecondary, lineWidth: 1)
+                )
+                .contentShape(Rectangle())
+                .onTapGesture { action() }
+                .accessibilityElement()
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel("Info")
+                .accessibilityIdentifier(id ?? "")
         case .pencil(let action, let id):
-            Button(action: action) {
-                PayPencilIcon()
-                    .frame(width: 18, height: 18)
-                    .foregroundColor(AppColors.textPrimary)
-                    .frame(width: 38, height: 38)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Spacing._3)
-                            .stroke(AppColors.borderSecondary, lineWidth: 1)
-                    )
-            }
-            .accessibilityLabel("Edit")
-            .accessibilityIdentifier(id ?? "")
+            PayPencilIcon()
+                .frame(width: 18, height: 18)
+                .foregroundColor(AppColors.textPrimary)
+                .frame(width: 38, height: 38)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Spacing._3)
+                        .stroke(AppColors.borderSecondary, lineWidth: 1)
+                )
+                .contentShape(Rectangle())
+                .onTapGesture { action() }
+                .accessibilityElement()
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel("Edit")
+                .accessibilityIdentifier(id ?? "")
         }
     }
 }
