@@ -25,37 +25,14 @@ struct OptionItem: View {
     var onTap: (() -> Void)? = nil
 
     var body: some View {
-        let bgColor = AppColors.foregroundPrimary
+        ZStack(alignment: .trailing) {
+            rowSurface
 
-        HStack(spacing: Spacing._2) {
-            TokenIconWithNetwork(
-                iconUrl: option.amount.display.iconUrl,
-                networkIconUrl: option.amount.display.networkIconUrl,
-                symbol: option.amount.display.assetSymbol,
-                size: 32,
-                badgeSize: 18,
-                badgeBorderColor: bgColor
-            )
-
-            Text(option.formattedAmount)
-                .appFont(.lg)
-                .foregroundColor(AppColors.textPrimary)
-
-            Spacer()
-
-            feeSuffix
-
-            rightSlotView
+            if hasRightSlot {
+                rightSlotView
+                    .padding(.trailing, Spacing._5)
+            }
         }
-        .padding(.horizontal, Spacing._5)
-        .frame(height: 68)
-        .background(bgColor)
-        .cornerRadius(AppRadius._4)
-        .contentShape(Rectangle())
-        .onTapGesture { onTap?() }
-        .accessibilityIdentifier(accessibilityId ?? "")
-        .accessibilityLabel(option.amount.display.networkName ?? "unknown")
-        .accessibilityElement(children: .contain)
     }
 
     @ViewBuilder
@@ -108,6 +85,70 @@ struct OptionItem: View {
             )
             .frame(width: 38, height: 38)
         }
+    }
+
+    private var hasRightSlot: Bool {
+        switch rightSlot {
+        case .none:
+            false
+        case .info, .pencil:
+            true
+        }
+    }
+
+    private var rowAccessibilityLabel: String {
+        option.amount.display.networkName ?? "unknown"
+    }
+
+    private var trailingAccessoryWidth: CGFloat {
+        hasRightSlot ? 38 + Spacing._2 : 0
+    }
+
+    @ViewBuilder
+    private var rowSurface: some View {
+        if let onTap {
+            Button(action: onTap) {
+                rowContent
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(rowAccessibilityLabel)
+            .accessibilityIdentifier(accessibilityId ?? "")
+        } else {
+            rowContent
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(rowAccessibilityLabel)
+                .accessibilityIdentifier(accessibilityId ?? "")
+        }
+    }
+
+    private var rowContent: some View {
+        let bgColor = AppColors.foregroundPrimary
+
+        return HStack(spacing: Spacing._2) {
+            TokenIconWithNetwork(
+                iconUrl: option.amount.display.iconUrl,
+                networkIconUrl: option.amount.display.networkIconUrl,
+                symbol: option.amount.display.assetSymbol,
+                size: 32,
+                badgeSize: 18,
+                badgeBorderColor: bgColor
+            )
+
+            Text(option.formattedAmount)
+                .appFont(.lg)
+                .foregroundColor(AppColors.textPrimary)
+
+            Spacer()
+
+            feeSuffix
+        }
+        .padding(.leading, Spacing._5)
+        .padding(.trailing, Spacing._5 + trailingAccessoryWidth)
+        .frame(maxWidth: .infinity, minHeight: 68, maxHeight: 68, alignment: .leading)
+        .background(bgColor)
+        .cornerRadius(AppRadius._4)
+        .contentShape(Rectangle())
     }
 }
 
@@ -184,12 +225,10 @@ struct PayInfoIcon: View {
 
 // MARK: - OptionSlotButton (UIKit-backed for reliable Maestro identifiers)
 
-/// UIKit `UIButton` wrapper used by `OptionItem`'s right slot. Pure SwiftUI
-/// Buttons nested inside an `.accessibilityElement(children: .contain)` row
-/// don't reliably expose their `accessibilityIdentifier` to XCUITest, so the
-/// info / edit affordances Maestro needs to tap (e.g. `pay-option-info-required`)
-/// are rendered through this representable to guarantee a native UIView carries
-/// the id directly.
+/// UIKit `UIButton` wrapper used by `OptionItem`'s right slot. The row itself
+/// remains a separate accessibility element/button, so the info/edit affordance
+/// needs its own native UIView to keep identifiers like
+/// `pay-option-info-required` independently addressable to XCUITest/Maestro.
 struct OptionSlotButton: UIViewRepresentable {
     let imageName: String
     let iconSize: CGFloat
