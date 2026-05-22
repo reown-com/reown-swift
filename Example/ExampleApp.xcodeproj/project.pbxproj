@@ -263,6 +263,11 @@
 		PAY0000012EE1000000000020 /* PaymentUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000020 /* PaymentUtil.swift */; };
 		PAY0000012EE1000000000021 /* PayRPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000021 /* PayRPCClient.swift */; };
 		PAY0000012EE1000000000022 /* PayTransactionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000022 /* PayTransactionService.swift */; };
+		PAY0000012EE1000000000023 /* PayTokenPreferenceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000023 /* PayTokenPreferenceStore.swift */; };
+		PAY0000012EE1000000000024 /* PayOptionItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000024 /* PayOptionItem.swift */; };
+		PAY0000012EE1000000000025 /* PaymentReviewFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000025 /* PaymentReviewFormatter.swift */; };
+		PAY0000012EE1000000000026 /* PayGasFeeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000026 /* PayGasFeeView.swift */; };
+		PAY0000012EE1000000000027 /* NativeTokenPriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PAY0000022EE1000000000027 /* NativeTokenPriceService.swift */; };
 		PH6B000100000000000001 /* WalletGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000001 /* WalletGenerationService.swift */; };
 		PH6B000100000000000002 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000002 /* ThemeManager.swift */; };
 		PH6B000100000000000003 /* SettingsCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PH6F000100000000000003 /* SettingsCardView.swift */; };
@@ -540,6 +545,11 @@
 		PAY0000022EE1000000000020 /* PaymentUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentUtil.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000021 /* PayRPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayRPCClient.swift; sourceTree = "<group>"; };
 		PAY0000022EE1000000000022 /* PayTransactionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayTransactionService.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000023 /* PayTokenPreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayTokenPreferenceStore.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000024 /* PayOptionItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayOptionItem.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000025 /* PaymentReviewFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentReviewFormatter.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000026 /* PayGasFeeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayGasFeeView.swift; sourceTree = "<group>"; };
+		PAY0000022EE1000000000027 /* NativeTokenPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTokenPriceService.swift; sourceTree = "<group>"; };
 		PH6F000100000000000001 /* WalletGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationService.swift; sourceTree = "<group>"; };
 		PH6F000100000000000002 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		PH6F000100000000000003 /* SettingsCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCardView.swift; sourceTree = "<group>"; };
@@ -981,6 +991,7 @@
 				44EF89702E0149360025778F /* StacksAccointStorage.swift */,
 				PH6F000100000000000001 /* WalletGenerationService.swift */,
 				446A306A2DE8375E0024781A /* SolanaAccountStorage.swift */,
+				PAY0000022EE1000000000027 /* NativeTokenPriceService.swift */,
 				446A306C2DE8405A0024781A /* SuiAccountStorage.swift */,
 				44650A3C2E93F775004F2144 /* TonAccountStorage.swift */,
 				44650A402F1E0001004F2144 /* TronAccountStorage.swift */,
@@ -1470,6 +1481,10 @@
 				PAY0000022EE1000000000020 /* PaymentUtil.swift */,
 				PAY0000022EE1000000000021 /* PayRPCClient.swift */,
 				PAY0000022EE1000000000022 /* PayTransactionService.swift */,
+				PAY0000022EE1000000000023 /* PayTokenPreferenceStore.swift */,
+				PAY0000022EE1000000000024 /* PayOptionItem.swift */,
+				PAY0000022EE1000000000025 /* PaymentReviewFormatter.swift */,
+				PAY0000022EE1000000000026 /* PayGasFeeView.swift */,
 			);
 			path = Pay;
 			sourceTree = "<group>";
@@ -2049,6 +2064,11 @@
 				PAY0000012EE1000000000020 /* PaymentUtil.swift in Sources */,
 				PAY0000012EE1000000000021 /* PayRPCClient.swift in Sources */,
 				PAY0000012EE1000000000022 /* PayTransactionService.swift in Sources */,
+				PAY0000012EE1000000000023 /* PayTokenPreferenceStore.swift in Sources */,
+				PAY0000012EE1000000000024 /* PayOptionItem.swift in Sources */,
+				PAY0000012EE1000000000025 /* PaymentReviewFormatter.swift in Sources */,
+				PAY0000012EE1000000000026 /* PayGasFeeView.swift in Sources */,
+				PAY0000012EE1000000000027 /* NativeTokenPriceService.swift in Sources */,
 				44650A3F2E951D71004F2144 /* TonSigner.swift in Sources */,
 				44650A432F1E0002004F2144 /* TronSigner.swift in Sources */,
 				CA00CA032F3A0001000CA101 /* CantonSigner.swift in Sources */,
