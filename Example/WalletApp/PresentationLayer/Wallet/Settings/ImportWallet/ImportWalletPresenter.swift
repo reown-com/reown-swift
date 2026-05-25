@@ -71,6 +71,7 @@ final class ImportWalletPresenter: ObservableObject {
 
         if success {
             accountStorage.userImportedWallet = true
+            PayTokenPreferenceStore().clear()
             input = ""
             showSuccess = true
             NotificationCenter.default.post(name: .walletImported, object: nil)

@@ -3,20 +3,30 @@ import Combine
 import ReownWalletKit
 import Commons
 
+/// Loading-screen copy. `subtitle` is optional and renders smaller / secondary
+/// beneath `title` (used for the multi-line one-time-setup message). Equatable
+/// so SwiftUI can drive the cross-fade animation off the value.
+struct PayLoadingMessage: Equatable, Hashable {
+    let title: String
+    var subtitle: String? = nil
+}
+
 enum PayFlowStep: Int, CaseIterable {
     case loading = 0
     case options = 1
     case whyInfoRequired = 2
     case webviewDataCollection = 3
     case summary = 4
-    case confirming = 5
-    case result = 6
+    case gasFee = 5
+    case confirming = 6
+    case result = 7
 }
 
 final class PayPresenter: ObservableObject {
     var dismissAction: (() -> Void)?
     var scanNewQRAction: (() -> Void)?
     private let importAccount: ImportAccount
+    private var tokenPreferenceStore = PayTokenPreferenceStore()
     private var disposeBag = Set<AnyCancellable>()
 
     // Trusted IC WebView domains
@@ -33,19 +43,31 @@ final class PayPresenter: ObservableObject {
 
     // Result state
     @Published var resultType: PayResultType = .success
-    @Published var loadingMessage: String = "Preparing your payment..."
+    @Published var loadingMessage: PayLoadingMessage = .init(title: "Preparing your payment...")
 
     // Payment data
     @Published var paymentOptionsResponse: PaymentOptionsResponse?
     @Published var selectedOption: PaymentOption?
-    @Published var requiredActions: [Action] = []
 
-    // Two-action flow state (Permit2 / approve + sign)
-    @Published var paymentContext: PaymentContext?
-    @Published var isLoadingActions = false
-    @Published var approvalGasEstimate: String?
-    @Published var isEstimatingApprovalGas = false
-    private var actionsRequestSeq: Int = 0
+    // Per-option preload state, keyed by option.id.
+    @Published var optionFeeEstimates: [String: FeeEstimate] = [:]
+    @Published var loadingFeeOptionIds: Set<String> = []
+
+    // Gas explainer routing state
+    @Published var gasFeeOption: PaymentOption?
+    private var gasFeeReturnStep: PayFlowStep = .options
+
+    /// True when we reached `.summary` directly from `.loading` (single option
+    /// or remembered last-paid token). In that case the summary header hides
+    /// its back button — there is no previous step to return to.
+    @Published var summaryEnteredDirectly: Bool = false
+
+    /// Per-option preload sequence counters. A stale fetch for option A cannot
+    /// overwrite a fresh state for option B. Bumped per preload kickoff.
+    private var optionSeqs: [String: Int] = [:]
+    /// Global session counter — bumped on every `loadPaymentOptions` call so
+    /// all in-flight estimates from a previous QR scan are discarded.
+    private var paymentSessionSeq: Int = 0
 
     /// Local expiry safety margin — refuse to broadcast a payment whose
     /// `expiresAt` is within this window of now.
@@ -96,8 +118,14 @@ final class PayPresenter: ObservableObject {
     // MARK: - Public Methods
 
     func loadPaymentOptions() {
-        loadingMessage = "Preparing your payment..."
+        loadingMessage = PayLoadingMessage(title: "Preparing your payment...")
         currentStep = .loading
+        paymentSessionSeq += 1
+        optionSeqs.removeAll()
+        optionFeeEstimates.removeAll()
+        loadingFeeOptionIds.removeAll()
+        let sessionSeq = paymentSessionSeq
+
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
@@ -106,26 +134,40 @@ final class PayPresenter: ObservableObject {
                     accounts: accounts,
                     includePaymentInfo: true
                 )
+                guard sessionSeq == self.paymentSessionSeq else { return }
                 self.paymentOptionsResponse = response
-                print("💳 [Pay] getPaymentOptions response: \(response)")
 
                 if response.options.isEmpty {
-                    // No payment options — show insufficient funds result
                     self.resultType = .insufficientFunds
                     self.currentStep = .result
-                } else {
-                    // Select first option by default
-                    self.selectedOption = response.options.first
+                    return
+                }
 
-                    // Auto-skip to summary for single option with no IC
-                    if response.options.count == 1 && response.collectData == nil {
-                        self.currentStep = .summary
-                        if let option = response.options.first {
-                            self.loadRequiredActions(for: option, paymentId: response.paymentId)
-                        }
-                    } else {
-                        self.currentStep = .options
-                    }
+                let preferredUnit = self.tokenPreferenceStore.lastPaidTokenUnit
+                let preferred = PayTokenPreferenceStore.findPreferredOption(response.options, lastPaidUnit: preferredUnit)
+
+                // Single-option flows: pre-select the only choice.
+                // Multi-option flows: only auto-select when the user has a
+                // remembered preferred token and skip straight to review when
+                // there's no IC step. Otherwise leave selection nil so the
+                // user actively taps a row on the select screen. Mirrors
+                // Flutter PR #377's "no auto-pre-pick" behavior.
+                if response.options.count == 1 {
+                    self.selectedOption = response.options.first
+                } else {
+                    self.selectedOption = preferred
+                }
+
+                self.preloadOptionFees(options: response.options, sessionSeq: sessionSeq)
+
+                let goDirectToReview = (response.options.count == 1 && response.collectData == nil)
+                    || (preferred != nil && response.collectData == nil)
+                if goDirectToReview {
+                    self.summaryEnteredDirectly = true
+                    self.currentStep = .summary
+                } else {
+                    self.summaryEnteredDirectly = false
+                    self.currentStep = .options
                 }
             } catch {
                 self.resultType = Self.detectResultType(from: error)
@@ -134,26 +176,47 @@ final class PayPresenter: ObservableObject {
         }
     }
 
+    /// Kicks off a parallel estimate per option. Approval requirement is read
+    /// directly off `option.actions` returned by `getPaymentOptions`; no
+    /// committal `getRequiredPaymentActions` call is made for preview.
+    private func preloadOptionFees(options: [PaymentOption], sessionSeq: Int) {
+        for option in options where PaymentUtil.requiresApproval(option: option) {
+            let optionId = option.id
+            let nextSeq = (optionSeqs[optionId] ?? 0) + 1
+            optionSeqs[optionId] = nextSeq
+            loadingFeeOptionIds.insert(optionId)
+
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let service = PayTransactionService(projectId: InputConfig.projectId)
+                let estimate = await service.estimateTransactionFeeFiat(option: option)
+
+                guard sessionSeq == self.paymentSessionSeq,
+                      self.optionSeqs[optionId] == nextSeq else { return }
+                self.loadingFeeOptionIds.remove(optionId)
+                if let estimate {
+                    self.optionFeeEstimates[optionId] = estimate
+                }
+            }
+        }
+    }
+
     /// Called from options screen when user taps the primary button
     func continueFromOptions() {
-        guard let option = selectedOption,
-              let paymentId = paymentOptionsResponse?.paymentId else { return }
-
+        guard selectedOption != nil else { return }
+        summaryEnteredDirectly = false
         if let collectData = collectData,
            let url = collectData.url, !url.isEmpty {
             currentStep = .webviewDataCollection
         } else {
             currentStep = .summary
-            loadRequiredActions(for: option, paymentId: paymentId)
         }
     }
 
     /// Called when IC WebView completes successfully
     func onICWebViewComplete() {
+        summaryEnteredDirectly = false
         currentStep = .summary
-        if let option = selectedOption, let paymentId = paymentOptionsResponse?.paymentId {
-            loadRequiredActions(for: option, paymentId: paymentId)
-        }
     }
 
     /// Called when IC WebView encounters an error
@@ -265,9 +328,13 @@ final class PayPresenter: ObservableObject {
             if let collectData = collectData,
                let url = collectData.url, !url.isEmpty {
                 currentStep = .webviewDataCollection
-            } else {
+            } else if paymentOptions.count > 1 {
                 currentStep = .options
+            } else {
+                dismiss()
             }
+        case .gasFee:
+            currentStep = gasFeeReturnStep
         case .confirming, .result:
             // Don't allow back navigation from these states
             break
@@ -278,56 +345,34 @@ final class PayPresenter: ObservableObject {
         currentStep = .whyInfoRequired
     }
 
+    /// Shows the gas-fee explainer for an option without changing the
+    /// presenter's `selectedOption`. The originating step is remembered so
+    /// `goBack()` returns there.
+    func showGasFeeExplainer(for option: PaymentOption) {
+        gasFeeOption = option
+        gasFeeReturnStep = currentStep == .options ? .options : .summary
+        currentStep = .gasFee
+    }
+
     func selectOption(_ option: PaymentOption) {
         selectedOption = option
     }
 
-    /// Fetches required actions for the selected option in the background.
-    /// While running, the summary step renders immediately but the Pay button is disabled.
-    /// Uses a request-sequence counter to ignore stale responses from rapid option changes.
-    func loadRequiredActions(for option: PaymentOption, paymentId: String) {
-        actionsRequestSeq += 1
-        let seq = actionsRequestSeq
-        isLoadingActions = true
-        requiredActions = []
-        paymentContext = nil
-        approvalGasEstimate = nil
-        isEstimatingApprovalGas = false
-
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
-                    paymentId: paymentId,
-                    optionId: option.id
-                )
-                // Ignore stale response
-                guard seq == self.actionsRequestSeq else { return }
-
-                self.requiredActions = actions
-                let context = PaymentUtil.getPaymentContext(actions: actions)
-                self.paymentContext = context
-                self.isLoadingActions = false
-
-                // Estimate approval fee in background — non-blocking.
-                if let approval = context.approvalAction {
-                    self.isEstimatingApprovalGas = true
-                    Task { @MainActor [weak self] in
-                        guard let self else { return }
-                        let service = PayTransactionService(projectId: InputConfig.projectId)
-                        let estimate = await service.estimateTransactionFee(action: approval)
-                        guard seq == self.actionsRequestSeq else { return }
-                        self.approvalGasEstimate = estimate
-                        self.isEstimatingApprovalGas = false
-                    }
-                }
-            } catch {
-                guard seq == self.actionsRequestSeq else { return }
-                self.isLoadingActions = false
-                self.resultType = Self.detectResultType(from: error)
-                self.currentStep = .result
-            }
+    func fee(for option: PaymentOption) -> FeeState {
+        if !PaymentUtil.requiresApproval(option: option) {
+            return .notRequired
         }
+        if let estimate = optionFeeEstimates[option.id] {
+            return .value(estimate)
+        }
+        if loadingFeeOptionIds.contains(option.id) {
+            return .loading
+        }
+        return .unavailable
+    }
+
+    func requiresApproval(for option: PaymentOption) -> Bool {
+        PaymentUtil.requiresApproval(option: option)
     }
 
     /// Returns true when `paymentInfo.expiresAt` is within `expiryGuardMs` of
@@ -357,44 +402,43 @@ final class PayPresenter: ObservableObject {
 
         // Switch to confirming state. The exact message is set below once we
         // know whether this is a single- or multi-step flow.
-        loadingMessage = "Processing your payment..."
+        loadingMessage = PayLoadingMessage(title: "Processing your payment...")
         currentStep = .confirming
 
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                // Ensure we have the required actions (may still be in flight if user tapped fast).
-                let actions: [Action]
-                if !self.requiredActions.isEmpty {
-                    actions = self.requiredActions
-                } else {
-                    actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
-                        paymentId: paymentId,
-                        optionId: option.id
-                    )
-                    self.requiredActions = actions
-                    self.paymentContext = PaymentUtil.getPaymentContext(actions: actions)
-                }
+                // Committal call — exactly once per payment, at the moment the
+                // user confirms. There is no preview/cache path. From this
+                // point the wallet is obligated to execute every action and
+                // call `confirmPayment`.
+                let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
+                    paymentId: paymentId,
+                    optionId: option.id
+                )
 
                 let tokenSymbol = option.amount.display.assetSymbol
                 let txService = PayTransactionService(projectId: InputConfig.projectId)
                 let ethSigner = ETHSigner(importAccount: importAccount)
                 var signatures: [String] = []
-                let isMultiStep = self.paymentContext?.requiresApproval == true
+                let isMultiStep = PaymentUtil.shouldShowSetupLoader(actions: actions)
 
                 for action in actions {
                     switch action.walletRpc.method {
                     case "eth_sendTransaction":
-                        self.loadingMessage = "Setting up \(tokenSymbol) for the first time…"
+                        self.loadingMessage = PayLoadingMessage(
+                            title: "Setting up \(tokenSymbol)",
+                            subtitle: "This usually takes a few seconds. Future \(tokenSymbol) payments will skip this step."
+                        )
                         let txHash = try await txService.sendTransactionAndWait(
                             action: action,
                             importAccount: self.importAccount
                         )
                         signatures.append(txHash)
                     case "eth_signTypedData", "eth_signTypedData_v3", "eth_signTypedData_v4":
-                        self.loadingMessage = isMultiStep
-                            ? "Finalizing your payment…"
-                            : "Processing your payment..."
+                        self.loadingMessage = PayLoadingMessage(
+                            title: isMultiStep ? "Finalizing your payment…" : "Processing your payment..."
+                        )
                         let signature = try await ethSigner.signTypedData(
                             AnyCodable(action.walletRpc.params)
                         )
@@ -404,9 +448,9 @@ final class PayPresenter: ObservableObject {
                     }
                 }
 
-                self.loadingMessage = isMultiStep
-                    ? "Finalizing your payment…"
-                    : "Processing your payment..."
+                self.loadingMessage = PayLoadingMessage(
+                    title: isMultiStep ? "Finalizing your payment…" : "Processing your payment..."
+                )
                 let result = try await WalletKit.instance.Pay.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
@@ -421,6 +465,7 @@ final class PayPresenter: ObservableObject {
                 switch result.status {
                 case .succeeded, .processing:
                     self.resultType = .success
+                    self.tokenPreferenceStore.lastPaidTokenUnit = option.amount.unit
                 case .cancelled:
                     self.resultType = .cancelled
                 case .failed:
@@ -524,4 +569,3 @@ final class PayPresenter: ObservableObject {
     }
 
 }
-

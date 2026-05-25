@@ -75,6 +75,7 @@ struct PayResultView: View {
             Spacer()
                 .frame(height: Spacing._2)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("pay-result-container")
     }
 

@@ -21,16 +21,16 @@ struct PayWhyInfoRequiredView: View {
             Text("Why do we collect personal details?")
                 .appFont(.h6)
                 .foregroundColor(AppColors.textPrimary)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, Spacing._2)
 
             // Description
             Text("To meet compliance requirements, some basic information is collected from WalletConnect Pay users.\n\nThis is typically a one-time step\u{2014}if you use the same wallet on this network again, you won\u{2019}t need to provide the info again, unless your information changes.")
                 .appFont(.lg)
                 .foregroundColor(AppColors.textSecondary)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             Spacer()
                 .frame(minHeight: Spacing._7, maxHeight: Spacing._7)

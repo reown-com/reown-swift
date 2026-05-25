@@ -92,6 +92,15 @@
         }
       },
       {
+        "package": "swift-algorithms",
+        "repositoryURL": "https://github.com/apple/swift-algorithms.git",
+        "state": {
+          "branch": null,
+          "revision": "87e50f483c54e6efd60e885f7f5aa946cee68023",
+          "version": "1.2.1"
+        }
+      },
+      {
         "package": "swift-atomics",
         "repositoryURL": "https://github.com/apple/swift-atomics.git",
         "state": {
@@ -105,8 +114,8 @@
         "repositoryURL": "https://github.com/apple/swift-collections.git",
         "state": {
           "branch": null,
-          "revision": "671108c96644956dddcd89dd59c203dcdb36cec7",
-          "version": "1.1.4"
+          "revision": "fea17c02d767f46b23070fdfdacc28a03a39232a",
+          "version": "1.5.1"
         }
       },
       {
@@ -128,6 +137,15 @@
         }
       },
       {
+        "package": "swift-http-structured-headers",
+        "repositoryURL": "https://github.com/apple/swift-http-structured-headers.git",
+        "state": {
+          "branch": null,
+          "revision": "933538faa42c432d385f02e07df0ace7c5ecfc47",
+          "version": "1.7.0"
+        }
+      },
+      {
         "package": "swift-http-types",
         "repositoryURL": "https://github.com/apple/swift-http-types",
         "state": {
@@ -141,8 +159,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "914081701062b11e3bb9e21accc379822621995e",
-          "version": "2.76.1"
+          "revision": "57c0a08a331aaea9f5d7a932ad94ef43be942a95",
+          "version": "2.100.0"
         }
       },
       {
@@ -150,8 +168,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-extras.git",
         "state": {
           "branch": null,
-          "revision": "2e9746cfc57554f70b650b021b6ae4738abef3e6",
-          "version": "1.24.1"
+          "revision": "f1f6f772198bee35d99dd145f1513d8581a54f2c",
+          "version": "1.26.0"
         }
       },
       {
@@ -179,6 +197,15 @@
           "branch": null,
           "revision": "bbd5e63cf949b7db0c9edaf7a21e141c52afe214",
           "version": "1.23.0"
+        }
+      },
+      {
+        "package": "swift-numerics",
+        "repositoryURL": "https://github.com/apple/swift-numerics.git",
+        "state": {
+          "branch": null,
+          "revision": "0c0290ff6b24942dadb83a929ffaaa1481df04a2",
+          "version": "1.1.1"
         }
       },
       {
@@ -267,8 +294,8 @@
         "repositoryURL": "https://github.com/vapor/websocket-kit",
         "state": {
           "branch": null,
-          "revision": "4232d34efa49f633ba61afde365d3896fc7f8740",
-          "version": "2.15.0"
+          "revision": "90bbbdab3ede12c803cfbe91646f291c092517a3",
+          "version": "2.16.2"
         }
       },
       {

@@ -39,12 +39,21 @@ struct PayContainerView: View {
                                     onError: { error in presenter.onICWebViewError(error) }
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .padding(.top, 50)
-                                .background(AppColors.backgroundPrimary)
+                                .clipShape(
+                                    UnevenRoundedRectangle(
+                                        topLeadingRadius: AppRadius._8,
+                                        bottomLeadingRadius: 0,
+                                        bottomTrailingRadius: 0,
+                                        topTrailingRadius: AppRadius._8
+                                    )
+                                )
                                 .ignoresSafeArea(edges: .bottom)
                             }
                         case .summary:
                             PaySummaryView()
+                                .environmentObject(presenter)
+                        case .gasFee:
+                            PayGasFeeView()
                                 .environmentObject(presenter)
                         case .confirming:
                             PayConfirmingView()

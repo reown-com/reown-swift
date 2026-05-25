@@ -153,14 +153,12 @@ All Pay views have accessibility identifiers that the shared Maestro test flows 
 | `input-paste-url` | ScannerOptionsView | URL text field (test mode) |
 | `button-submit-url` | ScannerOptionsView | Submit URL button (test mode) |
 | `pay-merchant-info` | PayOptionsView / PaySummaryView | Merchant header |
-| `pay-option-{index}` | PayOptionsView | Unselected option card |
-| `pay-option-{index}-selected` | PayOptionsView | Selected option card |
-| `pay-info-required-badge` | PayOptionsView | "Info required" pill |
-| `pay-button-info` | PayOptionsView | Question mark button |
-| `pay-button-continue` | PayOptionsView | Continue/Pay button |
+| `pay-option-{index}` | PayOptionsView | Payment option row |
+| `pay-option-info-required` | PayOptionsView | Per-row info button for data collection requirements |
 | `pay-button-close` | All Pay views | Close (X) button |
 | `pay-button-back` | PaySummaryView / PayWhyInfoRequiredView | Back arrow button |
 | `pay-review-token-{networkName}` | PaySummaryView | Selected token row |
+| `pay-review-edit-token` | PaySummaryView | Edit selected token button |
 | `pay-button-pay` | PaySummaryView | Pay button |
 | `pay-loading-message` | PayConfirmingView | Loading text |
 | `pay-result-container` | PayResultView | Result container |

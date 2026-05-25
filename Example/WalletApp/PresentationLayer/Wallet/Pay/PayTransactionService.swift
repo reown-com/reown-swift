@@ -49,6 +49,69 @@ struct PayTransactionService {
 
     // MARK: - Public API
 
+    /// Fiat-priced fee preview used by the option list and summary CTA.
+    /// Returns the native wei total, the native symbol, and (when the price
+    /// lookup succeeds) the USD-priced fee. Returns `nil` only if the gas
+    /// estimate itself failed — partial results with no fiat are still useful.
+    func estimateTransactionFeeFiat(option: PaymentOption) async -> FeeEstimate? {
+        guard let action = option.actions.first(where: { $0.walletRpc.method == "eth_sendTransaction" }) else {
+            return nil
+        }
+        guard let payload = Self.decodePayload(from: action.walletRpc.params) else { return nil }
+
+        let chainId = action.walletRpc.chainId
+        let client = PayRPCClient(chainId: chainId, projectId: projectId)
+        let symbol = Self.nativeSymbolByChainId[chainId] ?? "ETH"
+
+        let request = RPCTxRequest(
+            from: payload.from,
+            to: payload.to,
+            data: payload.data,
+            value: payload.value
+        )
+
+        do {
+            let gasLimitHex = try await Self.withTimeout(message: "eth_estimateGas") {
+                try await client.estimateGas(request)
+            }
+            let latestBlock = try await Self.withTimeout(message: "eth_getBlockByNumber") {
+                try await client.getLatestBlock()
+            }
+            let priorityHex: String? = try? await Self.withTimeout(message: "eth_maxPriorityFeePerGas") {
+                try await client.maxPriorityFeePerGas()
+            }
+            let gasPriceHex: String? = try? await Self.withTimeout(message: "eth_gasPrice") {
+                try await client.gasPrice()
+            }
+
+            let gasLimit = Self.applyGasBuffer(Self.parseHex(gasLimitHex) ?? 0)
+            let priority = Self.parseHex(priorityHex ?? "")
+            let legacyGasPrice = Self.parseHex(gasPriceHex ?? "")
+
+            let fees = Self.computeFees(
+                chainId: chainId,
+                baseFeeHex: latestBlock.baseFeePerGas,
+                priorityFee: priority,
+                legacyGasPrice: legacyGasPrice
+            )
+            let totalWei = gasLimit * fees.maxFee
+            let nativeAmount = Self.weiToNative(totalWei)
+            let priceUsd = await NativeTokenPriceService.shared.fetch(chainId: chainId)
+            let fiatAmount = priceUsd.map { nativeAmount * $0.price }
+
+            return FeeEstimate(
+                nativeWei: totalWei,
+                nativeAmount: nativeAmount,
+                nativeSymbol: symbol,
+                fiatAmount: fiatAmount,
+                fiatCurrency: priceUsd?.currency ?? "USD"
+            )
+        } catch {
+            print("💳 [PayTx] estimateTransactionFeeFiat error: \(error)")
+            return nil
+        }
+    }
+
     /// Returns a short human-readable fee preview string, e.g. "~0.0034 POL".
     /// Returns `nil` if estimation fails for any reason.
     func estimateTransactionFee(action: Action) async -> String? {
@@ -211,6 +274,13 @@ struct PayTransactionService {
         if let legacyGasPrice { maxFee = max(maxFee, legacyGasPrice) }
         maxFee = max(maxFee, priority)
         return (maxFee, priority)
+    }
+
+    private static func weiToNative(_ wei: BigUInt) -> Double {
+        let divisor = BigUInt(10).power(18)
+        let whole = wei / divisor
+        let frac = wei % divisor
+        return Double(whole) + Double(frac) / pow(10.0, 18)
     }
 
     private static func formatFee(weiTotal: BigUInt, symbol: String) -> String {
