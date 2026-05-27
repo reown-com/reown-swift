@@ -298,10 +298,17 @@ final class BalancesViewModel: ObservableObject {
             async let evmBalances = Self.fetchBalances(for: walletAddress, chainId: nil)
             async let solBalances: [TokenBalance] = {
                 guard let solanaAddress, !solanaAddress.isEmpty else { return [] }
-                return (try? await Self.fetchBalances(
-                    for: solanaAddress,
-                    chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
-                )) ?? []
+                do {
+                    return try await Self.fetchBalances(
+                        for: solanaAddress,
+                        chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+                    )
+                } catch {
+                    // Solana failure shouldn't block EVM rendering — log and
+                    // fall back to no SOL balances.
+                    print("[Balance] Solana fetch failed: \(error.localizedDescription)")
+                    return []
+                }
             }()
             let allApiBalances = try await evmBalances + solBalances
 
