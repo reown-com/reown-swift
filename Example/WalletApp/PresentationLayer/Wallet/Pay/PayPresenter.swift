@@ -139,7 +139,7 @@ final class PayPresenter: ObservableObject {
                 self.paymentOptionsResponse = response
 
                 if response.options.isEmpty {
-                    self.resultType = .insufficientFunds
+                    self.resultType = self.emptyOptionsResultType(for: response)
                     self.currentStep = .result
                     return
                 }
@@ -374,6 +374,31 @@ final class PayPresenter: ObservableObject {
 
     func requiresApproval(for option: PaymentOption) -> Bool {
         PaymentUtil.requiresApproval(option: option)
+    }
+
+    /// `getPaymentOptions` returns an empty option list for several distinct
+    /// reasons — and only some of them are "insufficient funds". An expired or
+    /// cancelled payment also comes back with no options (the real reason lives
+    /// in `info.status`, not in a thrown error). Map the backend status to the
+    /// correct result and only fall back to insufficient funds for a still-
+    /// payable session.
+    private func emptyOptionsResultType(for response: PaymentOptionsResponse) -> PayResultType {
+        switch response.info?.status {
+        case .expired:
+            return .expired
+        case .cancelled:
+            return .cancelled
+        case .failed:
+            return .generic(message: "Payment failed.")
+        case .succeeded, .processing:
+            return .generic(message: "This payment has already been completed.")
+        case .requiresAction, .none:
+            // Active, payable session with no options → genuinely insufficient
+            // funds, unless the local clock says it's effectively expired.
+            return isPaymentExpiredLocally() ? .expired : .insufficientFunds
+        @unknown default:
+            return isPaymentExpiredLocally() ? .expired : .insufficientFunds
+        }
     }
 
     /// Returns true when `paymentInfo.expiresAt` is within `expiryGuardMs` of
