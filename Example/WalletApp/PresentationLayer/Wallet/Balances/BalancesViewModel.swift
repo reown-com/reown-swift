@@ -178,11 +178,33 @@ final class BalancesViewModel: ObservableObject {
     var walletAddress: String {
         importAccount.account.address
     }
-    
+
     var truncatedAddress: String {
         let address = walletAddress
         guard address.count > 10 else { return address }
         return "\(address.prefix(6))...\(address.suffix(4))"
+    }
+
+    /// Pick the displayed-and-copied address per row based on the token's CAIP-2
+    /// chainId namespace. Solana tokens show the Solana pubkey; everything else
+    /// falls back to the EVM address.
+    func address(for token: TokenBalance) -> String {
+        if let chainId = token.chainId, chainId.hasPrefix("solana:"),
+           let solAddress = SolanaAccountStorage().getAddress() {
+            return solAddress
+        }
+        return walletAddress
+    }
+
+    func truncatedAddress(for token: TokenBalance) -> String {
+        let address = address(for: token)
+        guard address.count > 10 else { return address }
+        return "\(address.prefix(6))...\(address.suffix(4))"
+    }
+
+    func copyAddress(for token: TokenBalance) {
+        UIPasteboard.general.string = address(for: token)
+        WalletToast.present(message: "Address copied", type: .success)
     }
     
     // MARK: - Init
