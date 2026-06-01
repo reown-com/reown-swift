@@ -117,6 +117,43 @@ private let mainnetNativeTokens: [TokenBalance] = [
     ),
 ]
 
+/// Native non-EVM tokens to display when the wallet has the corresponding
+/// account, even with zero balance. Each is only seeded into the balance map
+/// when its account address exists. The chainId must match the chainId used to
+/// fetch that chain's balances so a real balance from the API overrides this
+/// zero default (same mechanism as the EVM natives above).
+private let solanaNativeToken = TokenBalance(
+    name: "Solana", symbol: "SOL",
+    chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", address: nil,
+    value: 0, price: 0,
+    quantity: TokenQuantity(decimals: "9", numeric: "0"),
+    iconUrl: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png"
+)
+
+private let suiNativeToken = TokenBalance(
+    name: "Sui", symbol: "SUI",
+    chainId: "sui:mainnet", address: nil,
+    value: 0, price: 0,
+    quantity: TokenQuantity(decimals: "9", numeric: "0"),
+    iconUrl: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/sui/info/logo.png"
+)
+
+private let tonNativeToken = TokenBalance(
+    name: "TON", symbol: "TON",
+    chainId: "ton:-239", address: nil,
+    value: 0, price: 0,
+    quantity: TokenQuantity(decimals: "9", numeric: "0"),
+    iconUrl: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ton/info/logo.png"
+)
+
+private let tronNativeToken = TokenBalance(
+    name: "TRON", symbol: "TRX",
+    chainId: "tron:0x2b6653dc", address: nil,
+    value: 0, price: 0,
+    quantity: TokenQuantity(decimals: "6", numeric: "0"),
+    iconUrl: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/tron/info/logo.png"
+)
+
 /// Notification posted when a payment is completed successfully
 extension Notification.Name {
     static let paymentCompleted = Notification.Name("paymentCompleted")
@@ -150,7 +187,13 @@ final class BalancesViewModel: ObservableObject {
 
     private var refreshTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
-    private static let refreshInterval: TimeInterval = 10.0
+    private static let refreshInterval: TimeInterval = 300.0 // 5 minutes
+    /// Timestamp of the last successful balance fetch. `onAppear` fires each time
+    /// the Balances tab becomes visible; we only re-fetch when the data is stale
+    /// (older than `refreshInterval`). Quick tab switches within the interval
+    /// don't hit the expensive balance endpoint, but returning after a while
+    /// refreshes once. `nil` until the first successful fetch.
+    private var lastSuccessfulFetch: Date?
     
     // MARK: - Computed Properties
     
@@ -185,15 +228,88 @@ final class BalancesViewModel: ObservableObject {
         return "\(address.prefix(6))...\(address.suffix(4))"
     }
 
-    /// Pick the displayed-and-copied address per row based on the token's CAIP-2
-    /// chainId namespace. Solana tokens show the Solana pubkey; everything else
-    /// falls back to the EVM address.
-    func address(for token: TokenBalance) -> String {
-        if let chainId = token.chainId, chainId.hasPrefix("solana:"),
-           let solAddress = SolanaAccountStorage().getAddress() {
-            return solAddress
+    // MARK: - Spam Filtering
+
+    /// Symbols of known spam/airdrop tokens to hide from the balances list.
+    /// Matched case-insensitively against the trimmed token symbol.
+    private static let spamSymbols: Set<String> = [
+        "MANTRA POS", "AMPAR", "ACHIVX", "BASED", "GT", "MY"
+    ]
+
+    /// Detects scam/airdrop tokens that abuse the symbol field to advertise a
+    /// website (e.g. "USD0 [www.usual.finance]", "ecAVAX - https://invest...",
+    /// "www.2base.cfd") or that match a known spam symbol blocklist.
+    private static func isSpam(_ token: TokenBalance) -> Bool {
+        let symbol = token.symbol
+        let lower = symbol.lowercased()
+
+        // Explicit URLs embedded in the symbol.
+        if lower.contains("http://") || lower.contains("https://")
+            || lower.contains("www.") || lower.contains("://") {
+            return true
         }
-        return walletAddress
+
+        // Any domain-like token, e.g. "2base.cfd", "gftpepe.com",
+        // "investpulse.org". Legitimate token symbols never contain a "name.tld"
+        // segment, so a generic domain match is safe and TLD-agnostic.
+        if symbol.range(
+            of: #"[a-z0-9][a-z0-9-]*\.[a-z]{2,}"#,
+            options: [.regularExpression, .caseInsensitive]
+        ) != nil {
+            return true
+        }
+
+        // Bracketed advertising, e.g. "USD0 [ ... ]" or "VISIT [ GFTPEPE.COM ]".
+        if symbol.contains("[") || symbol.contains("]") {
+            return true
+        }
+
+        // Known spam symbol blocklist.
+        let normalized = symbol.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        if Self.spamSymbols.contains(normalized) {
+            return true
+        }
+
+        return false
+    }
+
+    /// Non-EVM addresses (Solana/Sui/TON/Tron) derived once, off the main thread.
+    /// Deriving them involves crypto / Yttrium FFI work — TON in particular spins
+    /// up a `TonClient`, which we don't want to construct synchronously during
+    /// init (the view model is created from the `@MainActor` coordinator). The
+    /// `Task` derives the addresses once and caches its result; the balance fetch
+    /// awaits it (off main), and the resolved map is mirrored into the
+    /// synchronously-readable `nonEvmAddresses` for per-row rendering. The
+    /// underlying keys only change on wallet import, which recreates this view
+    /// model (see NavigationCoordinator's `_balancesViewModel = nil`).
+    private let nonEvmAddressesTask: Task<[String: String], Never>
+
+    /// Synchronously-readable copy of the derived non-EVM addresses, keyed by
+    /// CAIP-2 namespace, for `address(for:)`. Assigned on the main actor inside
+    /// the fetch. Non-EVM rows only exist after a fetch (which awaits the
+    /// derivation), so this is populated by the time such a row renders.
+    /// Main-actor-only access.
+    private var nonEvmAddresses: [String: String] = [:]
+
+    private static func deriveNonEvmAddresses() -> [String: String] {
+        var result: [String: String] = [:]
+        if let address = SolanaAccountStorage().getAddress() { result["solana"] = address }
+        if let address = SuiAccountStorage().getAddress() { result["sui"] = address }
+        if let address = TonAccountStorage().getAddress() { result["ton"] = address }
+        if let address = TronAccountStorage().getAddress() { result["tron"] = address }
+        return result
+    }
+
+    /// Pick the displayed-and-copied address per row based on the token's CAIP-2
+    /// chainId namespace. Non-EVM tokens (Solana, Sui, TON, Tron) show their
+    /// own native address; everything else falls back to the EVM address.
+    func address(for token: TokenBalance) -> String {
+        guard let chainId = token.chainId,
+              let namespace = chainId.split(separator: ":").first.map(String.init),
+              let native = nonEvmAddresses[namespace] else {
+            return walletAddress
+        }
+        return native
     }
 
     func truncatedAddress(for token: TokenBalance) -> String {
@@ -212,6 +328,12 @@ final class BalancesViewModel: ObservableObject {
     init(app: Application, importAccount: ImportAccount) {
         self.app = app
         self.importAccount = importAccount
+        // Derive non-EVM addresses off the main thread (TON builds a TonClient);
+        // the balance fetch awaits this and mirrors the result into
+        // `nonEvmAddresses` for rendering.
+        self.nonEvmAddressesTask = Task.detached(priority: .userInitiated) {
+            Self.deriveNonEvmAddresses()
+        }
         subscribeToPaymentCompletion()
         scanHandler.objectWillChange
             .receive(on: DispatchQueue.main)
@@ -226,7 +348,14 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Public Methods
 
     func onAppear() {
-        fetchAllBalances()
+        // Fetch on first appearance, or when the displayed data is stale (older
+        // than the refresh interval). Quick tab switches within the interval
+        // don't trigger a fetch, keeping load off the expensive balance endpoint;
+        // returning after the data has gone stale refreshes once.
+        let isStale = lastSuccessfulFetch.map { Date().timeIntervalSince($0) >= Self.refreshInterval } ?? true
+        if isStale {
+            fetchAllBalances()
+        }
         startAutoRefresh()
     }
 
@@ -312,27 +441,45 @@ final class BalancesViewModel: ObservableObject {
 
     private func fetchAllBalancesAsync() async {
         do {
-            // Fetch EVM and Solana balances in parallel. The balance API only
-            // accepts one address per call, so we issue two requests and merge
-            // their results. Solana fetch is optional — if the wallet has no
-            // Solana account, we just skip it.
-            let solanaAddress = SolanaAccountStorage().getAddress()
+            // Fetch EVM and non-EVM (Solana/Sui/TON/Tron) balances in parallel.
+            // The balance API only accepts one address per call, so we issue one
+            // request per chain and merge the results. Each non-EVM fetch is
+            // optional — if the wallet has no account for that chain, or the
+            // fetch fails, we skip it and the zero-balance native default below
+            // keeps the row (and its address) visible.
+            let nonEvmAddresses = await nonEvmAddressesTask.value
+            let nonEvmAccounts: [(token: TokenBalance, address: String?)] = [
+                (solanaNativeToken, nonEvmAddresses["solana"]),
+                (suiNativeToken, nonEvmAddresses["sui"]),
+                (tonNativeToken, nonEvmAddresses["ton"]),
+                (tronNativeToken, nonEvmAddresses["tron"]),
+            ]
+
             async let evmBalances = Self.fetchBalances(for: walletAddress, chainId: nil)
-            async let solBalances: [TokenBalance] = {
-                guard let solanaAddress, !solanaAddress.isEmpty else { return [] }
-                do {
-                    return try await Self.fetchBalances(
-                        for: solanaAddress,
-                        chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
-                    )
-                } catch {
-                    // Solana failure shouldn't block EVM rendering — log and
-                    // fall back to no SOL balances.
-                    print("[Balance] Solana fetch failed: \(error.localizedDescription)")
-                    return []
+            let nonEvmBalances = await withTaskGroup(of: [TokenBalance].self) { group in
+                for account in nonEvmAccounts {
+                    guard let address = account.address, !address.isEmpty else { continue }
+                    let chainId = account.token.chainId
+                    let symbol = account.token.symbol
+                    group.addTask {
+                        do {
+                            return try await Self.fetchBalances(for: address, chainId: chainId)
+                        } catch {
+                            // A single chain's failure shouldn't block the rest.
+                            print("[Balance] \(symbol) fetch failed: \(error.localizedDescription)")
+                            return []
+                        }
+                    }
                 }
-            }()
-            let allApiBalances = try await evmBalances + solBalances
+                var results: [TokenBalance] = []
+                for await balances in group {
+                    results.append(contentsOf: balances)
+                }
+                return results
+            }
+            // Drop scam/airdrop tokens (URLs in symbol, known spam symbols).
+            let allApiBalances = (try await evmBalances + nonEvmBalances)
+                .filter { !Self.isSpam($0) }
 
             // Filter for USDC and EURC tokens
             let usdcTokens = allApiBalances.filter { $0.symbol == "USDC" }
@@ -343,6 +490,13 @@ final class BalancesViewModel: ObservableObject {
             // Start with native token defaults (zero balance)
             for native in mainnetNativeTokens {
                 balanceMap[native.id] = native
+            }
+            // Always show a native row (zero balance) for each non-EVM chain the
+            // wallet has an account for, so its address stays visible even if the
+            // API omits it.
+            for account in nonEvmAccounts {
+                guard let address = account.address, !address.isEmpty else { continue }
+                balanceMap[account.token.id] = account.token
             }
             // Override with actual API balances
             for token in allApiBalances {
@@ -401,6 +555,12 @@ final class BalancesViewModel: ObservableObject {
                     self.eurcBalances = newEurc
                 }
 
+                // Mirror the resolved non-EVM addresses for synchronous per-row
+                // reads in `address(for:)`. Assigned in the same main-actor block
+                // as `tokenBalances`, so the new rows render with the correct
+                // addresses rather than the EVM fallback.
+                self.nonEvmAddresses = nonEvmAddresses
+                self.lastSuccessfulFetch = Date()
                 if self.isLoading { self.isLoading = false }
                 if self.isRefreshing { self.isRefreshing = false }
             }

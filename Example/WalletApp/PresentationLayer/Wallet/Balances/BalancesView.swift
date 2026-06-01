@@ -109,7 +109,8 @@ private struct CachedTokenImage: View {
     }
 
     private func loadImage() {
-        guard let urlString = url, let url = URL(string: urlString) else {
+        guard let urlString = url, let url = URL(string: urlString),
+              url.scheme == "http" || url.scheme == "https" else {
             loaded = true
             return
         }
@@ -121,13 +122,17 @@ private struct CachedTokenImage: View {
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
-                if let uiImage = UIImage(data: data) {
-                    ImageCache.shared.set(uiImage, for: urlString)
+                guard let uiImage = UIImage(data: data) else {
+                    await MainActor.run { self.loaded = true }
+                    return
+                }
+                ImageCache.shared.set(uiImage, for: urlString)
+                await MainActor.run {
                     self.image = uiImage
                     self.loaded = true
                 }
             } catch {
-                self.loaded = true
+                await MainActor.run { self.loaded = true }
             }
         }
     }
