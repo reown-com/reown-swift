@@ -188,11 +188,12 @@ final class BalancesViewModel: ObservableObject {
     private var refreshTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
     private static let refreshInterval: TimeInterval = 300.0 // 5 minutes
-    /// Whether the initial balance fetch has run. Used to avoid re-fetching on
-    /// every tab switch — `onAppear` fires each time the Balances tab becomes
-    /// visible, but we only want the one-time initial load (plus the periodic
-    /// timer and post-payment refresh).
-    private var hasPerformedInitialFetch = false
+    /// Timestamp of the last successful balance fetch. `onAppear` fires each time
+    /// the Balances tab becomes visible; we only re-fetch when the data is stale
+    /// (older than `refreshInterval`). Quick tab switches within the interval
+    /// don't hit the expensive balance endpoint, but returning after a while
+    /// refreshes once. `nil` until the first successful fetch.
+    private var lastSuccessfulFetch: Date?
     
     // MARK: - Computed Properties
     
@@ -272,16 +273,23 @@ final class BalancesViewModel: ObservableObject {
         return false
     }
 
-    /// Non-EVM addresses (Solana/Sui/TON/Tron) derived once at init, keyed by
-    /// CAIP-2 namespace. Deriving them involves crypto / Yttrium FFI work (TON
-    /// even spins up a TonClient), and they're needed both per-row on every
-    /// SwiftUI render and on every balance refresh — so deriving on demand made
-    /// the list janky and re-created FFI clients every 10s refresh. The
+    /// Non-EVM addresses (Solana/Sui/TON/Tron) derived once, off the main thread.
+    /// Deriving them involves crypto / Yttrium FFI work — TON in particular spins
+    /// up a `TonClient`, which we don't want to construct synchronously during
+    /// init (the view model is created from the `@MainActor` coordinator). The
+    /// `Task` derives the addresses once and caches its result; the balance fetch
+    /// awaits it (off main), and the resolved map is mirrored into the
+    /// synchronously-readable `nonEvmAddresses` for per-row rendering. The
     /// underlying keys only change on wallet import, which recreates this view
-    /// model (see NavigationCoordinator's `_balancesViewModel = nil`), so
-    /// deriving once is safe. Immutable after init, so the background fetch task
-    /// can read it without a data race.
-    private let nonEvmAddresses: [String: String]
+    /// model (see NavigationCoordinator's `_balancesViewModel = nil`).
+    private let nonEvmAddressesTask: Task<[String: String], Never>
+
+    /// Synchronously-readable copy of the derived non-EVM addresses, keyed by
+    /// CAIP-2 namespace, for `address(for:)`. Assigned on the main actor inside
+    /// the fetch. Non-EVM rows only exist after a fetch (which awaits the
+    /// derivation), so this is populated by the time such a row renders.
+    /// Main-actor-only access.
+    private var nonEvmAddresses: [String: String] = [:]
 
     private static func deriveNonEvmAddresses() -> [String: String] {
         var result: [String: String] = [:]
@@ -320,7 +328,12 @@ final class BalancesViewModel: ObservableObject {
     init(app: Application, importAccount: ImportAccount) {
         self.app = app
         self.importAccount = importAccount
-        self.nonEvmAddresses = Self.deriveNonEvmAddresses()
+        // Derive non-EVM addresses off the main thread (TON builds a TonClient);
+        // the balance fetch awaits this and mirrors the result into
+        // `nonEvmAddresses` for rendering.
+        self.nonEvmAddressesTask = Task.detached(priority: .userInitiated) {
+            Self.deriveNonEvmAddresses()
+        }
         subscribeToPaymentCompletion()
         scanHandler.objectWillChange
             .receive(on: DispatchQueue.main)
@@ -335,11 +348,12 @@ final class BalancesViewModel: ObservableObject {
     // MARK: - Public Methods
 
     func onAppear() {
-        // Only fetch immediately on the first appearance, not on every tab
-        // switch. Subsequent updates come from the periodic timer and the
-        // post-payment refresh.
-        if !hasPerformedInitialFetch {
-            hasPerformedInitialFetch = true
+        // Fetch on first appearance, or when the displayed data is stale (older
+        // than the refresh interval). Quick tab switches within the interval
+        // don't trigger a fetch, keeping load off the expensive balance endpoint;
+        // returning after the data has gone stale refreshes once.
+        let isStale = lastSuccessfulFetch.map { Date().timeIntervalSince($0) >= Self.refreshInterval } ?? true
+        if isStale {
             fetchAllBalances()
         }
         startAutoRefresh()
@@ -433,6 +447,7 @@ final class BalancesViewModel: ObservableObject {
             // optional — if the wallet has no account for that chain, or the
             // fetch fails, we skip it and the zero-balance native default below
             // keeps the row (and its address) visible.
+            let nonEvmAddresses = await nonEvmAddressesTask.value
             let nonEvmAccounts: [(token: TokenBalance, address: String?)] = [
                 (solanaNativeToken, nonEvmAddresses["solana"]),
                 (suiNativeToken, nonEvmAddresses["sui"]),
@@ -540,6 +555,12 @@ final class BalancesViewModel: ObservableObject {
                     self.eurcBalances = newEurc
                 }
 
+                // Mirror the resolved non-EVM addresses for synchronous per-row
+                // reads in `address(for:)`. Assigned in the same main-actor block
+                // as `tokenBalances`, so the new rows render with the correct
+                // addresses rather than the EVM fallback.
+                self.nonEvmAddresses = nonEvmAddresses
+                self.lastSuccessfulFetch = Date()
                 if self.isLoading { self.isLoading = false }
                 if self.isRefreshing { self.isRefreshing = false }
             }

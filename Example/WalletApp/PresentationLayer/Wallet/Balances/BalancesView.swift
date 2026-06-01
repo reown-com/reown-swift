@@ -109,7 +109,8 @@ private struct CachedTokenImage: View {
     }
 
     private func loadImage() {
-        guard let urlString = url, let url = URL(string: urlString) else {
+        guard let urlString = url, let url = URL(string: urlString),
+              url.scheme == "http" || url.scheme == "https" else {
             loaded = true
             return
         }
