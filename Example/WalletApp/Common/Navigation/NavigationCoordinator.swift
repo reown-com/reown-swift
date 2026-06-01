@@ -125,7 +125,7 @@ final class NavigationCoordinator: ObservableObject {
     func showPayment(paymentLink: String) {
         guard let importAccount else { return }
         let address = importAccount.account.address
-        let accounts = [
+        var accounts = [
             "eip155:1:\(address)",
             "eip155:10:\(address)",
             "eip155:56:\(address)",
@@ -133,6 +133,9 @@ final class NavigationCoordinator: ObservableObject {
             "eip155:8453:\(address)",
             "eip155:42161:\(address)"
         ]
+        if let solAddress = SolanaAccountStorage().getAddress(), !solAddress.isEmpty {
+            accounts.append("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:\(solAddress)")
+        }
 
         if activeModal != nil {
             pendingPaymentTask?.cancel()

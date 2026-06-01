@@ -178,11 +178,33 @@ final class BalancesViewModel: ObservableObject {
     var walletAddress: String {
         importAccount.account.address
     }
-    
+
     var truncatedAddress: String {
         let address = walletAddress
         guard address.count > 10 else { return address }
         return "\(address.prefix(6))...\(address.suffix(4))"
+    }
+
+    /// Pick the displayed-and-copied address per row based on the token's CAIP-2
+    /// chainId namespace. Solana tokens show the Solana pubkey; everything else
+    /// falls back to the EVM address.
+    func address(for token: TokenBalance) -> String {
+        if let chainId = token.chainId, chainId.hasPrefix("solana:"),
+           let solAddress = SolanaAccountStorage().getAddress() {
+            return solAddress
+        }
+        return walletAddress
+    }
+
+    func truncatedAddress(for token: TokenBalance) -> String {
+        let address = address(for: token)
+        guard address.count > 10 else { return address }
+        return "\(address.prefix(6))...\(address.suffix(4))"
+    }
+
+    func copyAddress(for token: TokenBalance) {
+        UIPasteboard.general.string = address(for: token)
+        WalletToast.present(message: "Address copied", type: .success)
     }
     
     // MARK: - Init
@@ -290,30 +312,31 @@ final class BalancesViewModel: ObservableObject {
 
     private func fetchAllBalancesAsync() async {
         do {
-            // Build URL with query parameters
-            var components = URLComponents(string: "https://rpc.walletconnect.org/v1/account/\(walletAddress)/balance")
-            components?.queryItems = [
-                URLQueryItem(name: "projectId", value: InputConfig.projectId),
-                URLQueryItem(name: "currency", value: "usd")
-            ]
-
-            guard let url = components?.url else {
-                throw URLError(.badURL)
-            }
-
-            // Create request with required headers
-            var request = URLRequest(url: url)
-            request.setValue("appkit", forHTTPHeaderField: "x-sdk-type")
-            request.setValue("reown-swift-1.0", forHTTPHeaderField: "x-sdk-version")
-            request.setValue("https://reown.com", forHTTPHeaderField: "Origin")
-
-            // Fetch and decode
-            let (data, _) = try await URLSession.shared.data(for: request)
-            let response = try JSONDecoder().decode(BalanceAPIResponse.self, from: data)
+            // Fetch EVM and Solana balances in parallel. The balance API only
+            // accepts one address per call, so we issue two requests and merge
+            // their results. Solana fetch is optional — if the wallet has no
+            // Solana account, we just skip it.
+            let solanaAddress = SolanaAccountStorage().getAddress()
+            async let evmBalances = Self.fetchBalances(for: walletAddress, chainId: nil)
+            async let solBalances: [TokenBalance] = {
+                guard let solanaAddress, !solanaAddress.isEmpty else { return [] }
+                do {
+                    return try await Self.fetchBalances(
+                        for: solanaAddress,
+                        chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+                    )
+                } catch {
+                    // Solana failure shouldn't block EVM rendering — log and
+                    // fall back to no SOL balances.
+                    print("[Balance] Solana fetch failed: \(error.localizedDescription)")
+                    return []
+                }
+            }()
+            let allApiBalances = try await evmBalances + solBalances
 
             // Filter for USDC and EURC tokens
-            let usdcTokens = response.balances.filter { $0.symbol == "USDC" }
-            let eurcTokens = response.balances.filter { $0.symbol == "EURC" }
+            let usdcTokens = allApiBalances.filter { $0.symbol == "USDC" }
+            let eurcTokens = allApiBalances.filter { $0.symbol == "EURC" }
 
             // Merge API balances with native token fallbacks
             var balanceMap: [String: TokenBalance] = [:]
@@ -322,7 +345,7 @@ final class BalancesViewModel: ObservableObject {
                 balanceMap[native.id] = native
             }
             // Override with actual API balances
-            for token in response.balances {
+            for token in allApiBalances {
                 balanceMap[token.id] = token
             }
             // Sort: tokens with balance first (by value desc), then zero-balance by name
@@ -389,7 +412,28 @@ final class BalancesViewModel: ObservableObject {
             }
         }
     }
-    
+
+    private static func fetchBalances(for address: String, chainId: String?) async throws -> [TokenBalance] {
+        var components = URLComponents(string: "https://rpc.walletconnect.org/v1/account/\(address)/balance")
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "projectId", value: InputConfig.projectId),
+            URLQueryItem(name: "currency", value: "usd")
+        ]
+        if let chainId {
+            queryItems.append(URLQueryItem(name: "chainId", value: chainId))
+        }
+        components?.queryItems = queryItems
+        guard let url = components?.url else { throw URLError(.badURL) }
+
+        var request = URLRequest(url: url)
+        request.setValue("appkit", forHTTPHeaderField: "x-sdk-type")
+        request.setValue("reown-swift-1.0", forHTTPHeaderField: "x-sdk-version")
+        request.setValue("https://reown.com", forHTTPHeaderField: "Origin")
+
+        let (data, _) = try await URLSession.shared.data(for: request)
+        return try JSONDecoder().decode(BalanceAPIResponse.self, from: data).balances
+    }
+
     private func handleScannedOrPastedUri(_ uriString: String) {
         // Check if it's a WalletConnect Pay URL (e.g. pay.walletconnect.com)
         if WalletKit.isPaymentLink(uriString) {

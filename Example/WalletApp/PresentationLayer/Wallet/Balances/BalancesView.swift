@@ -218,7 +218,7 @@ struct BalancesView: View {
                     .foregroundColor(AppColors.textPrimary)
                     .lineLimit(1)
 
-                Text(viewModel.truncatedAddress)
+                Text(viewModel.truncatedAddress(for: token))
                     .appFont(.lg)
                     .foregroundColor(AppColors.textSecondary)
                     .lineLimit(1)
@@ -235,7 +235,7 @@ struct BalancesView: View {
         .background(AppColors.foregroundPrimary, in: cardShape)
         .contentShape(cardShape)
         .onTapGesture {
-            viewModel.copyAddress()
+            viewModel.copyAddress(for: token)
         }
     }
 

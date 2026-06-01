@@ -2,6 +2,7 @@ import UIKit
 import Combine
 import ReownWalletKit
 import Commons
+import YttriumUtilsWrapper
 
 /// Loading-screen copy. `subtitle` is optional and renders smaller / secondary
 /// beneath `title` (used for the multi-line one-time-setup message). Equatable
@@ -138,7 +139,7 @@ final class PayPresenter: ObservableObject {
                 self.paymentOptionsResponse = response
 
                 if response.options.isEmpty {
-                    self.resultType = .insufficientFunds
+                    self.resultType = self.emptyOptionsResultType(for: response)
                     self.currentStep = .result
                     return
                 }
@@ -375,6 +376,31 @@ final class PayPresenter: ObservableObject {
         PaymentUtil.requiresApproval(option: option)
     }
 
+    /// `getPaymentOptions` returns an empty option list for several distinct
+    /// reasons — and only some of them are "insufficient funds". An expired or
+    /// cancelled payment also comes back with no options (the real reason lives
+    /// in `info.status`, not in a thrown error). Map the backend status to the
+    /// correct result and only fall back to insufficient funds for a still-
+    /// payable session.
+    private func emptyOptionsResultType(for response: PaymentOptionsResponse) -> PayResultType {
+        switch response.info?.status {
+        case .expired:
+            return .expired
+        case .cancelled:
+            return .cancelled
+        case .failed:
+            return .generic(message: "Payment failed.")
+        case .succeeded, .processing:
+            return .generic(message: "This payment has already been completed.")
+        case .requiresAction, .none:
+            // Active, payable session with no options → genuinely insufficient
+            // funds, unless the local clock says it's effectively expired.
+            return isPaymentExpiredLocally() ? .expired : .insufficientFunds
+        @unknown default:
+            return isPaymentExpiredLocally() ? .expired : .insufficientFunds
+        }
+    }
+
     /// Returns true when `paymentInfo.expiresAt` is within `expiryGuardMs` of
     /// the current time (or already past). Matches the Kotlin sample's guard.
     private func isPaymentExpiredLocally() -> Bool {
@@ -443,6 +469,10 @@ final class PayPresenter: ObservableObject {
                             AnyCodable(action.walletRpc.params)
                         )
                         signatures.append(signature)
+                    case "solana_signTransaction":
+                        self.loadingMessage = PayLoadingMessage(title: "Processing your payment...")
+                        let signedB64 = try Self.signSolanaTransaction(params: action.walletRpc.params)
+                        signatures.append(signedB64)
                     default:
                         throw PayPresenterError.unsupportedWalletRpcMethod(action.walletRpc.method)
                     }
@@ -489,13 +519,53 @@ final class PayPresenter: ObservableObject {
 
     enum PayPresenterError: Error, LocalizedError {
         case unsupportedWalletRpcMethod(String)
+        case solanaWalletUnavailable
+        case solanaParamsInvalid
 
         var errorDescription: String? {
             switch self {
             case .unsupportedWalletRpcMethod(let m):
                 return "Unsupported wallet RPC method: \(m)"
+            case .solanaWalletUnavailable:
+                return "Solana wallet is not available"
+            case .solanaParamsInvalid:
+                return "Invalid Solana transaction params"
             }
         }
+    }
+
+    /// Signs a Solana `solana_signTransaction` RPC action using the stored
+    /// Solana keypair and returns the base64-encoded signed `VersionedTransaction`.
+    /// The Pay backend broadcasts this blob, so we return it as the "signature"
+    /// value — mirrors Kotlin's `PaymentSigner.signSolanaTransaction` and RN's
+    /// `PaymentStore` Solana branch.
+    private static func signSolanaTransaction(params: String) throws -> String {
+        guard let keypair = SolanaAccountStorage().getPrivateKey() else {
+            throw PayPresenterError.solanaWalletUnavailable
+        }
+
+        guard let data = params.data(using: .utf8) else {
+            throw PayPresenterError.solanaParamsInvalid
+        }
+
+        // Accept both `{transaction: "<b64>"}` (WC shape) and
+        // `[{transaction: "<b64>"}]` (backend array-wrapped shape).
+        let txObject: [String: Any]
+        let json = try JSONSerialization.jsonObject(with: data)
+        if let arr = json as? [[String: Any]], let first = arr.first {
+            txObject = first
+        } else if let obj = json as? [String: Any] {
+            txObject = obj
+        } else {
+            throw PayPresenterError.solanaParamsInvalid
+        }
+
+        guard let base64Tx = txObject["transaction"] as? String else {
+            throw PayPresenterError.solanaParamsInvalid
+        }
+
+        let signed = try solanaSignTransaction(keypair: keypair, transaction: base64Tx)
+        return signed.transaction
     }
 
     func dismiss() {

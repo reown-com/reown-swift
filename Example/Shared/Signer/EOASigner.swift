@@ -19,9 +19,6 @@ final class EOASigner {
         case "eth_sendTransaction":
             return try signer.sendTransaction(request.params)
 
-        case "solana_signTransaction":
-            return SOLSigner.signTransaction(request.params)
-
         default:
             // If something is not supported, throw an error or handle it
             throw Signer.Errors.notImplemented
