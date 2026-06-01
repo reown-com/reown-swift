@@ -121,13 +121,17 @@ private struct CachedTokenImage: View {
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
-                if let uiImage = UIImage(data: data) {
-                    ImageCache.shared.set(uiImage, for: urlString)
+                guard let uiImage = UIImage(data: data) else {
+                    await MainActor.run { self.loaded = true }
+                    return
+                }
+                ImageCache.shared.set(uiImage, for: urlString)
+                await MainActor.run {
                     self.image = uiImage
                     self.loaded = true
                 }
             } catch {
-                self.loaded = true
+                await MainActor.run { self.loaded = true }
             }
         }
     }
