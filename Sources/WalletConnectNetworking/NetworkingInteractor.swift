@@ -9,6 +9,8 @@ public class NetworkingInteractor: NetworkInteracting {
     private let rpcHistory: RPCHistory
     private let logger: ConsoleLogging
 
+    private let serializationQueue = DispatchQueue(label: "com.walletconnect.networking.serialization", qos: .userInitiated)
+
     private let requestPublisherSubject = PassthroughSubject<(topic: String, request: RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?, encryptedMessage: String, attestation: String?), Never>()
     private let responsePublisherSubject = PassthroughSubject<(topic: String, request: RPCRequest, response: RPCResponse, publishedAt: Date, derivedTopic: String?), Never>()
 
@@ -228,7 +230,7 @@ public class NetworkingInteractor: NetworkInteracting {
         let correlationId = request.id
 
         do {
-            let message = try serializer.serialize(topic: topic, encodable: request, envelopeType: envelopeType)
+            let message = try await serialize(topic: topic, encodable: request, envelopeType: envelopeType)
 
 
             try await relayClient.publish(
@@ -251,7 +253,7 @@ public class NetworkingInteractor: NetworkInteracting {
     public func proposeSession(_ request: RPCRequest, topic: String) async throws {
         let correlationId = request.id
         try rpcHistory.set(request, forTopic: topic, emmitedBy: .local, transportType: .relay)
-        let message = try serializer.serialize(topic: topic, encodable: request, envelopeType: .type0)
+        let message = try await serialize(topic: topic, encodable: request, envelopeType: .type0)
         try await relayClient.proposeSession(pairingTopic: topic, sessionProposal: message, correlationId: correlationId)
     }
     
@@ -270,9 +272,9 @@ public class NetworkingInteractor: NetworkInteracting {
         try rpcHistory.validate(sessionProposalResponse)
         try rpcHistory.set(sessionSettleRequest, forTopic: sessionTopic, emmitedBy: .local, transportType: .relay)
         
-        let serialisedSessionProposalResponse = try serializer.serialize(topic: pairingTopic, encodable: sessionProposalResponse, envelopeType: .type0)
+        let serialisedSessionProposalResponse = try await serialize(topic: pairingTopic, encodable: sessionProposalResponse, envelopeType: .type0)
         
-        let serialisedSessionSettlementRequest = try serializer.serialize(topic: sessionTopic, encodable: sessionSettleRequest, envelopeType: .type0)
+        let serialisedSessionSettlementRequest = try await serialize(topic: sessionTopic, encodable: sessionSettleRequest, envelopeType: .type0)
         
         try await relayClient.approveSession(
             pairingTopic: pairingTopic,
@@ -291,7 +293,7 @@ public class NetworkingInteractor: NetworkInteracting {
     
     public func respond(topic: String, response: RPCResponse, protocolMethod: ProtocolMethod, envelopeType: Envelope.EnvelopeType, tvfData: TVFData?) async throws {
         try rpcHistory.validate(response)
-        let message = try serializer.serialize(topic: topic, encodable: response, envelopeType: envelopeType)
+        let message = try await serialize(topic: topic, encodable: response, envelopeType: envelopeType)
         let coorelationId = response.id
         try await relayClient.publish(topic: topic, payload: message, tag: protocolMethod.responseConfig.tag, prompt: protocolMethod.responseConfig.prompt, ttl: protocolMethod.responseConfig.ttl, tvfData: tvfData, coorelationId: coorelationId)
         try rpcHistory.resolve(response)
@@ -314,6 +316,16 @@ public class NetworkingInteractor: NetworkInteracting {
     
     public func trackTopics(_ topics: [String]) {
         relayClient.trackTopics(topics)
+    }
+
+    // Serialization does synchronous keychain reads (securityd IPC); run it on a dedicated queue
+    // so the calling Task suspends instead of blocking a cooperative-pool worker.
+    private func serialize(topic: String?, encodable: Encodable, envelopeType: Envelope.EnvelopeType = .type0) async throws -> String {
+        try await withCheckedThrowingContinuation { continuation in
+            serializationQueue.async {
+                continuation.resume(with: Result { try self.serializer.serialize(topic: topic, encodable: encodable, envelopeType: envelopeType) })
+            }
+        }
     }
 
     private func manageSubscription(_ topic: String, _ encodedEnvelope: String, _ publishedAt: Date, _ attestation: String?) {
