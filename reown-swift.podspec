@@ -66,8 +66,8 @@ spec.pod_target_xcconfig = {
     ss.dependency 'reown-swift/WalletConnectSign'
     ss.dependency 'reown-swift/ReownAppKitUI'
     ss.dependency 'reown-swift/ReownAppKitBackport'
-    ss.dependency 'DSF_QRCode', '~> 16.1.1'
-    ss.dependency 'CoinbaseWalletSDK', '~> 1.1.0'
+    ss.dependency 'DSF_QRCode', '16.1.1'
+    ss.dependency 'CoinbaseWalletSDK', '1.1.2'
     ss.resource_bundles = {
       'ReownAppKit' => [
         'Sources/ReownAppKit/Resources/*'
