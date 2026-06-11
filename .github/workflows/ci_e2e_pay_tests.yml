@@ -5,6 +5,9 @@ on:
     branches:
       - develop
       - main
+  schedule:
+    # Run daily at 06:00 UTC (only on the default branch)
+    - cron: '0 6 * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -59,10 +62,10 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@52e0ab7755ca993bd829062278654ed12b2d471d # main
+        uses: WalletConnect/actions/maestro/pay-tests@3a145abaa0dcf9f609fabe17f6e6722e0db49535 # main
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@52e0ab7755ca993bd829062278654ed12b2d471d # main
+        uses: WalletConnect/actions/maestro/setup@3a145abaa0dcf9f609fabe17f6e6722e0db49535 # main
         with:
           version: '2.4.0'
 
