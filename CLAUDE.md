@@ -80,5 +80,3 @@ Payment-option rows carry both the order-dependent `pay-option-{index}` (on the 
 #### USDT-on-Polygon Permit2 flow (`pay_usdt_polygon`)
 
 USDT on Polygon is a plain ERC-20, so WC Pay uses the Permit2 path: the wallet sends an on-chain `approve` then the payment tx. While setting a token up for the first time (allowance 0), `PayConfirmingView` shows the setup note under id `pay-loading-setup-note` (the flow observes it best-effort). CI resets the Permit2 allowance back to 0 after the suite (`Reset USDT Permit2 allowance (Polygon)` step in `ci_e2e_pay_tests.yml`, via the shared `WalletConnect/actions/maestro/permit2-reset` action) so each run re-exercises `approve`; `e2e_balance_check.yml` monitors USDT + POL (gas) on Polygon. The test wallet must hold USDT **and** a little POL on Polygon.
-
-> The `pay-tests` and `permit2-reset` actions are temporarily pinned to the [actions#97](https://github.com/WalletConnect/actions/pull/97) head SHA (`d07c1f8a…`). Re-pin both to the master merge commit once #97 lands.

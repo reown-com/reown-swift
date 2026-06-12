@@ -61,13 +61,11 @@ jobs:
             build \
             | xcbeautify
 
-      # TEMP: pinned to the WalletConnect/actions PR #97 head (adds pay_usdt_polygon).
-      # Re-pin to the squash-merge commit on master once #97 lands.
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@d07c1f8a83dde5c52b7c8649a6814f98ba716b6b # PR #97 head
+        uses: WalletConnect/actions/maestro/pay-tests@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f # main
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@3a145abaa0dcf9f609fabe17f6e6722e0db49535 # main
+        uses: WalletConnect/actions/maestro/setup@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f # main
         with:
           version: '2.4.0'
 
@@ -108,11 +106,10 @@ jobs:
       # continue-on-error so a reset hiccup can't fail an otherwise-green run.
       # It signs a transaction, so it's a Node step (not a Maestro runScript); the
       # private key goes via env, never the CLI.
-      # TEMP: pinned to #97 head; re-pin to the master merge commit once #97 lands.
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@d07c1f8a83dde5c52b7c8649a6814f98ba716b6b # PR #97 head
+        uses: WalletConnect/actions/maestro/permit2-reset@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f # main
         with:
           chain-id: eip155:137
           # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.
