@@ -8,9 +8,9 @@ let yttriumDebug = false
 
 // Define dependencies array
 var dependencies: [Package.Dependency] = [
-    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
-    .package(url: "https://github.com/WalletConnect/QRCode", from: "14.3.1"),
-    .package(name: "CoinbaseWalletSDK", url: "https://github.com/MobileWalletProtocol/wallet-mobile-sdk", .upToNextMinor(from: "1.1.0")),
+    .package(url: "https://github.com/apple/swift-docc-plugin", .exact("1.4.5")),
+    .package(url: "https://github.com/WalletConnect/QRCode", .exact("14.3.1")),
+    .package(name: "CoinbaseWalletSDK", url: "https://github.com/MobileWalletProtocol/wallet-mobile-sdk", .exact("1.1.2")),
 //    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.10.0")),
 ]
 
