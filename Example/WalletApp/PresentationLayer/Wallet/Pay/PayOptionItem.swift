@@ -189,7 +189,9 @@ struct MaestroAccessibilityMarker: UIViewRepresentable {
         view.isUserInteractionEnabled = false
         view.backgroundColor = .clear
         view.isAccessibilityElement = true
-        view.accessibilityTraits = .button
+        // No trait: this element only exposes a stable id for UI tests; it isn't
+        // interactive (the tap falls through to the row button), so a `.button`
+        // trait would advertise a VoiceOver action that doesn't exist here.
         view.accessibilityIdentifier = identifier
         return view
     }
