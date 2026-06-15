@@ -62,10 +62,10 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@3a145abaa0dcf9f609fabe17f6e6722e0db49535 # main
+        uses: WalletConnect/actions/maestro/pay-tests@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f # main
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@3a145abaa0dcf9f609fabe17f6e6722e0db49535 # main
+        uses: WalletConnect/actions/maestro/setup@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f # main
         with:
           version: '2.4.0'
 
@@ -99,6 +99,23 @@ jobs:
             --include-tags pay \
             --test-output-dir debug-artifacts/maestro-output \
             .maestro/
+
+      # Reset the USDT Permit2 allowance back to 0 so the next pay_usdt_polygon run
+      # re-exercises the on-chain `approve` step. Runs even when the suite failed
+      # (if: always()) so a mid-flow failure can't leave the allowance set.
+      # continue-on-error so a reset hiccup can't fail an otherwise-green run.
+      # It signs a transaction, so it's a Node step (not a Maestro runScript); the
+      # private key goes via env, never the CLI.
+      - name: Reset USDT Permit2 allowance (Polygon)
+        if: always()
+        continue-on-error: true
+        uses: WalletConnect/actions/maestro/permit2-reset@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f # main
+        with:
+          chain-id: eip155:137
+          # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.
+          rpc-url: https://polygon-bor-rpc.publicnode.com
+          token-address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
+          private-key: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
 
       - name: Capture simulator logs
         if: always()

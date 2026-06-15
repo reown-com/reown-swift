@@ -56,6 +56,12 @@ struct PayOptionsView: View {
                                 presenter.continueFromOptions()
                             }
                         )
+                        .overlay(
+                            MaestroAccessibilityMarker(
+                                identifier: "pay-option-\(option.stableOptionIdSuffix)"
+                            )
+                            .allowsHitTesting(false)
+                        )
                     }
                 }
             }
