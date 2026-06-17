@@ -3,6 +3,7 @@ import ReownWalletKit
 
 struct WalletView: View {
     @EnvironmentObject var presenter: WalletPresenter
+    @EnvironmentObject var coordinator: NavigationCoordinator
 
     var body: some View {
         ZStack {
@@ -11,7 +12,9 @@ struct WalletView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 HeaderView(
-                    onScan: { presenter.scanHandler.show() }
+                    onScan: { presenter.scanHandler.show() },
+                    onNfc: { coordinator.scanNFC() },
+                    isNfcAvailable: coordinator.isNFCAvailable
                 )
 
                 ZStack {
@@ -113,6 +116,7 @@ struct WalletView: View {
         }
         .scanOptionsSheet(
             isPresented: $presenter.scanHandler.showScanOptions,
+            scanHandler: presenter.scanHandler,
             onScanQR: { presenter.scanHandler.scanQR() },
             onPasteURL: { presenter.scanHandler.pasteURL() }
         )

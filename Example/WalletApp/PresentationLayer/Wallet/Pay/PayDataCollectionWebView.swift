@@ -3,6 +3,7 @@ import WebKit
 
 struct PayDataCollectionWebView: View {
     let url: URL
+    let onBack: () -> Void
     let onClose: () -> Void
     let onComplete: () -> Void
     let onError: (String) -> Void
@@ -10,7 +11,7 @@ struct PayDataCollectionWebView: View {
     @State private var isLoading = true
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack(alignment: .top) {
             PayWebViewRepresentable(
                 url: url,
                 isLoading: $isLoading,
@@ -18,10 +19,14 @@ struct PayDataCollectionWebView: View {
                 onError: onError
             )
 
-            // Close button — matches other Pay modals
-            PayCloseButton(action: onClose)
-                .padding(.top, Spacing._4)
-                .padding(.trailing, Spacing._5)
+            // Header bar with back + close buttons
+            HStack {
+                PayBackButton(action: onBack, accessibilityId: "pay-button-back")
+                Spacer()
+                PayCloseButton(action: onClose, accessibilityId: "pay-button-close")
+            }
+            .padding(.top, Spacing._4)
+            .padding(.horizontal, Spacing._5)
 
             if isLoading {
                 VStack {
@@ -178,6 +183,7 @@ struct PayDataCollectionWebView_Previews: PreviewProvider {
     static var previews: some View {
         PayDataCollectionWebView(
             url: URL(string: "https://example.com")!,
+            onBack: {},
             onClose: {},
             onComplete: {},
             onError: { _ in }

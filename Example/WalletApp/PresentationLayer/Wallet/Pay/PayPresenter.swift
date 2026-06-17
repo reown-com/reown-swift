@@ -2,6 +2,15 @@ import UIKit
 import Combine
 import ReownWalletKit
 import Commons
+import YttriumUtilsWrapper
+
+/// Loading-screen copy. `subtitle` is optional and renders smaller / secondary
+/// beneath `title` (used for the multi-line one-time-setup message). Equatable
+/// so SwiftUI can drive the cross-fade animation off the value.
+struct PayLoadingMessage: Equatable, Hashable {
+    let title: String
+    var subtitle: String? = nil
+}
 
 enum PayFlowStep: Int, CaseIterable {
     case loading = 0
@@ -9,13 +18,16 @@ enum PayFlowStep: Int, CaseIterable {
     case whyInfoRequired = 2
     case webviewDataCollection = 3
     case summary = 4
-    case confirming = 5
-    case result = 6
+    case gasFee = 5
+    case confirming = 6
+    case result = 7
 }
 
 final class PayPresenter: ObservableObject {
     var dismissAction: (() -> Void)?
+    var scanNewQRAction: (() -> Void)?
     private let importAccount: ImportAccount
+    private var tokenPreferenceStore = PayTokenPreferenceStore()
     private var disposeBag = Set<AnyCancellable>()
 
     // Trusted IC WebView domains
@@ -32,12 +44,35 @@ final class PayPresenter: ObservableObject {
 
     // Result state
     @Published var resultType: PayResultType = .success
-    @Published var loadingMessage: String = "Preparing your payment..."
+    @Published var loadingMessage: PayLoadingMessage = .init(title: "Preparing your payment...")
 
     // Payment data
     @Published var paymentOptionsResponse: PaymentOptionsResponse?
     @Published var selectedOption: PaymentOption?
-    @Published var requiredActions: [Action] = []
+
+    // Per-option preload state, keyed by option.id.
+    @Published var optionFeeEstimates: [String: FeeEstimate] = [:]
+    @Published var loadingFeeOptionIds: Set<String> = []
+
+    // Gas explainer routing state
+    @Published var gasFeeOption: PaymentOption?
+    private var gasFeeReturnStep: PayFlowStep = .options
+
+    /// True when we reached `.summary` directly from `.loading` (single option
+    /// or remembered last-paid token). In that case the summary header hides
+    /// its back button — there is no previous step to return to.
+    @Published var summaryEnteredDirectly: Bool = false
+
+    /// Per-option preload sequence counters. A stale fetch for option A cannot
+    /// overwrite a fresh state for option B. Bumped per preload kickoff.
+    private var optionSeqs: [String: Int] = [:]
+    /// Global session counter — bumped on every `loadPaymentOptions` call so
+    /// all in-flight estimates from a previous QR scan are discarded.
+    private var paymentSessionSeq: Int = 0
+
+    /// Local expiry safety margin — refuse to broadcast a payment whose
+    /// `expiresAt` is within this window of now.
+    private static let expiryGuardMs: Int64 = 10_000
 
     // Payment result info (from confirmPayment response)
     @Published var paymentResultInfo: ConfirmPaymentResultResponse?
@@ -69,17 +104,9 @@ final class PayPresenter: ObservableObject {
         collectData != nil
     }
 
-    /// Whether the currently selected option requires information capture
-    var selectedOptionRequiresIC: Bool {
-        collectData != nil
-    }
-
-    /// Button title for the options screen — "Continue" if IC required, "Pay $X" otherwise
+    /// Button title for the options screen — "Continue"
     var optionsButtonTitle: String {
-        if selectedOptionRequiresIC {
-            return "Continue"
-        }
-        return "Pay \(paymentInfo?.formattedAmount ?? "")"
+        return "Continue"
     }
 
     init(paymentLink: String, accounts: [String], importAccount: ImportAccount) {
@@ -92,8 +119,14 @@ final class PayPresenter: ObservableObject {
     // MARK: - Public Methods
 
     func loadPaymentOptions() {
-        loadingMessage = "Preparing your payment..."
+        loadingMessage = PayLoadingMessage(title: "Preparing your payment...")
         currentStep = .loading
+        paymentSessionSeq += 1
+        optionSeqs.removeAll()
+        optionFeeEstimates.removeAll()
+        loadingFeeOptionIds.removeAll()
+        let sessionSeq = paymentSessionSeq
+
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
@@ -102,21 +135,69 @@ final class PayPresenter: ObservableObject {
                     accounts: accounts,
                     includePaymentInfo: true
                 )
+                guard sessionSeq == self.paymentSessionSeq else { return }
                 self.paymentOptionsResponse = response
-                print("💳 [Pay] getPaymentOptions response: \(response)")
 
                 if response.options.isEmpty {
-                    // No payment options — show insufficient funds result
-                    self.resultType = .insufficientFunds
+                    self.resultType = self.emptyOptionsResultType(for: response)
                     self.currentStep = .result
-                } else {
-                    // Select first option by default
+                    return
+                }
+
+                let preferredUnit = self.tokenPreferenceStore.lastPaidTokenUnit
+                let preferred = PayTokenPreferenceStore.findPreferredOption(response.options, lastPaidUnit: preferredUnit)
+
+                // Single-option flows: pre-select the only choice.
+                // Multi-option flows: only auto-select when the user has a
+                // remembered preferred token and skip straight to review when
+                // there's no IC step. Otherwise leave selection nil so the
+                // user actively taps a row on the select screen. Mirrors
+                // Flutter PR #377's "no auto-pre-pick" behavior.
+                if response.options.count == 1 {
                     self.selectedOption = response.options.first
+                } else {
+                    self.selectedOption = preferred
+                }
+
+                self.preloadOptionFees(options: response.options, sessionSeq: sessionSeq)
+
+                let goDirectToReview = (response.options.count == 1 && response.collectData == nil)
+                    || (preferred != nil && response.collectData == nil)
+                if goDirectToReview {
+                    self.summaryEnteredDirectly = true
+                    self.currentStep = .summary
+                } else {
+                    self.summaryEnteredDirectly = false
                     self.currentStep = .options
                 }
             } catch {
-                self.resultType = Self.detectErrorType(from: error.localizedDescription)
+                self.resultType = Self.detectResultType(from: error)
                 self.currentStep = .result
+            }
+        }
+    }
+
+    /// Kicks off a parallel estimate per option. Approval requirement is read
+    /// directly off `option.actions` returned by `getPaymentOptions`; no
+    /// committal `getRequiredPaymentActions` call is made for preview.
+    private func preloadOptionFees(options: [PaymentOption], sessionSeq: Int) {
+        for option in options where PaymentUtil.requiresApproval(option: option) {
+            let optionId = option.id
+            let nextSeq = (optionSeqs[optionId] ?? 0) + 1
+            optionSeqs[optionId] = nextSeq
+            loadingFeeOptionIds.insert(optionId)
+
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let service = PayTransactionService(projectId: InputConfig.projectId)
+                let estimate = await service.estimateTransactionFeeFiat(option: option)
+
+                guard sessionSeq == self.paymentSessionSeq,
+                      self.optionSeqs[optionId] == nextSeq else { return }
+                self.loadingFeeOptionIds.remove(optionId)
+                if let estimate {
+                    self.optionFeeEstimates[optionId] = estimate
+                }
             }
         }
     }
@@ -124,39 +205,113 @@ final class PayPresenter: ObservableObject {
     /// Called from options screen when user taps the primary button
     func continueFromOptions() {
         guard selectedOption != nil else { return }
-
+        summaryEnteredDirectly = false
         if let collectData = collectData,
            let url = collectData.url, !url.isEmpty {
             currentStep = .webviewDataCollection
         } else {
-            // No IC needed or no webview URL — go to summary
             currentStep = .summary
         }
     }
 
     /// Called when IC WebView completes successfully
     func onICWebViewComplete() {
+        summaryEnteredDirectly = false
         currentStep = .summary
     }
 
     /// Called when IC WebView encounters an error
     func onICWebViewError(_ error: String) {
-        errorMessage = "Information capture failed: \(error)"
-        showError = true
+        let detectedType = Self.detectErrorType(from: error)
+        switch detectedType {
+        case .generic:
+            errorMessage = "Information capture failed: \(error)"
+            showError = true
+        default:
+            resultType = detectedType
+            currentStep = .result
+        }
     }
 
-    /// Build IC WebView URL with domain validation
+    /// Build IC WebView URL with domain validation, prefill data, and theme
     func buildICWebViewURL() -> URL? {
         guard let baseUrlString = collectData?.url,
               !baseUrlString.isEmpty,
-              let url = URL(string: baseUrlString),
-              let host = url.host,
+              var components = URLComponents(string: baseUrlString),
+              components.scheme?.lowercased() == "https",
+              let host = components.host,
               Self.trustedICDomains.contains(host) else {
             print("⚠️ [Pay] Rejected untrusted or invalid IC URL: \(collectData?.url ?? "nil")")
             return nil
         }
 
-        return url
+        var queryItems = components.queryItems ?? []
+
+        if let prefill = buildPrefillParam(schema: collectData?.schema) {
+            if let idx = queryItems.firstIndex(where: { $0.name == "prefill" }) {
+                queryItems[idx] = URLQueryItem(name: "prefill", value: prefill)
+            } else {
+                queryItems.append(URLQueryItem(name: "prefill", value: prefill))
+            }
+        }
+
+        // Append theme param
+        let theme = ThemeManager.shared.isDarkMode ? "dark" : "light"
+        queryItems.append(URLQueryItem(name: "theme", value: theme))
+        components.queryItems = queryItems
+
+        return components.url
+    }
+
+    /// Build Base64-encoded prefill param from schema's required fields.
+    /// Parses the JSON Schema to find all required fields (top-level + anyOf)
+    /// and only includes fields that have known prefill values.
+    private func buildPrefillParam(schema: String?) -> String? {
+        guard let schema = schema,
+              let schemaData = schema.data(using: .utf8),
+              let schemaJson = try? JSONSerialization.jsonObject(with: schemaData) as? [String: Any] else {
+            return nil
+        }
+
+        // Collect required fields from top-level "required" array
+        var requiredFields = Set<String>()
+        if let topRequired = schemaJson["required"] as? [String] {
+            requiredFields.formUnion(topRequired)
+        }
+
+        // Collect required fields from "anyOf" conditional groups
+        if let anyOf = schemaJson["anyOf"] as? [[String: Any]] {
+            for group in anyOf {
+                if let groupRequired = group["required"] as? [String] {
+                    requiredFields.formUnion(groupRequired)
+                }
+            }
+        }
+
+        // Map of field id -> prefill value
+        let fieldValues: [String: String] = [
+            "fullName": "Test User",
+            "dob": "1990-01-15",
+            "pobAddress": "New York, NY",
+            "pobCountry": "US",
+            "porAddress": "New York, NY",
+            "porCountry": "US"
+        ]
+
+        // Build prefill dict with only required fields
+        var prefillData = [String: String]()
+        for fieldId in requiredFields {
+            if let value = fieldValues[fieldId] {
+                prefillData[fieldId] = value
+            }
+        }
+
+        guard !prefillData.isEmpty,
+              let jsonData = try? JSONSerialization.data(withJSONObject: prefillData) else {
+            return nil
+        }
+
+        return jsonData.base64EncodedString()
     }
 
     func goBack() {
@@ -174,9 +329,13 @@ final class PayPresenter: ObservableObject {
             if let collectData = collectData,
                let url = collectData.url, !url.isEmpty {
                 currentStep = .webviewDataCollection
-            } else {
+            } else if paymentOptions.count > 1 {
                 currentStep = .options
+            } else {
+                dismiss()
             }
+        case .gasFee:
+            currentStep = gasFeeReturnStep
         case .confirming, .result:
             // Don't allow back navigation from these states
             break
@@ -187,8 +346,68 @@ final class PayPresenter: ObservableObject {
         currentStep = .whyInfoRequired
     }
 
+    /// Shows the gas-fee explainer for an option without changing the
+    /// presenter's `selectedOption`. The originating step is remembered so
+    /// `goBack()` returns there.
+    func showGasFeeExplainer(for option: PaymentOption) {
+        gasFeeOption = option
+        gasFeeReturnStep = currentStep == .options ? .options : .summary
+        currentStep = .gasFee
+    }
+
     func selectOption(_ option: PaymentOption) {
         selectedOption = option
+    }
+
+    func fee(for option: PaymentOption) -> FeeState {
+        if !PaymentUtil.requiresApproval(option: option) {
+            return .notRequired
+        }
+        if let estimate = optionFeeEstimates[option.id] {
+            return .value(estimate)
+        }
+        if loadingFeeOptionIds.contains(option.id) {
+            return .loading
+        }
+        return .unavailable
+    }
+
+    func requiresApproval(for option: PaymentOption) -> Bool {
+        PaymentUtil.requiresApproval(option: option)
+    }
+
+    /// `getPaymentOptions` returns an empty option list for several distinct
+    /// reasons — and only some of them are "insufficient funds". An expired or
+    /// cancelled payment also comes back with no options (the real reason lives
+    /// in `info.status`, not in a thrown error). Map the backend status to the
+    /// correct result and only fall back to insufficient funds for a still-
+    /// payable session.
+    private func emptyOptionsResultType(for response: PaymentOptionsResponse) -> PayResultType {
+        switch response.info?.status {
+        case .expired:
+            return .expired
+        case .cancelled:
+            return .cancelled
+        case .failed:
+            return .generic(message: "Payment failed.")
+        case .succeeded, .processing:
+            return .generic(message: "This payment has already been completed.")
+        case .requiresAction, .none:
+            // Active, payable session with no options → genuinely insufficient
+            // funds, unless the local clock says it's effectively expired.
+            return isPaymentExpiredLocally() ? .expired : .insufficientFunds
+        @unknown default:
+            return isPaymentExpiredLocally() ? .expired : .insufficientFunds
+        }
+    }
+
+    /// Returns true when `paymentInfo.expiresAt` is within `expiryGuardMs` of
+    /// the current time (or already past). Matches the Kotlin sample's guard.
+    private func isPaymentExpiredLocally() -> Bool {
+        guard let expiresAtSec = paymentInfo?.expiresAt else { return false }
+        let expiresAtMs = expiresAtSec * 1_000
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1_000)
+        return expiresAtMs <= nowMs + Self.expiryGuardMs
     }
 
     func confirmPayment() {
@@ -199,31 +418,69 @@ final class PayPresenter: ObservableObject {
             return
         }
 
-        // Switch to confirming state
-        loadingMessage = "Processing your payment..."
+        // Local expiry guard — avoid racing an effectively-expired payment
+        // through the RPC flow.
+        if isPaymentExpiredLocally() {
+            resultType = .expired
+            currentStep = .result
+            return
+        }
+
+        // Switch to confirming state. The exact message is set below once we
+        // know whether this is a single- or multi-step flow.
+        loadingMessage = PayLoadingMessage(title: "Processing your payment...")
         currentStep = .confirming
 
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                // 1. Get required actions for the selected option
+                // Committal call — exactly once per payment, at the moment the
+                // user confirms. There is no preview/cache path. From this
+                // point the wallet is obligated to execute every action and
+                // call `confirmPayment`.
                 let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
                     paymentId: paymentId,
                     optionId: option.id
                 )
-                self.requiredActions = actions
 
-                // 2. Sign all wallet RPC actions
-                var signatures: [String] = []
+                let tokenSymbol = option.amount.display.assetSymbol
+                let txService = PayTransactionService(projectId: InputConfig.projectId)
                 let ethSigner = ETHSigner(importAccount: importAccount)
+                var signatures: [String] = []
+                let isMultiStep = PaymentUtil.shouldShowSetupLoader(actions: actions)
 
                 for action in actions {
-                    let rpcAction = action.walletRpc
-                    let signature = try await ethSigner.signTypedData(AnyCodable(rpcAction.params))
-                    signatures.append(signature)
+                    switch action.walletRpc.method {
+                    case "eth_sendTransaction":
+                        self.loadingMessage = PayLoadingMessage(
+                            title: "Setting up \(tokenSymbol)",
+                            subtitle: "This usually takes a few seconds. Future \(tokenSymbol) payments will skip this step."
+                        )
+                        let txHash = try await txService.sendTransactionAndWait(
+                            action: action,
+                            importAccount: self.importAccount
+                        )
+                        signatures.append(txHash)
+                    case "eth_signTypedData", "eth_signTypedData_v3", "eth_signTypedData_v4":
+                        self.loadingMessage = PayLoadingMessage(
+                            title: isMultiStep ? "Finalizing your payment…" : "Processing your payment..."
+                        )
+                        let signature = try await ethSigner.signTypedData(
+                            AnyCodable(action.walletRpc.params)
+                        )
+                        signatures.append(signature)
+                    case "solana_signTransaction":
+                        self.loadingMessage = PayLoadingMessage(title: "Processing your payment...")
+                        let signedB64 = try Self.signSolanaTransaction(params: action.walletRpc.params)
+                        signatures.append(signedB64)
+                    default:
+                        throw PayPresenterError.unsupportedWalletRpcMethod(action.walletRpc.method)
+                    }
                 }
 
-                // 3. Confirm payment with signatures
+                self.loadingMessage = PayLoadingMessage(
+                    title: isMultiStep ? "Finalizing your payment…" : "Processing your payment..."
+                )
                 let result = try await WalletKit.instance.Pay.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
@@ -238,8 +495,9 @@ final class PayPresenter: ObservableObject {
                 switch result.status {
                 case .succeeded, .processing:
                     self.resultType = .success
+                    self.tokenPreferenceStore.lastPaidTokenUnit = option.amount.unit
                 case .cancelled:
-                    self.resultType = .generic(message: "This payment was cancelled.")
+                    self.resultType = .cancelled
                 case .failed:
                     self.resultType = .generic(message: "Payment failed.")
                 case .expired:
@@ -253,17 +511,115 @@ final class PayPresenter: ObservableObject {
                 NotificationCenter.default.post(name: .paymentCompleted, object: nil)
 
             } catch {
-                self.resultType = Self.detectErrorType(from: error.localizedDescription)
+                self.resultType = Self.detectResultType(from: error)
                 self.currentStep = .result
             }
         }
+    }
+
+    enum PayPresenterError: Error, LocalizedError {
+        case unsupportedWalletRpcMethod(String)
+        case solanaWalletUnavailable
+        case solanaParamsInvalid
+
+        var errorDescription: String? {
+            switch self {
+            case .unsupportedWalletRpcMethod(let m):
+                return "Unsupported wallet RPC method: \(m)"
+            case .solanaWalletUnavailable:
+                return "Solana wallet is not available"
+            case .solanaParamsInvalid:
+                return "Invalid Solana transaction params"
+            }
+        }
+    }
+
+    /// Signs a Solana `solana_signTransaction` RPC action using the stored
+    /// Solana keypair and returns the base64-encoded signed `VersionedTransaction`.
+    /// The Pay backend broadcasts this blob, so we return it as the "signature"
+    /// value — mirrors Kotlin's `PaymentSigner.signSolanaTransaction` and RN's
+    /// `PaymentStore` Solana branch.
+    private static func signSolanaTransaction(params: String) throws -> String {
+        guard let keypair = SolanaAccountStorage().getPrivateKey() else {
+            throw PayPresenterError.solanaWalletUnavailable
+        }
+
+        guard let data = params.data(using: .utf8) else {
+            throw PayPresenterError.solanaParamsInvalid
+        }
+
+        // Accept both `{transaction: "<b64>"}` (WC shape) and
+        // `[{transaction: "<b64>"}]` (backend array-wrapped shape).
+        let txObject: [String: Any]
+        let json = try JSONSerialization.jsonObject(with: data)
+        if let arr = json as? [[String: Any]], let first = arr.first {
+            txObject = first
+        } else if let obj = json as? [String: Any] {
+            txObject = obj
+        } else {
+            throw PayPresenterError.solanaParamsInvalid
+        }
+
+        guard let base64Tx = txObject["transaction"] as? String else {
+            throw PayPresenterError.solanaParamsInvalid
+        }
+
+        let signed = try solanaSignTransaction(keypair: keypair, transaction: base64Tx)
+        return signed.transaction
     }
 
     func dismiss() {
         dismissAction?()
     }
 
-    // MARK: - Error Detection (from RN utils.ts)
+    func primaryResultAction() {
+        switch resultType {
+        case .expired:
+            scanNewQRAction?()
+        case .success, .insufficientFunds, .cancelled, .notFound, .generic:
+            dismiss()
+        }
+    }
+
+    // MARK: - Error Detection
+
+    /// Map SDK typed errors to result types, with string fallback
+    static func detectResultType(from error: Error) -> PayResultType {
+        // Match on typed SDK errors first
+        if let e = error as? GetPaymentOptionsError {
+            switch e {
+            case .PaymentExpired:
+                return .expired
+            case .PaymentNotFound(let msg):
+                // Cancelled payments may surface as NotFound — check inner message
+                let lowered = msg.lowercased()
+                if lowered.contains("cancelled") || lowered.contains("canceled") {
+                    return .cancelled
+                }
+                return .notFound
+            default:
+                break
+            }
+        }
+        if let e = error as? ConfirmPaymentError {
+            switch e {
+            case .PaymentExpired, .RouteExpired, .QuoteExpired:
+                return .expired
+            case .PaymentNotFound(let msg):
+                let lowered = msg.lowercased()
+                if lowered.contains("cancelled") || lowered.contains("canceled") {
+                    return .cancelled
+                }
+                return .notFound
+            case .PollingTimeout:
+                return .expired
+            default:
+                break
+            }
+        }
+        // Fallback: string matching on localizedDescription
+        return detectErrorType(from: error.localizedDescription)
+    }
 
     static func detectErrorType(from message: String) -> PayResultType {
         let lowered = message.lowercased()
@@ -273,6 +629,9 @@ final class PayPresenter: ObservableObject {
         if lowered.contains("expired") || lowered.contains("timeout") {
             return .expired
         }
+        if lowered.contains("cancelled") || lowered.contains("canceled") {
+            return .cancelled
+        }
         if lowered.contains("not found") || lowered.contains("404") {
             return .notFound
         }
@@ -280,4 +639,3 @@ final class PayPresenter: ObservableObject {
     }
 
 }
-

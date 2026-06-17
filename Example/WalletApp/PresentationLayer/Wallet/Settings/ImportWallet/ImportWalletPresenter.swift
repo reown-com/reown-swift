@@ -32,9 +32,11 @@ final class ImportWalletPresenter: ObservableObject {
     @Published var showSuccess: Bool = false
 
     private let walletService: WalletGenerationService
+    private let accountStorage: AccountStorage
 
-    init(walletService: WalletGenerationService) {
+    init(walletService: WalletGenerationService, accountStorage: AccountStorage) {
         self.walletService = walletService
+        self.accountStorage = accountStorage
     }
 
     var canImport: Bool {
@@ -68,6 +70,8 @@ final class ImportWalletPresenter: ObservableObject {
         isImporting = false
 
         if success {
+            accountStorage.userImportedWallet = true
+            PayTokenPreferenceStore().clear()
             input = ""
             showSuccess = true
             NotificationCenter.default.post(name: .walletImported, object: nil)

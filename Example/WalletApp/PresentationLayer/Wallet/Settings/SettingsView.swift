@@ -11,7 +11,9 @@ struct SettingsView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onScan: { viewModel.scanHandler.show() }
+                    onScan: { viewModel.scanHandler.show() },
+                    onNfc: { coordinator.scanNFC() },
+                    isNfcAvailable: coordinator.isNFCAvailable
                 )
 
                 ScrollView {
@@ -60,6 +62,7 @@ struct SettingsView: View {
         }
         .scanOptionsSheet(
             isPresented: $viewModel.scanHandler.showScanOptions,
+            scanHandler: viewModel.scanHandler,
             onScanQR: { viewModel.scanHandler.scanQR() },
             onPasteURL: { viewModel.scanHandler.pasteURL() }
         )

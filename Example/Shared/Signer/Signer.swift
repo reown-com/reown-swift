@@ -2,6 +2,9 @@ import Foundation
 import WalletConnectSign
 import ReownWalletKit
 import Web3
+import YttriumUtilsWrapper
+import SolanaSwift
+import TweetNacl
 
 
 struct SendCallsParams: Codable {
@@ -66,6 +69,18 @@ final class Signer {
             throw Errors.accountForRequestNotFound
         }
 
+        // Handle Solana methods
+        if request.method.starts(with: "solana_") {
+            let requestedAddress = try await getRequestedAddress(request)
+            let solanaAccountStorage = SolanaAccountStorage()
+
+            if let solAddress = solanaAccountStorage.getAddress(),
+               requestedAddress == solAddress {
+                return try signSolanaRequest(request: request, storage: solanaAccountStorage)
+            }
+            throw Errors.accountForRequestNotFound
+        }
+
         // Handle Stacks methods
         if request.method.starts(with: "stx_") {
             let requestedAddress = try await getRequestedAddress(request)
@@ -119,6 +134,25 @@ final class Signer {
             let suiAccountStorage = SuiAccountStorage()
             if let suiAddress = suiAccountStorage.getAddress() {
                 return suiAddress
+            }
+            throw Errors.cantFindRequestedAddress
+        }
+
+        // Solana methods: pubkey lives in params.pubkey (signMessage) or
+        // params.feePayer (legacy signTransaction). Modern signTransaction
+        // sends an opaque base64 VersionedTransaction with no top-level pubkey,
+        // so we fall back to the locally-stored Solana address in that case.
+        if request.method.starts(with: "solana_") {
+            if let paramsObj = try? request.params.get([String: AnyCodable].self) {
+                if let pubkey = paramsObj["pubkey"]?.value as? String {
+                    return pubkey
+                }
+                if let feePayer = paramsObj["feePayer"]?.value as? String {
+                    return feePayer
+                }
+            }
+            if let solAddress = SolanaAccountStorage().getAddress() {
+                return solAddress
             }
             throw Errors.cantFindRequestedAddress
         }
@@ -182,6 +216,40 @@ final class Signer {
 
         print("[Signer] Could not find requested address for method: \(request.method)")
         throw Errors.cantFindRequestedAddress
+    }
+
+    /// Signs a Solana WalletConnect request using the user's stored keypair.
+    /// - `solana_signMessage`: params `{pubkey, message: base58-bytes}` → response `{signature: base58}`
+    /// - `solana_signTransaction`: params `{transaction: base64}` → response `{transaction: base64}` (signed)
+    private static func signSolanaRequest(request: Request, storage: SolanaAccountStorage) throws -> AnyCodable {
+        guard let privateKey = storage.getPrivateKey() else {
+            throw Errors.cantFindRequestedAddress
+        }
+
+        guard let paramsObj = try? request.params.get([String: AnyCodable].self) else {
+            throw Errors.notImplemented
+        }
+
+        switch request.method {
+        case "solana_signMessage":
+            guard let messageBase58 = paramsObj["message"]?.value as? String else {
+                throw Errors.notImplemented
+            }
+            let messageBytes = Data(SolanaSwift.Base58.decode(messageBase58))
+            let account = try storage.createAccount(from: privateKey)
+            let signature = try NaclSign.signDetached(message: messageBytes, secretKey: account.secretKey)
+            return AnyCodable(["signature": SolanaSwift.Base58.encode(Array(signature))])
+
+        case "solana_signTransaction":
+            guard let base64Tx = paramsObj["transaction"]?.value as? String else {
+                throw Errors.notImplemented
+            }
+            let signed = try solanaSignTransaction(keypair: privateKey, transaction: base64Tx)
+            return AnyCodable(["transaction": signed.transaction, "signature": signed.signature])
+
+        default:
+            throw Errors.notImplemented
+        }
     }
 }
 

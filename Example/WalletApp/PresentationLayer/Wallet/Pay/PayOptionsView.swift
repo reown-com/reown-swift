@@ -6,51 +6,105 @@ struct PayOptionsView: View {
 
     var body: some View {
         PayModalContainer {
-            // Header: ? button (left) + X close (right)
+            // Header: X close only. The per-row ⓘ now carries the
+            // "Why do we collect personal details?" entry point so the
+            // top-level question button is gone.
             HStack {
-                if presenter.anyOptionRequiresIC {
-                    PayQuestionButton(action: {
-                        presenter.showWhyInfoRequiredScreen()
-                    })
-                }
-
                 Spacer()
-
-                PayCloseButton(action: { presenter.dismiss() })
+                PayCloseButton(action: { presenter.dismiss() }, accessibilityId: "pay-button-close")
             }
             .padding(.top, Spacing._5)
 
-            if let info = presenter.paymentInfo {
-                // Merchant icon (no seal check)
-                MerchantHeader(info: info)
-                    .padding(.top, Spacing._5)
+            // Centered token-stack icon + title — replaces the previous
+            // MerchantHeader.
+            VStack(spacing: Spacing._4) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppRadius._4)
+                        .fill(AppColors.foregroundAccentPrimary10Solid)
+                        .frame(width: 64, height: 64)
+                    CoinStackShape()
+                        .fill(AppColors.foregroundAccentPrimary90Solid)
+                        .frame(width: 36, height: 36)
+                }
 
-                // Payment options list
+                Text("Select a token to pay with")
+                    .appFont(.h6)
+                    .foregroundColor(AppColors.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("pay-select-option-header")
+            }
+            .padding(.top, Spacing._5)
+
+            // Payment options list — tap a row to advance directly to review.
+            // There is no Continue button; row selection and confirmation are
+            // the same gesture.
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: Spacing._2) {
-                    ForEach(presenter.paymentOptions, id: \.id) { option in
-                        PaymentOptionCard(
+                    ForEach(Array(presenter.paymentOptions.enumerated()), id: \.element.id) { index, option in
+                        let needsIC = option.collectData != nil || presenter.anyOptionRequiresIC
+                        let rightSlot: OptionRightSlot = needsIC
+                            ? .info(action: { presenter.showWhyInfoRequiredScreen() },
+                                    accessibilityId: "pay-option-info-required")
+                            : .none
+                        OptionItem(
                             option: option,
-                            isSelected: presenter.selectedOption?.id == option.id,
-                            requiresIC: presenter.anyOptionRequiresIC,
-                            onSelect: { presenter.selectOption(option) }
+                            feeState: presenter.fee(for: option),
+                            rightSlot: rightSlot,
+                            accessibilityId: "pay-option-\(index)",
+                            onTap: {
+                                presenter.selectOption(option)
+                                presenter.continueFromOptions()
+                            }
+                        )
+                        .overlay(
+                            MaestroAccessibilityMarker(
+                                identifier: "pay-option-\(option.stableOptionIdSuffix)"
+                            )
+                            .allowsHitTesting(false)
                         )
                     }
                 }
-                .padding(.top, Spacing._7)
+            }
+            .frame(maxHeight: UIScreen.main.bounds.height * 0.55)
+            .padding(.top, Spacing._5)
 
-                // Primary button
-                PayPrimaryButton(
-                    title: presenter.optionsButtonTitle,
-                    isEnabled: presenter.selectedOption != nil,
-                    action: { presenter.continueFromOptions() }
-                )
-                .padding(.top, Spacing._5)
+            // Footer: "Pay {amount} to {merchant}" + small merchant icon.
+            if let info = presenter.paymentInfo {
+                merchantFooter(info: info)
+                    .padding(.top, Spacing._4)
+                    .padding(.bottom, Spacing._2)
+                    .accessibilityIdentifier("pay-merchant-info")
             }
         }
     }
+
+    private func merchantFooter(info: PaymentInfo) -> some View {
+        HStack(spacing: Spacing._2) {
+            Text("Pay \(info.formattedAmount) to \(info.merchant.name)")
+                .appFont(.lg)
+                .foregroundColor(AppColors.textSecondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            if let iconUrl = info.merchant.iconUrl, let url = URL(string: iconUrl) {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        EmptyView()
+                    }
+                }
+                .frame(width: 20, height: 20)
+                .cornerRadius(AppRadius._1)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
 }
 
-// MARK: - Merchant Header
+// MARK: - Merchant Header (still used by PaySummaryView)
 
 struct MerchantHeader: View {
     let info: PaymentInfo
@@ -92,50 +146,6 @@ struct MerchantHeader: View {
             Text(String(name.prefix(1)))
                 .appFont(.h5, weight: .medium)
                 .foregroundColor(AppColors.textPrimary)
-        }
-    }
-}
-
-// MARK: - Payment Option Card
-
-struct PaymentOptionCard: View {
-    let option: PaymentOption
-    let isSelected: Bool
-    let requiresIC: Bool
-    let onSelect: () -> Void
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: Spacing._2) {
-                // Token icon 32x32 with network badge 18x18
-                TokenIconWithNetwork(
-                    iconUrl: option.amount.display.iconUrl,
-                    networkIconUrl: option.amount.display.networkIconUrl,
-                    symbol: option.amount.display.assetSymbol,
-                    size: 32,
-                    badgeSize: 18,
-                    isSelected: isSelected
-                )
-
-                // Token amount — lg-400 (16px, 400)
-                Text(option.formattedAmount)
-                    .appFont(.lg)
-                    .foregroundColor(AppColors.textPrimary)
-
-                Spacer()
-
-                // "Info required" pill
-                if requiresIC {
-                    InfoRequiredPillView(isSelected: isSelected)
-                }
-            }
-            .padding(Spacing._5)
-            .background(isSelected ? AppColors.foregroundAccentPrimary10Solid : AppColors.foregroundPrimary)
-            .cornerRadius(AppRadius._4)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius._4)
-                    .stroke(isSelected ? AppColors.borderAccentPrimary : Color.clear, lineWidth: 1)
-            )
         }
     }
 }
@@ -227,6 +237,7 @@ struct TokenIcon: View {
 
 struct InfoRequiredPill: UIViewRepresentable {
     let isSelected: Bool
+    let accessibilityId: String?
 
     func makeUIView(context: Context) -> UILabel {
         let label = UILabel()
@@ -234,6 +245,9 @@ struct InfoRequiredPill: UIViewRepresentable {
         label.textAlignment = .center
         label.setContentHuggingPriority(.required, for: .horizontal)
         label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        label.isAccessibilityElement = true
+        label.accessibilityLabel = "Info required"
+        label.accessibilityIdentifier = accessibilityId
         return label
     }
 
@@ -242,6 +256,7 @@ struct InfoRequiredPill: UIViewRepresentable {
         let textInvert = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x202020) : UIColor(hex: 0xFFFFFF) }
         let textPrimary = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xFFFFFF) : UIColor(hex: 0x202020) }
         label.textColor = isSelected ? textInvert : textPrimary
+        label.accessibilityIdentifier = accessibilityId
     }
 }
 
@@ -249,9 +264,10 @@ struct InfoRequiredPill: UIViewRepresentable {
 
 struct InfoRequiredPillView: View {
     let isSelected: Bool
+    let accessibilityId: String?
 
     var body: some View {
-        InfoRequiredPill(isSelected: isSelected)
+        InfoRequiredPill(isSelected: isSelected, accessibilityId: accessibilityId)
             .fixedSize()
             .padding(.horizontal, Spacing._2)
             .padding(.vertical, 6)

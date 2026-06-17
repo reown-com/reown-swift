@@ -9,6 +9,7 @@ struct PayContainerView: View {
             ZStack {
                 Color.black.opacity(0.6)
                     .ignoresSafeArea()
+                    .accessibilityHidden(true)
                     .onTapGesture {
                         // Dismiss keyboard when tapping background
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -32,17 +33,27 @@ struct PayContainerView: View {
                             if let url = presenter.buildICWebViewURL() {
                                 PayDataCollectionWebView(
                                     url: url,
-                                    onClose: { presenter.goBack() },
+                                    onBack: { presenter.goBack() },
+                                    onClose: { presenter.dismiss() },
                                     onComplete: { presenter.onICWebViewComplete() },
                                     onError: { error in presenter.onICWebViewError(error) }
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .padding(.top, 50)
-                                .background(AppColors.backgroundPrimary)
+                                .clipShape(
+                                    UnevenRoundedRectangle(
+                                        topLeadingRadius: AppRadius._8,
+                                        bottomLeadingRadius: 0,
+                                        bottomTrailingRadius: 0,
+                                        topTrailingRadius: AppRadius._8
+                                    )
+                                )
                                 .ignoresSafeArea(edges: .bottom)
                             }
                         case .summary:
                             PaySummaryView()
+                                .environmentObject(presenter)
+                        case .gasFee:
+                            PayGasFeeView()
                                 .environmentObject(presenter)
                         case .confirming:
                             PayConfirmingView()
@@ -54,14 +65,15 @@ struct PayContainerView: View {
                     }
                     .transition(.opacity)
                     .id(presenter.currentStep)
+                    .accessibilityElement(children: .contain)
                 }
                 .animation(.easeInOut(duration: 0.25), value: presenter.currentStep)
+                .ignoresSafeArea(edges: .bottom)
             }
         }
         .alert(presenter.errorMessage, isPresented: $presenter.showError) {
             Button("OK", role: .cancel) {}
         }
-        .ignoresSafeArea()
     }
 }
 

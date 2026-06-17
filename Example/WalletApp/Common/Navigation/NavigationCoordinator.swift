@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import CoreNFC
 import ReownWalletKit
 import WalletConnectNetworking
 
@@ -17,21 +18,27 @@ final class NavigationCoordinator: ObservableObject {
     // MARK: - Dependencies
 
     let app: Application
-    var importAccount: ImportAccount?
+    @Published var importAccount: ImportAccount?
 
-    // MARK: - Cached View Models (created once, reused across tab switches)
+    // MARK: - Cached View Models (recreated when the imported wallet changes)
 
-    private(set) lazy var balancesViewModel: BalancesViewModel = {
+    private var _balancesViewModel: BalancesViewModel?
+    var balancesViewModel: BalancesViewModel {
+        if let vm = _balancesViewModel { return vm }
         let vm = BalancesViewModel(app: app, importAccount: importAccount!)
         vm.scanHandler.onScanOverride = { [weak self] in self?.presentScanCamera() }
+        _balancesViewModel = vm
         return vm
-    }()
+    }
 
-    private(set) lazy var walletPresenter: WalletPresenter = {
+    private var _walletPresenter: WalletPresenter?
+    var walletPresenter: WalletPresenter {
+        if let p = _walletPresenter { return p }
         let p = WalletPresenter(interactor: WalletInteractor(), app: app, importAccount: importAccount!)
         p.scanHandler.onScanOverride = { [weak self] in self?.presentScanCamera() }
+        _walletPresenter = p
         return p
-    }()
+    }
 
     private(set) lazy var settingsPresenter: SettingsPresenter = {
         let p = SettingsPresenter(accountStorage: app.accountStorage)
@@ -69,6 +76,28 @@ final class NavigationCoordinator: ObservableObject {
         showScanCamera = true
     }
 
+    var isNFCAvailable: Bool {
+        NFCPaymentReader.isAvailable
+    }
+
+    func scanNFC() {
+        NFCPaymentReader.shared.scan { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let urlString):
+                    if WalletKit.isPaymentLink(urlString) {
+                        self?.showPayment(paymentLink: urlString)
+                    } else {
+                        WalletToast.present(message: "Not a valid payment link", type: .error)
+                    }
+                case .failure(let error):
+                    if case NFCPaymentError.cancelled = error { return }
+                    WalletToast.present(message: error.localizedDescription, type: .error)
+                }
+            }
+        }
+    }
+
     func handleScanResult(_ uriString: String) {
         showScanCamera = false
 
@@ -96,11 +125,17 @@ final class NavigationCoordinator: ObservableObject {
     func showPayment(paymentLink: String) {
         guard let importAccount else { return }
         let address = importAccount.account.address
-        let accounts = [
+        var accounts = [
             "eip155:1:\(address)",
+            "eip155:10:\(address)",
+            "eip155:56:\(address)",
             "eip155:137:\(address)",
-            "eip155:8453:\(address)"
+            "eip155:8453:\(address)",
+            "eip155:42161:\(address)"
         ]
+        if let solAddress = SolanaAccountStorage().getAddress(), !solAddress.isEmpty {
+            accounts.append("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:\(solAddress)")
+        }
 
         if activeModal != nil {
             pendingPaymentTask?.cancel()
@@ -180,7 +215,12 @@ final class NavigationCoordinator: ObservableObject {
             }
         }
 
-        // Refresh balances
+        // Pick up the newly imported account and rebuild presenters that captured the old one.
+        importAccount = app.accountStorage.importAccount
+        _balancesViewModel = nil
+        _walletPresenter = nil
+
+        // Refresh balances on the fresh view model
         Task { await balancesViewModel.refresh() }
     }
 }

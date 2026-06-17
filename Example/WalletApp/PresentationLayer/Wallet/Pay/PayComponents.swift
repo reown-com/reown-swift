@@ -189,6 +189,7 @@ struct PayPrimaryButton: View {
     let title: String
     var isEnabled: Bool = true
     var isLoading: Bool = false
+    var accessibilityId: String?
     let action: () -> Void
 
     var body: some View {
@@ -205,6 +206,9 @@ struct PayPrimaryButton: View {
             }
         }
         .buttonStyle(PrimaryButtonStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityIdentifier(accessibilityId ?? "")
         .opacity(isEnabled ? 1.0 : 0.5)
         .disabled(!isEnabled || isLoading)
     }

@@ -109,7 +109,8 @@ private struct CachedTokenImage: View {
     }
 
     private func loadImage() {
-        guard let urlString = url, let url = URL(string: urlString) else {
+        guard let urlString = url, let url = URL(string: urlString),
+              url.scheme == "http" || url.scheme == "https" else {
             loaded = true
             return
         }
@@ -121,13 +122,17 @@ private struct CachedTokenImage: View {
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
-                if let uiImage = UIImage(data: data) {
-                    ImageCache.shared.set(uiImage, for: urlString)
+                guard let uiImage = UIImage(data: data) else {
+                    await MainActor.run { self.loaded = true }
+                    return
+                }
+                ImageCache.shared.set(uiImage, for: urlString)
+                await MainActor.run {
                     self.image = uiImage
                     self.loaded = true
                 }
             } catch {
-                self.loaded = true
+                await MainActor.run { self.loaded = true }
             }
         }
     }
@@ -141,6 +146,7 @@ private let cardShape = RoundedRectangle(cornerRadius: CGFloat(AppRadius._5))
 
 struct BalancesView: View {
     @EnvironmentObject var viewModel: BalancesViewModel
+    @EnvironmentObject var coordinator: NavigationCoordinator
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
@@ -150,7 +156,9 @@ struct BalancesView: View {
 
             VStack(spacing: 0) {
                 HeaderView(
-                    onScan: { viewModel.scanHandler.show() }
+                    onScan: { viewModel.scanHandler.show() },
+                    onNfc: { coordinator.scanNFC() },
+                    isNfcAvailable: coordinator.isNFCAvailable
                 )
 
                 if viewModel.isLoading && viewModel.tokenBalances.isEmpty {
@@ -187,6 +195,7 @@ struct BalancesView: View {
         }
         .scanOptionsSheet(
             isPresented: $viewModel.scanHandler.showScanOptions,
+            scanHandler: viewModel.scanHandler,
             onScanQR: { viewModel.scanHandler.scanQR() },
             onPasteURL: { viewModel.scanHandler.pasteURL() }
         )
@@ -205,7 +214,7 @@ struct BalancesView: View {
         HStack(spacing: Spacing._3) {
             ZStack(alignment: .bottomTrailing) {
                 CachedTokenImage(url: token.iconUrl, symbol: token.symbol)
-                chainBadge(for: token.chainId)
+                chainBadge(for: token.chainId ?? "")
             }
 
             VStack(alignment: .leading, spacing: Spacing._05) {
@@ -214,7 +223,7 @@ struct BalancesView: View {
                     .foregroundColor(AppColors.textPrimary)
                     .lineLimit(1)
 
-                Text(viewModel.truncatedAddress)
+                Text(viewModel.truncatedAddress(for: token))
                     .appFont(.lg)
                     .foregroundColor(AppColors.textSecondary)
                     .lineLimit(1)
@@ -231,7 +240,7 @@ struct BalancesView: View {
         .background(AppColors.foregroundPrimary, in: cardShape)
         .contentShape(cardShape)
         .onTapGesture {
-            viewModel.copyAddress()
+            viewModel.copyAddress(for: token)
         }
     }
 
