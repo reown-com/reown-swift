@@ -6,8 +6,8 @@ on:
       - develop
       - main
   schedule:
-    # Run daily at 06:00 UTC (only on the default branch)
-    - cron: '0 6 * * *'
+    # Run daily at 04:00 UTC (only on the default branch)
+    - cron: '0 4 * * *'
   workflow_dispatch: {}
 
 permissions:
