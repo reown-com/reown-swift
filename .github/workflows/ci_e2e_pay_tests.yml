@@ -51,7 +51,7 @@ jobs:
             xcodebuild \
             -project "Example/ExampleApp.xcodeproj" \
             -scheme "WalletApp" \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "generic/platform=iOS Simulator" \
             -derivedDataPath DerivedDataCache \
             -clonedSourcePackagesDirPath ../SourcePackagesCache \
             RELAY_HOST='relay.walletconnect.com' \
@@ -71,8 +71,19 @@ jobs:
 
       - name: Boot iOS simulator
         run: |
-          xcrun simctl boot "iPhone 16" 2>/dev/null || true
-          xcrun simctl bootstatus "iPhone 16"
+          # Pick whatever iPhone simulator the runner actually has, so this
+          # doesn't break each time the Xcode/runner image bumps the model.
+          SIMULATOR_UDID=$(xcrun simctl list devices available \
+            | grep -Eo 'iPhone[^(]*\([A-Fa-f0-9-]{36}\)' \
+            | grep -Eo '[A-Fa-f0-9-]{36}' | head -n 1)
+          if [ -z "$SIMULATOR_UDID" ]; then
+            echo "ERROR: no available iPhone simulator found"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Using simulator: $SIMULATOR_UDID"
+          xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIMULATOR_UDID"
 
       - name: Install app on simulator
         run: |
