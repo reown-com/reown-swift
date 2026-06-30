@@ -51,7 +51,7 @@ jobs:
             xcodebuild \
             -project "Example/ExampleApp.xcodeproj" \
             -scheme "WalletApp" \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "generic/platform=iOS Simulator" \
             -derivedDataPath DerivedDataCache \
             -clonedSourcePackagesDirPath ../SourcePackagesCache \
             RELAY_HOST='relay.walletconnect.com' \
@@ -71,8 +71,25 @@ jobs:
 
       - name: Boot iOS simulator
         run: |
-          xcrun simctl boot "iPhone 16" 2>/dev/null || true
-          xcrun simctl bootstatus "iPhone 16"
+          # Pick whatever iPhone simulator the runner actually has, so this
+          # doesn't break each time the Xcode/runner image bumps the model.
+          # Single awk pass: pull the UDID from the first available iPhone row.
+          # awk exits 0 even when nothing matches (so the check below stays
+          # reachable under `set -eo pipefail`), `exit` avoids a head/SIGPIPE
+          # footgun, and it tolerates parens in the device name (e.g. SE).
+          SIMULATOR_UDID=$(xcrun simctl list devices available \
+            | awk '/iPhone/ { if (match($0, /[0-9A-Fa-f-]{36}/)) { print substr($0, RSTART, RLENGTH); exit } }')
+          if [ -z "$SIMULATOR_UDID" ]; then
+            echo "ERROR: no available iPhone simulator found"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Using simulator: $SIMULATOR_UDID"
+          xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIMULATOR_UDID"
+          # Reset associated-domains state before install so the applinks
+          # (Universal Link) binding isn't wiped from stale simulator state.
+          xcrun simctl spawn booted swcutil reset || true
 
       - name: Install app on simulator
         run: |
