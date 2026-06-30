@@ -73,9 +73,12 @@ jobs:
         run: |
           # Pick whatever iPhone simulator the runner actually has, so this
           # doesn't break each time the Xcode/runner image bumps the model.
+          # Single awk pass: pull the UDID from the first available iPhone row.
+          # awk exits 0 even when nothing matches (so the check below stays
+          # reachable under `set -eo pipefail`), `exit` avoids a head/SIGPIPE
+          # footgun, and it tolerates parens in the device name (e.g. SE).
           SIMULATOR_UDID=$(xcrun simctl list devices available \
-            | grep -Eo 'iPhone[^(]*\([A-Fa-f0-9-]{36}\)' \
-            | grep -Eo '[A-Fa-f0-9-]{36}' | head -n 1)
+            | awk '/iPhone/ { if (match($0, /[0-9A-Fa-f-]{36}/)) { print substr($0, RSTART, RLENGTH); exit } }')
           if [ -z "$SIMULATOR_UDID" ]; then
             echo "ERROR: no available iPhone simulator found"
             xcrun simctl list devices available
@@ -84,6 +87,9 @@ jobs:
           echo "Using simulator: $SIMULATOR_UDID"
           xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
           xcrun simctl bootstatus "$SIMULATOR_UDID"
+          # Reset associated-domains state before install so the applinks
+          # (Universal Link) binding isn't wiped from stale simulator state.
+          xcrun simctl spawn booted swcutil reset || true
 
       - name: Install app on simulator
         run: |
