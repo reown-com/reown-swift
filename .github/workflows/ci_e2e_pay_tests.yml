@@ -32,6 +32,9 @@ concurrency:
 
 jobs:
   check-balance:
+    # Skip on draft PRs (matches the E2E job) so a draft run has all jobs
+    # skipped -> run conclusion "skipped", never counted toward KPIs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     uses: ./.github/workflows/e2e_balance_check.yml
     secrets: inherit
 
