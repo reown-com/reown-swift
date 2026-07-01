@@ -1,4 +1,8 @@
 name: Maestro E2E Pay Tests
+# The " (Draft)" suffix is consumed by the E2E KPI metrics job (WalletConnect/actions)
+# to exclude draft-PR runs from the dashboard. Draft runs get a custom title; every
+# other run falls back to GitHub's default title (empty run-name). Don't change/remove it.
+run-name: ${{ github.event.pull_request.draft && format('{0} (Draft)', github.event.pull_request.title) || '' }}
 
 on:
   pull_request:
@@ -24,7 +28,9 @@ jobs:
 
   e2e-pay-tests:
     needs: check-balance
-    if: always() # Balance alert should not block tests
+    # always(): balance alert should not block tests. Skip on draft PRs (still
+    # runnable manually via workflow_dispatch); event guard keeps schedule/dispatch runs.
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: macos-latest-xlarge
     timeout-minutes: 45
     permissions:
