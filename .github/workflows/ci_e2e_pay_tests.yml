@@ -1,7 +1,20 @@
 name: Maestro E2E Pay Tests
+# "(skip-metrics)" in the run-name is consumed by the E2E KPI metrics job
+# (WalletConnect/actions) to drop a run from the dashboard. We stamp it on runs that
+# shouldn't count: draft PRs, and manual (workflow_dispatch) runs off the default
+# branch ('develop'). Every other run leaves run-name empty and keeps GitHub's
+# default title. Don't change/remove the marker.
+run-name: ${{ ((github.event_name == 'pull_request' && github.event.pull_request.draft) || (github.event_name == 'workflow_dispatch' && github.ref_name != 'develop')) && format('{0} (skip-metrics)', github.event.pull_request.title || github.ref_name) || '' }}
 
 on:
   pull_request:
+    # Explicit types = GitHub defaults + ready_for_review, so E2E fires
+    # immediately when a draft is marked ready (not just on the next push).
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - develop
       - main
@@ -19,12 +32,17 @@ concurrency:
 
 jobs:
   check-balance:
+    # Skip on draft PRs (matches the E2E job) so a draft run has all jobs
+    # skipped -> run conclusion "skipped", never counted toward KPIs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     uses: ./.github/workflows/e2e_balance_check.yml
     secrets: inherit
 
   e2e-pay-tests:
     needs: check-balance
-    if: always() # Balance alert should not block tests
+    # always(): balance alert should not block tests. Skip on draft PRs (still
+    # runnable manually via workflow_dispatch); event guard keeps schedule/dispatch runs.
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: macos-latest-xlarge
     timeout-minutes: 45
     permissions:
