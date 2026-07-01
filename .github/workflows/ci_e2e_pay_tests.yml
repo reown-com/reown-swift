@@ -1,8 +1,10 @@
 name: Maestro E2E Pay Tests
-# The " (Draft)" suffix is consumed by the E2E KPI metrics job (WalletConnect/actions)
-# to exclude draft-PR runs from the dashboard. Draft runs get a custom title; every
-# other run falls back to GitHub's default title (empty run-name). Don't change/remove it.
-run-name: ${{ github.event.pull_request.draft && format('{0} (Draft)', github.event.pull_request.title) || '' }}
+# "(skip-metrics)" in the run-name is consumed by the E2E KPI metrics job
+# (WalletConnect/actions) to drop a run from the dashboard. We stamp it on runs that
+# shouldn't count: draft PRs, and manual (workflow_dispatch) runs off the default
+# branch ('develop'). Every other run leaves run-name empty and keeps GitHub's
+# default title. Don't change/remove the marker.
+run-name: ${{ ((github.event_name == 'pull_request' && github.event.pull_request.draft) || (github.event_name == 'workflow_dispatch' && github.ref_name != 'develop')) && format('{0} (skip-metrics)', github.event.pull_request.title || github.ref_name) || '' }}
 
 on:
   pull_request:
