@@ -6,6 +6,13 @@ run-name: ${{ github.event.pull_request.draft && format('{0} (Draft)', github.ev
 
 on:
   pull_request:
+    # Explicit types = GitHub defaults + ready_for_review, so E2E fires
+    # immediately when a draft is marked ready (not just on the next push).
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - develop
       - main
