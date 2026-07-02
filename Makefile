@@ -45,7 +45,7 @@ unit_tests:
 	./run_tests.sh --scheme WalletConnect --project Example/ExampleApp.xcodeproj
 
 integration_tests:
-	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj --retry-on-failure --parallel-workers 2
+	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj --retry-on-failure --parallel-workers 1
 
 relay_tests:
 	./run_tests.sh --scheme RelayIntegrationTests --project Example/ExampleApp.xcodeproj
