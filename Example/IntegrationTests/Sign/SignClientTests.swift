@@ -79,6 +79,12 @@ final class SignClientTests: XCTestCase {
     }
 
     override func setUp() async throws {
+        // Stagger test start with a small random jitter. xctest parallelizes test methods
+        // across simulator clones with no delays, so many tests would otherwise open relay
+        // connections in lockstep and trip the relay's (recently hardened) rate limits. The
+        // JS test suite paces the relay similarly with human-latency "throttle" delays.
+        let staggerNanos = UInt64.random(in: 0...2_000) * 1_000_000 // 0–2s
+        try await Task.sleep(nanoseconds: staggerNanos)
         (dappPairingClient, dapp, dappKeyValueStorage, dappRelayClient) = Self.makeClients(name: "🍏Dapp")
         (walletPairingClient, wallet, _, walletRelayClient) = Self.makeClients(name: "🍎Wallet", linkModeUniversalLink: walletLinkModeUniversalLink)
     }

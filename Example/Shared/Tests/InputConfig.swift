@@ -59,7 +59,9 @@ struct InputConfig {
     }
 
     static var defaultTimeout: TimeInterval {
-        return 45
+        // Matches the JS test suite's 60s testTimeout; gives relay round-trips a bit more
+        // headroom under the relay's hardened rate limits.
+        return 60
     }
 
     private static func config(for key: String) -> String? {
