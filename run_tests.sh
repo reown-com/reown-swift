@@ -13,6 +13,8 @@ trap cleanup EXIT ERR
 # Parse named arguments
 RETRY_ON_FAILURE=""
 PARALLEL_WORKERS=""
+ONLY_TESTING=""
+SKIP_TESTING=""
 while [[ $# -gt 0 ]]; do
     case $1 in
     -s|--scheme) SCHEME="$2"; shift;;
@@ -20,6 +22,8 @@ while [[ $# -gt 0 ]]; do
     -t|--testplan) TESTPLAN="$2"; shift;;
     --retry-on-failure) RETRY_ON_FAILURE="1";;
     --parallel-workers) PARALLEL_WORKERS="$2"; shift;;
+    --only-testing) ONLY_TESTING="$2"; shift;;
+    --skip-testing) SKIP_TESTING="$2"; shift;;
     esac
     shift
 done
@@ -44,6 +48,14 @@ fi
 if [ -n "$PARALLEL_WORKERS" ]; then
     echo "Capping parallel testing worker count at $PARALLEL_WORKERS"
     EXTRA_XCODEBUILD_ARGS+=(-parallel-testing-worker-count "$PARALLEL_WORKERS")
+fi
+if [ -n "$ONLY_TESTING" ]; then
+    echo "Restricting to tests: $ONLY_TESTING"
+    EXTRA_XCODEBUILD_ARGS+=(-only-testing:"$ONLY_TESTING")
+fi
+if [ -n "$SKIP_TESTING" ]; then
+    echo "Skipping tests: $SKIP_TESTING"
+    EXTRA_XCODEBUILD_ARGS+=(-skip-testing:"$SKIP_TESTING")
 fi
 
 # Function to update xctestrun file

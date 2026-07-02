@@ -1,6 +1,6 @@
 XCODE_USER_TEMPLATES_DIR=/Applications/Xcode.app/Contents/Developer/Library/Xcode/Templates/File\ Templates
  
-.PHONY: build_all install_templates install_env echo_ui_tests ui_tests unit_tests integration_tests relay_tests notify_tests smoke_tests x_platform_protocol_tests release .FORCE
+.PHONY: build_all install_templates install_env echo_ui_tests ui_tests unit_tests integration_tests integration_relay_tests relay_tests notify_tests smoke_tests x_platform_protocol_tests release .FORCE
 .FORCE:
 TEMPLATE_NAME=VIPER
 TEMPLATES_DIR=Example/Templates/VIPER
@@ -44,8 +44,16 @@ ui_tests:
 unit_tests:
 	./run_tests.sh --scheme WalletConnect --project Example/ExampleApp.xcodeproj
 
+# PR-gating integration tests: the fast, deterministic non-relay suites
+# (signers/verifiers). Excludes SignClientTests, whose live-relay round-trips are
+# flaky under the relay's hardened rate limits (run separately, non-blocking).
 integration_tests:
-	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj --retry-on-failure --parallel-workers 2
+	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj --skip-testing IntegrationTests/SignClientTests
+
+# Live-relay integration tests (SignClientTests). Rate-limit-sensitive, so run with
+# retries + capped parallelism, and kept non-blocking in CI (continue-on-error).
+integration_relay_tests:
+	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj --only-testing IntegrationTests/SignClientTests --retry-on-failure --parallel-workers 2
 
 relay_tests:
 	./run_tests.sh --scheme RelayIntegrationTests --project Example/ExampleApp.xcodeproj
