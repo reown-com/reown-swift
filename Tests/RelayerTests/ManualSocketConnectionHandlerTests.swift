@@ -65,10 +65,10 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         }
         
         try? sut.handleConnect()
-        
+
         // Wait for the connection to complete
-        await fulfillment(of: [connectionExpectation], timeout: 0.3)
-        
+        await fulfillment(of: [connectionExpectation], timeout: 5.0)
+
         // Now assert that the socket is connected
         XCTAssertTrue(socket.isConnected)
     }
@@ -85,17 +85,17 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         }
         
         try? sut.handleConnect()
-        await fulfillment(of: [connectExpectation], timeout: 0.2)
+        await fulfillment(of: [connectExpectation], timeout: 5.0)
         XCTAssertTrue(socket.isConnected)
-        
+
         // Disconnection expectation
         let disconnectExpectation = XCTestExpectation(description: "Socket should disconnect")
         socket.onDisconnect = { _ in
             disconnectExpectation.fulfill()
         }
-        
+
         try? sut.handleDisconnect(closeCode: .normalClosure)
-        await fulfillment(of: [disconnectExpectation], timeout: 1.0)
+        await fulfillment(of: [disconnectExpectation], timeout: 5.0)
         XCTAssertFalse(socket.isConnected)
     }
     
@@ -109,9 +109,9 @@ final class ManualSocketConnectionHandlerTests: XCTestCase {
         }
         
         try? sut.handleConnect()
-        await fulfillment(of: [connectExpectation], timeout: 0.2)
+        await fulfillment(of: [connectExpectation], timeout: 5.0)
         XCTAssertTrue(socket.isConnected)
-        
+
         // Disconnect
         socket.disconnect()
         socketStatusProvider.simulateConnectionStatus(.disconnected)

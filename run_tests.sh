@@ -36,8 +36,10 @@ fi
 #   connections (the shared project id gets throttled under high parallelism).
 EXTRA_XCODEBUILD_ARGS=()
 if [ -n "$RETRY_ON_FAILURE" ]; then
-    echo "Enabling retry-on-failure (up to 3 attempts per failing test)"
-    EXTRA_XCODEBUILD_ARGS+=(-retry-tests-on-failure -test-iterations 3)
+    echo "Enabling retry-on-failure (up to 2 attempts per failing test)"
+    # 2 (not 3) so the 60s per-test timeout x retries x failing tests stays within the
+    # CI job's 30-min budget (3x previously ran the job past the limit → cancelled).
+    EXTRA_XCODEBUILD_ARGS+=(-retry-tests-on-failure -test-iterations 2)
 fi
 if [ -n "$PARALLEL_WORKERS" ]; then
     echo "Capping parallel testing worker count at $PARALLEL_WORKERS"
