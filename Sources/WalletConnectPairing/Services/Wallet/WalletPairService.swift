@@ -56,7 +56,9 @@ actor WalletPairService {
         }
         eventsClient.saveTraceEvent(PairingExecutionTraceEvents.subscribingPairingTopic)
         do {
-            try await networkingInteractor.subscribe(topic: pairing.topic, connectUnconditionally: true)
+            // Fetch the pairing-topic mailbox: the dApp may have published requests
+            // (e.g. wc_sessionAuthenticate) before this wallet paired and subscribed.
+            try await networkingInteractor.subscribe(topic: pairing.topic, connectUnconditionally: true, fetchMailbox: true)
         } catch {
             logger.debug("Failed to subscribe to topic: \(pairing.topic)")
             eventsClient.saveTraceEvent(PairingTraceErrorEvents.subscribePairingTopicFailure)

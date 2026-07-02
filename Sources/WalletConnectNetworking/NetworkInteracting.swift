@@ -7,7 +7,11 @@ public protocol NetworkInteracting {
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { get }
     var requestPublisher: AnyPublisher<(topic: String, request: RPCRequest, decryptedPayload: Data, publishedAt: Date, derivedTopic: String?, encryptedMessage: String, attestation: String?), Never> { get }
     func subscribe(topic: String) async throws
-    func subscribe(topic: String, connectUnconditionally: Bool) async throws 
+    func subscribe(topic: String, connectUnconditionally: Bool) async throws
+    /// Subscribe and, if `fetchMailbox` is true, drain the relay mailbox for the topic
+    /// (needed for topics that may hold messages published before this client subscribed,
+    /// e.g. a pairing topic carrying a queued wc_sessionAuthenticate request).
+    func subscribe(topic: String, connectUnconditionally: Bool, fetchMailbox: Bool) async throws
     func unsubscribe(topic: String)
     func batchSubscribe(topics: [String]) async throws
     func batchUnsubscribe(topics: [String]) async throws
@@ -61,6 +65,12 @@ public protocol NetworkInteracting {
 }
 
 extension NetworkInteracting {
+    /// Default: ignore `fetchMailbox` and subscribe normally. Conformers that support mailbox
+    /// fetching (e.g. NetworkingInteractor) override this.
+    public func subscribe(topic: String, connectUnconditionally: Bool, fetchMailbox: Bool) async throws {
+        try await subscribe(topic: topic, connectUnconditionally: connectUnconditionally)
+    }
+
     public func request(_ request: RPCRequest, topic: String, protocolMethod: ProtocolMethod) async throws {
         try await self.request(request, topic: topic, protocolMethod: protocolMethod, envelopeType: .type0, tvfData: nil)
     }

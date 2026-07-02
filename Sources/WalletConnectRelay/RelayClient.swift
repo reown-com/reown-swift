@@ -190,7 +190,7 @@ public final class RelayClient {
         subscriptionsTracker.setSubscription(for: sessionTopic, id: UUID().uuidString)
     }
 
-    public func subscribe(topic: String, connectUnconditionally: Bool = false) async throws {
+    public func subscribe(topic: String, connectUnconditionally: Bool = false, fetchMailbox: Bool = false) async throws {
         topicsTracker.addTopics([topic])
         logger.debug("[Subscribe] Subscribing to topic: \(topic)")
 
@@ -207,10 +207,14 @@ public final class RelayClient {
             logPrefix: "[Subscribe]"
         )
 
-        // The relay does not always push messages that were mailboxed while we had no
-        // active subscription (e.g. a wc_sessionAuthenticate request published before the
-        // wallet paired). Explicitly fetch them after subscribing.
-        await fetchMessages(topic: topic)
+        // The relay does not always push messages that were mailboxed while we had no active
+        // subscription (e.g. a wc_sessionAuthenticate request published on the pairing topic
+        // before the wallet paired). Only the caller knows whether a topic can have such
+        // pre-subscription messages, so mailbox fetching is opt-in to avoid extra relay
+        // requests on topics that only ever receive live messages (session topics, etc.).
+        if fetchMailbox {
+            await fetchMessages(topic: topic)
+        }
     }
 
     /// Maximum number of `hasMore` follow-up fetches, to bound pagination against a
@@ -228,21 +232,6 @@ public final class RelayClient {
             }
         } catch {
             logger.warn("[FetchMessages] Failed to fetch mailbox messages for topic: \(topic), error: \(error)")
-        }
-    }
-
-    /// Drains the relay mailbox for multiple topics in a single `irn_batchFetchMessages` call.
-    /// Best-effort: failures are logged and swallowed so (batch) subscription still succeeds.
-    func batchFetchMessages(topics: [String], page: Int = 0) async {
-        guard !topics.isEmpty else { return }
-        do {
-            let rpc = BatchFetchMessage(params: .init(topics: topics))
-            let hasMore = try await performFetch(rpc.asRPCRequest(), label: "\(topics.count) topic(s)")
-            if hasMore, page + 1 < Self.maxFetchPages {
-                await batchFetchMessages(topics: topics, page: page + 1)
-            }
-        } catch {
-            logger.warn("[FetchMessages] Failed to batch fetch mailbox messages for \(topics.count) topic(s), error: \(error)")
         }
     }
 
@@ -307,11 +296,6 @@ public final class RelayClient {
             topics: topics,
             logPrefix: "[BatchSubscribe]"
         )
-
-        // batchSubscribe is also the reconnect path (see setupConnectionSubscriptions): draining
-        // the mailbox here lets a dropped socket self-heal by recovering any messages that were
-        // queued while it was offline and not pushed on reconnect.
-        await batchFetchMessages(topics: topics)
     }
 
     private func waitForSubscriptionResponse(
