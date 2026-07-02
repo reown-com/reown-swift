@@ -47,6 +47,11 @@ public final class RelayClient {
     private var requestAcknowledgePublisher: AnyPublisher<RPCID?, Never> {
         requestAcknowledgePublisherSubject.eraseToAnyPublisher()
     }
+
+    private let fetchResponsePublisherSubject = PassthroughSubject<(RPCID?, FetchMessagesResult), Never>()
+    private var fetchResponsePublisher: AnyPublisher<(RPCID?, FetchMessagesResult), Never> {
+        fetchResponsePublisherSubject.eraseToAnyPublisher()
+    }
     private var publishers = [AnyCancellable]()
 
     private let clientIdStorage: ClientIdStoring
@@ -201,6 +206,63 @@ public final class RelayClient {
             topics: [topic],
             logPrefix: "[Subscribe]"
         )
+
+        // The relay does not always push messages that were mailboxed while we had no
+        // active subscription (e.g. a wc_sessionAuthenticate request published before the
+        // wallet paired). Explicitly fetch them after subscribing.
+        await fetchMessages(topic: topic)
+    }
+
+    /// Fetches and dispatches any messages held in the relay mailbox for `topic`.
+    /// Best-effort: failures are logged and swallowed so subscription still succeeds.
+    func fetchMessages(topic: String) async {
+        do {
+            let rpc = FetchMessage(params: .init(topic: topic))
+            let request = rpc.asRPCRequest()
+            guard let requestId = request.id else { return }
+            let message = try request.asJSONEncodedString()
+
+            logger.debug("[FetchMessages] Fetching mailbox messages for topic: \(topic)")
+
+            let result: FetchMessagesResult = try await withUnsafeThrowingContinuation { continuation in
+                var cancellable: AnyCancellable?
+                cancellable = fetchResponsePublisher
+                    .filter { $0.0 == requestId }
+                    .map { $0.1 }
+                    .setFailureType(to: RelayError.self)
+                    .timeout(.seconds(30), scheduler: concurrentQueue, customError: { .requestTimeout })
+                    .sink(receiveCompletion: { [unowned self] completion in
+                        if case .failure(let error) = completion {
+                            cancellable?.cancel()
+                            logger.debug("[FetchMessages] Timeout for topic: \(topic)")
+                            continuation.resume(throwing: error)
+                        }
+                    }, receiveValue: { value in
+                        cancellable?.cancel()
+                        continuation.resume(returning: value)
+                    })
+
+                Task {
+                    do {
+                        try await dispatcher.protectedSend(message, connectUnconditionally: true)
+                    } catch {
+                        cancellable?.cancel()
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+
+            logger.debug("[FetchMessages] Received \(result.messages.count) mailbox message(s) for topic: \(topic)")
+            for received in result.messages {
+                messagePublisherSubject.send((received.topic, received.message, received.publishedAt, received.attestation))
+            }
+
+            if result.hasMore == true {
+                await fetchMessages(topic: topic)
+            }
+        } catch {
+            logger.debug("[FetchMessages] Failed to fetch mailbox messages for topic: \(topic), error: \(error)")
+        }
     }
 
     public func batchSubscribe(topics: [String]) async throws {
@@ -342,7 +404,9 @@ public final class RelayClient {
         } else if let response = tryDecode(RPCResponse.self, from: payload) {
             switch response.outcome {
             case .response(let anyCodable):
-                if let _ = try? anyCodable.get(Bool.self) {
+                if let fetchResult = try? anyCodable.get(FetchMessagesResult.self) {
+                    fetchResponsePublisherSubject.send((response.id, fetchResult))
+                } else if let _ = try? anyCodable.get(Bool.self) {
                     requestAcknowledgePublisherSubject.send(response.id)
                 } else if let subscriptionId = try? anyCodable.get(String.self) {
                     subscriptionResponsePublisherSubject.send((response.id, [subscriptionId]))
