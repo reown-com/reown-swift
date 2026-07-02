@@ -41,7 +41,9 @@ jobs:
   test:
     needs: prepare
     runs-on: macos-latest-xlarge
-    timeout-minutes: 15
+    # Raised from 15 to absorb integration-test retries + reduced parallelism
+    # (both added to ride out transient relay contention on the shared project id).
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:

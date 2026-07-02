@@ -11,11 +11,15 @@ cleanup() {
 trap cleanup EXIT ERR
 
 # Parse named arguments
+RETRY_ON_FAILURE=""
+PARALLEL_WORKERS=""
 while [[ $# -gt 0 ]]; do
     case $1 in
     -s|--scheme) SCHEME="$2"; shift;;
     -p|--project) PROJECT="$2"; shift;;
     -t|--testplan) TESTPLAN="$2"; shift;;
+    --retry-on-failure) RETRY_ON_FAILURE="1";;
+    --parallel-workers) PARALLEL_WORKERS="$2"; shift;;
     esac
     shift
 done
@@ -23,6 +27,21 @@ done
 if [ -z "$SCHEME" ]; then
     echo "No scheme provided"
     exit 1
+fi
+
+# Optional flakiness controls (opt-in; used by network-dependent integration tests).
+# - retry-on-failure: re-runs only the tests that failed, up to 3 attempts, to ride out
+#   transient relay contention.
+# - parallel-workers: caps the number of simulator clones to reduce concurrent relay
+#   connections (the shared project id gets throttled under high parallelism).
+EXTRA_XCODEBUILD_ARGS=()
+if [ -n "$RETRY_ON_FAILURE" ]; then
+    echo "Enabling retry-on-failure (up to 3 attempts per failing test)"
+    EXTRA_XCODEBUILD_ARGS+=(-retry-tests-on-failure -test-iterations 3)
+fi
+if [ -n "$PARALLEL_WORKERS" ]; then
+    echo "Capping parallel testing worker count at $PARALLEL_WORKERS"
+    EXTRA_XCODEBUILD_ARGS+=(-parallel-testing-worker-count "$PARALLEL_WORKERS")
 fi
 
 # Function to update xctestrun file
@@ -88,6 +107,7 @@ if [ -z "$XCTESTRUN" ]; then
         -derivedDataPath DerivedDataCache \
         -clonedSourcePackagesDirPath ../SourcePackagesCache \
         -resultBundlePath "test_results/$SCHEME.xcresult" \
+        "${EXTRA_XCODEBUILD_ARGS[@]}" \
         test \
         | tee ./test_results/xcodebuild.log \
         | xcbeautify --report junit --junit-report-filename report.junit --report-path ./test_results
@@ -117,6 +137,7 @@ else
         -derivedDataPath DerivedDataCache \
         -clonedSourcePackagesDirPath ../SourcePackagesCache \
         -resultBundlePath "test_results/$SCHEME.xcresult" \
+        "${EXTRA_XCODEBUILD_ARGS[@]}" \
         test-without-building \
         | tee ./test_results/xcodebuild.log \
         | xcbeautify --report junit --junit-report-filename report.junit --report-path ./test_results
