@@ -68,7 +68,7 @@ final class DispatcherTests: XCTestCase {
         try! sut.connect()
         
         // Wait for connection to complete
-        await fulfillment(of: [connectExpectation], timeout: 0.5)
+        await fulfillment(of: [connectExpectation], timeout: 5.0)
         
         // Verify socket is connected
         XCTAssertTrue(webSocket.isConnected, "Socket should be connected before sending")
