@@ -17,6 +17,21 @@ struct FetchMessage: RelayRPC {
     }
 }
 
+/// `irn_batchFetchMessages` — mailbox fetch for multiple topics in a single request.
+/// Used to drain mailboxes when (re)subscribing to many topics at once (e.g. on reconnect).
+struct BatchFetchMessage: RelayRPC {
+
+    struct Params: Codable {
+        let topics: [String]
+    }
+
+    let params: Params
+
+    var method: String {
+        "irn_batchFetchMessages"
+    }
+}
+
 /// Result of an `irn_fetchMessages` call.
 struct FetchMessagesResult: Codable {
     struct ReceivedMessage: Codable {

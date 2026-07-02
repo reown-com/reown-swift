@@ -213,56 +213,80 @@ public final class RelayClient {
         await fetchMessages(topic: topic)
     }
 
+    /// Maximum number of `hasMore` follow-up fetches, to bound pagination against a
+    /// misbehaving relay that never stops returning `hasMore == true`.
+    private static let maxFetchPages = 50
+
     /// Fetches and dispatches any messages held in the relay mailbox for `topic`.
     /// Best-effort: failures are logged and swallowed so subscription still succeeds.
-    func fetchMessages(topic: String) async {
+    func fetchMessages(topic: String, page: Int = 0) async {
         do {
             let rpc = FetchMessage(params: .init(topic: topic))
-            let request = rpc.asRPCRequest()
-            guard let requestId = request.id else { return }
-            let message = try request.asJSONEncodedString()
-
-            logger.debug("[FetchMessages] Fetching mailbox messages for topic: \(topic)")
-
-            let result: FetchMessagesResult = try await withUnsafeThrowingContinuation { continuation in
-                var cancellable: AnyCancellable?
-                cancellable = fetchResponsePublisher
-                    .filter { $0.0 == requestId }
-                    .map { $0.1 }
-                    .setFailureType(to: RelayError.self)
-                    .timeout(.seconds(30), scheduler: concurrentQueue, customError: { .requestTimeout })
-                    .sink(receiveCompletion: { [unowned self] completion in
-                        if case .failure(let error) = completion {
-                            cancellable?.cancel()
-                            logger.debug("[FetchMessages] Timeout for topic: \(topic)")
-                            continuation.resume(throwing: error)
-                        }
-                    }, receiveValue: { value in
-                        cancellable?.cancel()
-                        continuation.resume(returning: value)
-                    })
-
-                Task {
-                    do {
-                        try await dispatcher.protectedSend(message, connectUnconditionally: true)
-                    } catch {
-                        cancellable?.cancel()
-                        continuation.resume(throwing: error)
-                    }
-                }
-            }
-
-            logger.debug("[FetchMessages] Received \(result.messages.count) mailbox message(s) for topic: \(topic)")
-            for received in result.messages {
-                messagePublisherSubject.send((received.topic, received.message, received.publishedAt, received.attestation))
-            }
-
-            if result.hasMore == true {
-                await fetchMessages(topic: topic)
+            let hasMore = try await performFetch(rpc.asRPCRequest(), label: "topic: \(topic)")
+            if hasMore, page + 1 < Self.maxFetchPages {
+                await fetchMessages(topic: topic, page: page + 1)
             }
         } catch {
-            logger.debug("[FetchMessages] Failed to fetch mailbox messages for topic: \(topic), error: \(error)")
+            logger.warn("[FetchMessages] Failed to fetch mailbox messages for topic: \(topic), error: \(error)")
         }
+    }
+
+    /// Drains the relay mailbox for multiple topics in a single `irn_batchFetchMessages` call.
+    /// Best-effort: failures are logged and swallowed so (batch) subscription still succeeds.
+    func batchFetchMessages(topics: [String], page: Int = 0) async {
+        guard !topics.isEmpty else { return }
+        do {
+            let rpc = BatchFetchMessage(params: .init(topics: topics))
+            let hasMore = try await performFetch(rpc.asRPCRequest(), label: "\(topics.count) topic(s)")
+            if hasMore, page + 1 < Self.maxFetchPages {
+                await batchFetchMessages(topics: topics, page: page + 1)
+            }
+        } catch {
+            logger.warn("[FetchMessages] Failed to batch fetch mailbox messages for \(topics.count) topic(s), error: \(error)")
+        }
+    }
+
+    /// Sends a fetch/batch-fetch request, dispatches the returned messages into the normal
+    /// inbound pipeline, and reports whether the relay signalled more messages are pending.
+    private func performFetch(_ request: RPCRequest, label: String) async throws -> Bool {
+        guard let requestId = request.id else { return false }
+        let message = try request.asJSONEncodedString()
+
+        logger.debug("[FetchMessages] Fetching mailbox messages for \(label)")
+
+        let result: FetchMessagesResult = try await withUnsafeThrowingContinuation { continuation in
+            var cancellable: AnyCancellable?
+            cancellable = fetchResponsePublisher
+                .filter { $0.0 == requestId }
+                .map { $0.1 }
+                .setFailureType(to: RelayError.self)
+                .timeout(.seconds(30), scheduler: concurrentQueue, customError: { .requestTimeout })
+                .sink(receiveCompletion: { [weak self] completion in
+                    if case .failure(let error) = completion {
+                        cancellable?.cancel()
+                        self?.logger.debug("[FetchMessages] Timeout for \(label)")
+                        continuation.resume(throwing: error)
+                    }
+                }, receiveValue: { value in
+                    cancellable?.cancel()
+                    continuation.resume(returning: value)
+                })
+
+            Task {
+                do {
+                    try await dispatcher.protectedSend(message, connectUnconditionally: true)
+                } catch {
+                    cancellable?.cancel()
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+
+        logger.debug("[FetchMessages] Received \(result.messages.count) mailbox message(s) for \(label)")
+        for received in result.messages {
+            messagePublisherSubject.send((received.topic, received.message, received.publishedAt, received.attestation))
+        }
+        return result.hasMore == true
     }
 
     public func batchSubscribe(topics: [String]) async throws {
@@ -283,6 +307,11 @@ public final class RelayClient {
             topics: topics,
             logPrefix: "[BatchSubscribe]"
         )
+
+        // batchSubscribe is also the reconnect path (see setupConnectionSubscriptions): draining
+        // the mailbox here lets a dropped socket self-heal by recovering any messages that were
+        // queued while it was offline and not pushed on reconnect.
+        await batchFetchMessages(topics: topics)
     }
 
     private func waitForSubscriptionResponse(

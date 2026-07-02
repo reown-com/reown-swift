@@ -111,15 +111,15 @@ final class MockHistoryService: HistoryServiceProtocol {
     }
     
     func getSessionRequest(id: RPCID) -> (request: Request, context: VerifyContext?)? {
-        fatalError("Unimplemented")
+        pendingRequests.first(where: { $0.request.id == id })
     }
-    
+
     func getPendingRequests() -> [(request: Request, context: VerifyContext?)] {
         pendingRequests
     }
-    
+
     func getPendingRequestsSortedByTimestamp() -> [(request: Request, context: VerifyContext?)] {
-        fatalError("Unimplemented")
+        pendingRequests
     }
 }
 #endif
