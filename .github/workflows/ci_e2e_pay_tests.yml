@@ -70,10 +70,10 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@ddc7c0f9acd8b1576e9a78f0ef67f4b8fbb36db2
+        uses: WalletConnect/actions/maestro/pay-tests@4be7c0112f9651fc63b18c137650b75d2fc9b200
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@ddc7c0f9acd8b1576e9a78f0ef67f4b8fbb36db2
+        uses: WalletConnect/actions/maestro/setup@4be7c0112f9651fc63b18c137650b75d2fc9b200
         with:
           version: '2.4.0'
 
@@ -95,9 +95,6 @@ jobs:
           echo "Using simulator: $SIMULATOR_UDID"
           xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
           xcrun simctl bootstatus "$SIMULATOR_UDID"
-          # Reset associated-domains state before install so the applinks
-          # (Universal Link) binding isn't wiped from stale simulator state.
-          xcrun simctl spawn booted swcutil reset || true
 
       - name: Install app on simulator
         run: |
@@ -134,7 +131,7 @@ jobs:
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@ddc7c0f9acd8b1576e9a78f0ef67f4b8fbb36db2
+        uses: WalletConnect/actions/maestro/permit2-reset@4be7c0112f9651fc63b18c137650b75d2fc9b200
         with:
           chain-id: eip155:137
           # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.
