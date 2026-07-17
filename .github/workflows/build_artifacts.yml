@@ -11,8 +11,12 @@ on:
         description: 'WalletConnect project id'
         required: true
   push:
-    branches: 
+    branches:
       - main
+  schedule:
+    # Weekly rebuild so the artifact never expires between merges to main
+    # (rs-relay's validate_swift downloads it and fails once it's gone)
+    - cron: '0 6 * * 1'
 
 permissions:
   contents: read
@@ -46,7 +50,7 @@ jobs:
       run: make build_all RELAY_HOST="$RELAY_HOST" PROJECT_ID="$PROJECT_ID"
 
     - name: Build for testing on push
-      if: ${{ github.event_name == 'push' }}
+      if: ${{ github.event_name != 'workflow_dispatch' }}
       shell: bash
       env:
         PROJECT_ID: ${{ secrets.PROJECT_ID }}
@@ -61,6 +65,7 @@ jobs:
         name: main-derivedData
         path: products.tar
         if-no-files-found: error
+        retention-days: 90
     
     # Slack notification for failing smoke and relay tests
     - name: Slack Notification for Failure
