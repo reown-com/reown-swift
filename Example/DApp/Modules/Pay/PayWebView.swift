@@ -78,11 +78,17 @@ struct PayWebView: UIViewRepresentable {
 
         // The checkout posts a JSON *string* (React Native semantics), so parse the string body.
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            guard message.name == PayWebView.bridgeName,
-                  let body = message.body as? String,
-                  let data = body.data(using: .utf8),
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            else { return }
+            guard message.name == PayWebView.bridgeName else { return }
+
+            guard let body = message.body as? String else {
+                print("💳 [PayWebView] Bridge message body is not a string: \(message.body)")
+                return
+            }
+            guard let data = body.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                print("💳 [PayWebView] Failed to parse bridge message JSON: \(body)")
+                return
+            }
 
             let type = json["type"] as? String
             let success = json["success"] as? Bool
