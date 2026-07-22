@@ -1,15 +1,6 @@
 import SwiftUI
 import WebKit
 
-/// Bridge message payload sent by the hosted checkout via
-/// `window.ReactNativeWebView.postMessage(jsonString)`.
-struct PayMessage {
-    let type: String?
-    let success: Bool?
-    let message: String?
-    let error: String?
-}
-
 /// Embeds the WalletConnect Pay hosted checkout in a `WKWebView`.
 ///
 /// Mirrors the React Native reference (`react-native-examples` PR #570/#576):
@@ -117,10 +108,11 @@ struct PayWebView: UIViewRepresentable {
                 return
             }
 
-            // Allow https navigations and the initial/programmatic loads; block any other scheme
-            // so the page cannot drive the OS into arbitrary native schemes (tel:, sms:, intent:, …).
+            // Allow only https (the checkout) and internal about: navigations; block every other
+            // scheme regardless of navigation type, so the page cannot drive the OS into arbitrary
+            // native schemes (tel:, sms:, intent:, data:, …). The initial https load passes here too.
             let scheme = url.scheme?.lowercased()
-            if scheme == "https" || scheme == "about" || navigationAction.navigationType == .other {
+            if scheme == "https" || scheme == "about" {
                 decisionHandler(.allow)
             } else {
                 decisionHandler(.cancel)
@@ -136,13 +128,21 @@ struct PayWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            DispatchQueue.main.async { [weak self] in self?.isLoading = false }
+            reportNavigationFailure(error)
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            reportNavigationFailure(error)
+        }
+
+        private func reportNavigationFailure(_ error: Error) {
+            // Ignore cancellations — e.g. when we intercept a wallet deeplink and cancel the navigation.
+            let isCancelled = (error as NSError).code == NSURLErrorCancelled
             DispatchQueue.main.async { [weak self] in
                 self?.isLoading = false
-                self?.onFailure("Failed to load checkout: \(error.localizedDescription)")
+                if !isCancelled {
+                    self?.onFailure("Failed to load checkout: \(error.localizedDescription)")
+                }
             }
         }
 
