@@ -323,7 +323,12 @@ public class NetworkingInteractor: NetworkInteracting {
     private func serialize(topic: String?, encodable: Encodable, envelopeType: Envelope.EnvelopeType = .type0) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             serializationQueue.async {
-                continuation.resume(with: Result { try self.serializer.serialize(topic: topic, encodable: encodable, envelopeType: envelopeType) })
+                do {
+                    let message = try self.serializer.serialize(topic: topic, encodable: encodable, envelopeType: envelopeType)
+                    continuation.resume(returning: message)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
             }
         }
     }
