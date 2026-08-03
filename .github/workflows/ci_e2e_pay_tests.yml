@@ -1,10 +1,20 @@
 name: Maestro E2E Pay Tests
+# "(skip-metrics)" tells the E2E KPI job (WalletConnect/actions) to drop this run.
+run-name: ${{ ((github.event_name == 'pull_request' && github.event.pull_request.draft) || (github.event_name == 'workflow_dispatch' && github.ref_name != 'develop')) && format('{0} (skip-metrics)', github.event.pull_request.title || github.ref_name) || '' }}
 
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - develop
       - main
+  schedule:
+    # Run daily at 04:00 UTC (only on the default branch)
+    - cron: '0 4 * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -16,12 +26,13 @@ concurrency:
 
 jobs:
   check-balance:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     uses: ./.github/workflows/e2e_balance_check.yml
     secrets: inherit
 
   e2e-pay-tests:
     needs: check-balance
-    if: always() # Balance alert should not block tests
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: macos-latest-xlarge
     timeout-minutes: 45
     permissions:
@@ -48,7 +59,7 @@ jobs:
             xcodebuild \
             -project "Example/ExampleApp.xcodeproj" \
             -scheme "WalletApp" \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "generic/platform=iOS Simulator" \
             -derivedDataPath DerivedDataCache \
             -clonedSourcePackagesDirPath ../SourcePackagesCache \
             RELAY_HOST='relay.walletconnect.com' \
@@ -59,17 +70,31 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@52e0ab7755ca993bd829062278654ed12b2d471d # main
+        uses: WalletConnect/actions/maestro/pay-tests@4be7c0112f9651fc63b18c137650b75d2fc9b200
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@52e0ab7755ca993bd829062278654ed12b2d471d # main
+        uses: WalletConnect/actions/maestro/setup@4be7c0112f9651fc63b18c137650b75d2fc9b200
         with:
           version: '2.4.0'
 
       - name: Boot iOS simulator
         run: |
-          xcrun simctl boot "iPhone 16" 2>/dev/null || true
-          xcrun simctl bootstatus "iPhone 16"
+          # Pick whatever iPhone simulator the runner actually has, so this
+          # doesn't break each time the Xcode/runner image bumps the model.
+          # Single awk pass: pull the UDID from the first available iPhone row.
+          # awk exits 0 even when nothing matches (so the check below stays
+          # reachable under `set -eo pipefail`), `exit` avoids a head/SIGPIPE
+          # footgun, and it tolerates parens in the device name (e.g. SE).
+          SIMULATOR_UDID=$(xcrun simctl list devices available \
+            | awk '/iPhone/ { if (match($0, /[0-9A-Fa-f-]{36}/)) { print substr($0, RSTART, RLENGTH); exit } }')
+          if [ -z "$SIMULATOR_UDID" ]; then
+            echo "ERROR: no available iPhone simulator found"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Using simulator: $SIMULATOR_UDID"
+          xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIMULATOR_UDID"
 
       - name: Install app on simulator
         run: |
@@ -96,6 +121,23 @@ jobs:
             --include-tags pay \
             --test-output-dir debug-artifacts/maestro-output \
             .maestro/
+
+      # Reset the USDT Permit2 allowance back to 0 so the next pay_usdt_polygon run
+      # re-exercises the on-chain `approve` step. Runs even when the suite failed
+      # (if: always()) so a mid-flow failure can't leave the allowance set.
+      # continue-on-error so a reset hiccup can't fail an otherwise-green run.
+      # It signs a transaction, so it's a Node step (not a Maestro runScript); the
+      # private key goes via env, never the CLI.
+      - name: Reset USDT Permit2 allowance (Polygon)
+        if: always()
+        continue-on-error: true
+        uses: WalletConnect/actions/maestro/permit2-reset@4be7c0112f9651fc63b18c137650b75d2fc9b200
+        with:
+          chain-id: eip155:137
+          # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.
+          rpc-url: https://polygon-bor-rpc.publicnode.com
+          token-address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
+          private-key: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
 
       - name: Capture simulator logs
         if: always()

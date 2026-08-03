@@ -203,6 +203,9 @@
 		C5BE01F82AF6CB270064FC88 /* SignInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE01EF2AF6C9DF0064FC88 /* SignInteractor.swift */; };
 		C5BE01FA2AF6CB270064FC88 /* SignPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE01ED2AF6C9DF0064FC88 /* SignPresenter.swift */; };
 		C5BE01FB2AF6CB270064FC88 /* SignRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE01F12AF6C9DF0064FC88 /* SignRouter.swift */; };
+		0714D0F81022D16D88EE412D /* PayURLBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34958469AF8E2B92FE89589E /* PayURLBuilder.swift */; };
+		2967F5B81EC3D5EB6D782D35 /* PayWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24E74EC51B204D49FC682D00 /* PayWebView.swift */; };
+		14161AED8DFACA6F6F8BFD58 /* PayContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE24C1193AE0D4E17493FB7 /* PayContainerView.swift */; };
 		C5BE02002AF774CB0064FC88 /* NewPairingRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE01F32AF6CA2B0064FC88 /* NewPairingRouter.swift */; };
 		C5BE02012AF774CB0064FC88 /* NewPairingModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE01F52AF6CA2B0064FC88 /* NewPairingModule.swift */; };
 		C5BE02022AF774CB0064FC88 /* NewPairingInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BE01F62AF6CA2B0064FC88 /* NewPairingInteractor.swift */; };
@@ -482,6 +485,9 @@
 		C5BE01EE2AF6C9DF0064FC88 /* SignModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignModule.swift; sourceTree = "<group>"; };
 		C5BE01EF2AF6C9DF0064FC88 /* SignInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInteractor.swift; sourceTree = "<group>"; };
 		C5BE01F12AF6C9DF0064FC88 /* SignRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignRouter.swift; sourceTree = "<group>"; };
+		34958469AF8E2B92FE89589E /* PayURLBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayURLBuilder.swift; sourceTree = "<group>"; };
+		24E74EC51B204D49FC682D00 /* PayWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWebView.swift; sourceTree = "<group>"; };
+		8BE24C1193AE0D4E17493FB7 /* PayContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayContainerView.swift; sourceTree = "<group>"; };
 		C5BE01F32AF6CA2B0064FC88 /* NewPairingRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPairingRouter.swift; sourceTree = "<group>"; };
 		C5BE01F42AF6CA2B0064FC88 /* NewPairingPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPairingPresenter.swift; sourceTree = "<group>"; };
 		C5BE01F52AF6CA2B0064FC88 /* NewPairingModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPairingModule.swift; sourceTree = "<group>"; };
@@ -1349,11 +1355,22 @@
 			path = SessionAccount;
 			sourceTree = "<group>";
 		};
+		2EE1666D78462F69DE441770 /* Pay */ = {
+			isa = PBXGroup;
+			children = (
+				34958469AF8E2B92FE89589E /* PayURLBuilder.swift */,
+				24E74EC51B204D49FC682D00 /* PayWebView.swift */,
+				8BE24C1193AE0D4E17493FB7 /* PayContainerView.swift */,
+			);
+			path = Pay;
+			sourceTree = "<group>";
+		};
 		C5BE02202AF7DDE70064FC88 /* Modules */ = {
 			isa = PBXGroup;
 			children = (
 				C5B4C4C52AF12C2900B4274A /* Sign */,
 				846E35A02C00655500E63DF4 /* Configuration */,
+				2EE1666D78462F69DE441770 /* Pay */,
 			);
 			path = Modules;
 			sourceTree = "<group>";
@@ -1899,6 +1916,9 @@
 				A51606F82A2F47BD00CACB92 /* DefaultBIP44Provider.swift in Sources */,
 				846E35A62C0065C100E63DF4 /* ConfigView.swift in Sources */,
 				C5BE01FB2AF6CB270064FC88 /* SignRouter.swift in Sources */,
+				0714D0F81022D16D88EE412D /* PayURLBuilder.swift in Sources */,
+				2967F5B81EC3D5EB6D782D35 /* PayWebView.swift in Sources */,
+				14161AED8DFACA6F6F8BFD58 /* PayContainerView.swift in Sources */,
 				C5BE01F72AF6CB250064FC88 /* SignModule.swift in Sources */,
 				C5BE01FA2AF6CB270064FC88 /* SignPresenter.swift in Sources */,
 				4455FB8F2EB2383100A585E9 /* AuthSignatureVerifier.swift in Sources */,

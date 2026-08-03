@@ -28,7 +28,7 @@ struct PayConfirmingView: View {
                         .appFont(.lg)
                         .foregroundColor(AppColors.textSecondary)
                         .multilineTextAlignment(.center)
-                        .accessibilityIdentifier("pay-loading-message-subtitle")
+                        .accessibilityIdentifier("pay-loading-setup-note")
                 }
             }
             .padding(.horizontal, Spacing._5)

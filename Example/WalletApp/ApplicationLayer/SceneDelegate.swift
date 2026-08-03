@@ -214,6 +214,10 @@ private extension SceneDelegate {
     /// - WC URI format: `uri` parameter containing embedded `pay` param
     /// - Gateway / universal links with `pid` or `paymentId` query params
     /// - App deeplinks with `walletconnectpay?paymentId=...`
+    ///
+    /// Note: `pay.walletconnect.*` universal-link registration was removed from
+    /// the entitlements, so on native these payment URLs now arrive via NFC (or
+    /// the test-mode URL field) rather than a tapped App Link.
     private func extractPaymentLink(from url: URL) -> String? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let queryItems = components.queryItems else { return nil }

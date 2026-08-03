@@ -48,7 +48,7 @@ struct PaySummaryView: View {
                         option: option,
                         feeState: requiresApprovalForSelected ? presenter.fee(for: option) : .notRequired,
                         rightSlot: rightSlot,
-                        accessibilityId: "pay-review-token-\(option.amount.display.networkName ?? "unknown")"
+                        accessibilityId: "pay-review-token-\((option.amount.display.networkName ?? "unknown").lowercased())"
                     )
                     .padding(.top, Spacing._6)
                 }

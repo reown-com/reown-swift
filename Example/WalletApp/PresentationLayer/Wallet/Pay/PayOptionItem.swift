@@ -97,7 +97,7 @@ struct OptionItem: View {
     }
 
     private var rowAccessibilityLabel: String {
-        option.amount.display.networkName ?? "unknown"
+        (option.amount.display.networkName ?? "unknown").lowercased()
     }
 
     private var trailingAccessoryWidth: CGFloat {
@@ -149,6 +149,55 @@ struct OptionItem: View {
         .background(bgColor)
         .cornerRadius(AppRadius._4)
         .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Stable option accessibility id
+
+extension PaymentOption {
+    /// Stable, network+token-keyed id segment for Maestro selection
+    /// (e.g. `usdt-polygon`): `assetSymbol-networkName`, lowercased with
+    /// whitespace collapsed to dashes. Mirrors the RN consumer
+    /// (react-native-examples #533) so the shared `pay_usdt_polygon` flow can
+    /// pick a specific asset+network when a token appears on several networks.
+    var stableOptionIdSuffix: String {
+        let symbol = amount.display.assetSymbol
+        let network = amount.display.networkName ?? "unknown"
+        return "\(symbol)-\(network)"
+            .lowercased()
+            .replacingOccurrences(of: "\\s+", with: "-", options: .regularExpression)
+    }
+}
+
+// MARK: - Maestro accessibility marker
+
+/// Non-interactive native accessibility element used to give a SwiftUI view an
+/// *additional* Maestro-addressable id. Overlaid on a payment-option row, it
+/// exposes the stable `pay-option-{symbol}-{network}` id alongside the
+/// order-dependent `pay-option-{index}` carried by the row button itself.
+///
+/// It doesn't consume touches (`isUserInteractionEnabled = false`), so Maestro's
+/// tap at the marker's frame centre falls through to the row button beneath —
+/// the same effect as RN's outer `<View testID=…>` wrapper. A plain SwiftUI
+/// `.accessibilityIdentifier(...)` on a wrapper isn't reliably surfaced to
+/// XCUITest (see CLAUDE.md), so we back it with a real `UIView`.
+struct MaestroAccessibilityMarker: UIViewRepresentable {
+    let identifier: String
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        view.isAccessibilityElement = true
+        // No trait: this element only exposes a stable id for UI tests; it isn't
+        // interactive (the tap falls through to the row button), so a `.button`
+        // trait would advertise a VoiceOver action that doesn't exist here.
+        view.accessibilityIdentifier = identifier
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) {
+        view.accessibilityIdentifier = identifier
     }
 }
 
