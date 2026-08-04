@@ -104,6 +104,19 @@ struct SignView: View {
                                         .background(Color(red: 95/255, green: 159/255, blue: 248/255))
                                         .cornerRadius(16)
                                 }
+
+                                Button {
+                                    presenter.presentPayWebView()
+                                } label: {
+                                    Text("WalletConnect Pay (WebView)")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 10)
+                                        .background(Color(red: 95/255, green: 159/255, blue: 248/255))
+                                        .cornerRadius(16)
+                                }
+                                .accessibilityIdentifier("payWithWebViewButton")
                             }
                             .padding(.top, 10)
                         }
@@ -188,6 +201,9 @@ struct SignView: View {
             }
             .alert(presenter.errorMessage, isPresented: $presenter.showError) {
                 Button("OK", role: .cancel) {}
+            }
+            .fullScreenCover(isPresented: $presenter.showPayWebView) {
+                PayContainerView(onClose: { presenter.showPayWebView = false })
             }
         }
     }

@@ -8,6 +8,7 @@ final class SignPresenter: ObservableObject {
     @Published var accountsDetails = [AccountDetails]()
     
     @Published var showError = false
+    @Published var showPayWebView = false
     @Published var errorMessage = String.empty
     
     var walletConnectUri: WalletConnectURI?
@@ -154,6 +155,10 @@ final class SignPresenter: ObservableObject {
     @MainActor
     func openConfiguration() {
         router.openConfig()
+    }
+
+    func presentPayWebView() {
+        showPayWebView = true
     }
 
     @MainActor

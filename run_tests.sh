@@ -55,11 +55,16 @@ mkdir test_results
 
 # Always run on iOS Simulator. Create an ephemeral device and target it.
 echo "Creating ephemeral iOS Simulator"
-DEVICE_TYPE="iPhone 16"
-DEVICE_ID=$(xcrun simctl create "EphemeralSim$SCHEME" "$DEVICE_TYPE" || true)
+DEVICE_ID=""
+for DEVICE_TYPE in "iPhone 17" "iPhone 16" "iPhone 16e"; do
+    DEVICE_ID=$(xcrun simctl create "EphemeralSim$SCHEME" "$DEVICE_TYPE" 2>/dev/null || true)
+    if [ -n "$DEVICE_ID" ]; then break; fi
+    echo "Failed to create '$DEVICE_TYPE', trying next device type"
+done
 if [ -z "$DEVICE_ID" ]; then
-    echo "Failed to create '$DEVICE_TYPE', falling back to 'iPhone 14'"
-    DEVICE_TYPE="iPhone 14"
+    # Device types are listed newest-first; take the newest iPhone
+    DEVICE_TYPE=$(xcrun simctl list devicetypes | sed -nE 's/^(iPhone [^(]+) \(com.*/\1/p' | head -1 | xargs)
+    echo "Falling back to newest available device type: '$DEVICE_TYPE'"
     DEVICE_ID=$(xcrun simctl create "EphemeralSim$SCHEME" "$DEVICE_TYPE")
 fi
 echo "Created ephemeral simulator with id: $DEVICE_ID"

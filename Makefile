@@ -24,7 +24,7 @@ build_all: .FORCE
 		xcodebuild \
 		-project "Example/ExampleApp.xcodeproj" \
 		-scheme "BuildAll" \
-		-destination "platform=iOS Simulator,name=iPhone 16" \
+		-destination "generic/platform=iOS Simulator" \
 		-derivedDataPath DerivedDataCache \
 		-clonedSourcePackagesDirPath ../SourcePackagesCache \
 		RELAY_HOST='$(RELAY_HOST)' \
