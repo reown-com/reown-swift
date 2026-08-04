@@ -123,7 +123,7 @@ public final class KeychainStorage: KeychainStorageProtocol {
     }
 
     private func buildBaseServiceQuery(for key: String) -> [CFString: Any] {
-        var query: [CFString: Any] = [
+        return [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
             kSecAttrIsInvisible: true,
@@ -132,24 +132,6 @@ public final class KeychainStorage: KeychainStorageProtocol {
             kSecAttrAccessGroup: accessGroup,
             kSecAttrAccount: key
         ]
-
-#if os(macOS)
-        // The data-protection keychain requires an application-identifier,
-        // application-groups or keychain-access-groups entitlement, and macOS
-        // only grants those against a provisioning profile — i.e. a paid
-        // developer account. Without one, every write fails with -34018
-        // (errSecMissingEntitlement), and AppPairService.create force-unwraps
-        // that error, so the app crashes the moment a user starts pairing.
-        //
-        // Fall back to the file-based keychain on macOS: same Keychain, same
-        // encryption at rest, just the older API that doesn't demand an access
-        // group. Access-group isolation only matters when several signed
-        // targets share one keychain item, which nothing here does.
-        query.removeValue(forKey: kSecUseDataProtectionKeychain)
-        query.removeValue(forKey: kSecAttrAccessGroup)
-#endif
-
-        return query
     }
 
 
