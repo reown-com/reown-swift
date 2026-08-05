@@ -75,9 +75,12 @@ jobs:
           # the item's creationDate matches this key to the second). Pre-seeding
           # it marks the notification as already shown, covering runs where the
           # build finishes (warm SPM cache) before the banner would have fired.
+          # Best-effort: booting early is the primary defense, so a runner image
+          # where this domain isn't writable must not fail the whole run.
           xcrun simctl spawn "$SIMULATOR_UDID" defaults write \
             com.apple.generativeexperiences.corefollowup \
-            DateOfLastAppleIntelligenceReadinessCFU -date "$(date -u '+%Y-%m-%d %H:%M:%S +0000')"
+            DateOfLastAppleIntelligenceReadinessCFU -date "$(date -u '+%Y-%m-%d %H:%M:%S +0000')" \
+            || echo "WARNING: could not pre-seed Apple Intelligence CFU timestamp (non-fatal)"
 
       - uses: actions/cache@v3
         with:
