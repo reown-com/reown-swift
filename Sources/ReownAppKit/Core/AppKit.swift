@@ -263,7 +263,7 @@ public extension AppKit {
         vc.present(modal, animated: true)
     }
     
-    static func present(from presentingViewController: UIViewController? = nil) {
+    public static func present(from presentingViewController: UIViewController? = nil) {
         guard let vc = presentingViewController ?? topViewController() else {
             assertionFailure("No controller found for presenting modal")
             return
