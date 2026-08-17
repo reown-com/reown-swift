@@ -38,7 +38,8 @@ public class TVFCollector: TVFCollectorProtocol {
             StacksTVFCollector(),
             SuiTVFCollector(),
             PolkadotTVFCollector(),
-            TonTVFCollector()
+            TonTVFCollector(),
+            StellarTVFCollector()
         ]
     }
 
