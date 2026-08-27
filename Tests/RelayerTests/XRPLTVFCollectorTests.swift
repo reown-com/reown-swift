@@ -56,11 +56,10 @@ final class XRPLTVFCollectorTests: XCTestCase {
         let expectedHash = "73734B611DDA23D3F5F62E20A173B78AB8406AC5015094DA53F53D39B9EDB06C"
         let resultModel = XRPLMockFactory.createTransactionResult(hash: expectedHash)
         
-        // Create proper nested RPCResult
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
         
         // Test hash extraction
         let txHashes = xrplCollector.parseTxHashes(
@@ -76,11 +75,10 @@ final class XRPLTVFCollectorTests: XCTestCase {
         let expectedHash = "BA2AF0C652F46C97B85C1D17080EEC7422C092B0BD906DCA344B42EF30FA8285"
         let resultModel = XRPLMockFactory.createTransactionResult(hash: expectedHash)
         
-        // Create proper nested RPCResult
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
         
         // Test hash extraction
         let txHashes = xrplCollector.parseTxHashes(

@@ -42,9 +42,8 @@ class AlgorandTVFCollector: ChainTVFCollector {
             underlyingValue = response.value
         }
         
-        // Extract the "result" field from JSON-RPC response structure
-        guard let responseDict = underlyingValue as? [String: Any],
-              let signedTxnsBase64 = responseDict["result"] as? [String] else {
+        // The result value is the array of base64 signed txns directly
+        guard let signedTxnsBase64 = underlyingValue as? [String] else {
             return nil
         }
         

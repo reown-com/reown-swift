@@ -30,9 +30,8 @@ final class AlgorandTVFCollectorTests: XCTestCase {
             "gqNzaWfEQNGPgbxS9pTu0sTikT3cJVO48WFltc8MM8meFR+aAnGwOo3FO+0nFkAludT0jNqHRM6E65gW6k/m92sHVCxVnQWjdHhuiaNhbXTOAAehIKNmZWXNA+iiZnbOAv0CO6NnZW6sbWFpbm5ldC12MS4womdoxCDAYcTY/B293tLXYEvkVo4/bQQZh6w3veS2ILWrOSSK36Jsds4C/QYjo3JjdsQgeqRNTBEXudHx2kO9Btq289aRzj5DlNUw0jwX9KEnaZqjc25kxCDH1s5tvgARbjtHceUG07Sj5IDfqzn7Zwx0P+XuvCYMz6R0eXBlo3BheQ=="
         ]
         
-        // Create proper nested RPCResult with JSON-RPC format
-        let nestedData = ["result": signedTxnsBase64]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        // Production shape: RPCResult.response holds the already-unwrapped result value (the raw array)
+        let rpcResult = RPCResult.response(AnyCodable(any: signedTxnsBase64))
         
         // Test hash extraction
         let txHashes = algorandCollector.parseTxHashes(
@@ -53,9 +52,8 @@ final class AlgorandTVFCollectorTests: XCTestCase {
         let signedTxnsBase64 = [
             "gqNzaWfEQNGPgbxS9pTu0sTikT3cJVO48WFltc8MM8meFR+aAnGwOo3FO+0nFkAludT0jNqHRM6E65gW6k/m92sHVCxVnQWjdHhuiaNhbXTOAAehIKNmZWXNA+iiZnbOAv0CO6NnZW6sbWFpbm5ldC12MS4womdoxCDAYcTY/B293tLXYEvkVo4/bQQZh6w3veS2ILWrOSSK36Jsds4C/QYjo3JjdsQgeqRNTBEXudHx2kO9Btq289aRzj5DlNUw0jwX9KEnaZqjc25kxCDH1s5tvgARbjtHceUG07Sj5IDfqzn7Zwx0P+XuvCYMz6R0eXBlo3BheQ=="
         ]
-        // Create proper nested RPCResult with JSON-RPC format
-        // The structure is { "result": ["base64encodedsignedtxn"] }
-        let rpcResult = makeResponse(["result": signedTxnsBase64])
+        // Production shape: RPCResult.response holds the already-unwrapped result value (the raw array)
+        let rpcResult = makeResponse(signedTxnsBase64)
 
         // Act
         let result = algorandCollector.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult)

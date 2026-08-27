@@ -60,11 +60,10 @@ final class HederaTVFCollectorTests: XCTestCase {
         let expectedTransactionId = "0.0.12345678@1689281510.675369303"
         let resultModel = HederaMockFactory.createTransactionResult(transactionId: expectedTransactionId)
         
-        // Create proper nested RPCResult
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
         
         // Test hash extraction
         let txHashes = hederaCollector.parseTxHashes(
@@ -80,11 +79,10 @@ final class HederaTVFCollectorTests: XCTestCase {
         let expectedTransactionId = "0.0.98765432@1689281510.675369303"
         let resultModel = HederaMockFactory.createTransactionResult(transactionId: expectedTransactionId)
         
-        // Create proper nested RPCResult
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
         
         // Test hash extraction
         let txHashes = hederaCollector.parseTxHashes(

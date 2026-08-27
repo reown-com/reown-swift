@@ -55,13 +55,11 @@ class XRPLTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract from result wrapper (nested format)
-        if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"],
-           let decoded = try? resultValue.get(XRPLSignTransactionResult.self) {
+        // Decode directly from the unwrapped result value
+        if let decoded = try? anycodable.get(XRPLSignTransactionResult.self) {
             return [decoded.tx_json.hash]
         }
-        
+
         return nil
     }
 } 

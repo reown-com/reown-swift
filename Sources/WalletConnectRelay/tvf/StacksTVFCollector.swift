@@ -42,16 +42,11 @@ class StacksTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract from result wrapper (always under "result" key in JSON-RPC)
-        if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"] {
-            
-            // Try to decode as StacksTransferResult
-            if let transferResult = try? resultValue.get(StacksTransferResult.self) {
-                return [transferResult.txid]
-            }
+        // Decode directly from the unwrapped result value
+        if let transferResult = try? anycodable.get(StacksTransferResult.self) {
+            return [transferResult.txid]
         }
-        
+
         return nil
     }
 } 

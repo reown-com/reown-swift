@@ -50,13 +50,11 @@ class HederaTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract from result wrapper (nested format)
-        if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"],
-           let decoded = try? resultValue.get(HederaTransactionResult.self) {
+        // Decode directly from the unwrapped result value
+        if let decoded = try? anycodable.get(HederaTransactionResult.self) {
             return [decoded.transactionId]
         }
-        
+
         return nil
     }
 } 
