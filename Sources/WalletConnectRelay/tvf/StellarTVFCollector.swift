@@ -62,22 +62,19 @@ class StellarTVFCollector: ChainTVFCollector {
             return nil
         }
 
-        // Extract from result wrapper (always under "result" key in JSON-RPC)
-        guard let wrapper = try? anycodable.get([String: AnyCodable].self),
-              let resultValue = wrapper["result"] else {
-            return nil
-        }
-
+        // `rpcResult` already holds the unwrapped JSON-RPC `result` value — the `result`
+        // key is stripped during RPCResponse decoding — so decode directly off `anycodable`,
+        // matching the Solana/EVM collectors and the JS reference implementation.
         switch rpcMethod {
         case Self.STELLAR_SIGN_AND_SUBMIT_XDR:
-            if let result = try? resultValue.get(StellarSignAndSubmitXDRResult.self),
+            if let result = try? anycodable.get(StellarSignAndSubmitXDRResult.self),
                let txHash = result.tx_hash {
                 return [txHash]
             }
             return nil
 
         case Self.STELLAR_SIGN_XDR:
-            guard let result = try? resultValue.get(StellarSignXDRResult.self) else {
+            guard let result = try? anycodable.get(StellarSignXDRResult.self) else {
                 return nil
             }
             let chain = extractChain(from: rpcParams)
