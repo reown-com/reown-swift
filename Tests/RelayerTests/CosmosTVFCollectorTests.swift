@@ -47,8 +47,8 @@ final class CosmosTVFCollectorTests: XCTestCase {
             "signed": signedData
         ]
         
-        // Create JSON-RPC response format
-        let rpcResult = RPCResult.response(AnyCodable(any: ["result": result]))
+        // Production shape: RPCResult.response holds the already-unwrapped result value
+        let rpcResult = RPCResult.response(AnyCodable(any: result))
         
         // Expected hash from the provided sample
         let expectedHash = "A7284BA475C55983E5BCB7D52F5C82CBFF19FD75725F5E0E33BA4384FCFC6052"

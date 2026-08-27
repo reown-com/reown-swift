@@ -277,12 +277,11 @@ final class TVFCollectorTests: XCTestCase {
         let expectedHash = "73734B611DDA23D3F5F62E20A173B78AB8406AC5015094DA53F53D39B9EDB06C"
         let resultModel = XRPLMockFactory.createTransactionResult(hash: expectedHash)
         
-        // Create proper nested RPCResult
+        // Raw result value — RPCResult.response already holds the unwrapped result
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
-        
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
+
         // Act
         let data = tvf.collect(
             rpcMethod: "xrpl_signTransaction",
@@ -302,12 +301,11 @@ final class TVFCollectorTests: XCTestCase {
         let expectedHash = "BA2AF0C652F46C97B85C1D17080EEC7422C092B0BD906DCA344B42EF30FA8285"
         let resultModel = XRPLMockFactory.createTransactionResult(hash: expectedHash)
         
-        // Create proper nested RPCResult
+        // Raw result value — RPCResult.response already holds the unwrapped result
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
-        
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
+
         // Act
         let data = tvf.collect(
             rpcMethod: "xrpl_signTransactionFor",
@@ -327,12 +325,11 @@ final class TVFCollectorTests: XCTestCase {
         let expectedTransactionId = "0.0.12345678@1689281510.675369303"
         let resultModel = HederaMockFactory.createTransactionResult(transactionId: expectedTransactionId)
         
-        // Create proper nested RPCResult
+        // Raw result value — RPCResult.response already holds the unwrapped result
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
-        
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
+
         // Act
         let data = tvf.collect(
             rpcMethod: "hedera_signAndExecuteTransaction",
@@ -352,12 +349,11 @@ final class TVFCollectorTests: XCTestCase {
         let expectedTransactionId = "0.0.98765432@1689281510.675369303"
         let resultModel = HederaMockFactory.createTransactionResult(transactionId: expectedTransactionId)
         
-        // Create proper nested RPCResult
+        // Raw result value — RPCResult.response already holds the unwrapped result
         let jsonData = try! JSONEncoder().encode(resultModel)
         let jsonDict = try! JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
-        let nestedData = ["result": jsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: nestedData))
-        
+        let rpcResult = RPCResult.response(AnyCodable(any: jsonDict))
+
         // Act
         let data = tvf.collect(
             rpcMethod: "hedera_executeTransaction",
@@ -377,8 +373,8 @@ final class TVFCollectorTests: XCTestCase {
             "gqNzaWfEQNGPgbxS9pTu0sTikT3cJVO48WFltc8MM8meFR+aAnGwOo3FO+0nFkAludT0jNqHRM6E65gW6k/m92sHVCxVnQWjdHhuiaNhbXTOAAehIKNmZWXNA+iiZnbOAv0CO6NnZW6sbWFpbm5ldC12MS4womdoxCDAYcTY/B293tLXYEvkVo4/bQQZh6w3veS2ILWrOSSK36Jsds4C/QYjo3JjdsQgeqRNTBEXudHx2kO9Btq289aRzj5DlNUw0jwX9KEnaZqjc25kxCDH1s5tvgARbjtHceUG07Sj5IDfqzn7Zwx0P+XuvCYMz6R0eXBlo3BheQ=="
         ]
         
-        // Create proper JSON-RPC format response
-        let rpcResult = RPCResult.response(AnyCodable(any: ["result": signedTxns]))
+        // Raw result value — RPCResult.response already holds the unwrapped result
+        let rpcResult = RPCResult.response(AnyCodable(any: signedTxns))
         
         // Act
         let data = tvf.collect(
@@ -402,15 +398,10 @@ final class TVFCollectorTests: XCTestCase {
         let expectedDigest = "8cZk5Zj1sMZes9jBxrKF3Nv8uZJor3V5XTFmxp3GTxhp"
         let resultModel = SuiMockFactory.createSignAndExecuteTransactionResult(digest: expectedDigest)
         
-        // Create proper JSON-RPC format response (Tron-style)
-        // 1. Encode the resultModel to JSON Data
+        // Raw result value — RPCResult.response already holds the unwrapped result
         let resultModelData = try! JSONEncoder().encode(resultModel)
-        // 2. Convert JSON Data to a [String: Any] dictionary
         let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
-        // 3. Create the payload dictionary for AnyCodable(any:)
-        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
-        // 4. Wrap this payload using AnyCodable(any:)
-        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        let rpcResult = RPCResult.response(AnyCodable(any: resultModelJsonDict))
         
         // Act
         let data = tvf.collect(
@@ -497,12 +488,11 @@ final class TVFCollectorTests: XCTestCase {
         let expectedTxid = "f007551f169722ce74104d6673bd46ce193c624b8550889526d1b93820d725f7"
         let resultModel = BitcoinMockFactory.createTransferResult(txid: expectedTxid)
         
-        // Create proper JSON-RPC format response
+        // Raw result value — RPCResult.response already holds the unwrapped result
         let resultModelData = try! JSONEncoder().encode(resultModel)
         let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
-        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
-        
+        let rpcResult = RPCResult.response(AnyCodable(any: resultModelJsonDict))
+
         // Act
         let data = tvf.collect(
             rpcMethod: "sendTransfer",
@@ -523,12 +513,11 @@ final class TVFCollectorTests: XCTestCase {
         let expectedTxId = "stack_tx_id"
         let resultModel = StacksMockFactory.createTransferResult(txid: expectedTxId)
         
-        // Create proper JSON-RPC format response
+        // Raw result value — RPCResult.response already holds the unwrapped result
         let resultModelData = try! JSONEncoder().encode(resultModel)
         let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
-        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
-        
+        let rpcResult = RPCResult.response(AnyCodable(any: resultModelJsonDict))
+
         // Act
         let data = tvf.collect(
             rpcMethod: "stx_transferStx",

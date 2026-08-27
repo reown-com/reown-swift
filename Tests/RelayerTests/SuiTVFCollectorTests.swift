@@ -47,15 +47,13 @@ final class SuiTVFCollectorTests: XCTestCase {
         let expectedDigest = "8cZk5Zj1sMZes9jBxrKF3Nv8uZJor3V5XTFmxp3GTxhp"
         let resultModel = SuiMockFactory.createSignAndExecuteTransactionResult(digest: expectedDigest)
         
-        // Create proper JSON-RPC format response (Tron-style)
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         // 1. Encode the resultModel to JSON Data
         let resultModelData = try! JSONEncoder().encode(resultModel)
         // 2. Convert JSON Data to a [String: Any] dictionary
         let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
-        // 3. Create the payload dictionary for AnyCodable(any:)
-        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
-        // 4. Wrap this payload using AnyCodable(any:)
-        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        // 3. Wrap the raw result value using AnyCodable(any:)
+        let rpcResult = RPCResult.response(AnyCodable(any: resultModelJsonDict))
         
         // Test hash extraction
         let txHashes = suiCollector.parseTxHashes(
@@ -72,15 +70,13 @@ final class SuiTVFCollectorTests: XCTestCase {
         let transactionBytes = "AAAyQUz8RLI4P3k3TBKRjKbf8JF8TZm9eBBzWQAAAAAAAAABAQAAAAAAAAAMAgAAAAAAAAANAwAAAAAAAABAAAAAAAAAAEGPTnCp/DgxJKq1HWMpVoEGPzNbnvhF6qYlXVMAAAAAECQFAAAAAAAAAKQRBgAAAAAAIHn/FzA=="
         let resultModel = SuiMockFactory.createSignTransactionResult(transactionBytes: transactionBytes)
         
-        // Create proper JSON-RPC format response (Tron-style)
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         // 1. Encode the resultModel to JSON Data
         let resultModelData = try! JSONEncoder().encode(resultModel)
         // 2. Convert JSON Data to a [String: Any] dictionary
         let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
-        // 3. Create the payload dictionary for AnyCodable(any:)
-        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
-        // 4. Wrap this payload using AnyCodable(any:)
-        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        // 3. Wrap the raw result value using AnyCodable(any:)
+        let rpcResult = RPCResult.response(AnyCodable(any: resultModelJsonDict))
         
         // Test hash extraction
         let txHashes = suiCollector.parseTxHashes(
@@ -108,11 +104,10 @@ final class SuiTVFCollectorTests: XCTestCase {
         // Create sign transaction result with real transaction bytes
         let resultModel = SuiSignTransactionResult(signature: "dummy-signature", transactionBytes: base64Tx)
         
-        // Create proper JSON-RPC format response
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         let resultModelData = try! JSONEncoder().encode(resultModel)
         let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
-        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        let rpcResult = RPCResult.response(AnyCodable(any: resultModelJsonDict))
         
         // Test hash extraction
         let txHashes = suiCollector.parseTxHashes(
