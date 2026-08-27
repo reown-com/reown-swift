@@ -26,6 +26,13 @@ final class StellarTVFCollectorTests: XCTestCase {
         "AAAAAG5btGuvFysDlQ/whfTBH8NWx1qRgzGpjtSDnJx3krOBAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAsAAAAAAAAAZAAAAAAAAAABd5KzgQAAAEAu0xW2vwIqtuAu4/FFLWHBooGpvqn/N6iHgEX45savBk7SyoFGKIlyhG7ETZQ93tbF1OC/5ym6SdXmwIhIPQUD"
     private static let pubnetV0Hash = "5b709eff53cb92c20d2c79e007f6b53ba9be04d6073119d142ffa70d7ea5c7cb"
 
+    // Adversarial: the last 4 bytes of the (structurally valid) signature are 0x00000000,
+    // which an ascending signature-array scan mistakes for a zero-length signature array.
+    // Hash cross-checked against @stellar/stellar-sdk's Transaction.hash().
+    private static let zeroTailSigXDR =
+        "AAAAAgAAAABuW7RrrxcrA5UP8IX0wR/DVsdakYMxqY7Ug5ycd5KzgQAAAGQAAAAASZYC0wAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAAQAAAABuW7RrrxcrA5UP8IX0wR/DVsdakYMxqY7Ug5ycd5KzgQAAAAAAAAAAAJiWgAAAAAAAAAABd5KzgQAAAEDGLpyx0gomLUe6OHNM90dIb/J8FPe2mR/+9m8suCVKNCF3UH6jhJthgRaiYAchg4uS+yAghMuqqTVHvyAAAAAA"
+    private static let zeroTailSigHash = "17e5f1f36ff6edc099fc190d24da41e48ab9dd9f0b0be6c6d68d9eba028ed8d3"
+
     // MARK: - Helpers
 
     private func makeSignXDRResponse(signedXDR: String) -> RPCResult {
@@ -116,6 +123,18 @@ final class StellarTVFCollectorTests: XCTestCase {
         )
 
         XCTAssertEqual(hashes, [Self.pubnetV0Hash])
+    }
+
+    func testParseTxHashes_SignXDR_SignatureEndingInZeroBytes() {
+        let rpcResult = makeSignXDRResponse(signedXDR: Self.zeroTailSigXDR)
+
+        let hashes = stellarCollector.parseTxHashes(
+            rpcMethod: StellarTVFCollector.STELLAR_SIGN_XDR,
+            rpcResult: rpcResult,
+            rpcParams: makeParams(chain: "stellar:pubnet")
+        )
+
+        XCTAssertEqual(hashes, [Self.zeroTailSigHash])
     }
 
     func testParseTxHashes_SignAndSubmitXDR_ExtractsTxHash() {

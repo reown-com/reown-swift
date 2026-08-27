@@ -154,9 +154,12 @@ class StellarTVFCollector: ChainTVFCollector {
     /// parsing the transaction body. Assumes ed25519 signatures (fixed 72-byte entries), which is
     /// what the WalletConnect Stellar RPC spec mandates wallets emit.
     private static func findSignatureArrayOffset(_ bytes: Data) -> Int? {
-        for signatureCount in 0...maxEnvelopeSignatures {
+        // Scan from the maximum count downward: a real multi-signature array must be found
+        // before the vacuously-matching zero count, which would otherwise win whenever a
+        // signature happens to end in four zero bytes.
+        for signatureCount in stride(from: maxEnvelopeSignatures, through: 0, by: -1) {
             let offset = bytes.count - 4 - decoratedSignatureLength * signatureCount
-            if offset < 4 { break }
+            if offset < 4 { continue }
             if readUInt32BE(bytes, offset) != UInt32(signatureCount) { continue }
 
             var isValid = true
