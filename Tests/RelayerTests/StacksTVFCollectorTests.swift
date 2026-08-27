@@ -40,11 +40,10 @@ final class StacksTVFCollectorTests: XCTestCase {
         let expectedTxid = "stack_tx_id"
         let resultModel = StacksMockFactory.createTransferResult(txid: expectedTxid)
         
-        // Create proper JSON-RPC format response (using serialization/deserialization for JSON compatibility)
+        // Production shape: RPCResult.response holds the already-unwrapped result value
         let resultModelData = try! JSONEncoder().encode(resultModel)
         let resultModelJsonDict = try! JSONSerialization.jsonObject(with: resultModelData) as! [String: Any]
-        let rpcPayloadForAnyCodable: [String: Any] = ["result": resultModelJsonDict]
-        let rpcResult = RPCResult.response(AnyCodable(any: rpcPayloadForAnyCodable))
+        let rpcResult = RPCResult.response(AnyCodable(any: resultModelJsonDict))
         
         // Test hash extraction
         let txHashes = stacksCollector.parseTxHashes(

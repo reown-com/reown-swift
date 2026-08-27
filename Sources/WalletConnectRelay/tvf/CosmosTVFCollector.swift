@@ -29,10 +29,8 @@ class CosmosTVFCollector: ChainTVFCollector {
             }
             return nil
         }
-        // For signDirect we expect { result: { ... } }
-        guard let wrapper = try? anycodable.get([String: AnyCodable].self),
-              let resultAny = wrapper["result"],
-              let result = try? resultAny.get([String: AnyCodable].self) else { return nil }
+        // For signDirect the result value is the object directly
+        guard let result = try? anycodable.get([String: AnyCodable].self) else { return nil }
         
         if rpcMethod == Self.COSMOS_SIGN_DIRECT {
             return handleSignDirect(result)

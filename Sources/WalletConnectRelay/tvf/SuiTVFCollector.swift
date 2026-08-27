@@ -57,28 +57,20 @@ class SuiTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract from result wrapper (always under "result" key in JSON-RPC)
-        if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"] {
-            
-            if rpcMethod == Self.SUI_SIGN_AND_EXECUTE_TRANSACTION {
-                // For sui_signAndExecuteTransaction, extract digest directly
-                if let signAndExecuteResult = try? resultValue.get(SuiSignAndExecuteTransactionResult.self) {
-                    return [signAndExecuteResult.digest]
-                }
-            } else if rpcMethod == Self.SUI_SIGN_TRANSACTION {
-                // For sui_signTransaction, we need to calculate the digest from transactionBytes
-                if let signResult = try? resultValue.get(SuiSignTransactionResult.self) {
-                    // In a real implementation, we would calculate the transaction digest
-                    // from the transaction bytes using the Blake2b hash algorithm
-                    // Here we're using the transactionBytes as a placeholder
-                    if let digest = calculateTransactionDigest(from: signResult.transactionBytes) {
-                        return [digest]
-                    }
-                }
+        // Decode directly from the unwrapped result value
+        if rpcMethod == Self.SUI_SIGN_AND_EXECUTE_TRANSACTION {
+            // For sui_signAndExecuteTransaction, extract digest directly
+            if let r = try? anycodable.get(SuiSignAndExecuteTransactionResult.self) {
+                return [r.digest]
+            }
+        } else if rpcMethod == Self.SUI_SIGN_TRANSACTION {
+            // For sui_signTransaction, we need to calculate the digest from transactionBytes
+            if let r = try? anycodable.get(SuiSignTransactionResult.self),
+               let digest = calculateTransactionDigest(from: r.transactionBytes) {
+                return [digest]
             }
         }
-        
+
         return nil
     }
     

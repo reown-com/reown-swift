@@ -45,23 +45,18 @@ class BitcoinTVFCollector: ChainTVFCollector {
             return nil
         }
         
-        // Extract from result wrapper (always under "result" key in JSON-RPC)
-        if let result = try? anycodable.get([String: AnyCodable].self),
-           let resultValue = result["result"] {
-            
-            // Try to decode as BitcoinTransferResult
-            if let transferResult = try? resultValue.get(BitcoinTransferResult.self) {
-                return [transferResult.txid]
-            }
-            
-            // Alternative: try to extract txid directly from the result map if the above fails
-            if let resultMap = try? resultValue.get([String: AnyCodable].self),
-               let txidValue = resultMap["txid"],
-               let txid = try? txidValue.get(String.self) {
-                return [txid]
-            }
+        // Decode directly from the unwrapped result value
+        if let t = try? anycodable.get(BitcoinTransferResult.self) {
+            return [t.txid]
         }
-        
+
+        // Alternative: try to extract txid directly from the result map if the above fails
+        if let map = try? anycodable.get([String: AnyCodable].self),
+           let v = map["txid"],
+           let txid = try? v.get(String.self) {
+            return [txid]
+        }
+
         return nil
     }
 } 
