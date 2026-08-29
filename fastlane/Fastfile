@@ -120,15 +120,17 @@ platform :ios do
       },
       xcargs: "RELAY_HOST='#{options[:relay_host]}' PROJECT_ID='#{options[:project_id]}' WALLETAPP_SENTRY_DSN='#{options[:sentry_dsn]}' MIXPANEL_TOKEN='#{options[:mixpanel_token]}'"
     )
-    upload_to_testflight(
-      apple_id: ENV["APPLE_ID"],
+    testflight_options = {
       app_identifier: ENV["APP_IDENTIFIER"],
       changelog: "#{ENV["SCHEME"]} app weekly build 🚀",
       distribute_external: true,
       notify_external_testers: true,
       skip_waiting_for_build_processing: false,
       groups: ["WalletConnect Users"]
-    )
+    }
+    app_store_id = ENV["APPLE_ID"]
+    testflight_options[:apple_id] = app_store_id if app_store_id&.match?(/\A\d+\z/)
+    upload_to_testflight(testflight_options)
     clean_build_artifacts()
   end
 
