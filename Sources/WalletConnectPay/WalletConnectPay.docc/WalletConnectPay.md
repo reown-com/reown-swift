@@ -99,18 +99,18 @@ let actions = try await WalletKit.instance.Pay.getRequiredPaymentActions(
     optionId: selectedOption.id
 )
 
-// 3. Sign each action and collect signatures
-var signatures: [String] = []
+// 3. Sign each action and collect the results
+var data: [String] = []
 for action in actions {
     let signature = try await sign(action.walletRpc)
-    signatures.append(signature)
+    data.append(signature)
 }
 
 // 4. Confirm payment
 let result = try await WalletKit.instance.Pay.confirmPayment(
     paymentId: options.paymentId,
     optionId: selectedOption.id,
-    signatures: signatures
+    data: data
 )
 ```
 
@@ -316,13 +316,17 @@ if let collectDataAction = response.collectData {
 
 ### Step 5: Confirm Payment
 
-Submit the signatures and collected data to complete the payment:
+Submit the wallet RPC results and collected data to complete the payment.
+Each `data` element is either a plain string (signature, tx hash) or a
+JSON-encoded object/array for chains whose confirm payload is an object
+(e.g. TRON's `{"raw_data_hex": ..., "signature": [...]}`). The previous
+`signatures:` label still compiles but is deprecated:
 
 ```swift
 let result = try await WalletConnectPay.instance.confirmPayment(
     paymentId: response.paymentId,
     optionId: selectedOption.id,
-    signatures: signatures,
+    data: signatures,
     collectedData: collectedData,
     maxPollMs: 60000  // Wait up to 60 seconds for confirmation
 )

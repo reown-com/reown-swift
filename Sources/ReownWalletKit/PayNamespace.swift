@@ -80,7 +80,7 @@ public class PayNamespace {
         )
     }
 
-    /// Confirm a payment with wallet RPC signatures
+    /// Confirm a payment with wallet RPC results
     ///
     /// Submits the signed actions to complete the payment. The method polls for
     /// the final payment status if the initial response is not final.
@@ -88,7 +88,10 @@ public class PayNamespace {
     /// - Parameters:
     ///   - paymentId: The payment ID
     ///   - optionId: The selected payment option ID
-    ///   - signatures: Array of hex signatures from signing the wallet RPC actions
+    ///   - data: Wallet RPC results. Each element is either a plain string
+    ///     (signature, tx hash) or a JSON-encoded object/array (e.g. TRON's
+    ///     `{"raw_data_hex": ..., "signature": [...]}`), which is sent to the
+    ///     gateway as JSON
     ///   - collectedData: Optional array of collected user data fields (for travel rule compliance)
     ///   - maxPollMs: Optional max polling time in milliseconds (default: 60000)
     /// - Returns: Confirmation response with final payment status
@@ -96,14 +99,32 @@ public class PayNamespace {
     public func confirmPayment(
         paymentId: String,
         optionId: String,
-        signatures: [String],
+        data: [String],
         collectedData: [CollectDataFieldResult]? = nil,
         maxPollMs: Int64? = nil
     ) async throws -> ConfirmPaymentResultResponse {
         try await payClient.confirmPayment(
             paymentId: paymentId,
             optionId: optionId,
-            signatures: signatures,
+            data: data,
+            collectedData: collectedData,
+            maxPollMs: maxPollMs
+        )
+    }
+
+    /// Deprecated: use ``confirmPayment(paymentId:optionId:data:collectedData:maxPollMs:)``.
+    @available(*, deprecated, renamed: "confirmPayment(paymentId:optionId:data:collectedData:maxPollMs:)")
+    public func confirmPayment(
+        paymentId: String,
+        optionId: String,
+        signatures: [String],
+        collectedData: [CollectDataFieldResult]? = nil,
+        maxPollMs: Int64? = nil
+    ) async throws -> ConfirmPaymentResultResponse {
+        try await confirmPayment(
+            paymentId: paymentId,
+            optionId: optionId,
+            data: signatures,
             collectedData: collectedData,
             maxPollMs: maxPollMs
         )
