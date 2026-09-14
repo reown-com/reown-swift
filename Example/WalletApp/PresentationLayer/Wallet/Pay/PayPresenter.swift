@@ -484,7 +484,7 @@ final class PayPresenter: ObservableObject {
                 let result = try await WalletKit.instance.Pay.confirmPayment(
                     paymentId: paymentId,
                     optionId: option.id,
-                    signatures: signatures,
+                    data: signatures,
                     collectedData: nil,
                     maxPollMs: 60000
                 )

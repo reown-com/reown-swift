@@ -26,11 +26,13 @@ import Foundation
 ///     optionId: selectedOption.id
 /// )
 ///
-/// // Sign each action and collect signatures
-/// var signatures: [String] = []
+/// // Sign each action and collect the results. Each element is either a
+/// // plain string (signature, tx hash) or a JSON-encoded object for chains
+/// // like TRON ({"raw_data_hex": ..., "signature": [...]})
+/// var data: [String] = []
 /// for action in actions {
 ///     let signature = try await sign(action.walletRpc) // Your signing implementation
-///     signatures.append(signature)
+///     data.append(signature)
 /// }
 ///
 /// // Check if user data collection is required (travel rule)
@@ -43,7 +45,7 @@ import Foundation
 /// let response = try await WalletConnectPay.instance.confirmPayment(
 ///     paymentId: paymentId,
 ///     optionId: optionId,
-///     signatures: signatures,
+///     data: data,
 ///     collectedData: collectedData
 /// )
 /// ```
@@ -181,7 +183,7 @@ public final class PayClient: YttriumWrapper.Logger {
         )
     }
     
-    /// Confirm a payment with wallet RPC signatures
+    /// Confirm a payment with wallet RPC results
     ///
     /// Submits the signed actions to complete the payment. The method polls for
     /// the final payment status if the initial response is not final.
@@ -194,7 +196,10 @@ public final class PayClient: YttriumWrapper.Logger {
     /// - Parameters:
     ///   - paymentId: The payment ID
     ///   - optionId: The selected payment option ID
-    ///   - signatures: Array of hex signatures from signing the wallet RPC actions
+    ///   - data: Wallet RPC results. Each element is either a plain string
+    ///     (signature, tx hash) or a JSON-encoded object/array (e.g. TRON's
+    ///     `{"raw_data_hex": ..., "signature": [...]}`), which is sent to the
+    ///     gateway as JSON
     ///   - collectedData: Optional array of collected user data fields (for travel rule compliance)
     ///   - maxPollMs: Optional max polling time in milliseconds (default: 60000)
     /// - Returns: Confirmation response with final payment status
@@ -202,14 +207,32 @@ public final class PayClient: YttriumWrapper.Logger {
     public func confirmPayment(
         paymentId: String,
         optionId: String,
-        signatures: [String],
+        data: [String],
         collectedData: [CollectDataFieldResult]? = nil,
         maxPollMs: Int64? = nil
     ) async throws -> ConfirmPaymentResultResponse {
         try await client.confirmPayment(
             paymentId: paymentId,
             optionId: optionId,
-            signatures: signatures,
+            data: data,
+            collectedData: collectedData,
+            maxPollMs: maxPollMs
+        )
+    }
+
+    /// Deprecated: use ``confirmPayment(paymentId:optionId:data:collectedData:maxPollMs:)``.
+    @available(*, deprecated, renamed: "confirmPayment(paymentId:optionId:data:collectedData:maxPollMs:)")
+    public func confirmPayment(
+        paymentId: String,
+        optionId: String,
+        signatures: [String],
+        collectedData: [CollectDataFieldResult]? = nil,
+        maxPollMs: Int64? = nil
+    ) async throws -> ConfirmPaymentResultResponse {
+        try await confirmPayment(
+            paymentId: paymentId,
+            optionId: optionId,
+            data: signatures,
             collectedData: collectedData,
             maxPollMs: maxPollMs
         )
