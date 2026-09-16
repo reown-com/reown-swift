@@ -300,7 +300,7 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNil(data?.txHashes)
     }
 
-    func testSessionResponse_UnsupportedMethod_StructuredResult_NoTxHashes() {
+    func testSessionResponse_UnsupportedMethod_StructuredResult_ReportsJSON() {
         let objectResult = makeResponse(["0x1": ["paymasterService": ["supported": true]]])
         let arrayResult = makeResponse(["0x1234567890abcdef1234567890abcdef12345678"])
 
@@ -318,10 +318,8 @@ final class TVFCollectorTests: XCTestCase {
             rpcResult: arrayResult,
             tag: 1109
         )
-        XCTAssertNotNil(objectData)
-        XCTAssertNil(objectData?.txHashes)
-        XCTAssertNotNil(arrayData)
-        XCTAssertNil(arrayData?.txHashes)
+        XCTAssertEqual(objectData?.txHashes, [#"{"0x1":{"paymasterService":{"supported":true}}}"#])
+        XCTAssertEqual(arrayData?.txHashes, [#"["0x1234567890abcdef1234567890abcdef12345678"]"#])
     }
 
     func testSessionResponse_UnsupportedMethod_EmptyOrErrorResult_NoTxHashes() {

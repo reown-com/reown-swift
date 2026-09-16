@@ -83,7 +83,7 @@ public class TVFCollector: TVFCollectorProtocol {
             if let collector = collector {
                 txHashes = collector.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult, rpcParams: rpcParams)
             } else {
-                txHashes = Self.plainStringResult(rpcResult)
+                txHashes = Self.rawResult(rpcResult)
             }
         } else {
             txHashes = nil
@@ -99,14 +99,15 @@ public class TVFCollector: TVFCollectorProtocol {
 
     // MARK: - Methods without a chain collector
 
-    /// Signing methods (`eth_signTypedData_v4`, `personal_sign`, ...) return the signature as a plain
-    /// string. It is reported as-is so signature volume stays attributable, matching the JS and Flutter
-    /// SDKs. Structured results belong to dedicated collectors and are skipped here.
-    private static func plainStringResult(_ rpcResult: RPCResult?) -> [String]? {
+    /// Methods without a chain collector (`eth_signTypedData_v4`, `personal_sign`, ...) report their
+    /// result as-is so signing volume stays attributable, matching the JS and Flutter SDKs. A plain
+    /// string is reported verbatim; any other value is reported as its JSON representation.
+    private static func rawResult(_ rpcResult: RPCResult?) -> [String]? {
         guard let rpcResult = rpcResult, case .response(let anyCodable) = rpcResult else {
             return nil
         }
-        guard let result = try? anyCodable.get(String.self), !result.isEmpty else {
+        let result = (try? anyCodable.get(String.self)) ?? anyCodable.stringRepresentation
+        guard !result.isEmpty, result != "null" else {
             return nil
         }
         return [result]
