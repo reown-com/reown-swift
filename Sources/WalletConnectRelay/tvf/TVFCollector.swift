@@ -100,8 +100,7 @@ public class TVFCollector: TVFCollectorProtocol {
     // MARK: - Methods without a chain collector
 
     /// Methods without a chain collector (`eth_signTypedData_v4`, `personal_sign`, ...) report their
-    /// result as-is so signing volume stays attributable, matching the JS and Flutter SDKs. A plain
-    /// string is reported verbatim; any other value is reported as its JSON representation.
+    /// result as-is so signing volume stays attributable
     private static func rawResult(_ rpcResult: RPCResult?) -> [String]? {
         guard let rpcResult = rpcResult, case .response(let anyCodable) = rpcResult else {
             return nil
