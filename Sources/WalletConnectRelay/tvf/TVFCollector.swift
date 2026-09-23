@@ -78,8 +78,16 @@ public class TVFCollector: TVFCollectorProtocol {
             collector?.extractContractAddresses(rpcMethod: rpcMethod, rpcParams: rpcParams) : nil
 
         // Parse transaction hashes if this is a response
-        let txHashes = theTag == .sessionResponse ?
-        collector?.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult, rpcParams: rpcParams) : nil
+        let txHashes: [String]?
+        if theTag == .sessionResponse {
+            if let collector = collector {
+                txHashes = collector.parseTxHashes(rpcMethod: rpcMethod, rpcResult: rpcResult, rpcParams: rpcParams)
+            } else {
+                txHashes = Self.rawResult(rpcResult)
+            }
+        } else {
+            txHashes = nil
+        }
 
         return TVFData(
             rpcMethods: [rpcMethod],
@@ -87,6 +95,21 @@ public class TVFCollector: TVFCollectorProtocol {
             txHashes: txHashes,
             contractAddresses: contractAddresses
         )
+    }
+
+    // MARK: - Methods without a chain collector
+
+    /// Methods without a chain collector (`eth_signTypedData_v4`, `personal_sign`, ...) report their
+    /// result as-is so signing volume stays attributable
+    private static func rawResult(_ rpcResult: RPCResult?) -> [String]? {
+        guard let rpcResult = rpcResult, case .response(let anyCodable) = rpcResult else {
+            return nil
+        }
+        let result = (try? anyCodable.get(String.self)) ?? anyCodable.stringRepresentation
+        guard !result.isEmpty, result != "null" else {
+            return nil
+        }
+        return [result]
     }
 }
 
