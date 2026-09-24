@@ -106,10 +106,10 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@4be7c0112f9651fc63b18c137650b75d2fc9b200
+        uses: WalletConnect/actions/maestro/pay-tests@9a51b62bcd63afde28865788de560da9f74b508b
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@4be7c0112f9651fc63b18c137650b75d2fc9b200
+        uses: WalletConnect/actions/maestro/setup@9a51b62bcd63afde28865788de560da9f74b508b
         with:
           version: '2.4.0'
 
@@ -129,6 +129,7 @@ jobs:
         run: |
           maestro test \
             --env APP_ID=com.walletconnect.walletapp \
+            --env 'DEEPLINK_PREFIX=walletapp://wc?uri=' \
             --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }} \
             --env WPAY_MERCHANT_ID_SINGLE_NOKYC=${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }} \
             --env WPAY_CUSTOMER_KEY_MULTI_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }} \
@@ -148,7 +149,7 @@ jobs:
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@4be7c0112f9651fc63b18c137650b75d2fc9b200
+        uses: WalletConnect/actions/maestro/permit2-reset@9a51b62bcd63afde28865788de560da9f74b508b
         with:
           chain-id: eip155:137
           # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.

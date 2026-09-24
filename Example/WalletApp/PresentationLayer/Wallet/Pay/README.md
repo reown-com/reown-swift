@@ -73,6 +73,7 @@ WalletConnectPay.configure(projectId: InputConfig.projectId, apiKey: InputConfig
 
 ```
 walletapp://walletconnectpay?paymentId=<payment-id>
+walletapp://wc?uri=<url-encoded payment link>
 ```
 
 ## Testing
@@ -106,7 +107,7 @@ The Pay flow has comprehensive E2E tests using [Maestro](https://maestro.mobile.
 # Download shared test flows
 ./scripts/setup-maestro-pay-tests.sh
 
-# Build with test mode (adds URL input field + optional pre-funded wallet)
+# Build with test mode (optional pre-funded wallet)
 xcodebuild \
   -project "Example/ExampleApp.xcodeproj" \
   -scheme "WalletApp" \
@@ -136,12 +137,13 @@ maestro studio
 
 #### Test Mode (`ENABLE_TEST_MODE`)
 
-The `ENABLE_TEST_MODE` Swift compilation flag enables two features:
-
-1. **URL text input**: Adds a visible text field to the scanner options sheet, allowing Maestro to type payment URLs directly instead of scanning QR codes.
-2. **Test wallet import**: If `TEST_WALLET_PRIVATE_KEY` is provided as a build setting, the app imports that EVM private key on launch instead of generating a random wallet. This allows CI to use a pre-funded wallet for Pay tests.
+The `ENABLE_TEST_MODE` Swift compilation flag enables **test wallet import**: if `TEST_WALLET_PRIVATE_KEY` is provided as a build setting, the app imports that EVM private key on launch instead of generating a random wallet. This allows CI to use a pre-funded wallet for Pay tests.
 
 Both are passed via xcodebuild build settings — no Xcode project changes needed.
+
+#### Payment Link Deep Link
+
+The shared flows don't scan or type URLs. After launching the app they open each payment link with Maestro `openLink` as `<DEEPLINK_PREFIX><encodeURIComponent(gatewayUrl)>`. For WalletApp `DEEPLINK_PREFIX` is `walletapp://wc?uri=` — `run-maestro-pay-tests.sh` sets it by default and CI passes it explicitly. `SceneDelegate` extracts the decoded `uri` param and routes it to the Pay flow.
 
 #### Accessibility Identifiers
 
@@ -149,9 +151,7 @@ All Pay views have accessibility identifiers that the shared Maestro test flows 
 
 | ID | View | Element |
 |----|------|---------|
-| `button-scan` | HeaderView | Scan button |
-| `input-paste-url` | ScannerOptionsView | URL text field (test mode) |
-| `button-submit-url` | ScannerOptionsView | Submit URL button (test mode) |
+| `button-scan` | HeaderView | Scan button (flows wait for it to detect the home screen) |
 | `pay-merchant-info` | PayOptionsView / PaySummaryView | Merchant header |
 | `pay-option-{index}` | PayOptionsView | Payment option row |
 | `pay-option-info-required` | PayOptionsView | Per-row info button for data collection requirements |
