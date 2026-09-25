@@ -106,10 +106,10 @@ jobs:
             | xcbeautify
 
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@9a51b62bcd63afde28865788de560da9f74b508b
+        uses: WalletConnect/actions/maestro/pay-tests@444774bdc9c5b9669068d4c4f501bb298f52f5db
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@9a51b62bcd63afde28865788de560da9f74b508b
+        uses: WalletConnect/actions/maestro/setup@444774bdc9c5b9669068d4c4f501bb298f52f5db
         with:
           version: '2.4.0'
 
@@ -149,7 +149,7 @@ jobs:
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@9a51b62bcd63afde28865788de560da9f74b508b
+        uses: WalletConnect/actions/maestro/permit2-reset@444774bdc9c5b9669068d4c4f501bb298f52f5db
         with:
           chain-id: eip155:137
           # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.
