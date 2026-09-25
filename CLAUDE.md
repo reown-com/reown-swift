@@ -27,6 +27,8 @@ This is the Reown Swift SDK repository containing iOS/macOS SDKs for WalletConne
 
 The wallet sample app includes Maestro E2E tests for WalletConnect Pay flows. The shared test flows are downloaded from `WalletConnect/actions` repo at runtime.
 
+The flows deliver each payment link as a deep link (Maestro `openLink`) instead of scanning or typing it: `<DEEPLINK_PREFIX><encodeURIComponent(gatewayUrl)>`. For WalletApp the prefix is `walletapp://wc?uri=` (passed via `--env DEEPLINK_PREFIX=...`; `run-maestro-pay-tests.sh` defaults it). `SceneDelegate.extractPaymentLink` reads the decoded `uri` param and routes it to Pay. On a fresh simulator iOS shows an "Open in “WalletApp”?" prompt the first time; the shared flow taps **Open**.
+
 ### Prerequisites
 
 - [Maestro CLI](https://maestro.mobile.dev) installed
@@ -61,9 +63,7 @@ xcrun simctl install booted "$(find DerivedDataCache -name 'WalletApp.app' -path
 
 ### Test Mode
 
-The `ENABLE_TEST_MODE` Swift compilation flag enables two features:
-- **URL text input**: Adds a visible text field to the scanner options sheet, allowing Maestro to type payment URLs directly instead of scanning QR codes.
-- **Test wallet import**: If `TEST_WALLET_PRIVATE_KEY` is provided as a build setting, the app imports that EVM private key on launch instead of generating a random wallet. This allows CI to use a pre-funded wallet for Pay tests.
+The `ENABLE_TEST_MODE` Swift compilation flag enables **test wallet import**: if `TEST_WALLET_PRIVATE_KEY` is provided as a build setting, the app imports that EVM private key on launch instead of generating a random wallet. This allows CI to use a pre-funded wallet for Pay tests.
 
 Both are passed via xcodebuild build settings — no Xcode project changes needed.
 

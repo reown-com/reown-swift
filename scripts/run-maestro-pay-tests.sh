@@ -79,9 +79,12 @@ if [ ${#MISSING[@]} -gt 0 ]; then
 fi
 
 APP_ID="${MAESTRO_APP_ID:-${APP_ID:-com.walletconnect.walletapp}}"
+# Shared flows deliver payment links as <DEEPLINK_PREFIX><url-encoded link>.
+DEEPLINK_PREFIX="${DEEPLINK_PREFIX:-walletapp://wc?uri=}"
 
 MAESTRO_ARGS=(
   --env "APP_ID=$APP_ID"
+  --env "DEEPLINK_PREFIX=$DEEPLINK_PREFIX"
   --env "WPAY_CUSTOMER_KEY_SINGLE_NOKYC=$WPAY_CUSTOMER_KEY_SINGLE_NOKYC"
   --env "WPAY_MERCHANT_ID_SINGLE_NOKYC=$WPAY_MERCHANT_ID_SINGLE_NOKYC"
   --env "WPAY_CUSTOMER_KEY_MULTI_NOKYC=$WPAY_CUSTOMER_KEY_MULTI_NOKYC"
@@ -107,6 +110,7 @@ done
 
 echo "Running Maestro Pay E2E tests..."
 echo "  App ID: $APP_ID"
+echo "  Deep link prefix: $DEEPLINK_PREFIX"
 echo "  Args: ${RESOLVED_ARGS[*]}"
 
 maestro test "${MAESTRO_ARGS[@]}" "${RESOLVED_ARGS[@]}"
