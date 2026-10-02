@@ -184,7 +184,7 @@ private extension SceneDelegate {
         let metadata = AppMetadata(
             name: "Swift Wallet",
             description: "Swift sample wallet showcasing WalletConnect SDK integration",
-            url: "https://walletconnect.network/sdk",
+            url: "https://walletconnect.com/trade-transact/wallets",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
             redirect: redirect
         )
