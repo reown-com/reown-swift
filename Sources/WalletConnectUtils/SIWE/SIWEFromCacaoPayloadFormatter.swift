@@ -21,6 +21,10 @@ public typealias SignWithXFormatter = SIWEFromCacaoPayloadFormatter
 /// Previously SIWEFromCacaoPayloadFormatter - now supports Sign with X (CAIP-122)
 public struct SIWEFromCacaoPayloadFormatter: SignWithXFormatting {
 
+    public enum Errors: Error, Equatable {
+        case invalidSingleLineField(String)
+    }
+
     public init() {}
 
     public func formatMessage(from payload: CacaoPayload, includeRecapInTheStatement: Bool) throws -> String {
@@ -29,6 +33,27 @@ public struct SIWEFromCacaoPayloadFormatter: SignWithXFormatting {
         let address = account.address
         let chainId = account.reference
         let namespace = account.namespace
+
+        // EIP-4361 / CAIP-122 single-line fields must not embed CR/LF, or a
+        // caller can forge later lines (URI, Nonce, …). Parity with
+        // walletconnect-monorepo #7311 / walletconnect-utils #280.
+        try assertSingleLine(payload.domain, field: "domain")
+        try assertSingleLine(payload.aud, field: "aud")
+        try assertSingleLine(payload.version, field: "version")
+        try assertSingleLine(payload.nonce, field: "nonce")
+        try assertSingleLine(payload.iat, field: "iat")
+        if let statement = payload.statement {
+            try assertSingleLine(statement, field: "statement")
+        }
+        if let exp = payload.exp {
+            try assertSingleLine(exp, field: "exp")
+        }
+        if let nbf = payload.nbf {
+            try assertSingleLine(nbf, field: "nbf")
+        }
+        if let requestId = payload.requestId {
+            try assertSingleLine(requestId, field: "requestId")
+        }
 
         // Determine chain-specific account type for CAIP-122
         let accountType = getAccountType(for: namespace)
@@ -49,6 +74,12 @@ public struct SIWEFromCacaoPayloadFormatter: SignWithXFormatting {
         Issued At: \(payload.iat)\(formatExpLine(exp: payload.exp))\(formatNbfLine(nbf: payload.nbf))\(formatRequestIdLine(requestId: payload.requestId))\(formatResourcesSection(resources: payload.resources))
         """
         return formattedMessage
+    }
+
+    private func assertSingleLine(_ value: String, field: String) throws {
+        if value.contains("\r") || value.contains("\n") {
+            throw Errors.invalidSingleLineField(field)
+        }
     }
 
     // CAIP-122: Map chain namespace to account type
