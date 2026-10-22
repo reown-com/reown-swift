@@ -91,7 +91,7 @@ final class LinkEnvelopesDispatcher {
                 #elseif canImport(AppKit)
                 let configuration = NSWorkspace.OpenConfiguration()
                 configuration.promptsUserIfNeeded = true
-                self?.logger.debug("Will open universal link")
+                logger.debug("Will open universal link")
                 NSWorkspace.shared.open(envelopeUrl, configuration: configuration) { _, error in
                     if error == nil {
                         continuation.resume(returning: ())
