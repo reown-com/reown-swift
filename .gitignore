@@ -7,6 +7,8 @@ xcuserdata/
 
 **/xcshareddata/WorkspaceSettings.xcsettings
 
+# Tuist generated sources
+/Derived/
 
 # Swift Package Manager
 Packages/

@@ -1,6 +1,9 @@
 
-#if os(iOS)
+import Foundation
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 import Combine
@@ -73,6 +76,8 @@ final class LinkEnvelopesDispatcher {
                     continuation.resume(returning: ())
                     return
                 }
+
+                #if canImport(UIKit)
                 DispatchQueue.main.async { [weak self] in
                     self?.logger.debug("Will open universal link")
                     UIApplication.shared.open(envelopeUrl, options: [.universalLinksOnly: true]) { success in
@@ -83,6 +88,20 @@ final class LinkEnvelopesDispatcher {
                         }
                     }
                 }
+                #elseif canImport(AppKit)
+                let configuration = NSWorkspace.OpenConfiguration()
+                configuration.promptsUserIfNeeded = true
+                logger.debug("Will open universal link")
+                NSWorkspace.shared.open(envelopeUrl, configuration: configuration) { _, error in
+                    if error == nil {
+                        continuation.resume(returning: ())
+                    } else {
+                        continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
+                    }
+                }
+                #else
+                continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
+                #endif
             }
 
         } catch {
@@ -107,6 +126,7 @@ final class LinkEnvelopesDispatcher {
                 continuation.resume(returning: ())
                 return
             }
+            #if canImport(UIKit)
             DispatchQueue.main.async { [unowned self] in
                 logger.debug("Will open universal link")
                 UIApplication.shared.open(envelopeUrl, options: [.universalLinksOnly: true]) { success in
@@ -117,6 +137,20 @@ final class LinkEnvelopesDispatcher {
                     }
                 }
             }
+            #elseif canImport(AppKit)
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.promptsUserIfNeeded = true
+            logger.debug("Will open universal link")
+            NSWorkspace.shared.open(envelopeUrl, configuration: configuration) { _, error in
+                if error == nil {
+                    continuation.resume(returning: ())
+                } else {
+                    continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
+                }
+            }
+            #else
+            continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
+            #endif
         }
 
         try rpcHistory.resolve(response)
