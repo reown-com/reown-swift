@@ -67,6 +67,20 @@ The `ENABLE_TEST_MODE` Swift compilation flag enables **test wallet import**: if
 
 Both are passed via xcodebuild build settings — no Xcode project changes needed.
 
+### CI (`ci_e2e_pay_tests.yml`)
+
+**Test wallet:** CI doesn't store a private key. `.github/actions/derive-e2e-wallet` derives this repo's account (`m/44'/60'/0'/0/4`) from the `TEST_WALLET_MNEMONIC` secret, which the other SDK repos share (0–2 react-native-examples, 3 reown-kotlin, 4 reown-swift, 5 reown_flutter). Each repo has its own index, so no other repo's Permit2 reset or Polygon nonce races with this suite. The derived key is passed to the build as `TEST_WALLET_PRIVATE_KEY`, and the job fails if the address doesn't match the `TEST_WALLET_ADDRESS_IOS` repo variable (which `e2e_balance_check.yml` also monitors). The job runs in the `e2e-wallet-swift` concurrency group, so runs from different refs queue instead of paying from the wallet at the same time. To set or rotate the wallet (keep `--mnemonic-index` in sync with `index` in `ci_e2e_pay_tests.yml`):
+
+```bash
+gh secret set TEST_WALLET_MNEMONIC -R reown-com/reown-swift < mnemonic.txt
+gh variable set TEST_WALLET_ADDRESS_IOS -R reown-com/reown-swift \
+  --body "$(cast wallet address --mnemonic mnemonic.txt --mnemonic-index 4)"
+```
+
+A new address must be funded (Base USDC, Optimism USDC, Polygon USDT and POL) and must submit Pay's compliance details form once, or the no-KYC flows fail. Faucet requests run in the `e2e-faucet-requests` concurrency group with a cooldown, because the faucet bot drops a same-chain request that arrives before its previous send is mined.
+
+**Simulators, retry and artifacts:** `.github/scripts/maestro/boot-simulators.sh` creates two fresh simulators from the newest iPhone device type and slims them with [simslim](https://github.com/MobAI-App/simslim) (`simslim-ci.json`; Siri must stay enabled). `.github/scripts/maestro/maestro-suite.sh` splits the suite across them with `--shard-split` (safe because only `pay_usdt_polygon` sends txs) and, if any flow fails, re-runs only the flows the JUnit report marks as failed, once. `maestro-pay-test-artifacts` holds recordings, screenshots, JUnit reports, `maestro-output.log` and crash reports; the app-process syslog (`maestro-pay-ios-syslog`) is uploaded only when the job fails. Don't add Maestro `--debug-output` to uploaded artifacts: its `commands-*.json` contains the `WPAY_*` values.
+
 ### Accessibility Identifiers
 
 All Pay UI views have accessibility identifiers matching the shared Maestro test flows (e.g., `pay-button-pay`, `pay-option-0-selected`, `pay-result-success-icon`). These IDs must stay in sync with `WalletConnect/actions/maestro/pay-tests`.

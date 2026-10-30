@@ -20,9 +20,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a PR cancels its superseded run (freeing the test wallet);
+# scheduled and dispatched runs are never cancelled by another run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check-balance:
@@ -32,64 +34,90 @@ jobs:
 
   e2e-pay-tests:
     needs: check-balance
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # !cancelled() rather than always(): still runs when check-balance fails or is
+    # skipped, but a cancelled run stops (GitHub leaves an `always()` job running).
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
     runs-on: macos-latest-xlarge
     timeout-minutes: 45
+    # One test wallet for this repo (see derive-e2e-wallet): runs on other refs
+    # queue instead of paying from the same account at the same time. GitHub
+    # keeps one pending run per group; a newer one replaces it.
+    concurrency:
+      group: e2e-wallet-swift
+      cancel-in-progress: false
     permissions:
       checks: write
       actions: read
+    env:
+      ARTIFACTS_DIR: debug-artifacts
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      # This repo's account in the mnemonic shared with the other SDK repos
+      # (index 4; see the action for the reserved indexes), so no other repo's
+      # Permit2 reset or Polygon nonce races with this suite.
+      - name: Derive E2E wallet
+        id: wallet
+        uses: ./.github/actions/derive-e2e-wallet
+        with:
+          mnemonic: ${{ secrets.TEST_WALLET_MNEMONIC }}
+          index: 4
+          expected-address: ${{ vars.TEST_WALLET_ADDRESS_IOS }}
 
       - name: Select Xcode 26 (iOS 26 SDK)
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '26'
 
-      # Boot the simulator BEFORE the build (not right before `maestro test`).
+      - name: Install simslim
+        env:
+          # Pinned release + checksum: simslim is young and ships often.
+          SIMSLIM_VERSION: '0.11.0'
+          SIMSLIM_SHA256: d7ae4d0c834dfea9911f113cf60e98c25ee61f2a3a85ca22d0c28c43b39ccfaf
+        run: |
+          set -euo pipefail
+          DIR="$RUNNER_TEMP/simslim"
+          mkdir -p "$DIR"
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 \
+            --connect-timeout 20 --max-time 300 -o "$DIR/simslim.tar.gz" \
+            "https://github.com/MobAI-App/simslim/releases/download/v${SIMSLIM_VERSION}/simslim-v${SIMSLIM_VERSION}-macos-arm64.tar.gz"
+          echo "$SIMSLIM_SHA256  $DIR/simslim.tar.gz" | shasum -a 256 -c -
+          tar -xzf "$DIR/simslim.tar.gz" -C "$DIR" simslim
+          echo "$DIR" >> "$GITHUB_PATH"
+          "$DIR/simslim" --version
+
+      # Boot the simulators BEFORE the build (not right before `maestro test`).
       # A never-booted device posts a one-time "Ready for Apple Intelligence"
       # follow-up notification a few minutes after its first boot; when the sim
       # was booted seconds before the tests, that banner landed ~8s into the
       # first flow, covering the button Maestro was about to tap. Booting early
-      # lets it fire and auto-dismiss during the ~10 min build instead.
-      - name: Boot iOS simulator
-        run: |
-          # Pick whatever iPhone simulator the runner actually has, so this
-          # doesn't break each time the Xcode/runner image bumps the model.
-          # Single awk pass: pull the UDID from the first available iPhone row.
-          # awk exits 0 even when nothing matches (so the check below stays
-          # reachable under `set -eo pipefail`), `exit` avoids a head/SIGPIPE
-          # footgun, and it tolerates parens in the device name (e.g. SE).
-          SIMULATOR_UDID=$(xcrun simctl list devices available \
-            | awk '/iPhone/ { if (match($0, /[0-9A-Fa-f-]{36}/)) { print substr($0, RSTART, RLENGTH); exit } }')
-          if [ -z "$SIMULATOR_UDID" ]; then
-            echo "ERROR: no available iPhone simulator found"
-            xcrun simctl list devices available
-            exit 1
-          fi
-          echo "Using simulator: $SIMULATOR_UDID"
-          xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$SIMULATOR_UDID"
-          # Belt and suspenders for the same banner: iOS stamps this key when it
-          # posts the follow-up (verified against a sim's CoreFollowUp items.db —
-          # the item's creationDate matches this key to the second). Pre-seeding
-          # it marks the notification as already shown, covering runs where the
-          # build finishes (warm SPM cache) before the banner would have fired.
-          # Best-effort: booting early is the primary defense, so a runner image
-          # where this domain isn't writable must not fail the whole run.
-          xcrun simctl spawn "$SIMULATOR_UDID" defaults write \
-            com.apple.generativeexperiences.corefollowup \
-            DateOfLastAppleIntelligenceReadinessCFU -date "$(date -u '+%Y-%m-%d %H:%M:%S +0000')" \
-            || echo "WARNING: could not pre-seed Apple Intelligence CFU timestamp (non-fatal)"
+      # lets it fire and auto-dismiss during the build instead (the script also
+      # pre-seeds the key that marks it as shown).
+      # Two slim simulators (~2.3 GB each vs ~5.5 GB stock); the suite is split
+      # across them. A third made every flow slower on this 5-core runner
+      # (react-native-examples#638).
+      - name: Boot iOS simulators
+        env:
+          SIMULATORS: 2
+          SLIM: 'true'
+          # A first boot can be slow on a loaded runner (10m default).
+          SIMSLIM_BOOT_TIMEOUT: 15m
+        run: bash .github/scripts/maestro/boot-simulators.sh
 
-      - uses: actions/cache@v3
+      # Packages are cloned inside the workspace: actions/cache can't match
+      # `**/` globs outside it, so `../SourcePackagesCache` was never saved.
+      - uses: actions/cache@v4
         with:
-          path: |
-            **/SourcePackagesCache
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          path: SourcePackagesCache
+          key: ${{ runner.os }}-spm-e2e-pay-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-e2e-pay-
 
       - name: Build WalletApp for simulator (test mode)
         id: build
+        env:
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          TEST_WALLET_PRIVATE_KEY: ${{ steps.wallet.outputs.private-key }}
         run: |
           set -o pipefail && env NSUnbufferedIO=YES \
             xcodebuild \
@@ -97,10 +125,10 @@ jobs:
             -scheme "WalletApp" \
             -destination "generic/platform=iOS Simulator" \
             -derivedDataPath DerivedDataCache \
-            -clonedSourcePackagesDirPath ../SourcePackagesCache \
+            -clonedSourcePackagesDirPath SourcePackagesCache \
             RELAY_HOST='relay.walletconnect.com' \
-            PROJECT_ID='${{ secrets.PROJECT_ID }}' \
-            TEST_WALLET_PRIVATE_KEY='${{ secrets.TEST_WALLET_PRIVATE_KEY }}' \
+            PROJECT_ID="$PROJECT_ID" \
+            TEST_WALLET_PRIVATE_KEY="$TEST_WALLET_PRIVATE_KEY" \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) ENABLE_TEST_MODE' \
             build \
             | xcbeautify
@@ -117,34 +145,66 @@ jobs:
       - name: Install Maestro
         uses: WalletConnect/actions/maestro/setup@390045a88d335d438c972b422090144158df6823
         with:
-          version: '2.4.0'
+          # Multi-device `--shard-split` needs a recent Maestro; pinned so run
+          # timings are comparable across runs (react-native-examples uses the same).
+          version: '2.10.0'
 
-      - name: Install app on simulator
+      - name: Install app on simulators
         run: |
+          set -euo pipefail
           APP_PATH=$(find DerivedDataCache -name "WalletApp.app" -path "*/Debug-iphonesimulator/*" | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: WalletApp.app not found in DerivedDataCache"
             find DerivedDataCache -name "*.app" -path "*/Debug-iphonesimulator/*"
             exit 1
           fi
+          echo "APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
           echo "Installing: $APP_PATH"
-          xcrun simctl install booted "$APP_PATH"
+          IFS=, read -ra IDS <<< "$DEVICE_IDS"
+          PIDS=()
+          for ID in "${IDS[@]}"; do xcrun simctl install "$ID" "$APP_PATH" & PIDS+=($!); done
+          for PID in "${PIDS[@]}"; do wait "$PID"; done
 
+      # With two simulators, one Maestro process splits the flows across them.
+      # Only pay_usdt_polygon sends txs from the wallet (Polygon Permit2
+      # approve); Base/Optimism payments are gasless EIP-3009 authorizations, so
+      # any split is nonce-safe. A failed flow is retried once (only the failed
+      # ones; see maestro-suite.sh).
       - name: Run Maestro Pay E2E tests
         id: maestro
+        env:
+          APP_ID: com.walletconnect.walletapp
+          DEEPLINK_PREFIX: 'walletapp://wc?uri='
+          WPAY_CUSTOMER_KEY_SINGLE_NOKYC: ${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}
+          WPAY_MERCHANT_ID_SINGLE_NOKYC: ${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}
+          WPAY_CUSTOMER_KEY_MULTI_NOKYC: ${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}
+          WPAY_MERCHANT_ID_MULTI_NOKYC: ${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}
+          WPAY_CUSTOMER_KEY_MULTI_KYC: ${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}
+          WPAY_MERCHANT_ID_MULTI_KYC: ${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}
         run: |
-          maestro test \
-            --env APP_ID=com.walletconnect.walletapp \
-            --env 'DEEPLINK_PREFIX=walletapp://wc?uri=' \
-            --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }} \
-            --env WPAY_MERCHANT_ID_SINGLE_NOKYC=${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }} \
-            --env WPAY_CUSTOMER_KEY_MULTI_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }} \
-            --env WPAY_MERCHANT_ID_MULTI_NOKYC=${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }} \
-            --env WPAY_CUSTOMER_KEY_MULTI_KYC=${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }} \
-            --env WPAY_MERCHANT_ID_MULTI_KYC=${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }} \
-            --include-tags pay \
-            --test-output-dir debug-artifacts/maestro-output \
-            .maestro/
+          IFS=, read -ra IDS <<< "$DEVICE_IDS"
+          mkdir -p "$ARTIFACTS_DIR"
+          # App-process-only syslog at the default level (no debug/info), one per
+          # simulator (ios-syslog.log is the first). Uploaded only on failure.
+          APP_PROCESS=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP_PATH/Info.plist" 2>/dev/null || echo WalletApp)
+          SYSLOG_PIDS=()
+          for i in "${!IDS[@]}"; do
+            LOG="$ARTIFACTS_DIR/ios-syslog.log"
+            [ "$i" -gt 0 ] && LOG="$ARTIFACTS_DIR/ios-syslog-$((i + 1)).log"
+            xcrun simctl spawn "${IDS[$i]}" log stream \
+              --style=compact \
+              --predicate "process == \"$APP_PROCESS\"" \
+              > "$LOG" 2>&1 &
+            SYSLOG_PIDS+=($!)
+          done
+          set +e
+          MAESTRO_DEVICES="$DEVICE_IDS" bash .github/scripts/maestro/maestro-suite.sh iOS
+          maestro_exit_code=$?
+          kill "${SYSLOG_PIDS[@]}" 2>/dev/null || true
+          wait "${SYSLOG_PIDS[@]}" 2>/dev/null || true
+          mkdir -p "$ARTIFACTS_DIR/ios-crash-reports"
+          cp -R "$HOME/Library/Logs/DiagnosticReports/." "$ARTIFACTS_DIR/ios-crash-reports/" 2>/dev/null || true
+          exit "$maestro_exit_code"
 
       # Reset the USDT Permit2 allowance back to 0 so the next pay_usdt_polygon run
       # re-exercises the on-chain `approve` step. Runs even when the suite failed
@@ -153,7 +213,7 @@ jobs:
       # It signs a transaction, so it's a Node step (not a Maestro runScript); the
       # private key goes via env, never the CLI.
       - name: Reset USDT Permit2 allowance (Polygon)
-        if: always()
+        if: always() && steps.wallet.outputs.private-key != ''
         continue-on-error: true
         uses: WalletConnect/actions/maestro/permit2-reset@390045a88d335d438c972b422090144158df6823
         with:
@@ -161,15 +221,26 @@ jobs:
           # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.
           rpc-url: https://polygon-bor-rpc.publicnode.com
           token-address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
-          private-key: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
+          private-key: ${{ steps.wallet.outputs.private-key }}
 
-      - name: Capture simulator logs
-        if: always()
+      - name: Measure iOS simulators (after tests)
+        if: ${{ !cancelled() && env.DEVICE_IDS != '' }}
+        continue-on-error: true
         run: |
-          xcrun simctl spawn booted log collect --output debug-artifacts/sim-logs.logarchive 2>/dev/null || true
+          command -v simslim >/dev/null || exit 0
+          # Measured after the suite: the peak decides how many simulators fit
+          # on the runner (slim ~2.3 GB, stock ~5.5 GB).
+          HOST="$(sysctl -n hw.ncpu) cores, $(( $(sysctl -n hw.memsize) / 1073741824 )) GB RAM"
+          IFS=, read -ra IDS <<< "$DEVICE_IDS"
+          for i in "${!IDS[@]}"; do
+            OUT=$(simslim measure "${IDS[$i]}" 2>&1) || { echo "::warning::simslim measure failed: $OUT"; continue; }
+            echo "$OUT"
+            echo "iOS simulator $((i + 1))/${#IDS[@]} ($HOST host), after tests: ${OUT#*: }" >> "$GITHUB_STEP_SUMMARY"
+          done
 
+      # No Maestro --debug-output here: its commands-*.json hold the WPAY_* values.
       - name: Upload debug artifacts
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: maestro-pay-test-artifacts
@@ -181,7 +252,19 @@ jobs:
             debug-artifacts/**/*.mov
             debug-artifacts/**/*.webm
             debug-artifacts/**/*.gif
-            debug-artifacts/sim-logs.logarchive
+            debug-artifacts/junit-attempt-*.xml
+            debug-artifacts/maestro-output.log
+            debug-artifacts/ios-crash-reports/**
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # The app syslog is only useful when something failed.
+      - name: Upload iOS syslog (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-pay-ios-syslog
+          path: debug-artifacts/ios-syslog*.log
           retention-days: 14
           if-no-files-found: ignore
 
