@@ -224,21 +224,6 @@ jobs:
           token-address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
           private-key: ${{ steps.wallet.outputs.private-key }}
 
-      - name: Measure iOS simulators (after tests)
-        if: ${{ !cancelled() && env.DEVICE_IDS != '' }}
-        continue-on-error: true
-        run: |
-          command -v simslim >/dev/null || exit 0
-          # Measured after the suite: the peak decides how many simulators fit
-          # on the runner (slim ~2.3 GB, stock ~5.5 GB).
-          HOST="$(sysctl -n hw.ncpu) cores, $(( $(sysctl -n hw.memsize) / 1073741824 )) GB RAM"
-          IFS=, read -ra IDS <<< "$DEVICE_IDS"
-          for i in "${!IDS[@]}"; do
-            OUT=$(simslim measure "${IDS[$i]}" 2>&1) || { echo "::warning::simslim measure failed: $OUT"; continue; }
-            echo "$OUT"
-            echo "iOS simulator $((i + 1))/${#IDS[@]} ($HOST host), after tests: ${OUT#*: }" >> "$GITHUB_STEP_SUMMARY"
-          done
-
       # No Maestro --debug-output here: its commands-*.json hold the WPAY_* values.
       - name: Upload debug artifacts
         if: ${{ !cancelled() }}
