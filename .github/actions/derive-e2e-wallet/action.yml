@@ -11,7 +11,7 @@ inputs:
   index:
     description: >-
       Account index. Reserved: 0-2 react-native-examples (Android, iOS, web),
-      3 reown-kotlin, 4 reown-swift, 5 reown_flutter.
+      3 reown-kotlin, 4 reown-swift, 5-6 reown_flutter.
     required: true
   expected-address:
     description: >-
