@@ -213,8 +213,10 @@ jobs:
         uses: WalletConnect/actions/maestro/permit2-reset@390045a88d335d438c972b422090144158df6823
         with:
           chain-id: eip155:137
-          # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI; use publicnode.
-          rpc-url: https://polygon-bor-rpc.publicnode.com
+          # polygon-rpc.com gates requests (HTTP 401 "tenant disabled") in CI, and
+          # publicnode 403s eth_getTransactionReceipt ("Archive requests require a
+          # personal token"), so the revoke was sent but never confirmed.
+          rpc-url: https://polygon.drpc.org
           token-address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
           private-key: ${{ steps.wallet.outputs.private-key }}
 
