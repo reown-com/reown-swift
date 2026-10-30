@@ -65,7 +65,7 @@ jobs:
           expected-address: ${{ vars.TEST_WALLET_ADDRESS_IOS }}
 
       - name: Select Xcode 26 (iOS 26 SDK)
-        uses: maxim-lobanov/setup-xcode@v1
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: '26'
 
@@ -78,7 +78,8 @@ jobs:
           set -euo pipefail
           DIR="$RUNNER_TEMP/simslim"
           mkdir -p "$DIR"
-          curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 \
+          curl -fsSL --proto "=https" --proto-redir "=https" \
+            --retry 5 --retry-all-errors --retry-delay 3 \
             --connect-timeout 20 --max-time 300 -o "$DIR/simslim.tar.gz" \
             "https://github.com/MobAI-App/simslim/releases/download/v${SIMSLIM_VERSION}/simslim-v${SIMSLIM_VERSION}-macos-arm64.tar.gz"
           echo "$SIMSLIM_SHA256  $DIR/simslim.tar.gz" | shasum -a 256 -c -
