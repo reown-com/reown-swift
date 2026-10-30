@@ -45,11 +45,6 @@ jobs:
     concurrency:
       group: e2e-wallet-swift
       cancel-in-progress: false
-    permissions:
-      checks: write
-      actions: read
-    env:
-      ARTIFACTS_DIR: debug-artifacts
     steps:
       - uses: actions/checkout@v4
 
@@ -100,7 +95,6 @@ jobs:
       - name: Boot iOS simulators
         env:
           SIMULATORS: 2
-          SLIM: 'true'
           # A first boot can be slow on a loaded runner (10m default).
           SIMSLIM_BOOT_TIMEOUT: 15m
         run: bash .github/scripts/maestro/boot-simulators.sh
@@ -184,14 +178,14 @@ jobs:
           WPAY_MERCHANT_ID_MULTI_KYC: ${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}
         run: |
           IFS=, read -ra IDS <<< "$DEVICE_IDS"
-          mkdir -p "$ARTIFACTS_DIR"
+          mkdir -p debug-artifacts
           # App-process-only syslog at the default level (no debug/info), one per
           # simulator (ios-syslog.log is the first). Uploaded only on failure.
           APP_PROCESS=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP_PATH/Info.plist" 2>/dev/null || echo WalletApp)
           SYSLOG_PIDS=()
           for i in "${!IDS[@]}"; do
-            LOG="$ARTIFACTS_DIR/ios-syslog.log"
-            [ "$i" -gt 0 ] && LOG="$ARTIFACTS_DIR/ios-syslog-$((i + 1)).log"
+            LOG="debug-artifacts/ios-syslog.log"
+            [ "$i" -gt 0 ] && LOG="debug-artifacts/ios-syslog-$((i + 1)).log"
             xcrun simctl spawn "${IDS[$i]}" log stream \
               --style=compact \
               --predicate "process == \"$APP_PROCESS\"" \
@@ -203,8 +197,8 @@ jobs:
           maestro_exit_code=$?
           kill "${SYSLOG_PIDS[@]}" 2>/dev/null || true
           wait "${SYSLOG_PIDS[@]}" 2>/dev/null || true
-          mkdir -p "$ARTIFACTS_DIR/ios-crash-reports"
-          cp -R "$HOME/Library/Logs/DiagnosticReports/." "$ARTIFACTS_DIR/ios-crash-reports/" 2>/dev/null || true
+          mkdir -p debug-artifacts/ios-crash-reports
+          cp -R "$HOME/Library/Logs/DiagnosticReports/." "debug-artifacts/ios-crash-reports/" 2>/dev/null || true
           exit "$maestro_exit_code"
 
       # Reset the USDT Permit2 allowance back to 0 so the next pay_usdt_polygon run

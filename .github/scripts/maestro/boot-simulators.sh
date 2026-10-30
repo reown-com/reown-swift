@@ -1,12 +1,12 @@
 #!/bin/bash
 # Creates and boots the iOS simulators for the Maestro Pay suite. Ported from
 # react-native-examples' walletkit-build-and-maestro "Boot iOS Simulator" step.
+# Each fresh simulator is slimmed with simslim before its first boot (~2.3 GB
+# vs ~5.5 GB stock).
 #
 # Env:
 #   SIMULATORS       number of simulators (1-9, default 2); the suite is split
 #                    across them (maestro-suite.sh, --shard-split)
-#   SLIM             'true' (default) slims each fresh simulator with simslim
-#                    before its first boot (~2.3 GB vs ~5.5 GB stock)
 #   SIMSLIM_PROFILE  simslim profile (default: simslim-ci.json next to this file)
 # Exports DEVICE_IDS (comma-separated) and DEVICE_ID (first device) to
 # $GITHUB_ENV.
@@ -14,7 +14,6 @@
 set -euo pipefail
 
 SIMULATORS="${SIMULATORS:-2}"
-SLIM="${SLIM:-true}"
 SIMSLIM_PROFILE="${SIMSLIM_PROFILE:-$(cd "$(dirname "$0")" && pwd)/simslim-ci.json}"
 GITHUB_ENV="${GITHUB_ENV:-/dev/null}"
 ERR_FILE="$(mktemp)"
@@ -59,11 +58,11 @@ if [ "${#DEVICE_IDS[@]}" -lt "$SIMULATORS" ]; then
 fi
 echo "Using simulator device type: ${DEVICE_TYPE:-<fallback>}, ids: ${DEVICE_IDS[*]}"
 
-# Boot (or slim) all devices in parallel. simslim writes its overrides while
-# the device is still off, so it only applies to freshly created devices.
+# Slim and boot all devices in parallel. simslim writes its overrides while
+# the device is still off, so the existing-simulator fallback boots stock.
 PIDS=()
 for ID in "${DEVICE_IDS[@]}"; do
-  if [ "$SLIM" = "true" ] && [ "$FRESH" = "true" ]; then
+  if [ "$FRESH" = "true" ]; then
     # Boots the device slim; fails on drift rather than silently testing on a
     # stock simulator.
     ( simslim on "$ID" --profile "$SIMSLIM_PROFILE" &&
