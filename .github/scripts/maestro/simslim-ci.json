@@ -1,0 +1,5 @@
+{
+  "name": "walletapp-pay-e2e",
+  "description": "WalletApp Maestro Pay E2E (profile from react-native-examples). siri stays enabled: with assistantd off, the app's Siri client spins logging 'No language code saved, but Assistant is enabled' and XCTest snapshots time out. icloud and web stay enabled too.",
+  "except": ["icloud", "web", "siri"]
+}
