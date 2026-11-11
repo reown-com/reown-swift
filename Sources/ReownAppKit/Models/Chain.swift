@@ -62,10 +62,10 @@ enum EthUtils {
     static let ethEvents = [chainChanged, accountsChanged]
 }
 
-enum ChainPresets {
+public enum ChainPresets {
     static let ethToken = Chain.Token(name: "Ether", symbol: "ETH", decimal: 18)
 
-    static var ethChains: [Chain] = [
+    public static var ethChains: [Chain] = [
         Chain(
             chainName: "Ethereum",
             chainNamespace: "eip155",
