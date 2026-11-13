@@ -50,22 +50,26 @@ final class SessionAccountPresenter: ObservableObject {
                 do {
                     ActivityIndicatorManager.shared.start()
                     try await Sign.instance.request(params: request)
-                    lastRequest = request
                     ActivityIndicatorManager.shared.stop()
-                    
+
                     let requestId = request.id
                     let sessionTopic = session.topic
-                    
+
                     await MainActor.run { [weak self] in
                         guard let self = self else { return }
+                        // Set on the main thread, where the expiration sink reads it.
+                        self.lastRequest = request
                         self.requesting = true
                         self.openWallet(requstId: requestId, topic: sessionTopic)
                     }
                 } catch {
                     ActivityIndicatorManager.shared.stop()
-                    requesting = false
-                    showError.toggle()
-                    errorMessage = error.localizedDescription
+                    await MainActor.run { [weak self] in
+                        guard let self = self else { return }
+                        self.requesting = false
+                        self.showError.toggle()
+                        self.errorMessage = error.localizedDescription
+                    }
                 }
             }
         } catch {
@@ -87,6 +91,18 @@ extension SessionAccountPresenter {
             .sink { [unowned self] response in
                 requesting = false
                 presentResponse(response: response)
+            }
+            .store(in: &subscriptions)
+
+        // Without this the "Request sent" overlay stays up forever when the wallet never
+        // answers. SignPresenter shows the "expired" toast; this only clears our own state.
+        Sign.instance.requestExpirationPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] requestId in
+                guard requestId == lastRequest?.id else { return }
+                lastRequest = nil
+                requesting = false
+                ActivityIndicatorManager.shared.stop()
             }
             .store(in: &subscriptions)
     }
