@@ -94,3 +94,18 @@ Payment-option rows carry both the order-dependent `pay-option-{index}` (on the 
 #### USDT-on-Polygon Permit2 flow (`pay_usdt_polygon`)
 
 USDT on Polygon is a plain ERC-20, so WC Pay uses the Permit2 path: the wallet sends an on-chain `approve` then the payment tx. While setting a token up for the first time (allowance 0), `PayConfirmingView` shows the setup note under id `pay-loading-setup-note` (the flow observes it best-effort). CI resets the Permit2 allowance back to 0 after the suite (`Reset USDT Permit2 allowance (Polygon)` step in `ci_e2e_pay_tests.yml`, via the shared `WalletConnect/actions/maestro/permit2-reset` action) so each run re-exercises `approve`; `e2e_balance_check.yml` monitors USDT + POL (gas) on Polygon. The test wallet must hold USDT **and** a little POL on Polygon.
+
+## Maestro E2E Connect Tests (WX SLO 2)
+
+`ci_e2e_connect_tests.yml` (job `E2E Connect - iOS`) runs the WalletKit connect suite: dApp → pairing → session proposal → wallet approves → session settled → personal_sign. `Example/WalletApp` and `Example/DApp` (AppKit modal, SIWE off) run on the same simulator. Flows live in `.maestro/` (tag `connect`): `connect_approve_sign`, `connect_reject`, `sign_reject`, `connect_session_persists`. Names, tag, env (`APP_ID`, `DAPP_APP_ID`) and ids match react-native-examples and reown-kotlin.
+
+- **Shared wallet-side sub-flows** (`flows/connect_launch_wallet`, `connect_wallet_request`, `connect_settle`, `connect_back_to_dapp`, `connect_ios_open_prompt`, `connect_dapp_id`) are byte-identical to react-native-examples' and are meant to move to `WalletConnect/actions`. Don't edit them here only; change them in all repos.
+- **dApp-specific sub-flows**: `connect_launch_dapp`, `connect_open_dapp`, `connect_select_wallet` (taps the "Swift Sample Wallet" custom wallet), `connect_send_sign`, `connect_disconnect_dapp`.
+- **Ids the flows rely on**: wallet `button-scan` (HeaderView scan button), `wallet-request-approve` / `wallet-request-reject` (`ModalFooterView`, used by the proposal, sign and auth screens); dApp `connect-button`, `disconnect-button` (`SignView`), `sign-message-button` (personal_sign in `SessionAccountView`), and the "Sign message: success/failed" text in its response sheet.
+- `.maestro/` is tracked except the downloaded Pay flows (`pay_*.yaml`, `scripts/`).
+
+Run locally (build both schemes for the simulator with `PROJECT_ID`, install both apps, then):
+
+```bash
+./scripts/run-maestro-connect-tests.sh
+```

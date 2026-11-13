@@ -22,8 +22,11 @@ fastlane/README.md
 .env
 .env.maestro
 
-# Maestro E2E test flows (downloaded at runtime)
-.maestro/
+# Shared Maestro Pay flows (downloaded at runtime by setup-maestro-pay-tests.sh).
+# The connect flows (connect_*, sign_*) are tracked.
+.maestro/pay_*.yaml
+.maestro/flows/pay_*.yaml
+.maestro/scripts/
 
 # Configuration - local overrides (Configuration.xcconfig is tracked as template)
 Configuration.local.xcconfig
