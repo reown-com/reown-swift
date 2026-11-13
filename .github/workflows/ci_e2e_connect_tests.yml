@@ -1,0 +1,266 @@
+name: Maestro E2E Connect Tests
+# WX SLO 2 ("WalletKit connect flow works"): dApp → pairing → session proposal →
+# wallet approves → session settled → sign request handled. The Swift sample
+# wallet (Example/WalletApp) and the Swift sample dApp (Example/DApp, AppKit
+# modal) run on the same simulator; Maestro flows tagged `connect`
+# (.maestro/connect_*.yaml, sign_reject.yaml). Same flow names, tag, env and
+# testIDs as react-native-examples' and reown-kotlin's connect suites; the
+# wallet-side sub-flows are byte-identical to RN's so they can move to
+# WalletConnect/actions.
+# Kept apart from ci_e2e_pay_tests.yml so the E2E KPI job (WalletConnect/actions
+# metrics/config/workflows.json) reports the Connect pass rate on its own.
+# "(skip-metrics)" tells that job to drop this run. Don't change/remove it.
+run-name: ${{ ((github.event_name == 'pull_request' && github.event.pull_request.draft) || (github.event_name == 'workflow_dispatch' && github.ref_name != 'develop')) && format('{0} (skip-metrics)', github.event.pull_request.title || github.ref_name) || '' }}
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - develop
+      - main
+    paths:
+      - 'Sources/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'Example/WalletApp/**'
+      - 'Example/DApp/**'
+      - 'Example/Shared/**'
+      - 'Example/ExampleApp.xcodeproj/**'
+      - '.maestro/connect_*.yaml'
+      - '.maestro/sign_*.yaml'
+      - '.maestro/flows/connect_*.yaml'
+      - '.github/scripts/maestro/**'
+      - '.github/workflows/ci_e2e_connect_tests.yml'
+  schedule:
+    # Daily at 03:00 UTC (default branch), an hour before the Pay suite.
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+# A new push to a PR cancels its superseded run; scheduled and dispatched runs
+# are never cancelled by another run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e-connect-ios:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    # The KPI job matches this name (job_pattern) to get a per-platform rate.
+    name: E2E Connect - iOS
+    runs-on: macos-latest-xlarge
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26 (iOS 26 SDK)
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: '26'
+
+      - name: Install simslim
+        env:
+          # Same pinned release + checksum as ci_e2e_pay_tests.yml.
+          SIMSLIM_VERSION: '0.11.0'
+          SIMSLIM_SHA256: d7ae4d0c834dfea9911f113cf60e98c25ee61f2a3a85ca22d0c28c43b39ccfaf
+        run: |
+          set -euo pipefail
+          DIR="$RUNNER_TEMP/simslim"
+          mkdir -p "$DIR"
+          curl -fsSL --proto "=https" --proto-redir "=https" \
+            --retry 5 --retry-all-errors --retry-delay 3 \
+            --connect-timeout 20 --max-time 300 -o "$DIR/simslim.tar.gz" \
+            "https://github.com/MobAI-App/simslim/releases/download/v${SIMSLIM_VERSION}/simslim-v${SIMSLIM_VERSION}-macos-arm64.tar.gz"
+          echo "$SIMSLIM_SHA256  $DIR/simslim.tar.gz" | shasum -a 256 -c -
+          tar -xzf "$DIR/simslim.tar.gz" -C "$DIR" simslim
+          echo "$DIR" >> "$GITHUB_PATH"
+          "$DIR/simslim" --version
+
+      # Booted before the build so first-boot notifications fire and go away
+      # during the build (see ci_e2e_pay_tests.yml). The suite is split across
+      # two simulators; each gets the wallet and the dApp.
+      - name: Boot iOS simulators
+        env:
+          SIMULATORS: 2
+          SIMSLIM_BOOT_TIMEOUT: 15m
+        run: bash .github/scripts/maestro/boot-simulators.sh
+
+      - uses: actions/cache@v4
+        with:
+          path: SourcePackagesCache
+          key: ${{ runner.os }}-spm-e2e-connect-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-e2e-connect-
+            ${{ runner.os }}-spm-e2e-pay-
+
+      # No TEST_WALLET_PRIVATE_KEY / ENABLE_TEST_MODE: the wallet generates a
+      # fresh account, and personal_sign needs no funds.
+      - name: Build WalletApp and DApp for simulator
+        id: build
+        env:
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+        run: |
+          set -o pipefail
+          for SCHEME in WalletApp DApp; do
+            echo "::group::Build $SCHEME"
+            env NSUnbufferedIO=YES \
+              xcodebuild \
+              -project "Example/ExampleApp.xcodeproj" \
+              -scheme "$SCHEME" \
+              -destination "generic/platform=iOS Simulator" \
+              -derivedDataPath DerivedDataCache \
+              -clonedSourcePackagesDirPath SourcePackagesCache \
+              RELAY_HOST='relay.walletconnect.com' \
+              PROJECT_ID="$PROJECT_ID" \
+              build \
+              | xcbeautify
+            echo "::endgroup::"
+          done
+
+      - name: Install Maestro
+        uses: WalletConnect/actions/maestro/setup@390045a88d335d438c972b422090144158df6823
+        with:
+          # Same pinned version as the Pay suite (multi-device --shard-split).
+          version: '2.10.0'
+
+      - name: Install apps on simulators
+        run: |
+          set -euo pipefail
+          APPS=()
+          for NAME in WalletApp DApp; do
+            APP=$(find DerivedDataCache -name "$NAME.app" -path "*/Debug-iphonesimulator/*" | head -1)
+            if [ -z "$APP" ]; then
+              echo "ERROR: $NAME.app not found in DerivedDataCache"
+              find DerivedDataCache -name "*.app" -path "*/Debug-iphonesimulator/*"
+              exit 1
+            fi
+            APPS+=("$APP")
+          done
+          echo "WALLET_APP_PATH=${APPS[0]}" >> "$GITHUB_ENV"
+          echo "DAPP_APP_PATH=${APPS[1]}" >> "$GITHUB_ENV"
+          IFS=, read -ra IDS <<< "$DEVICE_IDS"
+          PIDS=()
+          for ID in "${IDS[@]}"; do
+            (for APP in "${APPS[@]}"; do xcrun simctl install "$ID" "$APP"; done) & PIDS+=($!)
+          done
+          for PID in "${PIDS[@]}"; do wait "$PID"; done
+
+      # Only personal_sign, no transactions: any split across the simulators is
+      # safe. A failed flow is retried once (only the failed ones).
+      - name: Run Maestro Connect E2E tests
+        id: maestro
+        env:
+          MAESTRO_TAGS: connect
+          APP_ID: com.walletconnect.walletapp
+          DAPP_APP_ID: com.walletconnect.dapp
+          DEEPLINK_PREFIX: 'walletapp://wc?uri='
+        run: |
+          IFS=, read -ra IDS <<< "$DEVICE_IDS"
+          mkdir -p debug-artifacts
+          # Wallet + dApp process syslog at the default level, one per simulator
+          # (ios-syslog.log is the first). Uploaded only on failure.
+          WALLET_PROCESS=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$WALLET_APP_PATH/Info.plist" 2>/dev/null || echo WalletApp)
+          DAPP_PROCESS=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$DAPP_APP_PATH/Info.plist" 2>/dev/null || echo DApp)
+          SYSLOG_PIDS=()
+          for i in "${!IDS[@]}"; do
+            LOG="debug-artifacts/ios-syslog.log"
+            [ "$i" -gt 0 ] && LOG="debug-artifacts/ios-syslog-$((i + 1)).log"
+            xcrun simctl spawn "${IDS[$i]}" log stream \
+              --style=compact \
+              --predicate "process == \"$WALLET_PROCESS\" OR process == \"$DAPP_PROCESS\"" \
+              > "$LOG" 2>&1 &
+            SYSLOG_PIDS+=($!)
+          done
+          set +e
+          MAESTRO_DEVICES="$DEVICE_IDS" bash .github/scripts/maestro/maestro-suite.sh iOS
+          maestro_exit_code=$?
+          kill "${SYSLOG_PIDS[@]}" 2>/dev/null || true
+          wait "${SYSLOG_PIDS[@]}" 2>/dev/null || true
+          mkdir -p debug-artifacts/ios-crash-reports
+          cp -R "$HOME/Library/Logs/DiagnosticReports/." "debug-artifacts/ios-crash-reports/" 2>/dev/null || true
+          exit "$maestro_exit_code"
+
+      - name: Upload debug artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-connect-test-artifacts
+          path: |
+            debug-artifacts/**/*.png
+            debug-artifacts/**/*.jpg
+            debug-artifacts/**/*.jpeg
+            debug-artifacts/**/*.mp4
+            debug-artifacts/**/*.mov
+            debug-artifacts/**/*.webm
+            debug-artifacts/**/*.gif
+            debug-artifacts/junit-attempt-*.xml
+            debug-artifacts/maestro-output.log
+            debug-artifacts/ios-crash-reports/**
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # Also when a flow failed and passed on the retry (junit-attempt-2.xml only
+      # exists then), so flakes in green runs can be diagnosed.
+      - name: Upload iOS syslog
+        if: failure() || hashFiles('debug-artifacts/junit-attempt-2.xml') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-connect-ios-syslog
+          path: debug-artifacts/ios-syslog*.log
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Send Slack notification
+        if: failure() && github.event_name != 'pull_request'
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "E2E Test Report - iOS - WalletKit Connect",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🧪 E2E Test Report - iOS (connect)" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Project:*\n`Reown Swift`" },
+                    { "type": "mrkdwn", "text": "*Platform:*\n`iOS`" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.ref_name }}`" },
+                    { "type": "mrkdwn", "text": "*Trigger:*\n`${{ github.event_name }}`" }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Build:*\n`${{ steps.build.outcome == 'success' && '✅ Success' || '❌ Failed' }}`" },
+                    { "type": "mrkdwn", "text": "*Maestro Tests:*\n`${{ steps.maestro.outcome == 'success' && '✅ Passed' || '❌ Failed' }}`" },
+                    { "type": "mrkdwn", "text": "*Overall Status:*\n`${{ job.status == 'success' && '✅ Success' || '❌ Failed' }}`" }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Workflow Run" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    },
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "Download Artifacts" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
+                    }
+                  ]
+                }
+              ]
+            }

@@ -92,7 +92,9 @@ extension SessionAccountPresenter {
     }
     
     private func getRequest(for method: String) throws -> AnyCodable {
-        let account = session.namespaces.first!.value.accounts.first!.address
+        // The account the user picked. Not `session.namespaces.first`: namespaces is a
+        // dictionary, so with eip155 + solana approved it could return the Solana address.
+        let account = sessionAccount.address
         if method == "eth_sendTransaction" {
             let tx = Stub.tx(from: account)
             return AnyCodable(tx)
