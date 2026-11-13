@@ -74,7 +74,7 @@ public struct RelayClientFactory {
         let socketStatusProvider = SocketStatusProvider(socket: socket, logger: logger)
         var socketConnectionHandler: SocketConnectionHandler!
         switch socketConnectionType {
-        case .automatic:    socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, subscriptionsTracker: subscriptionsTracker, logger: logger, socketStatusProvider: socketStatusProvider, clientIdAuthenticator: socketAuthenticator)
+        case .automatic:    socketConnectionHandler = AutomaticSocketConnectionHandler(socket: socket, networkMonitor: networkMonitor, subscriptionsTracker: subscriptionsTracker, logger: logger, socketStatusProvider: socketStatusProvider, clientIdAuthenticator: socketAuthenticator)
         case .manual:       socketConnectionHandler = ManualSocketConnectionHandler(socket: socket, logger: logger, topicsTracker: topicsTracker, clientIdAuthenticator: socketAuthenticator, socketStatusProvider: socketStatusProvider)
         }
 
