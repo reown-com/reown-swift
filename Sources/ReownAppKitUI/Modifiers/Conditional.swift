@@ -6,7 +6,7 @@ extension View {
     ///   - condition: The condition to evaluate.
     ///   - transform: The transform to apply to the source `View`.
     /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
-    @ViewBuilder public func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
+    @ViewBuilder func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
         if condition() {
             transform(self)
         } else {
@@ -15,7 +15,7 @@ extension View {
     }
     
     /// Transforms the source `View`  with the given closure giving more flexibility with modifcations.
-    public func transform(@ViewBuilder _ transform: (Self) -> some View) -> some View {
+    func transform(@ViewBuilder _ transform: (Self) -> some View) -> some View {
         transform(self)
     }
 }
