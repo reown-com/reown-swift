@@ -78,17 +78,23 @@ private final class DispatcherStub: Dispatching {
     var networkConnectionStatusPublisher: AnyPublisher<NetworkConnectionStatus, Never> { Just(.connected).eraseToAnyPublisher() }
     var socketConnectionStatusPublisher: AnyPublisher<SocketConnectionStatus, Never> { Just(.disconnected).eraseToAnyPublisher() }
 
-    func protectedSend(_ string: String, connectUnconditionally: Bool, completion: @escaping (Error?) -> Void) {
+    func protectedSend(_ string: String, connectUnconditionally _: Bool, completion: @escaping (Error?) -> Void) {
         if sendError == nil { sentMessages.append(string) }
         completion(sendError)
     }
 
-    func protectedSend(_ string: String, connectUnconditionally: Bool) async throws {
+    func protectedSend(_ string: String, connectUnconditionally _: Bool) async throws {
         if let sendError { throw sendError }
+        sentMessages.append(string)
     }
 
-    func connect() throws {}
-    func disconnect(closeCode: URLSessionWebSocketTask.CloseCode) throws {}
+    func connect() throws {
+        // The stub has no socket to connect.
+    }
+
+    func disconnect(closeCode _: URLSessionWebSocketTask.CloseCode) throws {
+        // The stub has no socket to disconnect.
+    }
 }
 
 private struct ClientIdStorageStub: ClientIdStoring {
