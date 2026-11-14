@@ -12,13 +12,19 @@ public final class SequenceStore<T> where T: SequenceObject {
 
     private let store: CodableStore<T>
     private let dateInitializer: () -> Date
+    private let handlesExpiry: Bool
     private var expiryMonitorTimer: Timer?
 
-
-    public init(store: CodableStore<T>, dateInitializer: @escaping () -> Date = Date.init) {
+    /// - Parameter handlesExpiry: Pass `false` for a store that reads the same storage as another
+    ///   `SequenceStore` that handles expiry. Expired sequences are then skipped but not deleted,
+    ///   `onSequenceExpiration` is never called and no expiry timer runs.
+    public init(store: CodableStore<T>, dateInitializer: @escaping () -> Date = Date.init, handlesExpiry: Bool = true) {
         self.store = store
         self.dateInitializer = dateInitializer
-        startExpiryMonitor()
+        self.handlesExpiry = handlesExpiry
+        if handlesExpiry {
+            startExpiryMonitor()
+        }
     }
 
     public func hasSequence(forTopic topic: String) -> Bool {
@@ -70,11 +76,13 @@ private extension SequenceStore {
 
     func verifyExpiry(on sequence: T) -> T? {
         let now = dateInitializer()
-        if now >= sequence.expiryDate {
+        guard now >= sequence.expiryDate else {
+            return sequence
+        }
+        if handlesExpiry {
             delete(topic: sequence.topic)
             onSequenceExpiration?(sequence)
-            return nil
         }
-        return sequence
+        return nil
     }
 }
