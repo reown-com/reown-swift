@@ -239,7 +239,10 @@ class WalletDetailViewModel: ObservableObject {
             safeAppUrl = safeAppUrl.replacingOccurrences(of: "/", with: "").replacingOccurrences(of: ":", with: "")
             safeAppUrl = "\(safeAppUrl)://"
         }
-        
+        if !safeAppUrl.hasSuffix("/") {
+            safeAppUrl = "\(safeAppUrl)/"
+        }
+
         guard let deeplinkUri = store.uri?.deeplinkUri else {
             throw DeeplinkErrors.uriNotCreated
         }
