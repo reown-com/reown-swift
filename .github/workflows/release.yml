@@ -8,6 +8,7 @@ on:
         type: choice
         description: Which sample app to release
         options:
+        - AppKitLab
         - DApp
         - WalletApp
         - Showcase
@@ -60,6 +61,7 @@ jobs:
       if: always()
       run: |
         case "${{ inputs.app }}" in
+          AppKitLab) echo "url=${{ vars.TESTFLIGHT_APPKITLAB_URL }}" >> "$GITHUB_OUTPUT" ;;
           DApp)      echo "url=${{ vars.TESTFLIGHT_DAPP_URL }}" >> "$GITHUB_OUTPUT" ;;
           WalletApp) echo "url=${{ vars.TESTFLIGHT_WALLETAPP_URL }}" >> "$GITHUB_OUTPUT" ;;
           Showcase)  echo "url=${{ vars.TESTFLIGHT_SHOWCASE_URL }}" >> "$GITHUB_OUTPUT" ;;
