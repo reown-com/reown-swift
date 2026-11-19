@@ -104,7 +104,7 @@ jobs:
       - name: Build WalletApp and DApp for simulator
         id: build
         env:
-          WALLET_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          WALLET_PROJECT_ID: ${{ secrets.WALLET_PROJECT_ID }}
           DAPP_PROJECT_ID: ${{ secrets.DAPP_PROJECT_ID }}
         run: |
           set -o pipefail

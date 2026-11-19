@@ -57,11 +57,11 @@ jobs:
       shell: bash
       run: |
         echo "No pre-built artifacts found, building from scratch..."
-        make build_all PROJECT_ID=${{ secrets.PROJECT_ID }}
+        make build_all PROJECT_ID=${{ secrets.TESTS_PROJECT_ID }}
 
     - name: Run UI Tests
       shell: bash
-      run: make ui_tests PROJECT_ID=${{ secrets.PROJECT_ID }}
+      run: make ui_tests PROJECT_ID=${{ secrets.TESTS_PROJECT_ID }}
 
     - name: List available simulators
       shell: bash
