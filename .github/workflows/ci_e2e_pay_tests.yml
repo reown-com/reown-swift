@@ -37,7 +37,7 @@ jobs:
     # !cancelled() rather than always(): still runs when check-balance fails or is
     # skipped, but a cancelled run stops (GitHub leaves an `always()` job running).
     if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 45
     # One test wallet for this repo (see derive-e2e-wallet): runs on other refs
     # queue instead of paying from the same account at the same time. GitHub

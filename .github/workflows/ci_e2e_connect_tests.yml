@@ -54,7 +54,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     # The KPI job matches this name (job_pattern) to get a per-platform rate.
     name: E2E Connect - iOS
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4

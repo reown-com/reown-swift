@@ -27,7 +27,7 @@ jobs:
 
   prepare:
     needs: authorize
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     steps:
       - uses: actions/checkout@v3
         with:
@@ -40,7 +40,7 @@ jobs:
 
   test:
     needs: prepare
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 15
     strategy:
       fail-fast: false
