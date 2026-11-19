@@ -53,7 +53,7 @@ jobs:
       if: ${{ github.event_name != 'workflow_dispatch' }}
       shell: bash
       env:
-        PROJECT_ID: ${{ secrets.PROJECT_ID }}
+        PROJECT_ID: ${{ secrets.TESTS_PROJECT_ID }}
       run: make build_all RELAY_HOST=relay.walletconnect.com PROJECT_ID="$PROJECT_ID"
 
     - name: Tar DerivedDataCache

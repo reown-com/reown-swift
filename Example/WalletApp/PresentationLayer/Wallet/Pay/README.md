@@ -63,11 +63,7 @@ let yttriumDebug = true  // Use local ../yttrium
 
 ### App Configuration
 
-WalletConnectPay is configured in `SceneDelegate.swift`:
-
-```swift
-WalletConnectPay.configure(projectId: InputConfig.projectId, apiKey: InputConfig.payApiKey!)
-```
+WalletConnectPay is configured by `WalletKit.configure` (called from `SceneDelegate.swift`) using the app's `PROJECT_ID`. No separate Pay API key is needed.
 
 ## Deep Link Format
 

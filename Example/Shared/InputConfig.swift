@@ -21,10 +21,6 @@ struct InputConfig {
         return config(for: "PIMLICO_API_KEY")
     }
 
-    static var payApiKey: String? {
-        return config(for: "PAY_API_KEY")
-    }
-
     static var testWalletPrivateKey: String? {
         return config(for: "TEST_WALLET_PRIVATE_KEY")
     }
