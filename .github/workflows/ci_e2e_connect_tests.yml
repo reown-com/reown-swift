@@ -104,10 +104,13 @@ jobs:
       - name: Build WalletApp and DApp for simulator
         id: build
         env:
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          WALLET_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          DAPP_PROJECT_ID: ${{ secrets.DAPP_PROJECT_ID }}
         run: |
           set -o pipefail
           for SCHEME in WalletApp DApp; do
+            # Wallet and dApp use separate Cloud projects.
+            if [ "$SCHEME" = DApp ]; then PROJECT_ID="$DAPP_PROJECT_ID"; else PROJECT_ID="$WALLET_PROJECT_ID"; fi
             echo "::group::Build $SCHEME"
             env NSUnbufferedIO=YES \
               xcodebuild \

@@ -104,6 +104,8 @@ USDT on Polygon is a plain ERC-20, so WC Pay uses the Permit2 path: the wallet s
 - **Ids the flows rely on**: wallet `button-scan` (HeaderView scan button), `wallet-request-approve` / `wallet-request-reject` (`ModalFooterView`, used by the proposal, sign and auth screens); dApp `connect-button`, `disconnect-button` (`SignView`), `sign-message-button` (personal_sign in `SessionAccountView`), and the "Sign message: success/failed" text in its response sheet.
 - `.maestro/` is tracked except the downloaded Pay flows (`pay_*.yaml`, `scripts/`).
 
+The wallet and the dApp use separate Cloud projects: CI builds WalletApp with the `PROJECT_ID` secret and DApp with `DAPP_PROJECT_ID` (also used by `release.yml` when `app` is DApp).
+
 Run locally (build both schemes for the simulator with `PROJECT_ID`, install both apps, then):
 
 ```bash
