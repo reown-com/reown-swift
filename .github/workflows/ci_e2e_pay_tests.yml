@@ -59,10 +59,10 @@ jobs:
           index: 4
           expected-address: ${{ vars.TEST_WALLET_ADDRESS_IOS }}
 
-      - name: Select Xcode 26 (iOS 26 SDK)
+      - name: Select Xcode 27 (iOS 27 SDK)
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
-          xcode-version: '26'
+          xcode-version: '27'
 
       - name: Install simslim
         env:
