@@ -83,6 +83,42 @@ final class ApproveEngineTests: XCTestCase {
         XCTAssertTrue(sessionStorageMock.hasSession(forTopic: topicB), "Responder must persist session on topic B")
     }
 
+    func testRedeliveredProposalAfterApprovalIsIgnored() async throws {
+        let topicA = String.generateTopic()
+        let pairing = WCPairing.stub(expiryDate: Date(timeIntervalSinceNow: 10000), topic: topicA)
+        pairingStorageMock.setPairing(pairing)
+        let proposerPubKey = AgreementPrivateKey().publicKey.hexRepresentation
+        let proposal = SessionProposal.stub(proposerPubKey: proposerPubKey)
+        let payload = RequestSubscriptionPayload(id: RPCID("id"), topic: topicA, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil, encryptedMessage: "", attestation: nil)
+
+        let firstProposal = expectation(description: "Wallet receives the proposal")
+        var redeliveredProposal: XCTestExpectation?
+        engine.onSessionProposal = { _, _ in
+            if let redeliveredProposal { redeliveredProposal.fulfill() } else { firstProposal.fulfill() }
+        }
+
+        pairingRegisterer.subject.send(payload)
+        await fulfillment(of: [firstProposal], timeout: 5)
+
+        _ = try await engine.approveProposal(proposerPubKey: proposerPubKey, validating: SessionNamespace.stubDictionary())
+
+        // The relay delivers the same wc_sessionPropose again after the wallet approved it.
+        let noSecondProposal = expectation(description: "An already approved proposal must not be emitted again")
+        noSecondProposal.isInverted = true
+        redeliveredProposal = noSecondProposal
+        pairingRegisterer.subject.send(payload)
+        await fulfillment(of: [noSecondProposal], timeout: 1)
+
+        XCTAssertNil(try proposalPayloadsStore.get(key: proposerPubKey), "An already approved proposal must not be stored again")
+        do {
+            _ = try await engine.approveProposal(proposerPubKey: proposerPubKey, validating: SessionNamespace.stubDictionary())
+            XCTFail("Approving the same proposal twice must fail")
+        } catch {
+            XCTAssertEqual(error as? ApproveEngine.Errors, .proposalNotFound)
+        }
+        XCTAssertEqual(sessionStorageMock.getAll().count, 1)
+    }
+
     func testReceiveProposal() {
         let pairing = WCPairing.stub()
         let topicA = pairing.topic
