@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   ui-tests:
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 45
     
     steps:

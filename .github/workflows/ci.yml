@@ -27,7 +27,7 @@ jobs:
 
   prepare:
     needs: authorize
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     steps:
       - uses: actions/checkout@v3
         with:
@@ -40,7 +40,7 @@ jobs:
 
   test:
     needs: prepare
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -52,10 +52,10 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Select Xcode 26 (iOS 26 SDK)
+    - name: Select Xcode 27 (iOS 27 SDK)
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '26'
+        xcode-version: '27'
 
     - uses: actions/cache/restore@v3
       with:

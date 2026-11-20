@@ -37,7 +37,7 @@ jobs:
     # !cancelled() rather than always(): still runs when check-balance fails or is
     # skipped, but a cancelled run stops (GitHub leaves an `always()` job running).
     if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 45
     # One test wallet for this repo (see derive-e2e-wallet): runs on other refs
     # queue instead of paying from the same account at the same time. GitHub
@@ -59,10 +59,10 @@ jobs:
           index: 4
           expected-address: ${{ vars.TEST_WALLET_ADDRESS_IOS }}
 
-      - name: Select Xcode 26 (iOS 26 SDK)
+      - name: Select Xcode 27 (iOS 27 SDK)
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
-          xcode-version: '26'
+          xcode-version: '27'
 
       - name: Install simslim
         env:

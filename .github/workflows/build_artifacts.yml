@@ -24,16 +24,16 @@ permissions:
 
 jobs:
   build:    
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 15
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Select Xcode 26 (iOS 26 SDK)
+    - name: Select Xcode 27 (iOS 27 SDK)
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '26'
+        xcode-version: '27'
 
     - uses: actions/cache@v3
       with:

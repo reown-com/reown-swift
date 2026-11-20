@@ -54,15 +54,15 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     # The KPI job matches this name (job_pattern) to get a per-platform rate.
     name: E2E Connect - iOS
-    runs-on: macos-latest-xlarge
+    runs-on: xcode-27-xlarge
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode 26 (iOS 26 SDK)
+      - name: Select Xcode 27 (iOS 27 SDK)
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
-          xcode-version: '26'
+          xcode-version: '27'
 
       - name: Install simslim
         env:
