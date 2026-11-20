@@ -41,7 +41,7 @@ final class RelayClientEndToEndTests: XCTestCase {
         let keychain = KeychainStorageMock()
         let relayClient = RelayClientFactory.create(
             relayHost: InputConfig.relayHost,
-            projectId: InputConfig.projectId,
+            projectId: projectId,
             keyValueStorage: keyValueStorage,
             keychainStorage: keychain,
             socketFactory: DefaultSocketFactory(),
