@@ -111,7 +111,7 @@ jobs:
       - name: Build WalletApp for simulator (test mode)
         id: build
         env:
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          PROJECT_ID: ${{ secrets.WALLET_PROJECT_ID }}
           TEST_WALLET_PRIVATE_KEY: ${{ steps.wallet.outputs.private-key }}
         run: |
           set -o pipefail && env NSUnbufferedIO=YES \

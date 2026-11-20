@@ -53,7 +53,7 @@ jobs:
         WALLETAPP_SENTRY_DSN: ${{ secrets.WALLETAPP_SENTRY_DSN }}
         MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
       run: |
-        make release APPLE_ID=${{ secrets.APPLE_ID }} PROJECT_ID=${{ secrets.RELEASE_PROJECT_ID }} WALLETAPP_SENTRY_DSN=${{ secrets.WALLETAPP_SENTRY_DSN }} MIXPANEL_TOKEN=${{secrets.MIXPANEL_TOKEN}} APP=${{ github.event.inputs.app }}
+        make release APPLE_ID=${{ secrets.APPLE_ID }} PROJECT_ID=${{ github.event.inputs.app == 'DApp' && secrets.DAPP_PROJECT_ID || secrets.WALLET_PROJECT_ID }} WALLETAPP_SENTRY_DSN=${{ secrets.WALLETAPP_SENTRY_DSN }} MIXPANEL_TOKEN=${{secrets.MIXPANEL_TOKEN}} APP=${{ github.event.inputs.app }}
 
     - name: Set TestFlight URL
       id: testflight
