@@ -52,8 +52,20 @@ public final class RPCHistory: RPCHistoryProtocol {
 
     private let storage: CodableStore<Record>
 
-    init(keyValueStore: CodableStore<Record>) {
+    /// Serialises the check-then-act sequences in `set` and `resolve`, so two deliveries of the
+    /// same request can't both pass the duplicate check.
+    private let lock = NSLock()
+
+    /// Ids of requests that were already resolved, oldest first. `resolve` deletes the record, so
+    /// without this a re-delivered request (the relay can deliver a message more than once) would
+    /// be accepted again and handled twice, e.g. a session proposal approved a second time.
+    private var resolvedIds: [String] = []
+    private var resolvedIdSet: Set<String> = []
+    private let resolvedIdsLimit: Int
+
+    init(keyValueStore: CodableStore<Record>, resolvedIdsLimit: Int = 1000) {
         self.storage = keyValueStore
+        self.resolvedIdsLimit = resolvedIdsLimit
 
         removeOutdated()
     }
@@ -66,7 +78,9 @@ public final class RPCHistory: RPCHistoryProtocol {
         guard let id = request.id else {
             throw HistoryError.unidentifiedRequest
         }
-        guard get(recordId: id) == nil else {
+        lock.lock()
+        defer { lock.unlock() }
+        guard get(recordId: id) == nil, !resolvedIdSet.contains(id.string) else {
             throw HistoryError.requestDuplicateNotAllowed
         }
         let record = Record(id: id, topic: topic, origin: origin, request: request, response: nil, timestamp: time.currentDate, transportType: transportType)
@@ -75,9 +89,29 @@ public final class RPCHistory: RPCHistoryProtocol {
 
     @discardableResult
     public func resolve(_ response: RPCResponse) throws -> Record {
+        lock.lock()
+        defer { lock.unlock() }
         let record = try validate(response)
         storage.delete(forKey: "\(record.id)")
+        markResolved(record.id)
         return record
+    }
+
+    /// Whether a request with this id was resolved in this process. Bounded to the most recent
+    /// `resolvedIdsLimit` ids and kept in memory only.
+    public func wasResolved(recordId: RPCID) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return resolvedIdSet.contains(recordId.string)
+    }
+
+    private func markResolved(_ id: RPCID) {
+        let key = id.string
+        guard resolvedIdSet.insert(key).inserted else { return }
+        resolvedIds.append(key)
+        if resolvedIds.count > resolvedIdsLimit {
+            resolvedIdSet.remove(resolvedIds.removeFirst())
+        }
     }
 
     @discardableResult

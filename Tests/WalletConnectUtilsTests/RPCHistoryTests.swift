@@ -49,6 +49,43 @@ final class RPCHistoryTests: XCTestCase {
         }
     }
 
+    func testSetResolvedRequestAgainThrows() throws {
+        let request = RPCRequest.stub()
+        let topic = String.randomTopic()
+        try sut.set(request, forTopic: topic, emmitedBy: .remote, transportType: .relay)
+        try sut.resolve(RPCResponse(matchingRequest: request, result: true))
+
+        // A re-delivery of the same request after it was answered must still be rejected.
+        XCTAssertThrowsError(try sut.set(request, forTopic: topic, emmitedBy: .remote, transportType: .relay)) { error in
+            XCTAssertEqual(RPCHistory.HistoryError.requestDuplicateNotAllowed, error as? RPCHistory.HistoryError)
+        }
+        XCTAssertTrue(sut.wasResolved(recordId: request.id!))
+    }
+
+    func testResolvedIdsAreBounded() throws {
+        sut = RPCHistory(keyValueStore: CodableStore<RPCHistory.Record>(defaults: RuntimeKeyValueStorage(), identifier: ""), resolvedIdsLimit: 2)
+        let requests = (1...3).map { _ in RPCRequest.stub() }
+        for request in requests {
+            try sut.set(request, forTopic: String.randomTopic(), emmitedBy: .remote, transportType: .relay)
+            try sut.resolve(RPCResponse(matchingRequest: request, result: true))
+        }
+        XCTAssertFalse(sut.wasResolved(recordId: requests[0].id!))
+        XCTAssertTrue(sut.wasResolved(recordId: requests[1].id!))
+        XCTAssertTrue(sut.wasResolved(recordId: requests[2].id!))
+    }
+
+    func testConcurrentSetOfSameRequestAcceptsOnlyOne() {
+        let request = RPCRequest.stub()
+        let topic = String.randomTopic()
+        let accepted = Atomic(0)
+        DispatchQueue.concurrentPerform(iterations: 50) { _ in
+            if (try? sut.set(request, forTopic: topic, emmitedBy: .remote, transportType: .relay)) != nil {
+                accepted.increment()
+            }
+        }
+        XCTAssertEqual(accepted.value, 1)
+    }
+
     // MARK: Error Cases Tests
 
     func testSetUnidentifiedRequest() {
@@ -128,4 +165,12 @@ final class RPCHistoryTests: XCTestCase {
     struct TestTimeProvider: TimeProvider {
         var currentDate: Date
     }
+}
+
+private final class Atomic {
+    private let lock = NSLock()
+    private var _value: Int
+    init(_ value: Int) { _value = value }
+    var value: Int { lock.lock(); defer { lock.unlock() }; return _value }
+    func increment() { lock.lock(); _value += 1; lock.unlock() }
 }
