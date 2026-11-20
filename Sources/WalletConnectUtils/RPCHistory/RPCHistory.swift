@@ -52,26 +52,34 @@ public final class RPCHistory: RPCHistoryProtocol {
 
     private let storage: CodableStore<Record>
 
-    /// Serialises the check-then-act sequences in `set` and `resolve`, so two deliveries of the
-    /// same request can't both pass the duplicate check.
+    /// Serialises the check-then-act sequences in `set`, `validate` and `resolve`, so two deliveries
+    /// of the same request can't both pass the duplicate check.
     private let lock = NSLock()
 
-    /// Ids of requests that were already resolved, oldest first. `resolve` deletes the record, so
-    /// without this a re-delivered request (the relay can deliver a message more than once) would
-    /// be accepted again and handled twice, e.g. a session proposal approved a second time.
+    /// When true, `resolve` keeps the record with its response instead of deleting it, so a
+    /// re-delivered request (the relay can deliver a message more than once) is still rejected
+    /// as a duplicate, also after an app restart. Resolved records are removed with their topic
+    /// or after 30 days, and are hidden from every read below, which only return pending requests.
+    private let keepsResolvedRecords: Bool
+
+    /// Used instead of kept records when `keepsResolvedRecords` is false: ids of the most recently
+    /// resolved requests, oldest first, in memory only.
     private var resolvedIds: [String] = []
     private var resolvedIdSet: Set<String> = []
     private let resolvedIdsLimit: Int
 
-    init(keyValueStore: CodableStore<Record>, resolvedIdsLimit: Int = 1000) {
+    init(keyValueStore: CodableStore<Record>, keepsResolvedRecords: Bool = true, resolvedIdsLimit: Int = 1000) {
         self.storage = keyValueStore
+        self.keepsResolvedRecords = keepsResolvedRecords
         self.resolvedIdsLimit = resolvedIdsLimit
 
         removeOutdated()
     }
 
+    /// The pending (not yet resolved) record for this id.
     public func get(recordId: RPCID) -> Record? {
-        try? storage.get(key: recordId.string)
+        guard let record = storedRecord(recordId), record.response == nil else { return nil }
+        return record
     }
 
     public func set(_ request: RPCRequest, forTopic topic: String, emmitedBy origin: Record.Origin, time: TimeProvider = DefaultTimeProvider(), transportType: RPCHistory.Record.TransportType) throws {
@@ -80,7 +88,7 @@ public final class RPCHistory: RPCHistoryProtocol {
         }
         lock.lock()
         defer { lock.unlock() }
-        guard get(recordId: id) == nil, !resolvedIdSet.contains(id.string) else {
+        guard storedRecord(id) == nil, !resolvedIdSet.contains(id.string) else {
             throw HistoryError.requestDuplicateNotAllowed
         }
         let record = Record(id: id, topic: topic, origin: origin, request: request, response: nil, timestamp: time.currentDate, transportType: transportType)
@@ -91,18 +99,50 @@ public final class RPCHistory: RPCHistoryProtocol {
     public func resolve(_ response: RPCResponse) throws -> Record {
         lock.lock()
         defer { lock.unlock() }
-        let record = try validate(response)
-        storage.delete(forKey: "\(record.id)")
-        markResolved(record.id)
+        let record = try validateLocked(response)
+        if keepsResolvedRecords {
+            let resolved = Record(id: record.id, topic: record.topic, origin: record.origin, request: record.request, response: response, timestamp: record.timestamp, transportType: record.transportType)
+            storage.set(resolved, forKey: "\(record.id)")
+        } else {
+            storage.delete(forKey: "\(record.id)")
+            markResolved(record.id)
+        }
         return record
     }
 
-    /// Whether a request with this id was resolved in this process. Bounded to the most recent
-    /// `resolvedIdsLimit` ids and kept in memory only.
+    /// Whether a request with this id was already resolved.
     public func wasResolved(recordId: RPCID) -> Bool {
         lock.lock()
         defer { lock.unlock() }
-        return resolvedIdSet.contains(recordId.string)
+        return isResolved(recordId)
+    }
+
+    @discardableResult
+    public func validate(_ response: RPCResponse) throws -> Record {
+        lock.lock()
+        defer { lock.unlock() }
+        return try validateLocked(response)
+    }
+
+    private func validateLocked(_ response: RPCResponse) throws -> Record {
+        guard let id = response.id else {
+            throw HistoryError.unidentifiedResponse
+        }
+        if isResolved(id) {
+            throw HistoryError.responseDuplicateNotAllowed
+        }
+        guard let record = storedRecord(id) else {
+            throw HistoryError.requestMatchingResponseNotFound
+        }
+        return record
+    }
+
+    private func storedRecord(_ id: RPCID) -> Record? {
+        try? storage.get(key: id.string)
+    }
+
+    private func isResolved(_ id: RPCID) -> Bool {
+        resolvedIdSet.contains(id.string) || storedRecord(id)?.response != nil
     }
 
     private func markResolved(_ id: RPCID) {
@@ -114,20 +154,6 @@ public final class RPCHistory: RPCHistoryProtocol {
         }
     }
 
-    @discardableResult
-    public func validate(_ response: RPCResponse) throws -> Record {
-        guard let id = response.id else {
-            throw HistoryError.unidentifiedResponse
-        }
-        guard let record = get(recordId: id) else {
-            throw HistoryError.requestMatchingResponseNotFound
-        }
-        guard record.response == nil else {
-            throw HistoryError.responseDuplicateNotAllowed
-        }
-        return record
-    }
-
     public func deleteAll(forTopics topics: [String]){
         storage.getAll().forEach { record in
             if topics.contains(record.topic) {
@@ -137,7 +163,7 @@ public final class RPCHistory: RPCHistoryProtocol {
     }
 
     public func getAll<Object: Codable>(of type: Object.Type, topic: String) -> [Object] {
-        return storage.getAll()
+        return pendingRecords()
             .filter{$0.topic == topic}
             .compactMap { try? $0.request.params?.get(Object.self) }
     }
@@ -147,7 +173,7 @@ public final class RPCHistory: RPCHistoryProtocol {
     }
 
     public func getAllWithIDs<Object: Codable>(of type: Object.Type) -> [(id: RPCID, value: Object)] {
-        return storage.getAll().compactMap { record in
+        return pendingRecords().compactMap { record in
             guard let object = try? record.request.params?.get(Object.self)
             else { return nil }
             return (record.id, object)
@@ -163,11 +189,19 @@ public final class RPCHistory: RPCHistoryProtocol {
     }
 
     public func getPending() -> [Record] {
+        pendingRecords()
+    }
+
+    private func pendingRecords() -> [Record] {
         storage.getAll().filter { $0.response == nil }
     }
 
     public func deleteAll() {
+        lock.lock()
+        defer { lock.unlock() }
         storage.deleteAll()
+        resolvedIds.removeAll()
+        resolvedIdSet.removeAll()
     }
 }
 

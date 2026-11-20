@@ -62,8 +62,47 @@ final class RPCHistoryTests: XCTestCase {
         XCTAssertTrue(sut.wasResolved(recordId: request.id!))
     }
 
+    func testResolvedRequestSurvivesRestart() throws {
+        let defaults = RuntimeKeyValueStorage()
+        sut = RPCHistory(keyValueStore: CodableStore<RPCHistory.Record>(defaults: defaults, identifier: "history"))
+        let request = RPCRequest.stub()
+        let topic = String.randomTopic()
+        try sut.set(request, forTopic: topic, emmitedBy: .remote, transportType: .relay)
+        try sut.resolve(RPCResponse(matchingRequest: request, result: true))
+
+        // A new instance over the same storage, as after an app restart.
+        sut = RPCHistory(keyValueStore: CodableStore<RPCHistory.Record>(defaults: defaults, identifier: "history"))
+
+        XCTAssertThrowsError(try sut.set(request, forTopic: topic, emmitedBy: .remote, transportType: .relay)) { error in
+            XCTAssertEqual(RPCHistory.HistoryError.requestDuplicateNotAllowed, error as? RPCHistory.HistoryError)
+        }
+        XCTAssertTrue(sut.wasResolved(recordId: request.id!))
+    }
+
+    func testResolvedRecordsAreHiddenFromReads() throws {
+        let topic = String.randomTopic()
+        let resolved = RPCRequest.stub()
+        let pending = RPCRequest.stub()
+        try sut.set(resolved, forTopic: topic, emmitedBy: .remote, transportType: .relay)
+        try sut.set(pending, forTopic: topic, emmitedBy: .remote, transportType: .relay)
+        try sut.resolve(RPCResponse(matchingRequest: resolved, result: true))
+
+        XCTAssertNil(sut.get(recordId: resolved.id!))
+        XCTAssertEqual(sut.getPending().map(\.id), [pending.id!])
+        XCTAssertEqual(sut.getAllWithIDs(of: [String: String].self).map(\.id), [pending.id!])
+    }
+
+    func testDeleteTopicRemovesResolvedRecords() throws {
+        let request = RPCRequest.stub()
+        let topic = String.randomTopic()
+        try sut.set(request, forTopic: topic, emmitedBy: .remote, transportType: .relay)
+        try sut.resolve(RPCResponse(matchingRequest: request, result: true))
+        sut.deleteAll(forTopic: topic)
+        XCTAssertFalse(sut.wasResolved(recordId: request.id!))
+    }
+
     func testResolvedIdsAreBounded() throws {
-        sut = RPCHistory(keyValueStore: CodableStore<RPCHistory.Record>(defaults: RuntimeKeyValueStorage(), identifier: ""), resolvedIdsLimit: 2)
+        sut = RPCHistory(keyValueStore: CodableStore<RPCHistory.Record>(defaults: RuntimeKeyValueStorage(), identifier: ""), keepsResolvedRecords: false, resolvedIdsLimit: 2)
         let requests = (1...3).map { _ in RPCRequest.stub() }
         for request in requests {
             try sut.set(request, forTopic: String.randomTopic(), emmitedBy: .remote, transportType: .relay)
@@ -130,7 +169,7 @@ final class RPCHistoryTests: XCTestCase {
     }
 
     func testResolveDuplicateResponse() throws {
-        let expectedError = RPCHistory.HistoryError.requestMatchingResponseNotFound
+        let expectedError = RPCHistory.HistoryError.responseDuplicateNotAllowed
 
         let request = RPCRequest.stub()
         let responseA = RPCResponse(matchingRequest: request, result: true)
