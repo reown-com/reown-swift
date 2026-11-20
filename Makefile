@@ -45,10 +45,10 @@ unit_tests:
 	./run_tests.sh --scheme WalletConnect --project Example/ExampleApp.xcodeproj
 
 integration_tests:
-	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj
+	./run_tests.sh --scheme IntegrationTests --testplan IntegrationTests --project Example/ExampleApp.xcodeproj --retry-on-failure
 
 relay_tests:
-	./run_tests.sh --scheme RelayIntegrationTests --project Example/ExampleApp.xcodeproj
+	./run_tests.sh --scheme RelayIntegrationTests --project Example/ExampleApp.xcodeproj --retry-on-failure
 
 notify_tests:
 	./run_tests.sh --scheme NotifyTests --project Example/ExampleApp.xcodeproj

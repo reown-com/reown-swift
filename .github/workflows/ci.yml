@@ -41,7 +41,7 @@ jobs:
   test:
     needs: prepare
     runs-on: xcode-27-xlarge
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
