@@ -16,9 +16,17 @@ while [[ $# -gt 0 ]]; do
     -s|--scheme) SCHEME="$2"; shift;;
     -p|--project) PROJECT="$2"; shift;;
     -t|--testplan) TESTPLAN="$2"; shift;;
+    # Retry failed tests once. For suites that hit the real relay, where a single
+    # requestTimeout/connectionFailed should not fail the whole run.
+    -r|--retry-on-failure) RETRY_ON_FAILURE=1;;
     esac
     shift
 done
+
+RETRY_ARGS=()
+if [ -n "$RETRY_ON_FAILURE" ]; then
+    RETRY_ARGS=(-retry-tests-on-failure -test-iterations 2)
+fi
 
 if [ -z "$SCHEME" ]; then
     echo "No scheme provided"
@@ -68,6 +76,12 @@ if [ -z "$DEVICE_ID" ]; then
     DEVICE_ID=$(xcrun simctl create "EphemeralSim$SCHEME" "$DEVICE_TYPE")
 fi
 echo "Created ephemeral simulator with id: $DEVICE_ID"
+
+# Boot it and wait until it is ready. Right after `simctl create` on a fresh runner,
+# xcodebuild can fail to see the device at all ("Unable to find a device matching
+# the provided destination specifier"), with only macOS destinations listed.
+echo "Booting ephemeral simulator and waiting for it to finish booting"
+xcrun simctl bootstatus "$DEVICE_ID" -b || echo "::warning::Simulator $DEVICE_ID did not report a finished boot; continuing"
 DEST="platform=iOS Simulator,id=$DEVICE_ID"
 
 if [ -z "$TESTPLAN" ]; then
@@ -93,6 +107,7 @@ if [ -z "$XCTESTRUN" ]; then
         -derivedDataPath DerivedDataCache \
         -clonedSourcePackagesDirPath ../SourcePackagesCache \
         -resultBundlePath "test_results/$SCHEME.xcresult" \
+        ${RETRY_ARGS[@]+"${RETRY_ARGS[@]}"} \
         test \
         | tee ./test_results/xcodebuild.log \
         | xcbeautify --report junit --junit-report-filename report.junit --report-path ./test_results
@@ -122,6 +137,7 @@ else
         -derivedDataPath DerivedDataCache \
         -clonedSourcePackagesDirPath ../SourcePackagesCache \
         -resultBundlePath "test_results/$SCHEME.xcresult" \
+        ${RETRY_ARGS[@]+"${RETRY_ARGS[@]}"} \
         test-without-building \
         | tee ./test_results/xcodebuild.log \
         | xcbeautify --report junit --junit-report-filename report.junit --report-path ./test_results
