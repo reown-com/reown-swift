@@ -58,21 +58,42 @@ if [ "${#DEVICE_IDS[@]}" -lt "$SIMULATORS" ]; then
 fi
 echo "Using simulator device type: ${DEVICE_TYPE:-<fallback>}, ids: ${DEVICE_IDS[*]}"
 
+# Boots the device slim; fails on drift rather than silently testing on a
+# stock simulator. On the Xcode 27 runner image a first boot occasionally dies
+# mid-boot ("device is not booted" / "Bad or unknown session" from simslim's
+# launchctl check, every device at the same instant), so shut the device down
+# and slim-boot it once more before failing the job.
+slim_boot() {
+  local id="$1" attempt
+  for attempt in 1 2; do
+    if simslim on "$id" --profile "$SIMSLIM_PROFILE" &&
+        simslim verify "$id" --profile "$SIMSLIM_PROFILE"; then
+      return 0
+    fi
+    if [ "$attempt" -eq 1 ]; then
+      echo "::warning::Slim boot of $id failed; shutting it down and retrying once"
+      xcrun simctl shutdown "$id" 2>/dev/null || true
+      sleep 5
+    fi
+  done
+  echo "::error::Slim boot of $id failed twice"
+  return 1
+}
+
 # Slim and boot all devices in parallel. simslim writes its overrides while
 # the device is still off, so the existing-simulator fallback boots stock.
 PIDS=()
 for ID in "${DEVICE_IDS[@]}"; do
   if [ "$FRESH" = "true" ]; then
-    # Boots the device slim; fails on drift rather than silently testing on a
-    # stock simulator.
-    ( simslim on "$ID" --profile "$SIMSLIM_PROFILE" &&
-        simslim verify "$ID" --profile "$SIMSLIM_PROFILE" ) &
+    slim_boot "$ID" &
   else
     ( xcrun simctl boot "$ID" 2>/dev/null || true ) &
   fi
   PIDS+=($!)
 done
-for PID in "${PIDS[@]}"; do wait "$PID"; done
+FAILED=0
+for PID in "${PIDS[@]}"; do wait "$PID" || FAILED=1; done
+[ "$FAILED" -eq 0 ] || exit 1
 
 for ID in "${DEVICE_IDS[@]}"; do
   # Wait for full boot so the steps below don't race a not-ready simulator.
