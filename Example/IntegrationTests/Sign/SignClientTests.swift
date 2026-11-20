@@ -208,45 +208,21 @@ final class SignClientTests: XCTestCase {
     func testSessionReject() async throws {
         print("🧪TEST: Starting testSessionReject()")
 
-        print("🧪TEST: Step 1 - Creating expectation for session rejection")
-        let sessionRejectExpectation = expectation(description: "Proposer is notified on session rejection")
-
-        print("🧪TEST: Step 2 - Stub required namespaces")
         let requiredNamespaces = ProposalNamespace.stubRequired()
+        let proposalWaiter = PublisherValueWaiter(wallet.sessionProposalPublisher, description: "Wallet receives the session proposal")
+        let rejectionWaiter = PublisherValueWaiter(dapp.sessionRejectionPublisher, description: "Proposer is notified on session rejection")
 
-        class Store { var rejectedProposal: Session.Proposal? }
-        let store = Store()
-        let semaphore = DispatchSemaphore(value: 0)
-
-        print("🧪TEST: Step 3 - Dapp connects with required namespaces")
+        print("🧪TEST: Step 1 - Dapp connects with required namespaces, wallet pairs")
         let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
-        print("🧪TEST: Step 4 - Wallet pairing with the URI")
         try await walletPairingClient.pair(uri: uri)
 
-        print("🧪TEST: Step 5 - Wallet listening to sessionProposalPublisher...")
-        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
-            print("🧪TEST: Wallet received a session proposal with id: \(proposal.id). Rejecting it.")
-            Task(priority: .high) {
-                do {
-                    try await wallet.rejectSession(proposalId: proposal.id, reason: .unsupportedChains)
-                    store.rejectedProposal = proposal
-                    semaphore.signal()
-                } catch {
-                    XCTFail("🧪TEST: Failed to reject session: \(error)")
-                }
-            }
-        }.store(in: &publishers)
+        print("🧪TEST: Step 2 - Wallet rejects the proposal")
+        let (proposal, _) = try await proposalWaiter.value()
+        try await wallet.rejectSession(proposalId: proposal.id, reason: .unsupportedChains)
 
-        print("🧪TEST: Step 6 - Dapp listens for session rejection")
-        dapp.sessionRejectionPublisher.sink { proposal, _ in
-            print("🧪TEST: Dapp received session rejection for proposal with id: \(proposal.id)")
-            semaphore.wait()
-            XCTAssertEqual(store.rejectedProposal, proposal)
-            sessionRejectExpectation.fulfill()
-        }.store(in: &publishers)
-
-        print("🧪TEST: Step 7 - Waiting for sessionRejectExpectation...")
-        await fulfillment(of: [sessionRejectExpectation], timeout: InputConfig.defaultTimeout)
+        print("🧪TEST: Step 3 - Dapp receives the rejection for the same proposal")
+        let (rejectedProposal, _) = try await rejectionWaiter.value()
+        XCTAssertEqual(rejectedProposal, proposal)
 
         print("🧪TEST: Finished testSessionReject() ✅")
     }
