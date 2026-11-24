@@ -60,39 +60,48 @@ class VerifyContextFactoryTests: XCTestCase {
     }
 
     // tests for createVerifyContextForLinkMode
+    // Link mode never passes through the Verify server, so the verify context
+    // always resolves to unknown with an empty origin.
 
-    func testValidUniversalLink() {
+    func testMatchingUniversalLinkResolvesToUnknown() {
         let context = factory.createVerifyContextForLinkMode(redirectUniversalLink: "https://www.example.com/universallink", domain: "https://example.com")
-        XCTAssertEqual(context.validation, .valid)
+        XCTAssertEqual(context.validation, .unknown)
+        XCTAssertEqual(context.origin, "")
     }
 
-    func testInvalidUniversalLink() {
+    func testNonMatchingUniversalLinkResolvesToUnknown() {
         let context = factory.createVerifyContextForLinkMode(redirectUniversalLink: "https://www.invalid.com/universallink", domain: "https://example.com")
-        XCTAssertEqual(context.validation, .invalid)
+        XCTAssertEqual(context.validation, .unknown)
+        XCTAssertEqual(context.origin, "")
     }
 
-    func testInvalidUniversalLinkFormat() {
+    func testInvalidUniversalLinkFormatResolvesToUnknown() {
         let context = factory.createVerifyContextForLinkMode(redirectUniversalLink: "invalidurl", domain: "https://example.com")
-        XCTAssertEqual(context.validation, .invalid)
+        XCTAssertEqual(context.validation, .unknown)
+        XCTAssertEqual(context.origin, "")
     }
 
-    func testInvalidDomainFormat() {
+    func testInvalidDomainFormatResolvesToUnknown() {
         let context = factory.createVerifyContextForLinkMode(redirectUniversalLink: "https://www.example.com/universallink", domain: "invalidurl")
-        XCTAssertEqual(context.validation, .invalid)
+        XCTAssertEqual(context.validation, .unknown)
+        XCTAssertEqual(context.origin, "")
     }
 
-    func testSubdomainMatch() {
+    func testSubdomainResolvesToUnknown() {
         let context = factory.createVerifyContextForLinkMode(redirectUniversalLink: "https://sub.example.com/universallink", domain: "https://example.com")
-        XCTAssertEqual(context.validation, .valid)
+        XCTAssertEqual(context.validation, .unknown)
+        XCTAssertEqual(context.origin, "")
     }
 
-    func testUppercaseDomainMatch() {
+    func testUppercaseDomainResolvesToUnknown() {
         let context = factory.createVerifyContextForLinkMode(redirectUniversalLink: "https://WWW.EXAMPLE.COM/universallink", domain: "https://example.com")
-        XCTAssertEqual(context.validation, .valid)
+        XCTAssertEqual(context.validation, .unknown)
+        XCTAssertEqual(context.origin, "")
     }
 
-    func testEmptyHost() {
+    func testEmptyHostResolvesToUnknown() {
         let context = factory.createVerifyContextForLinkMode(redirectUniversalLink: "https://", domain: "https://example.com")
-        XCTAssertEqual(context.validation, .invalid)
+        XCTAssertEqual(context.validation, .unknown)
+        XCTAssertEqual(context.origin, "")
     }
 }
