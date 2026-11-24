@@ -57,7 +57,7 @@ public struct SignClientFactory {
     ) -> SignClient {
         let kms = KeyManagementService(keychain: keychainStorage)
         let rpcHistory = RPCHistoryFactory.createForNetwork(keyValueStorage: keyValueStorage)
-        let pairingStore = PairingStorage(storage: SequenceStore<WCPairing>(store: .init(defaults: keyValueStorage, identifier: SignStorageIdentifiers.pairings.rawValue)))
+        let pairingStore = makePairingStore(keyValueStorage: keyValueStorage)
         let sessionStore = SessionStorage(storage: SequenceStore<WCSession>(store: .init(defaults: keyValueStorage, identifier: SignStorageIdentifiers.sessions.rawValue)))
         let proposalPayloadsStore = CodableStore<RequestSubscriptionPayload<SessionType.ProposeParams>>(defaults: RuntimeKeyValueStorage(), identifier: SignStorageIdentifiers.proposals.rawValue)
         let verifyContextStore = CodableStore<VerifyContext>(defaults: keyValueStorage, identifier: VerifyStorageIdentifiers.context.rawValue)
@@ -189,5 +189,13 @@ public struct SignClientFactory {
             topicReconciliationService: topicReconciliationService
         )
         return client
+    }
+
+    /// The pairing client's store over the same storage handles expiry: it unsubscribes and deletes the key.
+    static func makePairingStore(keyValueStorage: KeyValueStorage) -> PairingStorage {
+        PairingStorage(storage: SequenceStore<WCPairing>(
+            store: .init(defaults: keyValueStorage, identifier: SignStorageIdentifiers.pairings.rawValue),
+            handlesExpiry: false
+        ))
     }
 }

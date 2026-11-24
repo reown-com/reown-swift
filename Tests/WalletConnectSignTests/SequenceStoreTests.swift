@@ -186,4 +186,24 @@ final class SequenceStoreTests: XCTestCase {
         XCTAssert(retrievedCount == persistentCount)
         XCTAssert(expiredCount == expirableCount)
     }
+
+    func testStoreNotHandlingExpirySkipsExpiredSequenceWithoutDeletingIt() {
+        let storage = RuntimeKeyValueStorage()
+        let owner = SequenceStore<ExpirableSequenceStub>(store: .init(defaults: storage, identifier: "shared"), dateInitializer: timeTraveler.generateDate)
+        let reader = SequenceStore<ExpirableSequenceStub>(store: .init(defaults: storage, identifier: "shared"), dateInitializer: timeTraveler.generateDate, handlesExpiry: false)
+        var expiredByOwner: [String] = []
+        owner.onSequenceExpiration = { expiredByOwner.append($0.topic) }
+        reader.onSequenceExpiration = { _ in XCTFail("Unexpected expiration call") }
+        let sequence = stubSequence()
+        owner.setSequence(sequence)
+        timeTraveler.travel(by: defaultTime)
+
+        XCTAssertTrue(reader.getAll().isEmpty)
+        XCTAssertNil(try reader.getSequence(forTopic: sequence.topic))
+        XCTAssertFalse(reader.hasSequence(forTopic: sequence.topic))
+        XCTAssertEqual(expiredByOwner, [])
+
+        XCTAssertTrue(owner.getAll().isEmpty)
+        XCTAssertEqual(expiredByOwner, [sequence.topic])
+    }
 }
