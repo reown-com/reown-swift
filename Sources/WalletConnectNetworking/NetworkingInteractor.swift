@@ -74,11 +74,10 @@ public class NetworkingInteractor: NetworkInteracting {
     }
     
     public func unsubscribe(topic: String) {
+        rpcHistory.deleteAll(forTopic: topic)
         relayClient.unsubscribe(topic: topic) { [unowned self] error in
             if let error = error {
                 logger.error(error)
-            } else {
-                rpcHistory.deleteAll(forTopic: topic)
             }
         }
     }
@@ -92,8 +91,8 @@ public class NetworkingInteractor: NetworkInteracting {
     }
 
     public func batchUnsubscribe(topics: [String]) async throws {
-        try await relayClient.batchUnsubscribe(topics: topics)
         rpcHistory.deleteAll(forTopics: topics)
+        try await relayClient.batchUnsubscribe(topics: topics)
     }
 
     public func subscribeOnRequest<RequestParams: Codable>(
