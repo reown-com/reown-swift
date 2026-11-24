@@ -289,4 +289,57 @@ class SIWEFromCacaoPayloadFormatterTests: XCTestCase {
         let message = try sut.formatMessage(from: cacaoPayload)
         XCTAssertEqual(message, expectedMessage)
     }
+
+    // MARK: - EIP-4361 single-line field integrity
+
+    func testRejectsDomainWithEmbeddedNewline() throws {
+        let payload = try smugglingPayload(domain: "service.invalid\nURI: https://evil.invalid")
+        XCTAssertThrowsError(try sut.formatMessage(from: payload)) { error in
+            XCTAssertEqual(
+                error as? SIWEFromCacaoPayloadFormatter.Errors,
+                .invalidSingleLineField("domain")
+            )
+        }
+    }
+
+    func testRejectsStatementWithEmbeddedCarriageReturn() throws {
+        let payload = try smugglingPayload(statement: "I accept\rURI: https://evil.invalid")
+        XCTAssertThrowsError(try sut.formatMessage(from: payload)) { error in
+            XCTAssertEqual(
+                error as? SIWEFromCacaoPayloadFormatter.Errors,
+                .invalidSingleLineField("statement")
+            )
+        }
+    }
+
+    func testRejectsAudWithEmbeddedNewline() throws {
+        let payload = try smugglingPayload(aud: "https://service.invalid/login\nNonce: forged")
+        XCTAssertThrowsError(try sut.formatMessage(from: payload)) { error in
+            XCTAssertEqual(
+                error as? SIWEFromCacaoPayloadFormatter.Errors,
+                .invalidSingleLineField("aud")
+            )
+        }
+    }
+
+    private func smugglingPayload(
+        domain: String = "service.invalid",
+        aud: String = "https://service.invalid/login",
+        statement: String? = "I accept the ServiceOrg Terms of Service: https://service.invalid/tos"
+    ) throws -> CacaoPayload {
+        let account = Account.stub()
+        return CacaoPayload(
+            iss: account.did,
+            domain: domain,
+            aud: aud,
+            version: "1",
+            nonce: "32891756",
+            iat: "2021-09-30T16:25:24Z",
+            nbf: nil,
+            exp: nil,
+            statement: statement,
+            requestId: nil,
+            resources: nil
+        )
+    }
 }
