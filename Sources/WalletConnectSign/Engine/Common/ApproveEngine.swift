@@ -189,11 +189,8 @@ final class ApproveEngine {
             reason: reason
         )
 
-        if let pairingTopic = rpcHistory.get(recordId: payload.id)?.topic {
-            Task {
-                networkingInteractor.unsubscribe(topic: pairingTopic)
-            }
-        }
+        // The proposal arrived on its pairing topic. Stop listening on it once the rejection is sent.
+        networkingInteractor.unsubscribe(topic: payload.topic)
 
         proposalPayloadsStore.delete(forKey: proposerPubKey)
         verifyContextStore.delete(forKey: proposerPubKey)

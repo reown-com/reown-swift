@@ -327,6 +327,22 @@ final class ApproveEngineTests: XCTestCase {
         XCTAssertTrue(verifyContextStore.getAll().isEmpty)
     }
     
+    func testRejectUnsubscribesFromPairingTopic() async throws {
+        let proposalReceived = expectation(description: "Wallet receives the proposal")
+        let pairing = WCPairing.stub()
+        pairingStorageMock.setPairing(pairing)
+        let proposal = SessionProposal.stub(proposerPubKey: AgreementPrivateKey().publicKey.hexRepresentation)
+        engine.onSessionProposal = { _, _ in proposalReceived.fulfill() }
+
+        pairingRegisterer.subject.send(RequestSubscriptionPayload(id: RPCID("id"), topic: pairing.topic, request: proposal, decryptedPayload: Data(), publishedAt: Date(), derivedTopic: nil, encryptedMessage: "", attestation: nil))
+        await fulfillment(of: [proposalReceived], timeout: 5)
+
+        try await engine.reject(proposerPubKey: proposal.proposer.publicKey, reason: .userRejected)
+
+        XCTAssertTrue(networkingInteractor.didRespondError)
+        XCTAssertEqual(networkingInteractor.unsubscriptions, [pairing.topic])
+    }
+
     func testVerifyContextStorageRemoveOnReject() async throws {
         let proposalReceivedExpectation = expectation(description: "Wallet expects to receive a proposal")
         
