@@ -238,6 +238,7 @@ private extension SessionEngine {
                 isVerified: response.isVerified
             )
         } catch {
+            logger.error("Failed to resolve verify context for session request: \(error.localizedDescription)")
             return verifyClient.createVerifyContext(origin: nil, domain: domain, isScam: nil, isVerified: nil)
         }
     }

@@ -161,16 +161,16 @@ final class SessionEngineVerifyClientMock: VerifyClientProtocol {
     var contextToReturn = VerifyContext(origin: "resolved.example.com", validation: .scam)
     var onVerify: (() -> Void)?
 
-    func verify(_ verificationType: VerificationType) async throws -> VerifyResponse {
+    func verify(_: VerificationType) async throws -> VerifyResponse {
         onVerify?()
         return VerifyResponse(origin: contextToReturn.origin, isScam: true, isVerified: false)
     }
 
-    func createVerifyContext(origin: String?, domain: String, isScam: Bool?, isVerified: Bool?) -> VerifyContext {
+    func createVerifyContext(origin _: String?, domain _: String, isScam _: Bool?, isVerified _: Bool?) -> VerifyContext {
         return contextToReturn
     }
 
-    func createVerifyContextForLinkMode(redirectUniversalLink: String, domain: String) -> VerifyContext {
+    func createVerifyContextForLinkMode(redirectUniversalLink _: String, domain _: String) -> VerifyContext {
         return VerifyContext(origin: "", validation: .unknown)
     }
 }
