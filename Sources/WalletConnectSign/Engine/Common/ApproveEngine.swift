@@ -395,6 +395,13 @@ private extension ApproveEngine {
             approveEngineLoggingHelper.logProposalNamespaces(title: "Optional Namespaces", optionalNamespaces)
         }
 
+        // A re-delivered proposal that this wallet already approved must not be stored and shown
+        // again, or the wallet could approve it twice. The proposer key is unique per proposal.
+        if sessionStore.getAll().contains(where: { $0.peerParticipant.publicKey == proposal.proposer.publicKey }) {
+            logger.debug("Ignoring session proposal that was already approved, id: \(payload.id)")
+            return
+        }
+
         do { try Namespace.validate(proposal.requiredNamespaces) } catch {
             return respondError(payload: payload, reason: .invalidUpdateRequest, protocolMethod: SessionProposeProtocolMethod.responseAutoReject())
         }
