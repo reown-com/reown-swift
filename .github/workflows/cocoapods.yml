@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   cocoapods-release:
-    runs-on: macos-latest-xlarge
+    runs-on: macos-15-xlarge
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,6 +18,11 @@ jobs:
           ref: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+
+      - name: Select Xcode 16.4
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
