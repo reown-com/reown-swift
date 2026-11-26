@@ -1108,19 +1108,30 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: Starting testEIP1271SessionAuthenticated()")
 
         print("🧪TEST: Step 1 - Prepare account & signature for EIP1271, plus expectation")
-        let account = Account(chainIdentifier: "eip155:1", address: "0x6DF3d14554742D67068BB7294C80107a3c655A56")!
-        let eip1271Signature = "0xb518b65724f224f8b12dedeeb06f8b278eb7d3b42524959bed5d0dfa49801bd776c7ee05de396eadc38ee693c917a04d93b20981d68c4a950cbc42ea7f4264bc1c"
+        // Same smart account + signature as EIP1271VerifierTests and the JS/Kotlin SDKs. The signature is
+        // valid on-chain (isValidSignature returns 0x1626ba7e) for this SIWE message:
+        //   localhost wants you to sign in with your Ethereum account:
+        //   0x2faf83c542b68f1b4cdc0e770e8cb9f567b08f71
+        //
+        //   URI: http://localhost:3000/
+        //   Version: 1
+        //   Chain ID: 1
+        //   Nonce: 1665443015700
+        //   Issued At: 2022-10-10T23:03:35.700Z
+        //   Expiration Time: 2022-10-11T23:03:35.700Z
+        let account = Account(chainIdentifier: "eip155:1", address: "0x2faf83c542b68f1b4cdc0e770e8cb9f567b08f71")!
+        let eip1271Signature = "0xc1505719b2504095116db01baaf276361efd3a73c28cf8cc28dabefa945b8d536011289ac0a3b048600c1e692ff173ca944246cf7ceb319ac2262d27b395c82b1c"
         let responseExpectation = expectation(description: "successful response delivered")
 
         print("🧪TEST: Step 2 - Dapp calls dapp.authenticate(...) with EIP1271 data")
         let uri = try await dapp.authenticate(AuthRequestParams(
-            domain: "etherscan.io",
+            domain: "localhost",
             chains: ["eip155:1"],
-            nonce: "DTYxeNr95Ne7Sape5",
-            uri: "https://etherscan.io/verifiedSignatures#",
+            nonce: "1665443015700",
+            uri: "http://localhost:3000/",
             nbf: nil,
-            exp: nil,
-            statement: "Sign message to verify ownership of the address 0x6DF3d14554742D67068BB7294C80107a3c655A56 on etherscan.io",
+            exp: "2022-10-11T23:03:35.700Z",
+            statement: nil,
             requestId: nil,
             resources: nil,
             methods: nil
