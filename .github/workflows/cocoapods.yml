@@ -39,7 +39,8 @@ jobs:
 
       - name: Show CocoaPods errors
         if: failure()
-        run: grep -nE 'ERROR \||error: |did not pass|\[!\]' pod-trunk-push.log | head -100 || true
+        run: |
+          grep -nE 'ERROR \||error: |did not pass|\[!\]' pod-trunk-push.log | head -100 || true
 
       - name: Upload CocoaPods log
         if: always()
