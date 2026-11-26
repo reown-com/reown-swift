@@ -21,12 +21,18 @@ class AttestationJWTVerifier {
         case issuerDoesNotMatchVerifyServerPubKey
         case messageIdMismatch
         case invalidJWT
+        case attestationExpired
     }
 
     let verifyServerPubKeyManager: VerifyServerPubKeyManagerProtocol
+    private let currentTimeProvider: () -> Date
 
-    init(verifyServerPubKeyManager: VerifyServerPubKeyManagerProtocol) {
+    init(
+        verifyServerPubKeyManager: VerifyServerPubKeyManagerProtocol,
+        currentTimeProvider: @escaping () -> Date = { Date() }
+    ) {
         self.verifyServerPubKeyManager = verifyServerPubKeyManager
+        self.currentTimeProvider = currentTimeProvider
     }
 
     // messageId - hash of the encrypted message supplied in the request
@@ -42,6 +48,13 @@ class AttestationJWTVerifier {
         let claims = try decodeJWTClaims(jwtString: attestationJWT)
         guard messageId == claims.id else {
             throw Errors.messageIdMismatch
+        }
+
+        // The attestation carries an expiry; an attestation past its exp is no
+        // longer a current verification result and must not be treated as one.
+        let now = UInt64(currentTimeProvider().timeIntervalSince1970)
+        guard claims.exp > now else {
+            throw Errors.attestationExpired
         }
 
         return VerifyResponse(origin: claims.origin, isScam: claims.isScam, isVerified: claims.isVerified)
