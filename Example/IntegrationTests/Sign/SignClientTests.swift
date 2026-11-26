@@ -84,15 +84,27 @@ final class SignClientTests: XCTestCase {
     }
 
     func setUpDappForLinkMode() async throws {
-        try await tearDown()
+        retireClients()
         (dappPairingClient, dapp, dappKeyValueStorage, dappRelayClient) = Self.makeClients(name: "🍏Dapp", supportLinkMode: true)
         (walletPairingClient, wallet, _, walletRelayClient) = Self.makeClients(name: "🍎Wallet", linkModeUniversalLink: walletLinkModeUniversalLink, supportLinkMode: true)
     }
 
     override func tearDown() {
-        dapp = nil
-        wallet = nil
+        // Only stop this test's own subscriptions. The clients must stay alive: the SDK runs
+        // async callbacks with `[unowned self]` (SignClient, AuthResponseSubscriber,
+        // NetworkingInteractor) that can still fire after the test ends and crash the whole
+        // xctest process if the client has been deallocated.
+        publishers.removeAll()
         super.tearDown()
+    }
+
+    /// Clients replaced mid-test are kept alive for the same reason as in `tearDown`.
+    private var retiredClients: [AnyObject] = []
+
+    private func retireClients() {
+        publishers.removeAll()
+        let current: [AnyObject?] = [dapp, wallet, dappPairingClient, walletPairingClient, dappRelayClient, walletRelayClient]
+        retiredClients.append(contentsOf: current.compactMap { $0 })
     }
 
     // MARK: - TESTS
@@ -122,7 +134,7 @@ final class SignClientTests: XCTestCase {
             }
             """
         ]
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             print("🧪TEST: Wallet received a session proposal with id: \(proposal.id). Approving with sessionNamespaces.")
             Task(priority: .high) {
                 do {
@@ -164,7 +176,7 @@ final class SignClientTests: XCTestCase {
             .store(in: &publishers)
 
         print("🧪TEST: Step 6 - Dapp connects with required namespaces...")
-        let uri = try! await dapp.connect(
+        let uri = try await dapp.connect(
             requiredNamespaces: requiredNamespaces,
             sessionProperties: nil,
             scopedProperties: scopedProperties
@@ -196,45 +208,21 @@ final class SignClientTests: XCTestCase {
     func testSessionReject() async throws {
         print("🧪TEST: Starting testSessionReject()")
 
-        print("🧪TEST: Step 1 - Creating expectation for session rejection")
-        let sessionRejectExpectation = expectation(description: "Proposer is notified on session rejection")
-
-        print("🧪TEST: Step 2 - Stub required namespaces")
         let requiredNamespaces = ProposalNamespace.stubRequired()
+        let proposalWaiter = PublisherValueWaiter(wallet.sessionProposalPublisher, description: "Wallet receives the session proposal")
+        let rejectionWaiter = PublisherValueWaiter(dapp.sessionRejectionPublisher, description: "Proposer is notified on session rejection")
 
-        class Store { var rejectedProposal: Session.Proposal? }
-        let store = Store()
-        let semaphore = DispatchSemaphore(value: 0)
-
-        print("🧪TEST: Step 3 - Dapp connects with required namespaces")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
-        print("🧪TEST: Step 4 - Wallet pairing with the URI")
+        print("🧪TEST: Step 1 - Dapp connects with required namespaces, wallet pairs")
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
-        print("🧪TEST: Step 5 - Wallet listening to sessionProposalPublisher...")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
-            print("🧪TEST: Wallet received a session proposal with id: \(proposal.id). Rejecting it.")
-            Task(priority: .high) {
-                do {
-                    try await wallet.rejectSession(proposalId: proposal.id, reason: .unsupportedChains)
-                    store.rejectedProposal = proposal
-                    semaphore.signal()
-                } catch {
-                    XCTFail("🧪TEST: Failed to reject session: \(error)")
-                }
-            }
-        }.store(in: &publishers)
+        print("🧪TEST: Step 2 - Wallet rejects the proposal")
+        let (proposal, _) = try await proposalWaiter.value()
+        try await wallet.rejectSession(proposalId: proposal.id, reason: .unsupportedChains)
 
-        print("🧪TEST: Step 6 - Dapp listens for session rejection")
-        dapp.sessionRejectionPublisher.sink { proposal, _ in
-            print("🧪TEST: Dapp received session rejection for proposal with id: \(proposal.id)")
-            semaphore.wait()
-            XCTAssertEqual(store.rejectedProposal, proposal)
-            sessionRejectExpectation.fulfill()
-        }.store(in: &publishers)
-
-        print("🧪TEST: Step 7 - Waiting for sessionRejectExpectation...")
-        await fulfillment(of: [sessionRejectExpectation], timeout: InputConfig.defaultTimeout)
+        print("🧪TEST: Step 3 - Dapp receives the rejection for the same proposal")
+        let (rejectedProposal, _) = try await rejectionWaiter.value()
+        XCTAssertEqual(rejectedProposal, proposal)
 
         print("🧪TEST: Finished testSessionReject() ✅")
     }
@@ -248,7 +236,7 @@ final class SignClientTests: XCTestCase {
         let sessionNamespaces = SessionNamespace.make(toRespond: requiredNamespaces)
 
         print("🧪TEST: Step 2 - Wallet listens for session proposals and approves them")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             print("🧪TEST: Wallet received proposal with id: \(proposal.id). Approving.")
             Task(priority: .high) {
                 do {
@@ -275,7 +263,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Dapp connects with required namespaces, and wallet pairs")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 6 - Waiting for sessionDeleteExpectation...")
@@ -294,10 +282,10 @@ final class SignClientTests: XCTestCase {
         let sessionNamespaces = SessionNamespace.make(toRespond: requiredNamespaces)
 
         print("🧪TEST: Step 2 - Wallet listens for session proposals and approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             print("🧪TEST: Wallet received proposal with id: \(proposal.id). Approving.")
             Task(priority: .high) {
-                try! await self.wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
+                do { try await self.wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
@@ -305,7 +293,7 @@ final class SignClientTests: XCTestCase {
         dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             print("🧪TEST: Dapp sees session settle. Pinging session topic: \(settledSession.topic)")
             Task(priority: .high) {
-                try! await dapp.ping(topic: settledSession.topic)
+                do { try await dapp.ping(topic: settledSession.topic) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
@@ -318,7 +306,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Dapp connects with required namespaces, wallet pairs")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 6 - Waiting for ping response expectation...")
@@ -345,7 +333,7 @@ final class SignClientTests: XCTestCase {
         sleep(1)
 
         print("🧪TEST: Step 1 - Wallet listens for session proposals and approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             print("🧪TEST: Wallet received proposal with id: \(proposal.id). Approving.")
             Task(priority: .high) {
                 do {
@@ -390,7 +378,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Dapp connects, wallet pairs")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 6 - Waiting for request & response expectations...")
@@ -416,7 +404,7 @@ final class SignClientTests: XCTestCase {
         sleep(1)
 
         print("🧪TEST: Step 1 - Wallet listens for session proposals & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             print("🧪TEST: Wallet received a proposal with id: \(proposal.id). Approving.")
             Task(priority: .high) {
                 try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
@@ -451,7 +439,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 5 - Dapp connects, wallet pairs")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 6 - Waiting for the error expectation...")
@@ -468,7 +456,7 @@ final class SignClientTests: XCTestCase {
         let sessionNamespaces = SessionNamespace.make(toRespond: requiredNamespaces)
 
         print("🧪TEST: Step 1 - Wallet listens for session proposals & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
             }
@@ -480,7 +468,7 @@ final class SignClientTests: XCTestCase {
                 let updateNamespace = SessionNamespace.make(
                     toRespond: ProposalNamespace.stubRequired(chains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!])
                 )
-                try! await wallet.update(topic: settledSession.topic, namespaces: updateNamespace)
+                do { try await wallet.update(topic: settledSession.topic, namespaces: updateNamespace) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
@@ -491,7 +479,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 4 - Dapp connects, wallet pairs")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 5 - Waiting for update expectation...")
@@ -508,7 +496,7 @@ final class SignClientTests: XCTestCase {
         let sessionNamespaces = SessionNamespace.make(toRespond: requiredNamespaces)
 
         print("🧪TEST: Step 1 - Wallet approves session proposals")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
             }
@@ -522,12 +510,12 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: Step 3 - Dapp listens for session settle and extends session")
         dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             Task(priority: .high) {
-                try! await wallet.extend(topic: settledSession.topic)
+                do { try await wallet.extend(topic: settledSession.topic) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
         print("🧪TEST: Step 4 - Dapp connects, wallet pairs")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 5 - Waiting for extend expectation...")
@@ -547,7 +535,7 @@ final class SignClientTests: XCTestCase {
         let chain = Blockchain("eip155:1")!
 
         print("🧪TEST: Step 1 - Wallet listens for proposals & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
             }
@@ -561,12 +549,12 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: Step 3 - Dapp listens for session settle then emits event")
         dapp.sessionSettlePublisher.map(\.session).sink { [unowned self] settledSession in
             Task(priority: .high) {
-                try! await wallet.emit(topic: settledSession.topic, event: event, chainId: chain)
+                do { try await wallet.emit(topic: settledSession.topic, event: event, chainId: chain) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
         print("🧪TEST: Step 4 - Connect & Pair")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 5 - Waiting for session event expectation...")
@@ -586,7 +574,7 @@ final class SignClientTests: XCTestCase {
         let chain = Blockchain("eip155:1")!
 
         print("🧪TEST: Step 1 - Wallet listens for proposals & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
             }
@@ -601,7 +589,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 3 - Connect & Pair")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 4 - Waiting for expectation (we expect an error to be thrown) ...")
@@ -672,7 +660,7 @@ final class SignClientTests: XCTestCase {
         )
 
         print("🧪TEST: Step 4 - Wallet listens for session proposals and approves with built namespaces")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 do {
                     _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
@@ -691,7 +679,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 6 - Dapp connects with required + optional, wallet pairs")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
         try await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 7 - Waiting for both settle expectations...")
@@ -753,7 +741,7 @@ final class SignClientTests: XCTestCase {
         )
 
         print("🧪TEST: Step 4 - Wallet listens for session proposals & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 do {
                     _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
@@ -772,7 +760,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 6 - Dapp connects, wallet pairs, wait for settle")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
         try await walletPairingClient.pair(uri: uri)
         await fulfillment(of: [dappSettlementExpectation, walletSettlementExpectation], timeout: InputConfig.defaultTimeout)
 
@@ -822,7 +810,7 @@ final class SignClientTests: XCTestCase {
         )
 
         print("🧪TEST: Step 4 - Wallet listens for session proposals & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 do {
                     _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
@@ -841,7 +829,7 @@ final class SignClientTests: XCTestCase {
         }.store(in: &publishers)
 
         print("🧪TEST: Step 6 - Dapp connects, wallet pairs, wait for settle")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
         try await walletPairingClient.pair(uri: uri)
         await fulfillment(of: [dappSettlementExpectation, walletSettlementExpectation], timeout: InputConfig.defaultTimeout)
 
@@ -897,7 +885,7 @@ final class SignClientTests: XCTestCase {
             )
 
             print("🧪TEST: Step 3 - Wallet listens for session proposal & tries to approve with incomplete sessionNamespaces")
-            wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+            wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
                 Task(priority: .high) {
                     do {
                         _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
@@ -911,7 +899,7 @@ final class SignClientTests: XCTestCase {
         }
 
         print("🧪TEST: Step 4 - Connect & pair, expecting settlement failure")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
         try await walletPairingClient.pair(uri: uri)
         await fulfillment(of: [settlementFailedExpectation], timeout: InputConfig.defaultTimeout)
 
@@ -969,7 +957,7 @@ final class SignClientTests: XCTestCase {
                 ]
             )
 
-            wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+            wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
                 Task(priority: .high) {
                     do {
                         _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces)
@@ -983,7 +971,7 @@ final class SignClientTests: XCTestCase {
         }
 
         print("🧪TEST: Step 3 - Connect & pair, expecting settlement failure")
-        let uri = try! await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
+        let uri = try await dapp.connect(requiredNamespaces: requiredNamespaces, optionalNamespaces: optionalNamespaces)
         try await walletPairingClient.pair(uri: uri)
         await fulfillment(of: [settlementFailedExpectation], timeout: 1)
 
@@ -1009,7 +997,7 @@ final class SignClientTests: XCTestCase {
                 let siweMessage = try! wallet.formatAuthMessage(payload: supportedAuthPayload, account: walletAccount)
                 let signature = try! signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
                 let auth = try! wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
-                _ = try! await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth])
+                do { _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth]) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
@@ -1048,7 +1036,7 @@ final class SignClientTests: XCTestCase {
                 let siweMessage = try! wallet.formatAuthMessage(payload: supportedAuthPayload, account: walletAccount)
                 let signature = try! signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
                 let auth = try! wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
-                _ = try! await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth])
+                do { _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth]) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
@@ -1092,7 +1080,7 @@ final class SignClientTests: XCTestCase {
                     let cacao = try! wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: account)
                     cacaos.append(cacao)
                 }
-                _ = try! await wallet.approveSessionAuthenticate(requestId: request.id, auths: cacaos)
+                do { _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: cacaos) } catch { XCTFail("\(error)") }
             }
         }.store(in: &publishers)
 
@@ -1120,19 +1108,30 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: Starting testEIP1271SessionAuthenticated()")
 
         print("🧪TEST: Step 1 - Prepare account & signature for EIP1271, plus expectation")
-        let account = Account(chainIdentifier: "eip155:1", address: "0x6DF3d14554742D67068BB7294C80107a3c655A56")!
-        let eip1271Signature = "0xb518b65724f224f8b12dedeeb06f8b278eb7d3b42524959bed5d0dfa49801bd776c7ee05de396eadc38ee693c917a04d93b20981d68c4a950cbc42ea7f4264bc1c"
+        // Same smart account + signature as EIP1271VerifierTests and the JS/Kotlin SDKs. The signature is
+        // valid on-chain (isValidSignature returns 0x1626ba7e) for this SIWE message:
+        //   localhost wants you to sign in with your Ethereum account:
+        //   0x2faf83c542b68f1b4cdc0e770e8cb9f567b08f71
+        //
+        //   URI: http://localhost:3000/
+        //   Version: 1
+        //   Chain ID: 1
+        //   Nonce: 1665443015700
+        //   Issued At: 2022-10-10T23:03:35.700Z
+        //   Expiration Time: 2022-10-11T23:03:35.700Z
+        let account = Account(chainIdentifier: "eip155:1", address: "0x2faf83c542b68f1b4cdc0e770e8cb9f567b08f71")!
+        let eip1271Signature = "0xc1505719b2504095116db01baaf276361efd3a73c28cf8cc28dabefa945b8d536011289ac0a3b048600c1e692ff173ca944246cf7ceb319ac2262d27b395c82b1c"
         let responseExpectation = expectation(description: "successful response delivered")
 
         print("🧪TEST: Step 2 - Dapp calls dapp.authenticate(...) with EIP1271 data")
-        let uri = try! await dapp.authenticate(AuthRequestParams(
-            domain: "etherscan.io",
+        let uri = try await dapp.authenticate(AuthRequestParams(
+            domain: "localhost",
             chains: ["eip155:1"],
-            nonce: "DTYxeNr95Ne7Sape5",
-            uri: "https://etherscan.io/verifiedSignatures#",
+            nonce: "1665443015700",
+            uri: "http://localhost:3000/",
             nbf: nil,
-            exp: nil,
-            statement: "Sign message to verify ownership of the address 0x6DF3d14554742D67068BB7294C80107a3c655A56 on etherscan.io",
+            exp: "2022-10-11T23:03:35.700Z",
+            statement: nil,
             requestId: nil,
             resources: nil,
             methods: nil
@@ -1166,19 +1165,19 @@ final class SignClientTests: XCTestCase {
         print("🧪TEST: Finished testEIP1271SessionAuthenticated() ✅")
     }
 
-    func testSessionAuthenticateUserRespondError() async {
+    func testSessionAuthenticateUserRespondError() async throws {
         print("🧪TEST: Starting testSessionAuthenticateUserRespondError()")
 
         let responseExpectation = expectation(description: "error response delivered")
 
         print("🧪TEST: Step 1 - Dapp calls authenticate(...), wallet pairs")
-        let uri = try! await dapp.authenticate(AuthRequestParams.stub())!
+        let uri = try await dapp.authenticate(AuthRequestParams.stub())!
         try? await walletPairingClient.pair(uri: uri)
 
         print("🧪TEST: Step 2 - Wallet listens for authenticateRequestPublisher but rejects session")
         wallet.authenticateRequestPublisher.sink { [unowned self] request in
             Task(priority: .high) {
-                try! await wallet.rejectSession(requestId: request.0.id)
+                do { try await wallet.rejectSession(requestId: request.0.id) } catch { XCTFail("\(error)") }
             }
         }
         .store(in: &publishers)
@@ -1224,7 +1223,7 @@ final class SignClientTests: XCTestCase {
                     let siweMessage = try! wallet.formatAuthMessage(payload: supportedAuthPayload, account: walletAccount)
                     let signature = try! signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
                     let cacao = try! wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
-                    _ = try! await wallet.approveSessionAuthenticate(requestId: request.id, auths: [cacao])
+                    do { _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [cacao]) } catch { XCTFail("\(error)") }
                 }
             }
             .store(in: &publishers)
@@ -1306,7 +1305,7 @@ final class SignClientTests: XCTestCase {
                 let siweMessage = try! wallet.formatAuthMessage(payload: supportedAuthPayload, account: signingAccount)
                 let signature = try! signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
                 let cacao = try! wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
-                _ = try! await wallet.approveSessionAuthenticate(requestId: request.id, auths: [cacao])
+                do { _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [cacao]) } catch { XCTFail("\(error)") }
             }
         }
         .store(in: &publishers)
@@ -1362,7 +1361,7 @@ final class SignClientTests: XCTestCase {
         let sessionNamespaces = SessionNamespace.make(toRespond: requiredNamespaces)
 
         print("🧪TEST: Step 1 - Wallet listens for sessionProposalPublisher & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 do { _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces) } catch { XCTFail("\(error)") }
             }
@@ -1399,7 +1398,7 @@ final class SignClientTests: XCTestCase {
         let sessionNamespaces = SessionNamespace.make(toRespond: requiredNamespaces)
 
         print("🧪TEST: Step 2 - Wallet listens for sessionProposalPublisher & approves")
-        wallet.sessionProposalPublisher.sink { [unowned self] (proposal, _) in
+        wallet.sessionProposalPublisher.first().sink { [unowned self] (proposal, _) in
             Task(priority: .high) {
                 do { _ = try await wallet.approve(proposalId: proposal.id, namespaces: sessionNamespaces) } catch { XCTFail("\(error)") }
             }
@@ -1480,84 +1479,56 @@ final class SignClientTests: XCTestCase {
         dappRelayClient.blockPublishing = true
         walletRelayClient.blockPublishing = true
 
-        let requestExpectation = expectation(description: "Wallet expects to receive a request")
-        let responseExpectation = expectation(description: "Dapp expects to receive a response")
-
         let requestMethod = "personal_sign"
         let requestParams = [EthSendTransaction.stub()]
         let responseParams = "0xdeadbeef"
-
-        let semaphore = DispatchSemaphore(value: 0)
 
         print("🧪TEST: Step 1 - Prove link mode for walletUniversalLink in Dapp storage")
         let walletUniversalLink = "https://test"
         let dappLinkModeLinksStore = CodableStore<Bool>(defaults: dappKeyValueStorage, identifier: SignStorageIdentifiers.linkModeLinks.rawValue)
         dappLinkModeLinksStore.set(true, forKey: walletUniversalLink)
 
-        print("🧪TEST: Step 2 - Wallet listens for authenticateRequestPublisher, approves link mode, signals semaphore")
-        wallet.authenticateRequestPublisher.sink { [unowned self] (request, _) in
-            Task(priority: .high) {
-                let signerFactory = DefaultSignerFactory()
-                let signer = MessageSignerFactory(signerFactory: signerFactory).create()
-                let supportedAuthPayload = try! wallet.buildAuthPayload(
-                    payload: request.payload,
-                    supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!],
-                    supportedMethods: ["eth_signTransaction", "personal_sign"]
-                )
-                let siweMessage = try! wallet.formatAuthMessage(payload: supportedAuthPayload, account: walletAccount)
-                let signature = try signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
-                let auth = try wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
-                let (_, approveEnvelope) = try! await wallet.approveSessionAuthenticateLinkMode(requestId: request.id, auths: [auth])
-                try dapp.dispatchEnvelope(approveEnvelope)
-                semaphore.signal()
-            }
-        }.store(in: &publishers)
+        // Each step subscribes before triggering the action that emits, and awaits the value
+        // instead of blocking a thread: the Sign publishers emit synchronously on the caller's
+        // thread, so DispatchSemaphore-based coordination deadlocked on CI.
+        print("🧪TEST: Step 2 - Dapp sends a link mode authenticate request to the wallet")
+        let authRequest = PublisherValueWaiter(wallet.authenticateRequestPublisher, description: "Wallet receives the authenticate request")
+        let authRequestEnvelope = try await dapp.authenticateLinkMode(AuthRequestParams.stub(), walletUniversalLink: walletUniversalLink)
+        try wallet.dispatchEnvelope(authRequestEnvelope)
+        let (request, _) = try await authRequest.value()
 
-        print("🧪TEST: Step 3 - Dapp listens for authResponsePublisher, then sends link-mode request => signals semaphore")
-        dapp.authResponsePublisher.sink { [unowned self] (_, result) in
-            semaphore.wait()
-            guard case .success(let (session, _)) = result, let session = session else { XCTFail(); return }
-            Task(priority: .high) {
-                let request = try! Request(id: RPCID(0), topic: session.topic, method: requestMethod, params: requestParams, chainId: Blockchain("eip155:1")!)
-                let requestEnvelope = try! await dapp.requestLinkMode(params: request)!
-                try! wallet.dispatchEnvelope(requestEnvelope)
-                semaphore.signal()
-            }
+        print("🧪TEST: Step 3 - Wallet approves in link mode, dapp receives the session")
+        let authResponse = PublisherValueWaiter(dapp.authResponsePublisher, description: "Dapp receives the authenticate response")
+        let auth = try makeSignedAuth(for: request)
+        let (_, approveEnvelope) = try await wallet.approveSessionAuthenticateLinkMode(requestId: request.id, auths: [auth])
+        try dapp.dispatchEnvelope(approveEnvelope)
+        let (_, authResult) = try await authResponse.value()
+        guard case .success(let (session, _)) = authResult, let session else {
+            return XCTFail("🧪TEST: Auth response did not return a session: \(authResult)")
         }
-        .store(in: &publishers)
 
-        print("🧪TEST: Step 4 - Wallet listens for sessionRequestPublisher, responds link mode => signals semaphore")
-        wallet.sessionRequestPublisher.sink { [unowned self] (sessionRequest, _) in
-            semaphore.wait()
-            let receivedParams = try! sessionRequest.params.get([EthSendTransaction].self)
-            XCTAssertEqual(receivedParams, requestParams)
-            XCTAssertEqual(sessionRequest.method, requestMethod)
-            requestExpectation.fulfill()
-            Task(priority: .high) {
-                let envelope = try! await wallet.respondLinkMode(topic: sessionRequest.topic, requestId: sessionRequest.id, response: .response(AnyCodable(responseParams)))!
-                try! dapp.dispatchEnvelope(envelope)
-            }
-            semaphore.signal()
-        }.store(in: &publishers)
-
-        print("🧪TEST: Step 5 - Dapp listens for sessionResponsePublisher, expects success => fulfill responseExpectation")
-        dapp.sessionResponsePublisher.sink { response in
-            semaphore.wait()
-            switch response.result {
-            case .response(let resp):
-                XCTAssertEqual(try! resp.get(String.self), responseParams)
-            case .error:
-                XCTFail()
-            }
-            responseExpectation.fulfill()
-        }.store(in: &publishers)
-
-        print("🧪TEST: Step 6 - Dapp calls authenticateLinkMode, wallet dispatches envelope")
-        let requestEnvelope = try await dapp.authenticateLinkMode(AuthRequestParams.stub(), walletUniversalLink: walletUniversalLink)
+        print("🧪TEST: Step 4 - Dapp sends a session request over link mode")
+        let sessionRequest = PublisherValueWaiter(wallet.sessionRequestPublisher, description: "Wallet expects to receive a request")
+        let rpcRequest = try Request(id: RPCID(0), topic: session.topic, method: requestMethod, params: requestParams, chainId: Blockchain("eip155:1")!)
+        let requestEnvelopeValue = try await dapp.requestLinkMode(params: rpcRequest)
+        let requestEnvelope = try XCTUnwrap(requestEnvelopeValue)
         try wallet.dispatchEnvelope(requestEnvelope)
+        let (receivedRequest, _) = try await sessionRequest.value()
+        XCTAssertEqual(try receivedRequest.params.get([EthSendTransaction].self), requestParams)
+        XCTAssertEqual(receivedRequest.method, requestMethod)
 
-        print("🧪TEST: Step 7 - Wait for request & response expectations")
-        await fulfillment(of: [requestExpectation, responseExpectation], timeout: InputConfig.defaultTimeout)
+        print("🧪TEST: Step 5 - Wallet responds over link mode, dapp receives the response")
+        let sessionResponse = PublisherValueWaiter(dapp.sessionResponsePublisher, description: "Dapp expects to receive a response")
+        let responseEnvelopeValue = try await wallet.respondLinkMode(topic: receivedRequest.topic, requestId: receivedRequest.id, response: .response(AnyCodable(responseParams)))
+        let responseEnvelope = try XCTUnwrap(responseEnvelopeValue)
+        try dapp.dispatchEnvelope(responseEnvelope)
+        let response = try await sessionResponse.value()
+        switch response.result {
+        case .response(let value):
+            XCTAssertEqual(try value.get(String.self), responseParams)
+        case .error(let error):
+            XCTFail("🧪TEST: Unexpected error response: \(error)")
+        }
 
         print("🧪TEST: Finished testLinkSessionRequest() ✅")
     }
@@ -1583,156 +1554,128 @@ final class SignClientTests: XCTestCase {
     func testUpgradeFromRelayToLinkMode() async throws {
         print("🧪TEST: Starting testUpgradeFromRelayToLinkMode()")
 
-        let linkModeUpgradeExpectation = expectation(description: "successful upgraded to link mode")
         try await setUpDappForLinkMode()
 
-        print("🧪TEST: Step 1 - Wallet listens for authenticateRequestPublisher with eip191, then blocks publishing")
-        wallet.authenticateRequestPublisher.sink { [unowned self] (request, _) in
-            Task(priority: .high) {
-                let signerFactory = DefaultSignerFactory()
-                let signer = MessageSignerFactory(signerFactory: signerFactory).create()
-                let supportedAuthPayload = try! wallet.buildAuthPayload(
-                    payload: request.payload,
-                    supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!],
-                    supportedMethods: ["eth_signTransaction", "personal_sign"]
-                )
-                let siweMessage = try! wallet.formatAuthMessage(payload: supportedAuthPayload, account: walletAccount)
-                let signature = try! signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
-                let auth = try! wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
-                _ = try! await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth])
-                walletRelayClient.blockPublishing = true
-            }
-        }.store(in: &publishers)
-
-        print("🧪TEST: Step 2 - Dapp listens for authResponsePublisher, blocks publishing, attempts link upgrade")
-        dapp.authResponsePublisher.sink { [unowned self] (_, result) in
-            dappRelayClient.blockPublishing = true
-            guard case .success = result else { XCTFail(); return }
-            Task {
-                try! await self.dapp.authenticateLinkMode(AuthRequestParams.stub(), walletUniversalLink: self.walletLinkModeUniversalLink)
-                linkModeUpgradeExpectation.fulfill()
-            }
-        }.store(in: &publishers)
-
-        print("🧪TEST: Step 3 - Dapp calls authenticate(...), wallet pairs, waiting for link mode upgrade")
-        let uri = try await dapp.authenticate(AuthRequestParams.stub(), walletUniversalLink: walletLinkModeUniversalLink)!
+        print("🧪TEST: Step 1 - Dapp authenticates over the relay, wallet pairs")
+        let authRequest = PublisherValueWaiter(wallet.authenticateRequestPublisher, description: "Wallet receives the authenticate request")
+        let uriValue = try await dapp.authenticate(AuthRequestParams.stub(), walletUniversalLink: walletLinkModeUniversalLink)
+        let uri = try XCTUnwrap(uriValue)
         try await walletPairingClient.pair(uri: uri)
-        await fulfillment(of: [linkModeUpgradeExpectation], timeout: InputConfig.defaultTimeout)
+        let (request, _) = try await authRequest.value()
+
+        print("🧪TEST: Step 2 - Wallet approves over the relay, dapp receives the response")
+        let authResponse = PublisherValueWaiter(dapp.authResponsePublisher, description: "Dapp receives the authenticate response")
+        let auth = try makeSignedAuth(for: request)
+        _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth])
+        let (_, authResult) = try await authResponse.value()
+        guard case .success = authResult else {
+            return XCTFail("🧪TEST: Auth response failed: \(authResult)")
+        }
+
+        print("🧪TEST: Step 3 - Block relay publishing; the dapp can now authenticate over link mode")
+        dappRelayClient.blockPublishing = true
+        walletRelayClient.blockPublishing = true
+        try await dapp.authenticateLinkMode(AuthRequestParams.stub(), walletUniversalLink: walletLinkModeUniversalLink)
 
         print("🧪TEST: Finished testUpgradeFromRelayToLinkMode() ✅")
     }
 
     func testUpgradeSessionToLinkModeAndSendRequestOverLinkMode() async throws {
-        print("🧪TEST: Starting testUpgradeSessionToLinkModeAndSendRequestOverLinkMode...")
+        print("🧪TEST: Starting testUpgradeSessionToLinkModeAndSendRequestOverLinkMode()")
 
-        print("🧪TEST: Step 1 - Calling setUpDappForLinkMode()")
         try await setUpDappForLinkMode()
-        print("🧪TEST: Finished setUpDappForLinkMode()")
 
         let requestMethod = "personal_sign"
         let requestParams = [EthSendTransaction.stub()]
         let responseParams = "0xdeadbeef"
-        let sessionResponseOnLinkModeExpectation = expectation(description: "Dapp expects to receive a response")
 
-        let semaphore = DispatchSemaphore(value: 0)
-
-        print("🧪TEST: Subscribing to wallet.authenticateRequestPublisher...")
-        wallet.authenticateRequestPublisher.sink { [unowned self] (request, _) in
-            print("🧪TEST: Received authenticate request from wallet.authenticateRequestPublisher. Processing...")
-            Task(priority: .high) {
-                do {
-                    let signerFactory = DefaultSignerFactory()
-                    let signer = MessageSignerFactory(signerFactory: signerFactory).create()
-                    let supportedAuthPayload = try wallet.buildAuthPayload(
-                        payload: request.payload,
-                        supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!],
-                        supportedMethods: ["eth_signTransaction", "personal_sign"]
-                    )
-                    let siweMessage = try wallet.formatAuthMessage(payload: supportedAuthPayload, account: walletAccount)
-                    let signature = try signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
-                    let auth = try wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
-
-                    print("🧪TEST: Approving session authenticate on wallet...")
-                    _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth])
-                    print("🧪TEST: Wallet approved session authenticate. Signaling semaphore.")
-                    semaphore.signal()
-                } catch {
-                    XCTFail("Failed to approve session authenticate: \(error)")
-                    semaphore.signal()
-                }
-            }
-        }
-        .store(in: &publishers)
-
-        print("🧪TEST: Subscribing to dapp.authResponsePublisher...")
-        dapp.authResponsePublisher.sink { [unowned self] (_, result) in
-            print("🧪TEST: Dapp received auth response. Waiting on semaphore...")
-            semaphore.wait()
-
-            print("🧪TEST: Blocking relay publishing to use link mode exclusively...")
-            dappRelayClient.blockPublishing = true
-            walletRelayClient.blockPublishing = true
-
-            guard case .success(let (session, _)) = result, let session = session else {
-                XCTFail("Auth response did not return a valid session.")
-                return
-            }
-            print("🧪TEST: Auth responded with a valid session. Topic: \(session.topic)")
-
-            Task(priority: .high) {
-                do {
-                    print("🧪TEST: Sending link-mode request from dapp to wallet...")
-                    let request = try Request(
-                        id: RPCID(0),
-                        topic: session.topic,
-                        method: requestMethod,
-                        params: requestParams,
-                        chainId: Blockchain("eip155:1")!
-                    )
-                    let requestEnvelope = try await self.dapp.requestLinkMode(params: request)!
-                    try self.wallet.dispatchEnvelope(requestEnvelope)
-                    print("🧪TEST: Dispatched the request envelope to the wallet over link mode.")
-                } catch {
-                    XCTFail("Failed to dispatch link-mode request: \(error)")
-                }
-            }
-        }
-        .store(in: &publishers)
-
-        print("🧪TEST: Subscribing to wallet.sessionRequestPublisher...")
-        wallet.sessionRequestPublisher.sink { [unowned self] (sessionRequest, _) in
-            print("🧪TEST: Wallet received a session request. Preparing link-mode response...")
-            Task(priority: .high) {
-                do {
-                    let envelope = try await wallet.respondLinkMode(
-                        topic: sessionRequest.topic,
-                        requestId: sessionRequest.id,
-                        response: .response(AnyCodable(responseParams))
-                    )!
-                    try dapp.dispatchEnvelope(envelope)
-                    print("🧪TEST: Responded to request and dispatched the response envelope back to Dapp.")
-                } catch {
-                    XCTFail("Failed to respond or dispatch envelope: \(error)")
-                }
-            }
-        }
-        .store(in: &publishers)
-
-        print("🧪TEST: Subscribing to dapp.sessionResponsePublisher...")
-        dapp.sessionResponsePublisher.sink { response in
-            print("🧪TEST: Dapp received session response. Fulfilling expectation...")
-            sessionResponseOnLinkModeExpectation.fulfill()
-        }
-        .store(in: &publishers)
-
-        print("🧪TEST: Starting normal authenticate over universal link: \(walletLinkModeUniversalLink)")
-        let uri = try await dapp.authenticate(AuthRequestParams.stub(), walletUniversalLink: walletLinkModeUniversalLink)!
-        print("🧪TEST: Pairing on wallet with URI: \(uri)")
+        print("🧪TEST: Step 1 - Dapp authenticates over the relay, wallet pairs")
+        let authRequest = PublisherValueWaiter(wallet.authenticateRequestPublisher, description: "Wallet receives the authenticate request")
+        let uriValue = try await dapp.authenticate(AuthRequestParams.stub(), walletUniversalLink: walletLinkModeUniversalLink)
+        let uri = try XCTUnwrap(uriValue)
         try await walletPairingClient.pair(uri: uri)
+        let (request, _) = try await authRequest.value()
 
-        print("🧪TEST: Waiting for sessionResponseOnLinkModeExpectation (timeout = \(InputConfig.defaultTimeout) seconds)...")
-        await fulfillment(of: [sessionResponseOnLinkModeExpectation], timeout: InputConfig.defaultTimeout)
+        print("🧪TEST: Step 2 - Wallet approves over the relay, dapp receives the session")
+        let authResponse = PublisherValueWaiter(dapp.authResponsePublisher, description: "Dapp receives the authenticate response")
+        let auth = try makeSignedAuth(for: request)
+        _ = try await wallet.approveSessionAuthenticate(requestId: request.id, auths: [auth])
+        let (_, authResult) = try await authResponse.value()
+        guard case .success(let (session, _)) = authResult, let session else {
+            return XCTFail("🧪TEST: Auth response did not return a session: \(authResult)")
+        }
 
-        print("🧪TEST: Finished testUpgradeSessionToLinkModeAndSendRequestOverLinkMode ✅")
+        print("🧪TEST: Step 3 - Block relay publishing so the request can only go over link mode")
+        dappRelayClient.blockPublishing = true
+        walletRelayClient.blockPublishing = true
+
+        print("🧪TEST: Step 4 - Dapp sends a session request over link mode")
+        let sessionRequest = PublisherValueWaiter(wallet.sessionRequestPublisher, description: "Wallet expects to receive a request")
+        let rpcRequest = try Request(id: RPCID(0), topic: session.topic, method: requestMethod, params: requestParams, chainId: Blockchain("eip155:1")!)
+        let requestEnvelopeValue = try await dapp.requestLinkMode(params: rpcRequest)
+        let requestEnvelope = try XCTUnwrap(requestEnvelopeValue)
+        try wallet.dispatchEnvelope(requestEnvelope)
+        let (receivedRequest, _) = try await sessionRequest.value()
+
+        print("🧪TEST: Step 5 - Wallet responds over link mode, dapp receives the response")
+        let sessionResponse = PublisherValueWaiter(dapp.sessionResponsePublisher, description: "Dapp expects to receive a response")
+        let responseEnvelopeValue = try await wallet.respondLinkMode(topic: receivedRequest.topic, requestId: receivedRequest.id, response: .response(AnyCodable(responseParams)))
+        let responseEnvelope = try XCTUnwrap(responseEnvelopeValue)
+        try dapp.dispatchEnvelope(responseEnvelope)
+        let response = try await sessionResponse.value()
+        guard case .response(let value) = response.result else {
+            return XCTFail("🧪TEST: Unexpected error response: \(response.result)")
+        }
+        XCTAssertEqual(try value.get(String.self), responseParams)
+
+        print("🧪TEST: Finished testUpgradeSessionToLinkModeAndSendRequestOverLinkMode() ✅")
+    }
+
+    // MARK: - Helpers
+
+    private func makeSignedAuth(for request: AuthenticationRequest) throws -> AuthObject {
+        let signer = MessageSignerFactory(signerFactory: DefaultSignerFactory()).create()
+        let supportedAuthPayload = try wallet.buildAuthPayload(
+            payload: request.payload,
+            supportedEVMChains: [Blockchain("eip155:1")!, Blockchain("eip155:137")!],
+            supportedMethods: ["eth_signTransaction", "personal_sign"]
+        )
+        let siweMessage = try wallet.formatAuthMessage(payload: supportedAuthPayload, account: walletAccount)
+        let signature = try signer.sign(message: siweMessage, privateKey: prvKey, type: .eip191)
+        return try wallet.buildSignedAuthObject(authPayload: supportedAuthPayload, signature: signature, account: walletAccount)
+    }
+}
+
+/// Subscribes to a publisher right away and lets a test await its first value without blocking a
+/// thread. Create it before triggering the action that emits, so the value cannot be missed.
+private final class PublisherValueWaiter<Output> {
+    struct TimeoutError: Error, CustomStringConvertible {
+        let description: String
+    }
+
+    private let expectation: XCTestExpectation
+    private let lock = NSLock()
+    private var received: Output?
+    private var cancellable: AnyCancellable?
+
+    init<P: Combine.Publisher>(_ publisher: P, description: String) where P.Output == Output, P.Failure == Never {
+        expectation = XCTestExpectation(description: description)
+        cancellable = publisher.first().sink { [weak self] value in
+            guard let self else { return }
+            lock.lock()
+            received = value
+            lock.unlock()
+            expectation.fulfill()
+        }
+    }
+
+    func value(timeout: TimeInterval = InputConfig.defaultTimeout) async throws -> Output {
+        _ = await XCTWaiter().fulfillment(of: [expectation], timeout: timeout)
+        lock.lock()
+        defer { lock.unlock() }
+        guard let received else {
+            throw TimeoutError(description: "Timed out after \(timeout)s waiting for: \(expectation.expectationDescription)")
+        }
+        return received
     }
 }

@@ -127,7 +127,7 @@ runs:
         SLACK_WEBHOOK_URL: ${{ inputs.slack-webhook-url }}
 
     - name: Publish Test Report
-      uses: mikepenz/action-junit-report@v3
+      uses: mikepenz/action-junit-report@v6
       if: success() || failure()
       with:
           check_name: ${{ inputs.type }} junit report

@@ -1,3 +1,3 @@
 #if !CocoaPods
-@_exported import ReownRouter
+@_exported import WalletConnectRouterLegacy
 #endif

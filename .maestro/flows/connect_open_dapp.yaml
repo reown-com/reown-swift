@@ -1,0 +1,17 @@
+appId: ${APP_ID}
+---
+# Shared flow: start the Swift sample dApp (Example/DApp) from a clean state.
+# Its AppKit config has SIWE off, so "Connect with AppKit" sends a plain
+# session proposal.
+# Env: DAPP_APP_ID (com.walletconnect.dapp for this repo).
+
+- runFlow: connect_dapp_id.yaml
+
+- clearState: ${output.dappAppId}
+- runFlow:
+    file: connect_launch_dapp.yaml
+
+- extendedWaitUntil:
+    visible:
+      id: "connect-button"
+    timeout: 30000

@@ -45,33 +45,13 @@ class VerifyContextFactory {
     }
 
     public func createVerifyContextForLinkMode(redirectUniversalLink: String, domain: String) -> VerifyContext {
-        guard let redirectURL = URL(string: redirectUniversalLink), let domainURL = URL(string: domain) else {
-            return VerifyContext(
-                origin: domain,
-                validation: .invalid
-            )
-        }
-
-        let redirectHost = redirectURL.host?.lowercased() ?? ""
-        let domainHost = domainURL.host?.lowercased() ?? ""
-
-        if redirectHost.isEmpty || domainHost.isEmpty {
-            return VerifyContext(
-                origin: domain,
-                validation: .invalid
-            )
-        }
-
-        if redirectHost.hasSuffix(domainHost) && (redirectHost == domainHost || redirectHost.hasSuffix("." + domainHost)) {
-            return VerifyContext(
-                origin: domain,
-                validation: .valid
-            )
-        } else {
-            return VerifyContext(
-                origin: domain,
-                validation: .invalid
-            )
-        }
+        // Link mode messages are delivered directly to the wallet and never pass
+        // through the Verify server, so there is no attestation to validate the
+        // origin against. The verify context therefore always resolves to
+        // unknown with an empty origin.
+        return VerifyContext(
+            origin: "",
+            validation: .unknown
+        )
     }
 }

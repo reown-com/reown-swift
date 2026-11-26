@@ -184,7 +184,8 @@ struct SessionAccountView: View {
                         .padding(.bottom, 12)
                         .padding(.horizontal, 8)
                     }
-                    .accessibilityIdentifier("method-\(index)")
+                    // Maestro connect suite taps personal_sign by this id.
+                    .accessibilityIdentifier(method == "personal_sign" ? "sign-message-button" : "method-\(index)")
                 }
             }
         }
@@ -240,6 +241,22 @@ struct SessionAccountView: View {
                     }
                 }
                 
+                // Same wording as the RN AppKit sample: the Maestro connect suite
+                // asserts "Sign message: success" / "Sign message: failed".
+                if presenter.lastRequest?.method == "personal_sign" {
+                    Group {
+                        if case RPCResult.error(_) = response.result {
+                            Text("Sign message: failed")
+                        } else {
+                            Text("Sign message: success")
+                        }
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                }
+
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(.white.opacity(0.02))

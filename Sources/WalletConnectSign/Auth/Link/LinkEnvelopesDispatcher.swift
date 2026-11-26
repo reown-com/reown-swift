@@ -1,4 +1,6 @@
 
+import Foundation
+
 #if os(iOS)
 import UIKit
 #endif
@@ -75,6 +77,7 @@ final class LinkEnvelopesDispatcher {
                 }
                 DispatchQueue.main.async { [weak self] in
                     self?.logger.debug("Will open universal link")
+#if os(iOS)
                     UIApplication.shared.open(envelopeUrl, options: [.universalLinksOnly: true]) { success in
                         if success {
                             continuation.resume(returning: ())
@@ -82,6 +85,11 @@ final class LinkEnvelopesDispatcher {
                             continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
                         }
                     }
+#else
+                    // This Link Mode transport uses UIApplication on iOS.
+                    // Other platforms return an explicit error.
+                    continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
+#endif
                 }
             }
 
@@ -109,6 +117,7 @@ final class LinkEnvelopesDispatcher {
             }
             DispatchQueue.main.async { [unowned self] in
                 logger.debug("Will open universal link")
+#if os(iOS)
                 UIApplication.shared.open(envelopeUrl, options: [.universalLinksOnly: true]) { success in
                     if success {
                         continuation.resume(returning: ())
@@ -116,6 +125,10 @@ final class LinkEnvelopesDispatcher {
                         continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
                     }
                 }
+#else
+                // Match request(...): report unsupported Link Mode explicitly.
+                continuation.resume(throwing: Errors.failedToOpenUniversalLink(envelopeUrl.absoluteString))
+#endif
             }
         }
 

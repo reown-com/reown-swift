@@ -43,6 +43,7 @@ struct SignView: View {
                                         .background(Color(red: 95/255, green: 159/255, blue: 248/255))
                                         .cornerRadius(16)
                                 }
+                                .accessibilityIdentifier("connect-button")
 
                                 Button {
                                     presenter.connectWalletWithSessionPropose()
@@ -177,6 +178,7 @@ struct SignView: View {
                             .frame(height: 56)
 
                         }
+                        .accessibilityIdentifier("disconnect-button")
                         .padding(20)
                     }
                 }

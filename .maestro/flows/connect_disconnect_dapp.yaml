@@ -1,0 +1,16 @@
+appId: ${APP_ID}
+---
+# Shared flow: disconnect the dApp. The sign result sheet sits on the pushed
+# account screen, so restart the dApp to get back to "Session Accounts" (the
+# session is restored from storage), then tap "Disconnect" and wait for the
+# logged-out state.
+- runFlow: connect_launch_dapp.yaml
+- extendedWaitUntil:
+    visible:
+      id: "disconnect-button"
+    timeout: 30000
+- tapOn:
+    id: "disconnect-button"
+- extendedWaitUntil:
+    visible: "Available Chains"
+    timeout: 30000

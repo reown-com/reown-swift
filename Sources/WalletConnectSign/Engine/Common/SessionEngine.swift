@@ -20,6 +20,7 @@ final class SessionEngine {
     private let networkingInteractor: NetworkInteracting
     private let historyService: HistoryServiceProtocol
     private let verifyContextStore: CodableStore<VerifyContext>
+    private let verifyClient: VerifyClientProtocol
     private let kms: KeyManagementServiceProtocol
     private var publishers = [AnyCancellable]()
     private let logger: ConsoleLogging
@@ -30,6 +31,7 @@ final class SessionEngine {
         networkingInteractor: NetworkInteracting,
         historyService: HistoryServiceProtocol,
         verifyContextStore: CodableStore<VerifyContext>,
+        verifyClient: VerifyClientProtocol,
         kms: KeyManagementServiceProtocol,
         sessionStore: WCSessionStorage,
         logger: ConsoleLogging,
@@ -39,6 +41,7 @@ final class SessionEngine {
         self.networkingInteractor = networkingInteractor
         self.historyService = historyService
         self.verifyContextStore = verifyContextStore
+        self.verifyClient = verifyClient
         self.kms = kms
         self.sessionStore = sessionStore
         self.logger = logger
@@ -104,7 +107,7 @@ private extension SessionEngine {
         networkingInteractor.requestSubscription(on: SessionRequestProtocolMethod())
             .sink { [unowned self] (payload: RequestSubscriptionPayload<SessionType.RequestParams>) in
                 Task(priority: .high) {
-                    onSessionRequest(payload: payload)
+                    await onSessionRequest(payload: payload)
                 }
             }.store(in: &publishers)
 
@@ -186,7 +189,7 @@ private extension SessionEngine {
         onSessionDelete?(topic, payload.request)
     }
 
-    func onSessionRequest(payload: RequestSubscriptionPayload<SessionType.RequestParams>) {
+    func onSessionRequest(payload: RequestSubscriptionPayload<SessionType.RequestParams>) async {
         logger.debug("Received session request")
         let protocolMethod = SessionRequestProtocolMethod()
         let topic = payload.topic
@@ -210,9 +213,34 @@ private extension SessionEngine {
         guard !request.isExpired() else {
             return respondError(payload: payload, reason: .sessionRequestExpired, protocolMethod: protocolMethod)
         }
-        let verifyContext = session.verifyContext ?? VerifyContext(origin: nil, validation: .unknown)
+        // Resolve the verify context from this request's own attestation rather
+        // than reusing the one captured at session proposal, so the verification
+        // result reflects the current state of the dapp for every request.
+        let verifyContext = await resolveVerifyContext(payload: payload, domain: session.peerParticipant.metadata.url)
         verifyContextStore.set(verifyContext, forKey: request.id.string)
         sessionRequestsProvider.emitRequestIfPending()
+    }
+
+    private func resolveVerifyContext(payload: RequestSubscriptionPayload<SessionType.RequestParams>, domain: String) async -> VerifyContext {
+        do {
+            let response: VerifyResponse
+            if let attestation = payload.attestation,
+               let messageId = payload.encryptedMessage.data(using: .utf8)?.sha256().toHexString() {
+                response = try await verifyClient.verify(.v2(attestationJWT: attestation, messageId: messageId))
+            } else {
+                let assertionId = payload.decryptedPayload.sha256().toHexString()
+                response = try await verifyClient.verify(.v1(assertionId: assertionId))
+            }
+            return verifyClient.createVerifyContext(
+                origin: response.origin,
+                domain: domain,
+                isScam: response.isScam,
+                isVerified: response.isVerified
+            )
+        } catch {
+            logger.error("Failed to resolve verify context for session request: \(error.localizedDescription)")
+            return verifyClient.createVerifyContext(origin: nil, domain: domain, isScam: nil, isVerified: nil)
+        }
     }
 
     func onSessionPing(payload: SubscriptionPayload) {

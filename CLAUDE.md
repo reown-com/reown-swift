@@ -27,6 +27,8 @@ This is the Reown Swift SDK repository containing iOS/macOS SDKs for WalletConne
 
 The wallet sample app includes Maestro E2E tests for WalletConnect Pay flows. The shared test flows are downloaded from `WalletConnect/actions` repo at runtime.
 
+The flows deliver each payment link as a deep link (Maestro `openLink`) instead of scanning or typing it: `<DEEPLINK_PREFIX><encodeURIComponent(gatewayUrl)>`. For WalletApp the prefix is `walletapp://wc?uri=` (passed via `--env DEEPLINK_PREFIX=...`; `run-maestro-pay-tests.sh` defaults it). `SceneDelegate.extractPaymentLink` reads the decoded `uri` param and routes it to Pay. On a fresh simulator iOS shows an "Open in “WalletApp”?" prompt the first time; the shared flow taps **Open**.
+
 ### Prerequisites
 
 - [Maestro CLI](https://maestro.mobile.dev) installed
@@ -61,11 +63,23 @@ xcrun simctl install booted "$(find DerivedDataCache -name 'WalletApp.app' -path
 
 ### Test Mode
 
-The `ENABLE_TEST_MODE` Swift compilation flag enables two features:
-- **URL text input**: Adds a visible text field to the scanner options sheet, allowing Maestro to type payment URLs directly instead of scanning QR codes.
-- **Test wallet import**: If `TEST_WALLET_PRIVATE_KEY` is provided as a build setting, the app imports that EVM private key on launch instead of generating a random wallet. This allows CI to use a pre-funded wallet for Pay tests.
+The `ENABLE_TEST_MODE` Swift compilation flag enables **test wallet import**: if `TEST_WALLET_PRIVATE_KEY` is provided as a build setting, the app imports that EVM private key on launch instead of generating a random wallet. This allows CI to use a pre-funded wallet for Pay tests.
 
 Both are passed via xcodebuild build settings — no Xcode project changes needed.
+
+### CI (`ci_e2e_pay_tests.yml`)
+
+**Test wallet:** CI doesn't store a private key. `.github/actions/derive-e2e-wallet` derives this repo's account (`m/44'/60'/0'/0/4`) from the `TEST_WALLET_MNEMONIC` secret, which the other SDK repos share (0–2 react-native-examples, 3 reown-kotlin, 4 reown-swift, 5–6 reown_flutter). Each repo has its own index, so no other repo's Permit2 reset or Polygon nonce races with this suite. The derived key is passed to the build as `TEST_WALLET_PRIVATE_KEY`, and the job fails if the address doesn't match the `TEST_WALLET_ADDRESS_IOS` repo variable (which `e2e_balance_check.yml` also monitors). The job runs in the `e2e-wallet-swift` concurrency group, so runs from different refs queue instead of paying from the wallet at the same time. To set or rotate the wallet (keep `--mnemonic-index` in sync with `index` in `ci_e2e_pay_tests.yml`):
+
+```bash
+gh secret set TEST_WALLET_MNEMONIC -R reown-com/reown-swift < mnemonic.txt
+gh variable set TEST_WALLET_ADDRESS_IOS -R reown-com/reown-swift \
+  --body "$(cast wallet address --mnemonic mnemonic.txt --mnemonic-index 4)"
+```
+
+A new address must be funded (Base USDC, Optimism USDC, Polygon USDT and POL) and must submit Pay's compliance details form once, or the no-KYC flows fail. Faucet requests run in the `e2e-faucet-requests` concurrency group with a cooldown, because the faucet bot drops a same-chain request that arrives before its previous send is mined.
+
+**Simulators, retry and artifacts:** `.github/scripts/maestro/boot-simulators.sh` creates two fresh simulators from the newest iPhone device type and slims them with [simslim](https://github.com/MobAI-App/simslim) (`simslim-ci.json`; Siri must stay enabled). `.github/scripts/maestro/maestro-suite.sh` splits the suite across them with `--shard-split` (safe because only `pay_usdt_polygon` sends txs) and, if any flow fails, re-runs only the flows the JUnit report marks as failed, once. `maestro-pay-test-artifacts` holds recordings, screenshots, JUnit reports, `maestro-output.log` and crash reports; the app-process syslog (`maestro-pay-ios-syslog`) is uploaded only when the job fails. Don't add Maestro `--debug-output` to uploaded artifacts: its `commands-*.json` contains the `WPAY_*` values.
 
 ### Accessibility Identifiers
 
@@ -80,3 +94,20 @@ Payment-option rows carry both the order-dependent `pay-option-{index}` (on the 
 #### USDT-on-Polygon Permit2 flow (`pay_usdt_polygon`)
 
 USDT on Polygon is a plain ERC-20, so WC Pay uses the Permit2 path: the wallet sends an on-chain `approve` then the payment tx. While setting a token up for the first time (allowance 0), `PayConfirmingView` shows the setup note under id `pay-loading-setup-note` (the flow observes it best-effort). CI resets the Permit2 allowance back to 0 after the suite (`Reset USDT Permit2 allowance (Polygon)` step in `ci_e2e_pay_tests.yml`, via the shared `WalletConnect/actions/maestro/permit2-reset` action) so each run re-exercises `approve`; `e2e_balance_check.yml` monitors USDT + POL (gas) on Polygon. The test wallet must hold USDT **and** a little POL on Polygon.
+
+## Maestro E2E Connect Tests (WX SLO 2)
+
+`ci_e2e_connect_tests.yml` (job `E2E Connect - iOS`) runs the WalletKit connect suite: dApp → pairing → session proposal → wallet approves → session settled → personal_sign. `Example/WalletApp` and `Example/DApp` (AppKit modal, SIWE off) run on the same simulator. Flows live in `.maestro/` (tag `connect`): `connect_approve_sign`, `connect_reject`, `sign_reject`, `connect_session_persists`. Names, tag, env (`APP_ID`, `DAPP_APP_ID`) and ids match react-native-examples and reown-kotlin.
+
+- **Shared wallet-side sub-flows** (`flows/connect_launch_wallet`, `connect_wallet_request`, `connect_settle`, `connect_back_to_dapp`, `connect_ios_open_prompt`, `connect_dapp_id`) are byte-identical to react-native-examples' and are meant to move to `WalletConnect/actions`. Don't edit them here only; change them in all repos.
+- **dApp-specific sub-flows**: `connect_launch_dapp`, `connect_open_dapp`, `connect_select_wallet` (taps the "Swift Sample Wallet" custom wallet), `connect_send_sign`, `connect_disconnect_dapp`.
+- **Ids the flows rely on**: wallet `button-scan` (HeaderView scan button), `wallet-request-approve` / `wallet-request-reject` (`ModalFooterView`, used by the proposal, sign and auth screens); dApp `connect-button`, `disconnect-button` (`SignView`), `sign-message-button` (personal_sign in `SessionAccountView`), and the "Sign message: success/failed" text in its response sheet.
+- `.maestro/` is tracked except the downloaded Pay flows (`pay_*.yaml`, `scripts/`).
+
+CI uses three Cloud projects, one per secret: `WALLET_PROJECT_ID` (WalletApp builds in the E2E suites and `release.yml`), `DAPP_PROJECT_ID` (DApp builds, and `release.yml` when `app` is DApp) and `TESTS_PROJECT_ID` (SDK unit, integration, relay and UI tests in `ci.yml`, `build_artifacts.yml`, `ui-tests.yml`). Keep the tests project without a bundle-id allowlist: the test targets have no host app, so the relay sees the XCTest runner's bundle id and an allowlist makes them fail with `connectionFailed`.
+
+Run locally (build both schemes for the simulator with `PROJECT_ID`, install both apps, then):
+
+```bash
+./scripts/run-maestro-connect-tests.sh
+```

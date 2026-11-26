@@ -27,6 +27,7 @@ struct ModalFooterView: View {
             }
             .buttonStyle(SecondaryButtonStyle())
             .disabled(isAnyLoading)
+            .accessibilityIdentifier("wallet-request-reject")
 
             Button(action: onAction) {
                 if isActionLoading {
@@ -43,6 +44,7 @@ struct ModalFooterView: View {
             .buttonStyle(PrimaryButtonStyle())
             .disabled(isActionDisabled || isAnyLoading)
             .opacity(isActionDisabled ? 0.5 : 1.0)
+            .accessibilityIdentifier("wallet-request-approve")
         }
         .padding(.top, Spacing._4)
         .padding(.bottom, Spacing._8)

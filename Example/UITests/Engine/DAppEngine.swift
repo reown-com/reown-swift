@@ -44,7 +44,7 @@ struct DAppEngine {
 
     // Alternative way to find personal_sign if it's in a method list
     var personalSignMethodButton: XCUIElement {
-        instance.buttons["method-1"] // personal_sign is usually the second method (index 1)
+        instance.buttons["sign-message-button"] // personal_sign
     }
 
     // Pairing screen

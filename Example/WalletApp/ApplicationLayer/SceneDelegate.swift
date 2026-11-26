@@ -184,7 +184,7 @@ private extension SceneDelegate {
         let metadata = AppMetadata(
             name: "Swift Wallet",
             description: "Swift sample wallet showcasing WalletConnect SDK integration",
-            url: "https://walletconnect.network/sdk",
+            url: "https://walletconnect.com/trade-transact/wallets",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
             redirect: redirect
         )
@@ -216,8 +216,9 @@ private extension SceneDelegate {
     /// - App deeplinks with `walletconnectpay?paymentId=...`
     ///
     /// Note: `pay.walletconnect.*` universal-link registration was removed from
-    /// the entitlements, so on native these payment URLs now arrive via NFC (or
-    /// the test-mode URL field) rather than a tapped App Link.
+    /// the entitlements, so on native these payment URLs now arrive via NFC, a
+    /// pasted URL, or a `walletapp://wc?uri=<encoded link>` deep link (used by
+    /// the Maestro E2E flows) rather than a tapped App Link.
     private func extractPaymentLink(from url: URL) -> String? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let queryItems = components.queryItems else { return nil }

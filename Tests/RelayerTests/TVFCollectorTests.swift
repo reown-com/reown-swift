@@ -241,7 +241,7 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertEqual(data?.txHashes, [expectedTxID])
     }
 
-    func testSessionResponse_UnsupportedMethod_ReturnsTVFData() {
+    func testSessionResponse_UnsupportedMethod_PlainStringResult_ReportsResult() {
         let rpcParams = AnyCodable([String]())
         let rpcResult = makeResponse("whatever")
         let data = tvf.collect(
@@ -255,7 +255,92 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertEqual(data?.rpcMethods, ["someUnsupportedMethod"])
         XCTAssertEqual(data?.chainId?.absoluteString, "eip155:1")
         XCTAssertNil(data?.contractAddresses)
+        XCTAssertEqual(data?.txHashes, ["whatever"])
+    }
+
+    // MARK: - Signing methods (no dedicated collector)
+
+    func testSessionResponse_EthSignTypedDataV4_ReportsSignature() {
+        let signature = "0x" + String(repeating: "ab", count: 65)
+        let data = tvf.collect(
+            rpcMethod: "eth_signTypedData_v4",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: makeResponse(signature),
+            tag: 1109
+        )
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.rpcMethods, ["eth_signTypedData_v4"])
+        XCTAssertEqual(data?.txHashes, [signature])
+    }
+
+    func testSessionResponse_PersonalSign_ReportsSignature() {
+        let signature = "0x" + String(repeating: "cd", count: 65)
+        let data = tvf.collect(
+            rpcMethod: "personal_sign",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: makeResponse(signature),
+            tag: 1109
+        )
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.txHashes, [signature])
+    }
+
+    func testSessionRequest_EthSignTypedDataV4_NoTxHashes() {
+        let data = tvf.collect(
+            rpcMethod: "eth_signTypedData_v4",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: nil,
+            tag: 1108
+        )
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.rpcMethods, ["eth_signTypedData_v4"])
         XCTAssertNil(data?.txHashes)
+    }
+
+    func testSessionResponse_UnsupportedMethod_StructuredResult_ReportsJSON() {
+        let objectResult = makeResponse(["0x1": ["paymasterService": ["supported": true]]])
+        let arrayResult = makeResponse(["0x1234567890abcdef1234567890abcdef12345678"])
+
+        let objectData = tvf.collect(
+            rpcMethod: "wallet_getCapabilities",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: objectResult,
+            tag: 1109
+        )
+        let arrayData = tvf.collect(
+            rpcMethod: "eth_requestAccounts",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: arrayResult,
+            tag: 1109
+        )
+        XCTAssertEqual(objectData?.txHashes, [#"{"0x1":{"paymasterService":{"supported":true}}}"#])
+        XCTAssertEqual(arrayData?.txHashes, [#"["0x1234567890abcdef1234567890abcdef12345678"]"#])
+    }
+
+    func testSessionResponse_UnsupportedMethod_EmptyOrErrorResult_NoTxHashes() {
+        let emptyData = tvf.collect(
+            rpcMethod: "wallet_switchEthereumChain",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: makeResponse(""),
+            tag: 1109
+        )
+        let errorData = tvf.collect(
+            rpcMethod: "personal_sign",
+            rpcParams: AnyCodable([String]()),
+            chainID: chain,
+            rpcResult: makeError(code: 4001, message: "User rejected"),
+            tag: 1109
+        )
+        XCTAssertNotNil(emptyData)
+        XCTAssertNil(emptyData?.txHashes)
+        XCTAssertNotNil(errorData)
+        XCTAssertNil(errorData?.txHashes)
     }
 
     func testInvalidTag_ReturnsNil() {
