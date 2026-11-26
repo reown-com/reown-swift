@@ -132,9 +132,6 @@ runs:
       with:
           check_name: ${{ inputs.type }} junit report
           report_paths: 'test_results/report.junit'
-          # This action runs from other repos (e.g. rs-relay), whose tokens may
-          # lack `checks: write`. Annotate + job summary only, no Check Run.
-          annotate_only: true
 
     - name: Zip test artifacts
       if: always()
