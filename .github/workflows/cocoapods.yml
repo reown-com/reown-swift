@@ -34,4 +34,16 @@ jobs:
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
         run: |
-          pod trunk push reown-swift.podspec --verbose --allow-warnings
+          set -o pipefail
+          pod trunk push reown-swift.podspec --allow-warnings 2>&1 | tee pod-trunk-push.log
+
+      - name: Show CocoaPods errors
+        if: failure()
+        run: grep -nE 'ERROR \||error: |did not pass|\[!\]' pod-trunk-push.log | head -100 || true
+
+      - name: Upload CocoaPods log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pod-trunk-push-log
+          path: pod-trunk-push.log
