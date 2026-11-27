@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  actions: read # maestro/pay-tests reads earlier pay-expired-pool artifacts
 
 # A new push to a PR cancels its superseded run (freeing the test wallet);
 # scheduled and dispatched runs are never cancelled by another run.
@@ -130,9 +131,10 @@ jobs:
 
       # The merchant inputs enable the expired-payment pool for pay_expired_link:
       # payments only expire 15 min after creation, so each run uses one an
-      # earlier run created (kept in actions/cache) and seeds a new one.
+      # earlier run created (kept in `pay-expired-pool` artifacts, hence
+      # `actions: read`) and seeds a new one.
       - name: Copy shared Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@390045a88d335d438c972b422090144158df6823
+        uses: WalletConnect/actions/maestro/pay-tests@5a9fa5523fa15e82407806076d1c61cb8aa1bd6c
         with:
           merchant-api-key: ${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}
           merchant-id: ${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}
