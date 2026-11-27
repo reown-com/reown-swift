@@ -29,7 +29,7 @@ class AppViewModel: ObservableObject {
         let metadata = AppMetadata(
             name: "Web3Modal Swift Dapp",
             description: "Web3Modal DApp sample",
-            url: "www.web3modal.com",
+            url: "https://lab.web3modal.com",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
             redirect: try! .init(native: "w3mdapp://", universal: "https://lab.web3modal.com/web3modal_example", linkMode: true)
         )
