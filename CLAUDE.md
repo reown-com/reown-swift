@@ -21,7 +21,14 @@ xcodebuild -scheme <scheme_name>
 
 ## Project Structure
 
-This is the Reown Swift SDK repository containing iOS/macOS SDKs for WalletConnect services.
+This is the Reown Swift SDK repository containing iOS/macOS SDKs for WalletConnect services. Swift Package Manager, iOS 13+, macOS 11+, tvOS 13+. Modules live in `Sources/`:
+
+- Protocol: `WalletConnectSign`, `WalletConnectPairing`, `WalletConnectRelay` (WebSocket relay client)
+- Wallet SDK: `ReownWalletKit`, `WalletConnectNotify`, `WalletConnectPush`, `WalletConnectPay`
+- App SDK: `ReownAppKit`, `ReownAppKitUI`, `ReownAppKitBackport`
+- Infrastructure: `WalletConnectNetworking`, `HTTPClient`, `WalletConnectKMS` (keys, keychain), `WalletConnectJWT`, `WalletConnectIdentity`, `WalletConnectVerify`, `WalletConnectSigner`
+- Utilities: `Commons`, `JSONRPC`, `WalletConnectUtils`, `Database`, `Events`, `ReownRouter`
+- Yttrium: `YttriumWrapper`, `YttriumUtilsWrapper` wrap the Rust FFI; the version is pinned with `.exact` in `Package.swift`
 
 ## Maestro E2E Pay Tests
 
@@ -111,3 +118,8 @@ Run locally (build both schemes for the simulator with `PROJECT_ID`, install bot
 ```bash
 ./scripts/run-maestro-connect-tests.sh
 ```
+
+## Pull Requests
+
+- Opening a PR or refreshing its description: `/pr-handoff` (`.claude/skills/pr-handoff/`), which writes the agent blocks through `/visual-recap`.
+- `Why`, `Decisions`, `Worth looking at` and the Breaking change checkbox in `.github/pull_request_template.md` are author-owned. Never write them unless the author supplies or approves the exact text in the current conversation.

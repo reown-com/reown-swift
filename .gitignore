@@ -44,4 +44,5 @@ Sources/WalletConnectModal/Secrets/secrets.json
 
 # iOS Provisioning Profiles
 *.mobileprovision
-.claude/
+/.claude/*
+!/.claude/skills/
